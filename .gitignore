@@ -50,3 +50,4 @@ fw/**/*.bin
 *.swp
 *~
 __pycache__/
+docs/spec/*.pdf

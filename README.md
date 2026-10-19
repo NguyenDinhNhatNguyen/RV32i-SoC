@@ -4,6 +4,7 @@
 
 - Kế hoạch & phân công: https://docs.google.com/document/d/1RTnc3nwBibMsJxE9xoW7YXAB-516pJ7H3GNWsbQHur8/edit
 - Theo dõi tiến độ: https://docs.google.com/spreadsheets/d/1xDhI0274hMBTG_rTxtYcNM3uWLCWMau0yEdtHtpaCv0/edit
+- Repo: https://github.com/NguyenDinhNhatNguyen/RV32i-SoC
 
 ## Cấu trúc thư mục
 
