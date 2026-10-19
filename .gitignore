@@ -1,0 +1,52 @@
+# Thư viện công nghệ và IP có license: không bao giờ commit
+*.lib
+*.lef
+*.gds
+*.gds2
+*.oas
+*.db
+*.ldb
+gpdk*/
+GPDK*/
+*.cdb
+
+# Thư mục chạy tool
+syn/run*/
+pnr/run*/
+lec/run*/
+sta/run*/
+power/run*/
+xcelium.d/
+INCA_libs/
+waves.shm/
+*.shm/
+fv/
+.cadence/
+*.history
+*.key
+*.cmd*
+genus.log*
+innovus.log*
+innovus.cmd*
+tempus.log*
+lec.log*
+
+# Mô phỏng
+*.vcd
+*.fst
+*.vvp
+*.saif
+sim_build/
+obj_dir/
+tb/**/out/
+
+# Firmware build
+fw/**/*.o
+fw/**/*.elf
+fw/**/*.bin
+
+# Hệ điều hành / editor
+.DS_Store
+*.swp
+*~
+__pycache__/

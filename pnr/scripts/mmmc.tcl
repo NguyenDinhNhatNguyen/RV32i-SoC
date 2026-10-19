@@ -1,0 +1,17 @@
+# mmmc.tcl - hai corner: slow cho setup, fast cho hold (bài học Lab).
+# Được read_mmmc trong run_all.tcl; dùng biến từ config.tcl và DESIGN_SDC.
+
+create_library_set -name libs_slow -timing [concat [list $LIB_DIR/$LIB_SLOW] $SRAM_LIB_SLOW]
+create_library_set -name libs_fast -timing [concat [list $LIB_DIR/$LIB_FAST] $SRAM_LIB_FAST]
+
+create_rc_corner -name rc_typ -qrc_tech $QRC_TECH
+
+create_delay_corner -name dc_slow -library_set libs_slow -rc_corner rc_typ
+create_delay_corner -name dc_fast -library_set libs_fast -rc_corner rc_typ
+
+create_constraint_mode -name func -sdc_files [list $DESIGN_SDC]
+
+create_analysis_view -name av_setup -constraint_mode func -delay_corner dc_slow
+create_analysis_view -name av_hold  -constraint_mode func -delay_corner dc_fast
+
+set_analysis_view -setup {av_setup} -hold {av_hold}
