@@ -34,7 +34,7 @@ module accel_apb #(
 
     // Chỉ chuyển giao dịch ở pha access và hợp lệ xuống wrapper
     wire access = psel & penable;
-    wire s_ready;
+    wire unused_s_ready;                 // APB trả PREADY = 1 nên không cần s_ready
 
     accel_wrapper #(.N(N), .DW(DW), .AW(AW), .SIGNED(SIGNED)) u_wrap (
         .clk     (pclk),
@@ -44,7 +44,7 @@ module accel_apb #(
         .s_addr  (paddr),
         .s_wdata (pwdata),
         .s_wstrb (4'hF),
-        .s_ready (s_ready),
+        .s_ready (unused_s_ready),
         .s_rdata (prdata),
         .irq     (irq)
     );

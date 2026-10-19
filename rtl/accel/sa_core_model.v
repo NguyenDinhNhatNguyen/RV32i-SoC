@@ -31,8 +31,11 @@ module sa_core_model #(
 );
 
     // Thanh ghi truyền của từng PE, gom thành vector phẳng (index i*N+j)
+    // Cột cuối không dùng a_out, hàng cuối không dùng b_out (rìa mảng systolic)
+    /* verilator lint_off UNUSEDSIGNAL */
     wire [N*N*DW-1:0] a_out;
     wire [N*N*DW-1:0] b_out;
+    /* verilator lint_on UNUSEDSIGNAL */
 
     genvar gi, gj;
     generate

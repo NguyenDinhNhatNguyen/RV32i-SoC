@@ -35,7 +35,9 @@ module accel_wrapper #(
     // bus slave
     input  wire        s_valid,
     input  wire        s_we,
-    input  wire [11:0] s_addr,
+    /* verilator lint_off UNUSEDSIGNAL */
+    input  wire [11:0] s_addr,           // bit [1:0] bỏ qua: chỉ truy cập theo word
+    /* verilator lint_on UNUSEDSIGNAL */
     input  wire [31:0] s_wdata,
     input  wire [3:0]  s_wstrb,
     output wire        s_ready,
@@ -132,14 +134,16 @@ module accel_wrapper #(
     reg [N*DW-1:0] a_feed;
     reg [N*DW-1:0] b_feed;
     integer i;
+    integer t;                           // cnt mở rộng lên 32 bit cho phép so sánh/cộng với i
     always @* begin
+        t = {{(32-CW){1'b0}}, cnt};
         a_feed = {N*DW{1'b0}};
         b_feed = {N*DW{1'b0}};
         if (state == S_RUN) begin
             for (i = 0; i < N; i = i + 1) begin
-                if ((cnt >= i) && (cnt < i + N)) begin
-                    a_feed[i*DW +: DW] = abuf[(i*N + cnt - i)*DW +: DW];
-                    b_feed[i*DW +: DW] = bbuf[((cnt - i)*N + i)*DW +: DW];
+                if ((t >= i) && (t < i + N)) begin
+                    a_feed[i*DW +: DW] = abuf[(i*N + t - i)*DW +: DW];
+                    b_feed[i*DW +: DW] = bbuf[((t - i)*N + i)*DW +: DW];
                 end
             end
         end
