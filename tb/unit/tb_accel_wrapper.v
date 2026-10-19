@@ -51,6 +51,10 @@ module tb_accel_wrapper;
     reg [31:0] rd, word;
     integer t, i, j, k, w, cycles, seed;
 
+`ifdef DUMP_VCD
+    initial begin $dumpfile("accel.vcd"); $dumpvars(0, tb_accel_wrapper); end
+`endif
+
     initial begin
         seed = 12345;
         repeat (3) @(posedge clk);

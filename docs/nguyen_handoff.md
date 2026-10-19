@@ -1,11 +1,13 @@
 # Bàn giao task của Nguyên (19/10)
 
+Giải thích chi tiết và lệnh chạy: xem `docs/runbook_nguyen.md`.
+
 | Task | Trạng thái | Đã có trong repo | Còn phải làm |
 | --- | --- | --- | --- |
 | HT-02 Hỏi VPN | Xong | — | Trường không mở VPN: Cadence chỉ chạy khi lên trường |
 | HT-01 Kiểm tra server | Script sẵn sàng | `scripts/check_server.sh` | Lên trường, source môi trường Cadence như Lab, chạy `make check-server`, gửi file trong `appendix/server_check/` cho Phát |
 | HT-04 Môi trường ở nhà | Hướng dẫn xong | `docs/setup_home.md` | Cài thử trên một máy, sửa hướng dẫn nếu lệnh khác, gửi cả nhóm |
-| RTL-05 Wrapper accelerator | RTL + testbench pass với lõi giả | `rtl/accel/`, `tb/unit/tb_accel_wrapper.v`, `fw/accel.h` | Thay `sa_core_model.v` bằng lõi Lab 2, chỉnh `LAT`, chạy lại `make sim-accel` |
+| RTL-05 Wrapper accelerator | RTL + testbench pass với lõi giả; có thêm vỏ APB3 | `rtl/accel/`, `tb/unit/tb_accel_wrapper.v`, `tb/unit/tb_accel_apb.v`, `fw/accel.h` | Thay `sa_core_model.v` bằng lõi Lab 2, chỉnh `LAT`, chạy lại `make sim-accel` và `make sim-accel-apb` |
 | PD-01 Chạy thử Innovus | Script sẵn sàng, viết theo cú pháp Lab 01-05 | `syn/scripts/synth_accel.tcl`, `pnr/scripts/run_all.tcl`, `pnr/scripts/mmmc.view`, `syn/constraints/accel.sdc`, `docs/flow_notes.md` | Đặt `PDK_DIR` tới thư mục `PDK_GPDK45` của Lab, chạy `make synth-accel` rồi `make pnr-accel`; bước route/signoff đối chiếu khi học Lab route |
 | PD-02 Ước lượng die | Công cụ sẵn sàng | `pnr/scripts/estimate_die.py` | Chờ kích thước SRAM macro (HT-01) và diện tích SoC từ Phát |
 
