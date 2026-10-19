@@ -175,7 +175,7 @@ Không mở repo bằng đường dẫn `\\wsl.localhost\...` trong File > Open 
 | `docker pull` báo `read-only file system` | Như dòng trên. Nếu vẫn lỗi: Docker Desktop > biểu tượng con bọ (Troubleshoot) > **Clean / Purge data** > tick WSL 2 > Delete (chỉ xoá image Docker, không mất code), rồi pull lại |
 | `http://localhost` hiện trang `localhost - /` liệt kê file | Đó là IIS của Windows. Dùng `http://localhost:8080` (`scripts/eda.sh start` đã dùng cổng này) |
 | `port is already allocated` | Có thể container cũ còn giữ cổng: `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)` rồi `scripts/eda.sh start`. Vẫn lỗi thì cổng bị chương trình khác dùng: đổi cổng như ở mục 3 |
-| `fatal: destination path ... already exists` | Đã clone rồi, bỏ qua; dùng `git pull` để cập nhật |
+| `fatal: destination path ... already exists` | Đã clone rồi, bỏ qua và dùng `git pull` để cập nhật |
 | `$'\r': command not found` | Repo bị clone từ Windows. Xoá, chạy `git config --global core.autocrlf input`, clone lại trong Ubuntu |
 | `make: iverilog: No such file` hoặc `/foss/designs: No such file` | Đang gõ trong cửa sổ Ubuntu. Dùng `scripts/eda.sh run "..."` hoặc Terminal của container |
 | Chạy `gtkwave` không thấy cửa sổ | Nó hiện trong trang `localhost:8080`, chuyển sang tab Chrome đó |
@@ -208,7 +208,7 @@ Firmware RV32I biên dịch được bằng toolchain có sẵn trong container:
 ## 9. Ba điều không làm
 
 - Không copy thư viện GPDK45, file SRAM macro hay license Cadence về máy cá nhân hay lên GitHub.
-- Không đưa số liệu nangate45 vào report; chỉ dùng để xem xu hướng.
+- Không đưa số liệu nangate45 vào report, chỉ dùng để xem xu hướng.
 - Không sửa script Genus/Innovus để chạy ở nhà: hai bộ script khác nhau, chỉ SDC dùng chung.
 
 ## 10. Máy không cài được Docker

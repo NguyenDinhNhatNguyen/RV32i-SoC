@@ -30,7 +30,7 @@
 - Mỗi tính năng mở rộng có parameter bật/tắt (`ENABLE_M`, `ENABLE_DMA`, `ENABLE_SPI`...).
 - Mỗi người một nhánh (`feat/<tên>-<việc>`), merge vào `main` qua pull request có ít nhất 1 người review.
 - **Không commit thư viện GPDK45, file LIB/LEF/GDS của SRAM macro hay bất kỳ file nào của Cadence.** Script chỉ trỏ tới đường dẫn trên server qua biến môi trường (xem `pnr/scripts/config.tcl`).
-- Log/report chính thức copy vào `appendix/<bước>/`; thư mục chạy tool (`syn/run`, `pnr/run`...) bị bỏ qua bởi `.gitignore`.
+- Log/report chính thức copy vào `appendix/<bước>/`. Thư mục chạy tool (`syn/run`, `pnr/run`...) bị bỏ qua bởi `.gitignore`.
 
 ## Làm việc nhà ↔ trường
 

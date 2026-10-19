@@ -60,7 +60,7 @@ make sim-accel        # 40 phép nhân, phải in PASS
 make sim-accel-apb    # qua giao diện APB3, phải in PASS
 make wave-accel       # ghi tb/unit/out/accel.vcd
 gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
-make lint-accel       # cần Verilator; 0 warning là tốt
+make lint-accel       # cần Verilator, 0 warning là tốt
 ```
 
 Trong GTKWave nên kéo các tín hiệu: `dut.state`, `dut.busy`, `dut.done`, `dut.cnt`, `dut.a_feed`, `dut.b_feed`, `irq`. Hình FSM chuyển IDLE -> CLR -> RUN và dữ liệu lệch pha là ảnh tốt cho report.
@@ -132,7 +132,7 @@ Xem kết quả và chụp hình cho report:
 ```bash
 cd pnr/run_accel && innovus
 # trong Innovus:
-source DBS/cts.enc    # giống Lab; hoặc floorplan.enc / placement.enc
+source DBS/cts.enc    # giống Lab, hoặc floorplan.enc / placement.enc
 ```
 
 Chụp: floorplan + power grid, placement, cây clock (CCOpt Clock Tree Debugger), bảng timing. Đối chiếu bảng tiêu chí trong `docs/flow_notes.md`.
@@ -146,13 +146,13 @@ cp -r pnr/out_accel/reports/* appendix/pnr_accel/
 git add appendix && git commit -m "Add accelerator synthesis and P&R reports" && git push
 ```
 
-Không copy `.lib`, `.lef`, `.gds`, file SRAM macro hay bất kỳ file nào của GPDK45 ra khỏi server; `.gitignore` đã chặn các đuôi này nhưng vẫn kiểm tra `git status` trước khi commit.
+Không copy `.lib`, `.lef`, `.gds`, file SRAM macro hay bất kỳ file nào của GPDK45 ra khỏi server. `.gitignore` đã chặn các đuôi này nhưng vẫn kiểm tra `git status` trước khi commit.
 
 ## 5. Lỗi thường gặp (rút từ Lab)
 
 | Triệu chứng | Nguyên nhân | Cách xử lý |
 | --- | --- | --- |
-| Innovus báo IMPSP-9099 | netlist có scan flop (SDFF*) | script Genus không chèn scan; nếu vẫn gặp, kiểm tra netlist có cell SDFF và cấm chúng bằng `set_dont_use` |
+| Innovus báo IMPSP-9099 | netlist có scan flop (SDFF*) | script Genus không chèn scan. Nếu vẫn gặp, kiểm tra netlist có cell SDFF và cấm chúng bằng `set_dont_use` |
 | LEC non-equivalent sau clock gating | dofile tự viết không biết cell gating | dùng `rtl2gate.do` do Genus sinh (`write_do_lec`) cùng lần chạy với netlist, như Lab |
 | Hold vi phạm sau CTS | chỉ chạy setup | `optDesign -postCTS -hold` với view fast |
 | Skew lớn | dùng CLKBUFX2 | `setDontUse CLKBUFX2 true` trước `ccopt_design` |
