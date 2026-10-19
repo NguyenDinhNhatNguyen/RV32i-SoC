@@ -13,7 +13,7 @@ help:
 	@echo "make wave-accel    - mô phỏng và ghi sóng tb/unit/out/accel.vcd (xem bằng GTKWave)"
 	@echo "make lint-accel    - lint wrapper bằng Verilator nếu có"
 	@echo "make check-server  - kiểm tra thư viện/tool trên server trường"
-	@echo "make synth-accel   - Genus tổng hợp accelerator (server); CG=0 để chạy baseline"
+	@echo "make synth-accel   - Genus tổng hợp accelerator (server), CG=0 để chạy baseline"
 	@echo "make pnr-accel     - Innovus chạy thử accelerator (server)"
 
 sim-accel:
