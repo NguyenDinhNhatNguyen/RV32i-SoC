@@ -134,6 +134,7 @@ module accel_wrapper #(
     integer t;                           // cnt mở rộng lên 32 bit cho phép so sánh/cộng với i
     always @* begin
         t = {{(32-CW){1'b0}}, cnt};
+        i = 0;                           // gán mặc định để Yosys không suy ra latch cho biến vòng lặp
         a_feed = {N*DW{1'b0}};
         b_feed = {N*DW{1'b0}};
         if (state == S_RUN) begin
@@ -165,6 +166,7 @@ module accel_wrapper #(
     integer r;
     always @* begin
         s_rdata = 32'd0;
+        r       = 0;        // gán mặc định để Yosys không suy ra latch cho biến vòng lặp
         if (sel_reg) begin
             case (widx)
                 6'd0: s_rdata = {30'd0, irq_en, 1'b0};
