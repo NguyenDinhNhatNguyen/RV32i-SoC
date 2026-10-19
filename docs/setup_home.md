@@ -47,11 +47,13 @@ Khởi động lại máy, mở **Ubuntu** từ Start menu, đặt username và 
 
 - Tạo thư mục `D:\Docker\wsl` bằng File Explorer. Trong Docker Desktop vào **Settings > Resources > Advanced > Disk image location**, bấm Browse chọn thư mục đó, bấm **Apply & restart**. Làm bước này **trước** khi tải image ở mục 2 để khỏi phải chuyển 20 GB.
 - Muốn chuyển cả Ubuntu (code nằm trong đó, thường chỉ vài GB): đóng hết cửa sổ Ubuntu, Quit Docker Desktop, rồi trong PowerShell:
+
   ```powershell
   wsl --shutdown
   mkdir D:\WSL
   wsl --manage Ubuntu --move D:\WSL\Ubuntu
   ```
+
   Xong thì mở lại Docker Desktop.
 
 **1.4 Kiểm tra.** Mở **Ubuntu**:
@@ -122,7 +124,7 @@ make lint-accel && make sim-accel && make sim-accel-apb
 
 **Đạt khi:** lint không in dòng `%Warning` nào, và có hai dòng
 
-```
+```text
 PASS: 40 phep nhan ma tran 4x4 khop mo hinh vang
 PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
 ```
@@ -222,4 +224,3 @@ make lint-accel && make sim-accel && make sim-accel-apb
 ```
 
 Phiên bản tool sẽ khác image của nhóm. Nếu kết quả khác với máy người khác, tin kết quả trong Docker. GTKWave mở thẳng trên Windows nhờ WSLg.
-

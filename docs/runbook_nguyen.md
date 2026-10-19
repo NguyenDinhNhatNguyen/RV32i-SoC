@@ -5,20 +5,25 @@ Tài liệu này giải thích từng task Nguyên đang làm (nó là gì, vì 
 ## 1. Các task hiện tại
 
 ### HT-02 Hỏi VPN (Xong)
+
 Trường không mở VPN. Hệ quả: mọi bước Cadence (Genus, Conformal, Innovus) chỉ chạy được khi ngồi ở trường. Ở nhà chỉ làm RTL, mô phỏng và flow mã nguồn mở. Phải dồn việc Cadence vào các buổi lên trường và chuẩn bị script sẵn ở nhà.
 
 ### HT-01 Kiểm tra server (30%)
+
 Mục tiêu: biết chắc server có gì trước khi cả nhóm viết script: phiên bản Genus/Innovus/Conformal, đường dẫn `PDK_GPDK45`, file `.lib` slow/fast, **SRAM hard macro** (tên, kích thước trong LEF, có `.lib` không), toolchain RISC-V, server có ra GitHub được không.
 Xong khi: có file `appendix/server_check/server_check_<ngày>.txt` gửi cho Phát và điền đường dẫn `PDK_DIR` vào nhóm.
 Rủi ro lớn nhất: không có SRAM macro trong GPDK45. Khi đó phải báo nhóm ngay để chuyển sang phương án dự phòng trong doc (memory compiler của trường, hoặc macro do nhóm tự làm).
 
 ### HT-04 Môi trường ở nhà (60%)
+
 Mục tiêu: cả nhóm mô phỏng và tổng hợp thử được ở nhà mà không cần Cadence. Hướng dẫn trong `docs/setup_home.md` (WSL2 + Docker IIC-OSIC-TOOLS, hoặc cài Icarus/Verilator/Yosys rời).
 Xong khi: một máy Windows khác (không phải máy Nguyên) chạy được `make sim-accel` ra PASS theo đúng hướng dẫn.
 
 ### RTL-05 Wrapper accelerator (70%)
+
 Mục tiêu: biến accelerator của Lab 2 (mảng systolic 4x4, chỉ có chân dữ liệu) thành một ngoại vi mà CPU điều khiển được bằng lệnh `sw/lw`.
 Đã có:
+
 - `rtl/accel/accel_wrapper.v`: thanh ghi CTRL/STATUS/INFO, bộ đệm A, B, C, FSM IDLE -> CLR -> RUN, bộ sinh lệch pha (skew), ngắt `irq` khi xong.
 - `rtl/accel/accel_apb.v`: lớp vỏ APB3 (chỉ truy cập word, `PSLVERR` khi truy cập địa chỉ không định nghĩa hoặc ghi vào C_BUF). Dùng nếu nhóm chấp nhận đề xuất "ngoại vi nối qua cầu APB3" trong doc.
 - `rtl/accel/sa_core_model.v`: lõi giả cùng cấu trúc với Lab 2 để test trước.
@@ -41,14 +46,17 @@ Bản đồ thanh ghi (base `0x3000_0000`):
 Quy trình firmware: ghi A, B -> ghi CTRL = 1 (hoặc 3 nếu dùng ngắt) -> chờ DONE (hoặc ngắt) -> đọc C -> ghi STATUS = 2 để xoá DONE.
 
 ### PD-01 Chạy thử flow Cadence trên accelerator (30%)
+
 Mục tiêu: chạy trọn Genus -> LEC -> Innovus trên một khối nhỏ (accelerator) trước khi có SoC, để khi SoC sẵn sàng chỉ việc đổi tên top. Script viết đúng cú pháp Lab 01-05 nên dễ đối chiếu.
 Xong khi: tất cả tiêu chí trong `docs/flow_notes.md` đạt ở bước tới CTS (WNS >= 0, 0 violation geometry, skew <= 80 ps), báo cáo nằm trong `appendix/`.
 
 ### PD-02 Ước lượng die (20%)
+
 Mục tiêu: chọn kích thước floorplan cho SoC: đủ chỗ cho 2 SRAM macro + cell chuẩn ở mật độ 70%, chừa 15 um cho power ring.
 Cần đầu vào: kích thước SRAM (từ HT-01) và diện tích cell chuẩn SoC (Genus của Phát, M2). Trước đó có thể chạy với số tạm để biết cỡ.
 
 ### Các task tiếp theo (chưa tới hạn)
+
 PD-03 đến PD-08 (floorplan SoC với macro, power plan, place, CTS, route, signoff DRC/LVS/STA) dùng lại `pnr/scripts/run_all.tcl`. PWR-02 (công suất sau layout) dùng SPEF + VCD từ mô phỏng firmware thật.
 
 ## 2. Chạy ở nhà
