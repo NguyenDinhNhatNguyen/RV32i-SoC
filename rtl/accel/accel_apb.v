@@ -3,9 +3,7 @@
 // Bộ chuyển APB3 slave -> giao diện valid/ready của accel_wrapper.
 // Dùng khi ngoại vi trong SoC nối qua cầu APB3 (đề xuất trong doc kế hoạch).
 // APB3 chỉ truy cập word: mọi lệnh ghi dùng đủ 4 byte.
-// PSLVERR = 1 khi truy cập vùng không định nghĩa trong 4 KB của accelerator
-// (offset >= 0x400, thanh ghi 0x00C-0x0FC, hoặc ghi vào C_BUF), để core bẫy
-// access fault thay vì đọc ra 0.
+// PSLVERR = 1 khi truy cập vùng không định nghĩa trong 4 KB của accelerator (offset >= 0x400, thanh ghi 0x00C-0x0FC, hoặc ghi vào C_BUF), để core bẫy access fault thay vì đọc ra 0.
 
 module accel_apb #(
     parameter N      = 4,

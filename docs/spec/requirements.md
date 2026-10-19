@@ -1,6 +1,8 @@
 # Yêu cầu đề bài (CE434 Final Project) và nơi đáp ứng
 
-Nguồn: slide Final Project môn CE434 (GV Tạ Trí Đức, 16/10/2026), lưu trong Drive nhóm, không đưa lên repo công khai. Hạn nộp report PDF qua Courses: 20/12/2026.
+Nguồn: slide Final Project môn CE434 (GV Tạ Trí Đức, 16/10/2026), lưu trong Drive nhóm, không đưa lên repo công khai.
+
+Hạn nộp report PDF qua Courses: 20/12/2026.
 
 | Yêu cầu | Đáp ứng ở đâu | Chủ |
 | --- | --- | --- |
@@ -14,6 +16,7 @@ Nguồn: slide Final Project môn CE434 (GV Tạ Trí Đức, 16/10/2026), lưu 
 | Signoff: timing, trùng khớp, chức năng, luật thiết kế, kết nối, lỗi điện | Tempus, LEC sau layout, GLS có SDF, DRC/LVS/antenna, IR drop/EM | Phát, Phúc, Hiếu, Nguyên |
 | Đánh giá kết quả, so sánh thiết kế tương tự | Bảng PPA, so với PicoRV32/Ibex/SERV | Nhân, Hiếu |
 | Thiết kế CLEAN, đạt chức năng và tần số | Mốc M3 Signoff clean 6/12 | Cả nhóm |
-| Report: mọi bước, kết quả, tối ưu, kết luận; script/report/log ở phụ lục | `appendix/<bước>/` | Hiếu biên tập |
+| Report: mọi bước, kết quả, tối ưu, kết luận, script/report/log ở phụ lục | `appendix/<bước>/` | Hiếu biên tập |
 
-Điểm cộng nhóm chọn: tối ưu PPA (F_max, CPI, power theo testcase, EPI, area, GE, density), mở rộng lõi (ngắt, RV32IM, dự đoán nhánh), accelerator dùng ngắt, ngoại vi SPI/PWM (I2C tầng 2), DMA (tầng 2). Không làm: đa lõi, bảo mật.
+Điểm cộng nhóm chọn: tối ưu PPA (F_max, CPI, power theo testcase, EPI, area, GE, density), mở rộng lõi (ngắt, RV32IM, dự đoán nhánh), accelerator dùng ngắt, ngoại vi SPI/PWM (I2C tầng 2), DMA (tầng 2).
+Không làm: đa lõi, bảo mật.

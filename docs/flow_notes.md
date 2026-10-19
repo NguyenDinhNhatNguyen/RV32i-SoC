@@ -37,4 +37,4 @@ Mỗi lần quét, lưu báo cáo vào `appendix/<bước>/<cấu hình>/` để
 
 ## Accelerator Lab 2 (đề Lab 01)
 
-Systolic array 4x4, 16 PE; mỗi PE có bộ nhân 8x8, bộ cộng tích luỹ 20 bit, 2 thanh ghi pipeline 8 bit truyền ngang/dọc. Top của Lab là `accelerator_top` (file `pe.v`, `accelerator_top.v`), chân `a_row*`, `b_col*`, `res_out*`, `busy`, `done`. Wrapper của đồ án (`rtl/accel/accel_wrapper.v`) đang dùng mô hình thay thế cùng cấu trúc; khi ghép code Lab thì nối theo các chân này.
+Systolic array 4x4, 16 PE; mỗi PE có bộ nhân 8x8, bộ cộng tích luỹ 20 bit, 2 thanh ghi pipeline 8 bit truyền ngang/dọc. Top của Lab là `accelerator_top` (file `pe.v`, `accelerator_top.v`), chân `a_row*`, `b_col*`, `res_out*`, `busy`, `done`. Wrapper của đồ án (`rtl/accel/accel_wrapper.v`) đang dùng mô hình thay thế cùng cấu trúc. Khi ghép code Lab thì nối theo các chân này.

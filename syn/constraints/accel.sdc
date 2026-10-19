@@ -17,7 +17,6 @@ set_output_delay -clock clk -min 0.2 [all_outputs]
 set_driving_cell -lib_cell INVX2 $in_ports
 set_load -pin_load 0.05 [all_outputs]
 
-# Reset bất đồng bộ: khi chạy riêng block, rst_n vào thẳng flop nên đặt false
-# path từ chân vào. Trong SoC, rst_n qua bộ đồng bộ ở soc_top: chỉ false path
-# chân rst_n tới bộ đồng bộ, đường deassert sau đó phải kiểm tra recovery/removal.
+# Reset bất đồng bộ: khi chạy riêng block, rst_n vào thẳng flop nên đặt false path từ chân vào.
+# Trong SoC, rst_n qua bộ đồng bộ ở soc_top: chỉ false path chân rst_n tới bộ đồng bộ, đường deassert sau đó phải kiểm tra recovery/removal.
 set_false_path -from [get_ports rst_n]

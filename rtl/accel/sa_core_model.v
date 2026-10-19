@@ -1,17 +1,14 @@
 `timescale 1ns/1ps
 // sa_core_model.v
-// Mô hình thay thế cho lõi systolic array của Lab 2, chỉ dùng để phát triển và
-// kiểm tra wrapper khi chưa ghép code Lab 2. KHI CÓ CODE LAB 2: thay module này
-// bằng lõi thật, giữ nguyên tên cổng hoặc sửa phần khởi tạo trong accel_wrapper.v,
-// và chỉnh tham số LAT của wrapper cho đúng độ trễ của lõi thật.
-//
+// Mô hình thay thế cho lõi systolic array của Lab 2, chỉ dùng để phát triển và kiểm tra wrapper khi chưa ghép code Lab 2.
+// KHI CÓ CODE LAB 2: thay module này bằng lõi thật, giữ nguyên tên cổng hoặc sửa phần khởi tạo trong accel_wrapper.v và chỉnh tham số LAT của wrapper cho đúng độ trễ của lõi thật.
+
 // Kiến trúc theo đề Lab 2: N x N PE (N=4), mỗi PE có bộ nhân 8x8, bộ tích luỹ
 // 20 bit và 2 thanh ghi pipeline 8 bit truyền ngang/dọc. Output-stationary.
 //   - PE(i,j) nhận a từ trái (cột 0 lấy a_in[i]), b từ trên (hàng 0 lấy b_in[j]).
 //   - Mỗi chu kỳ en=1: acc += a*b, đẩy a sang phải (a_out), b xuống dưới (b_out).
 //   - Đầu vào phải được skew: hàng i trễ i chu kỳ, cột j trễ j chu kỳ (wrapper lo).
-//   - en=0 giữ nguyên mọi thanh ghi (kể cả a_out/b_out): Genus suy ra enable và
-//     chèn clock gating cho gần như toàn bộ flop của mảng.
+//   - en=0 giữ nguyên mọi thanh ghi (kể cả a_out/b_out): Genus suy ra enable và chèn clock gating cho gần như toàn bộ flop của mảng.
 //   - clr xoá bộ tích luỹ và thanh ghi truyền.
 // Với đầu vào skew, kết quả đầy đủ sau 3N-2 chu kỳ en=1.
 

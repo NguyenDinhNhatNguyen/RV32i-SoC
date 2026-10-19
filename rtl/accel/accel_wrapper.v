@@ -3,12 +3,9 @@
 // Wrapper MMIO cho accelerator nhân ma trận (systolic array Lab 2).
 // Chủ: Nguyên. Vùng địa chỉ trong SoC: 0x3000_0000, 4 KB.
 //
-// Lý do có wrapper: CPU chỉ ghi được 4 byte mỗi lệnh store, trong khi mảng N x N
-// cần N byte A + N byte B mỗi chu kỳ theo đúng thứ tự skew. Wrapper nhận ma trận
-// vào bộ đệm trước, rồi tự phát chuỗi skew cho lõi trong 3N-2 chu kỳ liên tiếp.
+// Lý do có wrapper: CPU chỉ ghi được 4 byte mỗi lệnh store, trong khi mảng N x N cần N byte A + N byte B mỗi chu kỳ theo đúng thứ tự skew. Wrapper nhận ma trận vào bộ đệm trước, rồi tự phát chuỗi skew cho lõi trong 3N-2 chu kỳ liên tiếp.
 //
-// Bus: valid/ready theo spec chung của SoC. Wrapper luôn sẵn sàng (ready = valid),
-// dữ liệu đọc hợp lệ trong chính chu kỳ ready.
+// Bus: valid/ready theo spec chung của SoC. Wrapper luôn sẵn sàng (ready = valid), dữ liệu đọc hợp lệ trong chính chu kỳ ready.
 //
 // Bản đồ thanh ghi (offset trong vùng 4 KB):
 //   0x000 CTRL    W: bit0 START (chỉ nhận khi rảnh), bit1 IRQ_EN.  R: bit1 IRQ_EN
@@ -28,7 +25,7 @@ module accel_wrapper #(
     parameter DW     = 8,
     parameter AW     = 20,
     parameter SIGNED = 1,
-    parameter LAT    = 3*N - 2      // số chu kỳ en=1 cần cho lõi; chỉnh theo lõi Lab 2
+    parameter LAT    = 3*N - 2      // số chu kỳ en=1 cần cho lõi và chỉnh theo lõi Lab 2
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -53,7 +50,7 @@ module accel_wrapper #(
                      S_CLR  = 2'd1,
                      S_RUN  = 2'd2;
 
-    // ------------------------------------------------------------ trạng thái
+    // Trạng thái
     reg  [1:0]    state;
     reg  [CW-1:0] cnt;
     reg           done;
@@ -63,7 +60,7 @@ module accel_wrapper #(
     reg  [NB*DW-1:0] abuf;
     reg  [NB*DW-1:0] bbuf;
 
-    // ------------------------------------------------------------ giải mã bus
+    // Giải mã bus
     wire        acc_w   = s_valid & s_we;
     wire [3:0]  region  = s_addr[11:8];
     wire [5:0]  widx    = s_addr[7:2];
@@ -78,7 +75,7 @@ module accel_wrapper #(
 
     assign s_ready = s_valid;
 
-    // ------------------------------------------------------------ FSM
+    // FSM
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= S_IDLE;
@@ -113,7 +110,7 @@ module accel_wrapper #(
 
     assign irq = done & irq_en;
 
-    // ------------------------------------------------------------ bộ đệm A/B
+    // Bộ đệm A/B
     integer b;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -129,7 +126,7 @@ module accel_wrapper #(
         end
     end
 
-    // ------------------------------------------------------------ sinh skew
+    // Sinh skew
     // Chu kỳ t = cnt: hàng i nhận A[i][t-i], cột j nhận B[t-j][j] (0 nếu ngoài khoảng)
     reg [N*DW-1:0] a_feed;
     reg [N*DW-1:0] b_feed;
@@ -149,7 +146,7 @@ module accel_wrapper #(
         end
     end
 
-    // ------------------------------------------------------------ lõi
+    // Lõi
     wire [NB*AW-1:0] c_out;
 
     sa_core_model #(
@@ -157,14 +154,14 @@ module accel_wrapper #(
     ) u_core (
         .clk   (clk),
         .rst_n (rst_n),
-        .en    (state == S_RUN),     // ngoài lúc chạy, mảng giữ nguyên: clock gating
+        .en    (state == S_RUN),     // Ngoài lúc chạy, mảng giữ nguyên: clock gating
         .clr   (state == S_CLR),
         .a_in  (a_feed),
         .b_in  (b_feed),
         .c_out (c_out)
     );
 
-    // ------------------------------------------------------------ đọc bus
+    // Đọc bus
     integer r;
     always @* begin
         s_rdata = 32'd0;
