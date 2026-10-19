@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "mshr-h.veriloghdl",
+    "lramseyer.vaporview",
+    "sleutho.tcl",
+    "ms-python.python",
+    "ms-vscode.cpptools",
+    "ms-vscode.makefile-tools",
+    "timonwong.shellcheck",
+    "foxundermoon.shell-format",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    "zhwu95.riscv"
+  ]
+}

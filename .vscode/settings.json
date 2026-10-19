@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.view": "tcl",
+    "*.sdc": "tcl"
+  }
+}
