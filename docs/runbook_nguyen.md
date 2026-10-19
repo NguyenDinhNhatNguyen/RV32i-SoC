@@ -59,7 +59,7 @@ cd rv32i-soc
 make sim-accel        # 40 phép nhân, phải in PASS
 make sim-accel-apb    # qua giao diện APB3, phải in PASS
 make wave-accel       # ghi tb/unit/out/accel.vcd
-gtkwave tb/unit/out/accel.vcd &
+gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
 make lint-accel       # cần Verilator; 0 warning là tốt
 ```
 

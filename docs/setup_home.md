@@ -64,7 +64,7 @@ cd /foss/designs/rv32i-soc
 make sim-accel          # phải in "PASS: 40 phep nhan ..."
 make sim-accel-apb      # phải in "PASS: APB3 ..."
 make lint-accel         # Verilator, không có %Warning là tốt
-make wave-accel && gtkwave tb/unit/out/accel.vcd &
+make wave-accel && gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
 ```
 
 Đạt khi cả hai lệnh `sim` in PASS. Đây cũng là tiêu chí nghiệm thu HT-04: một người khác Nguyên làm theo file này từ đầu và ra PASS.

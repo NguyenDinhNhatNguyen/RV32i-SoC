@@ -30,7 +30,7 @@ wave-accel:
 	@mkdir -p tb/unit/out
 	$(IVERILOG) -g2005 -Wall -DDUMP_VCD -o tb/unit/out/accel_wave.vvp $(ACCEL_RTL) $(ACCEL_TB)
 	cd tb/unit/out && $(VVP) -n accel_wave.vvp
-	@echo "Mo song: gtkwave tb/unit/out/accel.vcd"
+	@echo "Mo song: gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &"
 
 lint-accel:
 	verilator --lint-only -Wall $(ACCEL_RTL) rtl/accel/accel_apb.v --top-module accel_apb

@@ -1,0 +1,34 @@
+[*] GTKWave save file: tín hiệu chính của accel_wrapper
+[*] Mở: gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
+[timestart] 0
+[size] 1400 760
+[sst_width] 220
+[signals_width] 230
+[sst_expanded] 1
+@200
+-Bus
+@28
+tb_accel_wrapper.clk
+tb_accel_wrapper.rst_n
+tb_accel_wrapper.s_valid
+tb_accel_wrapper.s_we
+@22
+tb_accel_wrapper.s_addr[11:0]
+tb_accel_wrapper.s_wdata[31:0]
+tb_accel_wrapper.s_rdata[31:0]
+@200
+-FSM
+@24
+tb_accel_wrapper.dut.state[1:0]
+tb_accel_wrapper.dut.cnt[5:0]
+@28
+tb_accel_wrapper.dut.busy
+tb_accel_wrapper.dut.done
+tb_accel_wrapper.irq
+@200
+-Skew feed
+@22
+tb_accel_wrapper.dut.a_feed[31:0]
+tb_accel_wrapper.dut.b_feed[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
