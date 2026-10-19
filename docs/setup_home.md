@@ -50,7 +50,7 @@ DOCKER_TAG=2026.10 ./start_vnc.sh
 
 Mở trình duyệt vào `http://localhost`, mật khẩu `abc123`. Sẽ thấy một desktop Linux, mở Terminal trong đó.
 
-- Cổng 80 bị chiếm (lỗi "port is already allocated"): chạy `DOCKER_TAG=2026.10 WEBSERVER_PORT=8080 ./start_vnc.sh`, rồi mở `http://localhost:8080`.
+- Cổng 80 bị chiếm (lỗi "port is already allocated", hoặc `http://localhost` hiện trang liệt kê file `localhost - /` của IIS trên Windows): xoá container cũ bằng `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)`, chạy `DOCKER_TAG=2026.10 WEBSERVER_PORT=8080 ./start_vnc.sh`, rồi mở `http://localhost:8080`.
 - Lần sau chỉ cần chạy lại đúng lệnh trên; script tự khởi động lại container cũ. Tắt: `docker stop iic-osic-tools_xvnc_uid_$(id -u)`.
 - Muốn cửa sổ GUI hiện thẳng trên Windows (WSLg) thì dùng `DOCKER_TAG=2026.10 ./start_x.sh`. Nếu GUI lỗi, quay về VNC.
 
