@@ -70,7 +70,7 @@ case "${1:-}" in
     wave)
         need_running
         docker exec -w "$WORKDIR" "$CONTAINER" bash -lc "make wave-accel" | tail -1
-        # DISPLAY=:1 là desktop VNC; -d để GTKWave chạy nền, không giữ cửa sổ Ubuntu
+        # DISPLAY=:1 là desktop VNC, còn -d để GTKWave chạy nền và không giữ cửa sổ Ubuntu
         docker exec -d -e DISPLAY=:1 -w "$WORKDIR" "$CONTAINER" bash -lc "gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw"
         echo "GTKWave đã mở trên desktop VNC: http://localhost:$WEBSERVER_PORT"
         ;;

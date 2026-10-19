@@ -33,6 +33,7 @@ Genus/Innovus/Conformal (`make synth-accel`, `make pnr-accel`, `make check-serve
 - RTL theo Verilog-2005, tổng hợp được (không `initial` trong RTL, không latch), reset tích cực mức thấp `rst_n`. Giữ ghi chú trong code bằng tiếng Việt như các file hiện có.
 - Không sửa script Genus/Innovus để chạy được ở nhà; flow nhà và flow trường tách riêng, chỉ dùng chung SDC.
 - Tài liệu trong `docs/` viết tiếng Việt, câu ngắn.
+- **Không dùng dấu `;` trong câu văn** (tài liệu, comment, commit message, PR, tin nhắn cho nhóm), vì người viết bình thường không dùng. Thay bằng "và"/"and", dấu phẩy, hoặc tách thành câu mới, chọn cách đọc tự nhiên nhất. Chỉ giữ `;` khi là cú pháp code (`;#` trong Tcl, `;` trong C/Verilog).
 
 ## Cấu trúc thư mục
 
