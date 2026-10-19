@@ -20,12 +20,13 @@
 // Ghi vào A/B/CTRL khi đang BUSY bị bỏ qua.
 // irq = DONE & IRQ_EN, nối vào bộ gom ngắt của SoC.
 //
-// Giới hạn tham số của bản này: DW = 8, AW = 32, N <= 8.
+// Giới hạn tham số: DW = 8, AW <= 32 (Lab 2: tích luỹ 20 bit), N <= 8.
+// C_BUF trả về giá trị tích luỹ mở rộng dấu lên 32 bit.
 
 module accel_wrapper #(
     parameter N      = 4,
     parameter DW     = 8,
-    parameter AW     = 32,
+    parameter AW     = 20,
     parameter SIGNED = 1,
     parameter LAT    = 3*N - 2      // số chu kỳ en=1 cần cho lõi; chỉnh theo lõi Lab 2
 ) (
@@ -177,7 +178,8 @@ module accel_wrapper #(
                                               : bbuf[(widx*4 + r)*DW +: DW];
         end else if (sel_c) begin
             if (widx < NB)
-                s_rdata = c_out[widx*AW +: 32];
+                s_rdata = SIGNED ? {{(32-AW){c_out[widx*AW + AW-1]}}, c_out[widx*AW +: AW]}
+                                 : {{(32-AW){1'b0}}, c_out[widx*AW +: AW]};
         end
     end
 

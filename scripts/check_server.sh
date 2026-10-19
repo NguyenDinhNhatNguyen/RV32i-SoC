@@ -36,16 +36,16 @@ section "2. Biến môi trường liên quan"
 env | grep -iE 'cds|cadence|gpdk|gsclib|pdk|lm_license|cdslmd' | sed 's/^/  /' | tee -a "$OUT" >/dev/null
 env | grep -iE 'cds|cadence|gpdk|gsclib|pdk|lm_license|cdslmd' >/dev/null || log "  (không thấy biến nào)"
 
-section "3. Thư viện GPDK45 / gsclib045"
+section "3. Thư viện GPDK45 (thư mục PDK_GPDK45 của Lab, gsclib045)"
 for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
-  find "$r" -maxdepth "$MAXDEPTH" \( -iname 'gsclib045*' -o -iname 'gpdk045*' -o -iname 'gpdk45*' \) -print 2>/dev/null
+  find "$r" -maxdepth "$MAXDEPTH" \( -iname 'PDK_GPDK45' -o -iname 'gsclib045*' -o -iname 'gpdk045*' -o -iname 'gpdk45*' \) -print 2>/dev/null
 done | sort -u | head -n 40 | sed 's/^/  /' | tee -a "$OUT"
 
 section "4. File timing/LEF của thư viện cell (slow/fast/typical)"
 for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
-  find "$r" -maxdepth "$MAXDEPTH" -path '*gsclib045*' \( -name '*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' \) -print 2>/dev/null
+  find "$r" -maxdepth "$MAXDEPTH" \( -path '*gsclib045*' -o -path '*PDK_GPDK45*' \) \( -name '*basiccells*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' -o -name '*.map' -o -name '*.gds' \) -print 2>/dev/null
 done | sort -u | head -n 60 | sed 's/^/  /' | tee -a "$OUT"
 
 section "5. SRAM macro (LEF/LIB/GDS/Verilog)"
@@ -81,4 +81,5 @@ section "9. Dung lượng home"
 df -h "$HOME" 2>/dev/null | tail -n 1 | sed 's/^/  /' | tee -a "$OUT"
 
 log ""
+log "Gợi ý: đặt PDK_DIR=<đường dẫn PDK_GPDK45 ở mục 3> trước khi chạy make synth-accel / make pnr-accel."
 log "Xong. Gửi file này cho Phát: $OUT"

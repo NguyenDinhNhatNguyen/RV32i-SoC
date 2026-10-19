@@ -5,7 +5,7 @@
 SRAM macro trong LEF (check_server.sh in ra), utilization mục tiêu.
 
 Ví dụ:
-  python3 pnr/scripts/estimate_die.py --std-area 45000 --macro 120x80 --macro 120x80 --util 0.65
+  python3 pnr/scripts/estimate_die.py --std-area 45000 --macro 120x80 --macro 120x80 --util 0.70
 """
 import argparse
 import math
@@ -21,10 +21,10 @@ def main():
     p.add_argument("--std-area", type=float, required=True, help="tổng diện tích cell chuẩn (um^2) từ Genus")
     p.add_argument("--macro", action="append", default=[], type=parse_macro,
                    help="kích thước macro WxH (um), lặp lại cho mỗi macro")
-    p.add_argument("--util", type=float, default=0.65, help="mật độ cell chuẩn mục tiêu (0..1)")
+    p.add_argument("--util", type=float, default=0.70, help="mật độ cell chuẩn mục tiêu (0..1)")
     p.add_argument("--halo", type=float, default=5.0, help="halo quanh macro (um)")
     p.add_argument("--aspect", type=float, default=1.0, help="tỉ lệ cao/rộng của core")
-    p.add_argument("--margin", type=float, default=10.0, help="core tới biên die (um), chỗ cho power ring")
+    p.add_argument("--margin", type=float, default=15.0, help="core tới biên die (um), chỗ cho power ring")
     p.add_argument("--row", type=float, default=1.71, help="chiều cao hàng cell (um), GPDK45 gsclib045 = 1.71")
     a = p.parse_args()
 
@@ -47,7 +47,7 @@ def main():
     print(f"Dien tich macro+halo : {macro_area:,.0f} um^2  ({len(a.macro)} macro)")
     print(f"Core                 : {core_w:,.1f} x {core_h:,.1f} um = {core_w*core_h:,.0f} um^2")
     print(f"Die (margin {a.margin} um) : {die_w:,.1f} x {die_h:,.1f} um = {die_w*die_h/1e6:.4f} mm^2")
-    print(f"Lenh Innovus         : create_floorplan -site CoreSite -core_size {core_w:.1f} {core_h:.1f} "
+    print(f"Lenh Innovus         : floorPlan -site CoreSite -s {core_w:.1f} {core_h:.1f} "
           f"{a.margin} {a.margin} {a.margin} {a.margin}")
 
 

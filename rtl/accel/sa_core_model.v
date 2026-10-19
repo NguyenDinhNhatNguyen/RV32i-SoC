@@ -5,7 +5,8 @@
 // bằng lõi thật, giữ nguyên tên cổng hoặc sửa phần khởi tạo trong accel_wrapper.v,
 // và chỉnh tham số LAT của wrapper cho đúng độ trễ của lõi thật.
 //
-// Kiến trúc: N x N PE, output-stationary.
+// Kiến trúc theo đề Lab 2: N x N PE (N=4), mỗi PE có bộ nhân 8x8, bộ tích luỹ
+// 20 bit và 2 thanh ghi pipeline 8 bit truyền ngang/dọc. Output-stationary.
 //   - PE(i,j) nhận a từ trái (cột 0 lấy a_in[i]), b từ trên (hàng 0 lấy b_in[j]).
 //   - Mỗi chu kỳ en=1: acc += a*b, đẩy a sang phải (a_out), b xuống dưới (b_out).
 //   - Đầu vào phải được skew: hàng i trễ i chu kỳ, cột j trễ j chu kỳ (wrapper lo).
@@ -17,7 +18,7 @@
 module sa_core_model #(
     parameter N      = 4,
     parameter DW     = 8,
-    parameter AW     = 32,
+    parameter AW     = 20,   // Lab 2: bộ cộng tích luỹ 20 bit
     parameter SIGNED = 1
 ) (
     input  wire              clk,

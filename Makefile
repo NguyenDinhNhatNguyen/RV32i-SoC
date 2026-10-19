@@ -11,7 +11,7 @@ help:
 	@echo "make sim-accel     - mô phỏng wrapper accelerator (Icarus, chạy ở nhà)"
 	@echo "make lint-accel    - lint wrapper bằng Verilator nếu có"
 	@echo "make check-server  - kiểm tra thư viện/tool trên server trường"
-	@echo "make synth-accel   - Genus tổng hợp accelerator (server)"
+	@echo "make synth-accel   - Genus tổng hợp accelerator (server); CG=0 để chạy baseline"
 	@echo "make pnr-accel     - Innovus chạy thử accelerator (server)"
 
 sim-accel:

@@ -1,10 +1,14 @@
-# mmmc.tcl - hai corner: slow cho setup, fast cho hold (bài học Lab).
-# Được read_mmmc trong run_all.tcl; dùng biến từ config.tcl và DESIGN_SDC.
+# mmmc.view - Innovus đọc qua init_mmmc_file (giống <design>.view trong Lab 02).
+# Hai corner: slow cho setup, fast cho hold. Biến lấy từ config.tcl và run_all.tcl.
 
 create_library_set -name libs_slow -timing [concat [list $LIB_DIR/$LIB_SLOW] $SRAM_LIB_SLOW]
 create_library_set -name libs_fast -timing [concat [list $LIB_DIR/$LIB_FAST] $SRAM_LIB_FAST]
 
-create_rc_corner -name rc_typ -qrc_tech $QRC_TECH
+if {$QRC_TECH ne ""} {
+    create_rc_corner -name rc_typ -T 25 -qx_tech_file $QRC_TECH
+} else {
+    create_rc_corner -name rc_typ -T 25
+}
 
 create_delay_corner -name dc_slow -library_set libs_slow -rc_corner rc_typ
 create_delay_corner -name dc_fast -library_set libs_fast -rc_corner rc_typ

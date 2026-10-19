@@ -57,7 +57,7 @@ module tb_accel_wrapper;
         rst_n = 1'b1;
 
         bus_read(12'h008, rd);
-        if (rd !== {8'd4, 8'd8, 8'd32, 8'd10}) begin
+        if (rd !== {8'd4, 8'd8, 8'd20, 8'd10}) begin
             $display("ERROR: INFO = %h", rd); errors = errors + 1;
         end
 
