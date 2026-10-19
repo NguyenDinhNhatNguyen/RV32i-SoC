@@ -38,8 +38,67 @@ Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nh�
 
 Hướng dẫn chạy chi tiết cho accelerator và flow Cadence: `docs/runbook_nguyen.md`.
 
-## Chạy thử nhanh (ở nhà)
+## Tự kiểm tra ở nhà
+
+Cài môi trường một lần theo `docs/setup_home.md`. Mỗi lần kiểm tra, gõ trong cửa sổ Ubuntu (WSL) hoặc terminal VS Code:
+
+### 1. Vào repo, lấy bản mới
 
 ```sh
-make sim-accel      # testbench wrapper accelerator (Icarus Verilog)
+cd ~/eda/designs/rv32i-soc
+git pull
+```
+
+### 2. Bật container
+
+```sh
+scripts/eda.sh status     # "Dang chay" thì sang bước 3 luôn
+scripts/eda.sh start      # nếu báo "Khong chay"
+```
+
+`start` có thể hỏi một câu và chờ bấm một phím:
+
+| Thông báo | Nghĩa | Bấm |
+| --- | --- | --- |
+| Không hỏi gì | Chưa có container, đang tạo mới | — |
+| `Press "s" to start, and "r" to remove` | Container có rồi nhưng đang tắt | `s` để bật (bấm Enter thì container vẫn tắt) |
+| `Press "s" to stop, and "r" to stop & remove` | Container đang chạy rồi | Enter để giữ nguyên (bấm `s` là tắt container) |
+
+`r` xoá container (code trong `~/eda/designs` không mất). Chỉ dùng khi container lỗi, xong chạy `scripts/eda.sh start` lại để tạo mới.
+
+### 3. Lint và mô phỏng
+
+```sh
+scripts/eda.sh check
+```
+
+Đạt khi không có dòng `%Warning` và cuối cùng có 2 dòng:
+
+```text
+PASS: 40 phep nhan ma tran 4x4 khop mo hinh vang
+PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
+```
+
+### 4. Tổng hợp thử bằng Yosys
+
+Để xem số cell và cảnh báo latch. Không dùng số liệu này cho report.
+
+```sh
+scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat" | grep -E "^Warning|cells$"'
+```
+
+Đạt khi chỉ thấy các dòng `... cells` và không có dòng nào bắt đầu bằng `Warning`. Bỏ phần `| grep ...` để xem toàn bộ log.
+
+### 5. Xem sóng (khi cần)
+
+```sh
+scripts/eda.sh wave
+```
+
+Mở `http://localhost:8080` (mật khẩu `abc123`) để xem GTKWave. Hoặc mở `tb/unit/out/accel.vcd` trong VS Code bằng extension VaporView.
+
+### 6. Tắt container khi xong việc
+
+```sh
+scripts/eda.sh stop
 ```

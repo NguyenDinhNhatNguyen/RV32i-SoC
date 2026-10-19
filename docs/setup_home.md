@@ -94,6 +94,12 @@ scripts/eda.sh start
 
 Mở Chrome vào **`http://localhost:8080`**, mật khẩu **`abc123`**. Sẽ thấy một desktop Linux.
 
+Nếu container đã có từ lần trước, `start` sẽ hỏi và chờ bấm một phím:
+
+- `Press "s" to start, and "r" to remove`: container đang tắt, bấm `s` để bật.
+- `Press "s" to stop, and "r" to stop & remove`: container đang chạy rồi, bấm Enter để giữ nguyên. Bấm `s` là tắt container.
+- `r` xoá container (code trong `~/eda/designs` không mất). Chỉ dùng khi container lỗi, xong chạy `scripts/eda.sh start` lại để tạo mới.
+
 Nhóm dùng cổng 8080 thay vì 80 vì nhiều máy Windows có IIS chiếm cổng 80. Nếu máy bạn có chương trình khác đã dùng 8080 (lỗi `port is already allocated`), chọn cổng khác và dùng nó mọi lần, ví dụ thêm dòng `export WEBSERVER_PORT=8081` vào cuối file `~/.bashrc` rồi mở lại Ubuntu.
 
 Lệnh khác của `scripts/eda.sh` (chạy trong cửa sổ Ubuntu):
