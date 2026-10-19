@@ -2,9 +2,18 @@
 
 Trường không mở VPN, nên ở nhà cả nhóm dùng bộ tool mã nguồn mở trong Docker image **IIC-OSIC-TOOLS** (Icarus, Verilator, GTKWave, Yosys, OpenROAD, KLayout, toolchain RISC-V). Cả nhóm dùng **cùng tag `2026.10`** và **cùng cổng 8080** để hướng dẫn giống nhau trên mọi máy. Số liệu chính thức cho report vẫn lấy trên server Cadence.
 
-Hướng dẫn này là đúng các bước đã chạy được trên máy Nguyên (Windows 11, Ubuntu 26.04 trên WSL, Docker Desktop 4.55, dữ liệu Docker để ở ổ D).
+**Cần:** RAM từ 8 GB và một ổ còn trống **ít nhất 30 GB** (image giải nén khoảng 20 GB, cộng chỗ cho WSL và kết quả chạy).
 
-**Cần:** Windows 10 bản 19044 trở lên hoặc Windows 11, RAM từ 8 GB, một ổ còn trống ít nhất 25 GB (nên dùng ổ D nếu ổ C chật).
+**Chọn đường đi theo máy của bạn:**
+
+| Máy của bạn | Làm các mục |
+| --- | --- |
+| Windows, ổ C còn trống từ 30 GB | 1 (bỏ qua bước 1.3) → 2 → 3 → 4 |
+| Windows, ổ C chật nhưng có ổ D (hoặc ổ khác) còn trống | 1 (làm cả bước 1.3) → 2 → 3 → 4 |
+| macOS hoặc Linux | Chỉ cài Docker, bỏ qua mục 1, làm từ mục 2 trong terminal thường |
+| Máy yếu, không cài được Docker | Mục 10 (cài tool rời, chỉ đủ chạy mô phỏng) |
+
+Xem ổ còn trống: File Explorer > This PC.
 
 **Có hai loại cửa sổ dòng lệnh, đừng nhầm:**
 
@@ -17,31 +26,41 @@ Hướng dẫn này là đúng các bước đã chạy được trên máy Nguy
 
 Hai đường dẫn là **cùng một thư mục**: sửa bên này, bên kia thấy ngay.
 
-## 1. Cài WSL và Docker (làm một lần)
+## 1. Cài WSL và Docker (Windows, làm một lần)
 
-1. Mở **PowerShell** (Run as Administrator) và chạy:
-   ```powershell
-   wsl --install
-   wsl --update
-   ```
-   Khởi động lại máy, mở **Ubuntu** từ Start menu, đặt username và password cho Linux. Bản Ubuntu nào cũng được (24.04, 26.04...).
-2. Cài **Docker Desktop**, mở lên, rồi vào Settings (bánh răng):
-   - **General**: bật "Use the WSL 2 based engine".
-   - **Resources > WSL integration**: bật công tắc cho **Ubuntu**.
-   - **Resources > Advanced > Disk image location**: bấm Browse, chọn thư mục ở ổ còn trống, ví dụ `D:\Docker\wsl` (tạo trước bằng File Explorer). Image khoảng 20 GB sẽ nằm ở đây thay vì ổ C.
-   - Bấm **Apply & restart**, chờ góc dưới bên trái hiện chữ xanh **Engine running**.
-3. (Tuỳ chọn, nên làm nếu ổ C chật) Chuyển cả Ubuntu sang ổ D. Đóng hết cửa sổ Ubuntu, Quit Docker Desktop, rồi trong PowerShell:
-   ```powershell
-   wsl --shutdown
-   mkdir D:\WSL
-   wsl --manage Ubuntu --move D:\WSL\Ubuntu
-   ```
-   Xong thì mở lại Docker Desktop.
-4. Mở **Ubuntu** và kiểm tra:
-   ```sh
-   docker run --rm hello-world
-   ```
-   Dòng `Unable to find image 'hello-world:latest' locally` là bình thường (lần đầu nó tự tải). Đạt khi in ra **Hello from Docker!**
+**1.1 Cài WSL.** Mở **PowerShell** (Run as Administrator):
+
+```powershell
+wsl --install
+wsl --update
+```
+
+Khởi động lại máy, mở **Ubuntu** từ Start menu, đặt username và password cho Linux. Bản Ubuntu nào cũng được (24.04, 26.04...). Nếu đã có WSL từ trước thì chỉ cần chạy `wsl --update`.
+
+**1.2 Cài Docker Desktop**, mở lên, vào Settings (bánh răng):
+
+- **General**: bật "Use the WSL 2 based engine".
+- **Resources > WSL integration**: bật công tắc cho **Ubuntu**.
+- Bấm **Apply & restart**, chờ góc dưới bên trái hiện chữ xanh **Engine running**.
+
+**1.3 Chỉ làm nếu ổ C còn dưới 30 GB:** để image và Ubuntu nằm ở ổ khác (ví dụ D).
+
+- Tạo thư mục `D:\Docker\wsl` bằng File Explorer. Trong Docker Desktop vào **Settings > Resources > Advanced > Disk image location**, bấm Browse chọn thư mục đó, bấm **Apply & restart**. Làm bước này **trước** khi tải image ở mục 2 để khỏi phải chuyển 20 GB.
+- Muốn chuyển cả Ubuntu (code nằm trong đó, thường chỉ vài GB): đóng hết cửa sổ Ubuntu, Quit Docker Desktop, rồi trong PowerShell:
+  ```powershell
+  wsl --shutdown
+  mkdir D:\WSL
+  wsl --manage Ubuntu --move D:\WSL\Ubuntu
+  ```
+  Xong thì mở lại Docker Desktop.
+
+**1.4 Kiểm tra.** Mở **Ubuntu**:
+
+```sh
+docker run --rm hello-world
+```
+
+Dòng `Unable to find image 'hello-world:latest' locally` là bình thường (lần đầu nó tự tải). Đạt khi in ra **Hello from Docker!**
 
 ## 2. Lấy tool và repo (làm một lần)
 
@@ -73,7 +92,7 @@ scripts/eda.sh start
 
 Mở Chrome vào **`http://localhost:8080`**, mật khẩu **`abc123`**. Sẽ thấy một desktop Linux.
 
-Nhóm dùng cổng 8080 thay vì 80 vì nhiều máy Windows có IIS chiếm cổng 80 (vào `http://localhost` chỉ thấy trang liệt kê file `localhost - /`).
+Nhóm dùng cổng 8080 thay vì 80 vì nhiều máy Windows có IIS chiếm cổng 80. Nếu máy bạn có chương trình khác đã dùng 8080 (lỗi `port is already allocated`), chọn cổng khác và dùng nó mọi lần, ví dụ thêm dòng `export WEBSERVER_PORT=8081` vào cuối file `~/.bashrc` rồi mở lại Ubuntu.
 
 Lệnh khác của `scripts/eda.sh` (chạy trong cửa sổ Ubuntu):
 
@@ -152,12 +171,13 @@ Không mở repo bằng đường dẫn `\\wsl.localhost\...` trong File > Open 
 | Docker Desktop báo "There was a problem with WSL ... `wsl.exe --unmount docker_data.vhdx`" | Bấm **Quit**. PowerShell: `wsl --shutdown`, chờ 10 giây, mở lại Docker Desktop |
 | `docker pull` báo `read-only file system` | Như dòng trên. Nếu vẫn lỗi: Docker Desktop > biểu tượng con bọ (Troubleshoot) > **Clean / Purge data** > tick WSL 2 > Delete (chỉ xoá image Docker, không mất code), rồi pull lại |
 | `http://localhost` hiện trang `localhost - /` liệt kê file | Đó là IIS của Windows. Dùng `http://localhost:8080` (`scripts/eda.sh start` đã dùng cổng này) |
-| `port is already allocated` | Container cũ còn giữ cổng: `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)` rồi `scripts/eda.sh start` |
+| `port is already allocated` | Có thể container cũ còn giữ cổng: `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)` rồi `scripts/eda.sh start`. Vẫn lỗi thì cổng bị chương trình khác dùng: đổi cổng như ở mục 3 |
 | `fatal: destination path ... already exists` | Đã clone rồi, bỏ qua; dùng `git pull` để cập nhật |
 | `$'\r': command not found` | Repo bị clone từ Windows. Xoá, chạy `git config --global core.autocrlf input`, clone lại trong Ubuntu |
 | `make: iverilog: No such file` hoặc `/foss/designs: No such file` | Đang gõ trong cửa sổ Ubuntu. Dùng `scripts/eda.sh run "..."` hoặc Terminal của container |
 | Chạy `gtkwave` không thấy cửa sổ | Nó hiện trong trang `localhost:8080`, chuyển sang tab Chrome đó |
 | Không bấm được F1 trong VS Code | Dùng `Ctrl+Shift+P` hoặc `Fn+F1` |
+| Ổ C đầy trong lúc `docker pull` | Làm bước 1.3, rồi `docker system prune` và pull lại |
 | GTKWave/KLayout đen màn hình | Trong container: `export LIBGL_ALWAYS_SOFTWARE=1` rồi mở lại |
 
 ## 8. Luyện thiết kế vật lý ở nhà (tuỳ chọn, OpenROAD + nangate45)
@@ -187,3 +207,16 @@ Firmware RV32I biên dịch được bằng toolchain có sẵn trong container:
 - Không copy thư viện GPDK45, file SRAM macro hay license Cadence về máy cá nhân hay lên GitHub.
 - Không đưa số liệu nangate45 vào report; chỉ dùng để xem xu hướng.
 - Không sửa script Genus/Innovus để chạy ở nhà: hai bộ script khác nhau, chỉ SDC dùng chung.
+
+## 10. Máy không cài được Docker
+
+Cài tool rời trong Ubuntu (WSL) hoặc Linux, đủ để mô phỏng và lint:
+
+```sh
+sudo apt update && sudo apt install -y iverilog verilator gtkwave make git
+cd ~/eda/designs/rv32i-soc
+make lint-accel && make sim-accel && make sim-accel-apb
+```
+
+Phiên bản tool sẽ khác image của nhóm. Nếu kết quả khác với máy người khác, tin kết quả trong Docker. GTKWave mở thẳng trên Windows nhờ WSLg.
+
