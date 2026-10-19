@@ -102,6 +102,7 @@ Lệnh khác của `scripts/eda.sh` (chạy trong cửa sổ Ubuntu):
 | `scripts/eda.sh check` | Lint + 2 bài mô phỏng accelerator |
 | `scripts/eda.sh run "make wave-accel"` | Chạy một lệnh bất kỳ trong container |
 | `scripts/eda.sh shell` | Vào shell của container ngay trong cửa sổ Ubuntu |
+| `scripts/eda.sh wave` | Mô phỏng ghi sóng rồi mở GTKWave trên desktop VNC |
 | `scripts/eda.sh stop` | Tắt container khi xong việc |
 
 ## 4. Kiểm tra (tiêu chí nghiệm thu HT-04)
@@ -129,6 +130,8 @@ PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
 Chụp màn hình gửi vào kênh nhóm.
 
 ## 5. Xem sóng
+
+Nhanh nhất: trong cửa sổ Ubuntu gõ `scripts/eda.sh wave`, rồi mở `http://localhost:8080` là thấy GTKWave. Hoặc làm tay:
 
 Trong **Terminal của desktop VNC** (GTKWave hiện trong trang `localhost:8080`, không hiện trên Windows):
 

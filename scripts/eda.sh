@@ -7,6 +7,7 @@
 #   scripts/eda.sh check          lint + 2 bài mô phỏng accelerator (phải ra 2 dòng PASS)
 #   scripts/eda.sh run <lệnh>     chạy một lệnh bất kỳ trong container, tại thư mục repo
 #   scripts/eda.sh shell          mở shell trong container
+#   scripts/eda.sh wave           make wave-accel rồi mở GTKWave (preset accel.gtkw) trên desktop VNC
 #
 # Biến có thể đổi: IIC_DIR (mặc định ~/eda/IIC-OSIC-TOOLS), DESIGNS (~/eda/designs),
 # DOCKER_TAG (2026.10), WEBSERVER_PORT (8080).
@@ -66,8 +67,15 @@ case "${1:-}" in
         need_running
         docker exec -it -w "$WORKDIR" "$CONTAINER" bash -l
         ;;
+    wave)
+        need_running
+        docker exec -w "$WORKDIR" "$CONTAINER" bash -lc "make wave-accel" | tail -1
+        # DISPLAY=:1 là desktop VNC; -d để GTKWave chạy nền, không giữ cửa sổ Ubuntu
+        docker exec -d -e DISPLAY=:1 -w "$WORKDIR" "$CONTAINER" bash -lc "gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw"
+        echo "GTKWave đã mở trên desktop VNC: http://localhost:$WEBSERVER_PORT"
+        ;;
     *)
-        sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
         exit 1
         ;;
 esac
