@@ -34,7 +34,7 @@
 
 ## Làm việc nhà ↔ trường
 
-Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nhà dùng môi trường mã nguồn mở theo `docs/setup_home.md`. Lần đầu lên trường chạy `scripts/check_server.sh` để ghi lại đường dẫn thư viện, SRAM macro và phiên bản tool.
+Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nhà dùng môi trường mã nguồn mở theo `docs/setup_home.md` (bật container và chạy test bằng `scripts/eda.sh`). Lần đầu lên trường chạy `scripts/check_server.sh` để ghi lại đường dẫn thư viện, SRAM macro và phiên bản tool.
 
 Hướng dẫn chạy chi tiết cho accelerator và flow Cadence: `docs/runbook_nguyen.md`.
 

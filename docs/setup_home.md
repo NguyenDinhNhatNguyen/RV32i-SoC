@@ -1,124 +1,188 @@
 # Môi trường làm việc ở nhà (HT-04)
 
-Trường không mở VPN, nên ở nhà cả nhóm dùng bộ tool mã nguồn mở đóng gói trong Docker image **IIC-OSIC-TOOLS** (Icarus, Verilator, GTKWave, Yosys, OpenROAD, KLayout, toolchain RISC-V, Spike). Cả nhóm dùng **cùng một tag image `2026.10`** để không lệch phiên bản. Số liệu chính thức cho report vẫn lấy trên server Cadence.
+Trường không mở VPN, nên ở nhà cả nhóm dùng bộ tool mã nguồn mở trong Docker image **IIC-OSIC-TOOLS** (Icarus, Verilator, GTKWave, Yosys, OpenROAD, KLayout, toolchain RISC-V). Cả nhóm dùng **cùng tag `2026.10`** và **cùng cổng 8080** để hướng dẫn giống nhau trên mọi máy. Số liệu chính thức cho report vẫn lấy trên server Cadence.
 
-Cần: Windows 10 bản 19044 trở lên hoặc Windows 11, RAM từ 8 GB, ổ đĩa trống ít nhất 25 GB (image nén khoảng 4 GB, giải nén cần khoảng 20 GB).
+Hướng dẫn này là đúng các bước đã chạy được trên máy Nguyên (Windows 11, Ubuntu 26.04 trên WSL, Docker Desktop 4.55, dữ liệu Docker để ở ổ D).
 
-## 1. Cài WSL2 và Docker (Windows, làm một lần)
+**Cần:** Windows 10 bản 19044 trở lên hoặc Windows 11, RAM từ 8 GB, một ổ còn trống ít nhất 25 GB (nên dùng ổ D nếu ổ C chật).
 
-1. Mở PowerShell **Run as Administrator**:
+**Có hai loại cửa sổ dòng lệnh, đừng nhầm:**
+
+| | Cửa sổ Ubuntu (WSL) | Terminal trong container |
+| --- | --- | --- |
+| Mở từ | Start menu > Ubuntu, hoặc terminal của VS Code ở chế độ **WSL: Ubuntu** | Desktop Linux ở `http://localhost:8080`, hoặc VS Code đã **Attach** vào container |
+| Dấu nhắc | `ten@MAY:~$` | `/foss/designs/... >` hoặc `$` |
+| Đường dẫn repo | `~/eda/designs/rv32i-soc` | `/foss/designs/rv32i-soc` |
+| Dùng cho | `git`, `docker`, `scripts/eda.sh` | `make`, `iverilog`, `verilator`, `gtkwave` |
+
+Hai đường dẫn là **cùng một thư mục**: sửa bên này, bên kia thấy ngay.
+
+## 1. Cài WSL và Docker (làm một lần)
+
+1. Mở **PowerShell** (Run as Administrator) và chạy:
    ```powershell
-   wsl --install -d Ubuntu-24.04
+   wsl --install
    wsl --update
    ```
-   Khởi động lại máy, mở "Ubuntu 24.04" từ Start, đặt username/password cho Linux.
-2. Cài Docker Desktop. Trong Settings: General bật "Use the WSL 2 based engine"; Resources > WSL integration bật cho Ubuntu-24.04. Bấm Apply & restart.
-3. Trong cửa sổ Ubuntu kiểm tra:
-   ```sh
-   docker run --rm hello-world      # phải in "Hello from Docker!"
+   Khởi động lại máy, mở **Ubuntu** từ Start menu, đặt username và password cho Linux. Bản Ubuntu nào cũng được (24.04, 26.04...).
+2. Cài **Docker Desktop**, mở lên, rồi vào Settings (bánh răng):
+   - **General**: bật "Use the WSL 2 based engine".
+   - **Resources > WSL integration**: bật công tắc cho **Ubuntu**.
+   - **Resources > Advanced > Disk image location**: bấm Browse, chọn thư mục ở ổ còn trống, ví dụ `D:\Docker\wsl` (tạo trước bằng File Explorer). Image khoảng 20 GB sẽ nằm ở đây thay vì ổ C.
+   - Bấm **Apply & restart**, chờ góc dưới bên trái hiện chữ xanh **Engine running**.
+3. (Tuỳ chọn, nên làm nếu ổ C chật) Chuyển cả Ubuntu sang ổ D. Đóng hết cửa sổ Ubuntu, Quit Docker Desktop, rồi trong PowerShell:
+   ```powershell
+   wsl --shutdown
+   mkdir D:\WSL
+   wsl --manage Ubuntu --move D:\WSL\Ubuntu
    ```
+   Xong thì mở lại Docker Desktop.
+4. Mở **Ubuntu** và kiểm tra:
+   ```sh
+   docker run --rm hello-world
+   ```
+   Dòng `Unable to find image 'hello-world:latest' locally` là bình thường (lần đầu nó tự tải). Đạt khi in ra **Hello from Docker!**
 
-Máy macOS/Linux: chỉ cần cài Docker, làm tiếp từ mục 2 trong terminal thường.
+## 2. Lấy tool và repo (làm một lần)
 
-**Quan trọng:** mọi lệnh từ đây trở đi gõ trong cửa sổ **Ubuntu (WSL)**, không gõ trong PowerShell. Không clone repo vào ổ `C:` (`/mnt/c/...`): chạy chậm và dễ hỏng file do ký tự xuống dòng kiểu Windows.
-
-## 2. Lấy image và repo nhóm
+Mọi lệnh từ đây gõ trong **cửa sổ Ubuntu**. Không clone vào ổ Windows (`/mnt/c`, `/mnt/d`): chạy chậm và hỏng ký tự xuống dòng.
 
 ```sh
-# trong Ubuntu (WSL)
 git config --global core.autocrlf input
-git config --global user.name  "Ho Ten"
+git config --global user.name  "Ho Ten Day Du"
 git config --global user.email "email@gmail.com"
 
 mkdir -p ~/eda/designs && cd ~/eda
 git clone --depth 1 https://github.com/iic-jku/IIC-OSIC-TOOLS.git
 git clone https://github.com/NguyenDinhNhatNguyen/rv32i-soc.git designs/rv32i-soc
 
-docker pull hpretl/iic-osic-tools:2026.10      # tải một lần, khá lâu
+docker pull hpretl/iic-osic-tools:2026.10
 ```
 
-Thư mục `~/eda/designs` trong WSL sẽ hiện trong container là `/foss/designs`. Sửa code ở đâu cũng được (VS Code mở bằng lệnh `code ~/eda/designs/rv32i-soc` trong WSL), container thấy ngay.
+Lệnh cuối tải khoảng 4 GB, chờ tới khi in `Status: Downloaded newer image ...`. Nếu chạy lại mà thấy `fatal: destination path ... already exists` thì nghĩa là đã clone rồi, bỏ qua.
 
-## 3. Khởi động container
+## 3. Bật môi trường (mỗi lần làm việc)
 
-Cách khuyên dùng là **VNC qua trình duyệt** (ít lỗi đồ hoạ nhất trên Windows):
+Trong cửa sổ Ubuntu:
 
 ```sh
-cd ~/eda/IIC-OSIC-TOOLS
-DOCKER_TAG=2026.10 ./start_vnc.sh
+cd ~/eda/designs/rv32i-soc
+git pull
+scripts/eda.sh start
 ```
 
-Mở trình duyệt vào `http://localhost`, mật khẩu `abc123`. Sẽ thấy một desktop Linux, mở Terminal trong đó.
+Mở Chrome vào **`http://localhost:8080`**, mật khẩu **`abc123`**. Sẽ thấy một desktop Linux.
 
-- Cổng 80 bị chiếm (lỗi "port is already allocated", hoặc `http://localhost` hiện trang liệt kê file `localhost - /` của IIS trên Windows): xoá container cũ bằng `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)`, chạy `DOCKER_TAG=2026.10 WEBSERVER_PORT=8080 ./start_vnc.sh`, rồi mở `http://localhost:8080`.
-- Lần sau chỉ cần chạy lại đúng lệnh trên; script tự khởi động lại container cũ. Tắt: `docker stop iic-osic-tools_xvnc_uid_$(id -u)`.
-- Muốn cửa sổ GUI hiện thẳng trên Windows (WSLg) thì dùng `DOCKER_TAG=2026.10 ./start_x.sh`. Nếu GUI lỗi, quay về VNC.
+Nhóm dùng cổng 8080 thay vì 80 vì nhiều máy Windows có IIS chiếm cổng 80 (vào `http://localhost` chỉ thấy trang liệt kê file `localhost - /`).
 
-## 4. Kiểm tra tool và chạy repo
+Lệnh khác của `scripts/eda.sh` (chạy trong cửa sổ Ubuntu):
 
-Trong Terminal của container:
+| Lệnh | Việc làm |
+| --- | --- |
+| `scripts/eda.sh status` | Container có đang chạy không |
+| `scripts/eda.sh check` | Lint + 2 bài mô phỏng accelerator |
+| `scripts/eda.sh run "make wave-accel"` | Chạy một lệnh bất kỳ trong container |
+| `scripts/eda.sh shell` | Vào shell của container ngay trong cửa sổ Ubuntu |
+| `scripts/eda.sh stop` | Tắt container khi xong việc |
+
+## 4. Kiểm tra (tiêu chí nghiệm thu HT-04)
+
+Trong cửa sổ Ubuntu:
 
 ```sh
-which iverilog verilator yosys gtkwave openroad klayout riscv64-unknown-elf-gcc spike
+scripts/eda.sh check
+```
+
+Hoặc trong Terminal của desktop VNC:
+
+```sh
 cd /foss/designs/rv32i-soc
-make sim-accel          # phải in "PASS: 40 phep nhan ..."
-make sim-accel-apb      # phải in "PASS: APB3 ..."
-make lint-accel         # Verilator, không có %Warning là tốt
-make wave-accel && gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
+make lint-accel && make sim-accel && make sim-accel-apb
 ```
 
-Đạt khi cả hai lệnh `sim` in PASS. Đây cũng là tiêu chí nghiệm thu HT-04: một người khác Nguyên làm theo file này từ đầu và ra PASS.
+**Đạt khi:** lint không in dòng `%Warning` nào, và có hai dòng
 
-Thử tổng hợp nhanh bằng Yosys (chỉ xem số cell, không dùng cho report):
+```
+PASS: 40 phep nhan ma tran 4x4 khop mo hinh vang
+PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
+```
+
+Chụp màn hình gửi vào kênh nhóm.
+
+## 5. Xem sóng
+
+Trong **Terminal của desktop VNC** (GTKWave hiện trong trang `localhost:8080`, không hiện trên Windows):
 
 ```sh
-yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat"
+cd /foss/designs/rv32i-soc
+make wave-accel
+gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
 ```
 
-Biên dịch firmware RV32I (toolchain trong image là bản multilib, có sẵn rv32i):
+File `accel.gtkw` đã chọn sẵn các tín hiệu chính (bus, FSM `state`/`cnt`/`busy`/`done`/`irq`, dữ liệu lệch pha `a_feed`/`b_feed`). Vào **Time > Zoom > Zoom Best Fit** để xem toàn bộ. Nhớ có dấu `&` ở cuối, nếu không Terminal sẽ bị GTKWave giữ.
 
-```sh
-printf '#include "accel.h"\nstatic int8_t a[16], b[16]; static int32_t c[16];\nint main(void){ accel_matmul(a, b, c); return c[0]; }\n' > /tmp/t.c
-riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -nostdlib -O2 -Ifw -c /tmp/t.c -o /tmp/t.o && echo OK
-```
+## 6. Làm việc bằng VS Code trên Windows (khuyên dùng)
 
-## 5. Luyện thiết kế vật lý ở nhà (OpenROAD + nangate45)
+Cài VS Code bình thường trên Windows, rồi cài 2 extension của Microsoft: **WSL** và **Dev Containers**.
 
-Image không kèm nangate45, nhưng repo OpenROAD-flow-scripts (ORFS) có sẵn platform nangate45 và SRAM giả `fakeram45`, giống cấu trúc SoC của nhóm (logic + SRAM hard macro).
+**Mở repo để sửa code và dùng git:**
+
+1. Mở VS Code, nhấn `Ctrl+Shift+P` (hoặc bấm nút `><` màu xanh góc dưới bên trái), chọn **WSL: Connect to WSL**.
+2. File > Open Folder > `/home/<ten>/eda/designs/rv32i-soc`.
+3. Góc dưới bên trái hiện **WSL: Ubuntu** là đúng. Terminal (``Ctrl+` ``) lúc này là cửa sổ Ubuntu: dùng cho `git` và `scripts/eda.sh`.
+
+Cách nhanh: trong cửa sổ Ubuntu gõ `cd ~/eda/designs/rv32i-soc && code .`
+
+**Chạy `make` ngay trong VS Code:** container phải đang chạy (`scripts/eda.sh start`), rồi `Ctrl+Shift+P` > **Dev Containers: Attach to Running Container** > chọn `iic-osic-tools_xvnc_uid_1000` > File > Open Folder > `/foss/designs/rv32i-soc`. Terminal ở cửa sổ này có `make`, `iverilog`, `verilator`.
+
+**Extension nên cài thêm:**
+
+- **Verilog-HDL/SystemVerilog** (mshr-h): tô màu, báo lỗi khi gõ. Trong cửa sổ Attach, chọn linter `verilator`.
+- **VaporView**: mở file `.vcd` thành tab sóng ngay trong VS Code. Cài bằng nút **Install in Container**. Bấm `+` cạnh tên tín hiệu để thêm vào khung sóng.
+- **Claude Code** (Anthropic), cài ở cửa sổ WSL: bấm biểu tượng tia lửa góc trên bên phải để mở. Claude Code chạy mô phỏng bằng `scripts/eda.sh check` hoặc `scripts/eda.sh run "<lệnh>"`.
+
+Không mở repo bằng đường dẫn `\\wsl.localhost\...` trong File > Open Folder kiểu Windows: chậm và git Windows làm hỏng ký tự xuống dòng.
+
+## 7. Lỗi đã gặp và cách xử lý
+
+| Triệu chứng | Cách xử lý |
+| --- | --- |
+| `docker: command not found` trong Ubuntu | Docker Desktop chưa bật WSL integration cho Ubuntu (mục 1 bước 2) |
+| `permission denied ... docker.sock` | Docker Desktop chưa khởi động xong. Chờ chữ **Engine running** rồi thử lại |
+| Docker Desktop báo "There was a problem with WSL ... `wsl.exe --unmount docker_data.vhdx`" | Bấm **Quit**. PowerShell: `wsl --shutdown`, chờ 10 giây, mở lại Docker Desktop |
+| `docker pull` báo `read-only file system` | Như dòng trên. Nếu vẫn lỗi: Docker Desktop > biểu tượng con bọ (Troubleshoot) > **Clean / Purge data** > tick WSL 2 > Delete (chỉ xoá image Docker, không mất code), rồi pull lại |
+| `http://localhost` hiện trang `localhost - /` liệt kê file | Đó là IIS của Windows. Dùng `http://localhost:8080` (`scripts/eda.sh start` đã dùng cổng này) |
+| `port is already allocated` | Container cũ còn giữ cổng: `docker rm -f iic-osic-tools_xvnc_uid_$(id -u)` rồi `scripts/eda.sh start` |
+| `fatal: destination path ... already exists` | Đã clone rồi, bỏ qua; dùng `git pull` để cập nhật |
+| `$'\r': command not found` | Repo bị clone từ Windows. Xoá, chạy `git config --global core.autocrlf input`, clone lại trong Ubuntu |
+| `make: iverilog: No such file` hoặc `/foss/designs: No such file` | Đang gõ trong cửa sổ Ubuntu. Dùng `scripts/eda.sh run "..."` hoặc Terminal của container |
+| Chạy `gtkwave` không thấy cửa sổ | Nó hiện trong trang `localhost:8080`, chuyển sang tab Chrome đó |
+| Không bấm được F1 trong VS Code | Dùng `Ctrl+Shift+P` hoặc `Fn+F1` |
+| GTKWave/KLayout đen màn hình | Trong container: `export LIBGL_ALWAYS_SOFTWARE=1` rồi mở lại |
+
+## 8. Luyện thiết kế vật lý ở nhà (tuỳ chọn, OpenROAD + nangate45)
+
+Image không kèm nangate45, nhưng OpenROAD-flow-scripts (ORFS) có platform nangate45 và SRAM giả `fakeram45`, giống cấu trúc SoC của nhóm. Trong Terminal của container:
 
 ```sh
 cd /foss/designs
 git clone --depth 1 https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git
 cd OpenROAD-flow-scripts/flow
 export OPENROAD_EXE=$(which openroad) YOSYS_EXE=$(which yosys)
-make DESIGN_CONFIG=./designs/nangate45/gcd/config.mk         # thiết kế nhỏ, vài phút
+make DESIGN_CONFIG=./designs/nangate45/gcd/config.mk
 make DESIGN_CONFIG=./designs/nangate45/gcd/config.mk gui_final
 ```
 
-Nếu ORFS báo lỗi do lệch phiên bản OpenROAD trong image, dùng image chính thức của ORFS thay thế (chạy trong Ubuntu WSL, ngoài container IIC):
+Nếu ORFS báo lỗi do lệch phiên bản OpenROAD, dùng image riêng của ORFS (trong cửa sổ Ubuntu):
 
 ```sh
 docker run --rm -it -v ~/eda/designs:/work openroad/orfs:latest bash
 cd /OpenROAD-flow-scripts/flow && make DESIGN_CONFIG=./designs/nangate45/gcd/config.mk
 ```
 
-Sau khi `gcd` chạy được, tạo `designs/nangate45/accel/config.mk` cho wrapper accelerator để tập floorplan, CTS, route.
+Firmware RV32I biên dịch được bằng toolchain có sẵn trong container: `riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -nostdlib -Ifw ...`.
 
-## 6. Lỗi thường gặp
-
-| Triệu chứng | Cách xử lý |
-| --- | --- |
-| `docker: command not found` trong Ubuntu | Docker Desktop chưa bật WSL integration cho Ubuntu-24.04 (mục 1 bước 2) |
-| `permission denied ... docker.sock` | Mở Docker Desktop trước, đợi biểu tượng cá voi hết chạy rồi thử lại |
-| `$'\r': command not found` khi chạy script | Repo bị clone từ Windows. Xoá, chạy `git config --global core.autocrlf input`, clone lại trong WSL |
-| Trình duyệt không vào được `localhost` | Xem lại cổng (mục 3), hoặc `docker logs iic-osic-tools_xvnc_uid_$(id -u)` |
-| GTKWave/KLayout không hiện hoặc đen màn hình | Trong container: `export LIBGL_ALWAYS_SOFTWARE=1`, hoặc chuyển sang VNC |
-| `make: iverilog: No such file` | Đang gõ ngoài container. Mở Terminal trong desktop VNC |
-| Hết ổ đĩa | `docker system prune` để xoá image/cache cũ; giữ lại tag `2026.10` |
-
-Không có Docker (máy yếu)? Có thể cài tool rời trong Ubuntu 24.04: `sudo apt install iverilog verilator gtkwave yosys make`, đủ cho `make sim-accel`. Phiên bản sẽ khác image, chỉ dùng tạm.
-
-## 7. Ba điều không làm
+## 9. Ba điều không làm
 
 - Không copy thư viện GPDK45, file SRAM macro hay license Cadence về máy cá nhân hay lên GitHub.
 - Không đưa số liệu nangate45 vào report; chỉ dùng để xem xu hướng.
