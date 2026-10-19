@@ -16,6 +16,9 @@ pnr/run*/
 lec/run*/
 sta/run*/
 power/run*/
+# Kết quả flow (netlist, SPEF, SDF): chỉ copy báo cáo vào appendix/ để commit
+syn/out*/
+pnr/out*/
 xcelium.d/
 INCA_libs/
 waves.shm/
