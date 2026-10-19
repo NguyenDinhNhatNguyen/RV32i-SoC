@@ -14,10 +14,10 @@ Mục tiêu: biết chắc server có gì trước khi cả nhóm viết script:
 Xong khi: có file `appendix/server_check/server_check_<ngày>.txt` gửi cho Phát và điền đường dẫn `PDK_DIR` vào nhóm.
 Rủi ro lớn nhất: không có SRAM macro trong GPDK45. Khi đó phải báo nhóm ngay để chuyển sang phương án dự phòng trong doc (memory compiler của trường, hoặc macro do nhóm tự làm).
 
-### HT-04 Môi trường ở nhà (60%)
+### HT-04 Môi trường ở nhà (80%)
 
-Mục tiêu: cả nhóm mô phỏng và tổng hợp thử được ở nhà mà không cần Cadence. Hướng dẫn trong `docs/setup_home.md` (WSL2 + Docker IIC-OSIC-TOOLS, hoặc cài Icarus/Verilator/Yosys rời).
-Xong khi: một máy Windows khác (không phải máy Nguyên) chạy được `make sim-accel` ra PASS theo đúng hướng dẫn.
+Mục tiêu: cả nhóm mô phỏng và tổng hợp thử được ở nhà mà không cần Cadence. Hướng dẫn trong `docs/setup_home.md` (WSL2 + Docker IIC-OSIC-TOOLS tag `2026.10` + VS Code). Lệnh `scripts/eda.sh` bật container, chạy test và mở sóng. Đã kiểm chứng trên máy Nguyên.
+Xong khi: một máy Windows khác (không phải máy Nguyên) làm đúng theo hướng dẫn và chạy `scripts/eda.sh check` ra 2 dòng PASS.
 
 ### RTL-05 Wrapper accelerator (70%)
 
@@ -61,22 +61,23 @@ PD-03 đến PD-08 (floorplan SoC với macro, power plan, place, CTS, route, si
 
 ## 2. Chạy ở nhà
 
+Cài môi trường theo `docs/setup_home.md`. Repo phải nằm ở `~/eda/designs/rv32i-soc` thì container mới thấy. Mọi lệnh dưới đây gõ trong cửa sổ Ubuntu (WSL), tool chạy trong container:
+
 ```bash
-git clone https://github.com/NguyenDinhNhatNguyen/rv32i-soc.git
-cd rv32i-soc
-make sim-accel        # 40 phép nhân, phải in PASS
-make sim-accel-apb    # qua giao diện APB3, phải in PASS
-make wave-accel       # ghi tb/unit/out/accel.vcd
-gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
-make lint-accel       # cần Verilator, 0 warning là tốt
+cd ~/eda/designs/rv32i-soc
+scripts/eda.sh start                      # bật container (VNC: http://localhost:8080, mật khẩu abc123)
+scripts/eda.sh check                      # lint + 2 bài mô phỏng, phải ra 2 dòng PASS và 0 %Warning
+scripts/eda.sh run "make sim-accel"       # chạy riêng một target
+scripts/eda.sh wave                       # ghi tb/unit/out/accel.vcd rồi mở GTKWave trên desktop VNC
+scripts/eda.sh stop                       # tắt container khi xong việc
 ```
 
-Trong GTKWave nên kéo các tín hiệu: `dut.state`, `dut.busy`, `dut.done`, `dut.cnt`, `dut.a_feed`, `dut.b_feed`, `irq`. Hình FSM chuyển IDLE -> CLR -> RUN và dữ liệu lệch pha là ảnh tốt cho report.
+GTKWave mở với preset `tb/unit/accel.gtkw` đã chọn sẵn các tín hiệu: `dut.state`, `dut.busy`, `dut.done`, `dut.cnt`, `dut.a_feed`, `dut.b_feed`, `irq`. Hình FSM chuyển IDLE -> CLR -> RUN và dữ liệu lệch pha là ảnh tốt cho report. Muốn xem nhanh trong VS Code thì mở file `.vcd` bằng extension VaporView.
 
 Thử nhanh tổng hợp bằng Yosys (chỉ để xem số cell, không dùng trong report):
 
 ```bash
-yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat"
+scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat"'
 ```
 
 ## 3. Ghép lõi Lab 2 (hoàn thành RTL-05)
@@ -88,7 +89,7 @@ yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synt
    - Có chân start/busy/done không? Nếu có: nối vào FSM thay cho bộ đếm `cnt`.
    - Kết quả ra song song hay xả tuần tự? Sau bao nhiêu chu kỳ? -> `LAT` và cách nạp C_BUF.
 3. Thay instance `sa_core_model` trong `accel_wrapper.v` bằng `accelerator_top`, sửa `ACCEL_RTL` trong `Makefile`.
-4. `make sim-accel && make sim-accel-apb` phải PASS. Nếu sai, mở sóng để xem kết quả lệch mấy chu kỳ.
+4. `scripts/eda.sh check` phải ra 2 dòng PASS và lint 0 warning. Nếu sai, chạy `scripts/eda.sh wave` để xem kết quả lệch mấy chu kỳ.
 5. Cập nhật sheet: RTL-05 = Xong, cột Bằng chứng = link commit.
 
 ## 4. Chạy ở trường (Cadence)
