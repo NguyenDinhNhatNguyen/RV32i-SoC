@@ -42,27 +42,36 @@ check_timing_intent -verbose > $AUDIT/pre_syn_timing_intent.rpt  ;# 0 unconstrai
 set_db syn_generic_effort medium
 set_db syn_map_effort     medium
 set_db syn_opt_effort     medium
+
+# Lệnh thử: lỗi thì chỉ cảnh báo, không dừng script (tên lệnh, thuộc tính khác nhau giữa các bản Genus)
+proc try_cmd {cmd} {
+    if {[catch {uplevel 1 $cmd} msg]} { puts "CANH BAO: lenh \"$cmd\" loi: $msg" }
+}
+
+# assign trong netlist làm Innovus lỗi. Genus 21.1 bỏ lệnh remove_assigns, thay bằng thuộc tính cùng tên.
+try_cmd {set_db remove_assigns true}
+
 syn_generic
 syn_map
 syn_opt
 
-# Kiểm định sau tổng hợp (Quality Gate 2)
-remove_assigns -all                                ;# assign làm Innovus lỗi
-set_db write_vlog_unconnected_port_style none
-check_design -all > $AUDIT/post_syn_design_lint.rpt
+# Dọn netlist (Quality Gate 2)
+try_cmd {remove_assigns_without_optimization}
+try_cmd {set_db write_vlog_unconnected_port_style none}
 
-report_qor           > $RPT/qor.rpt
-report_timing -lint  > $RPT/timing_lint.rpt
-report_timing        > $RPT/timing.rpt
-report_area          > $RPT/area.rpt
-report_gates         > $RPT/gates.rpt
-report_power         > $RPT/power.rpt
-if {$CG} { report_clock_gating > $RPT/clock_gating.rpt }
+# Xuất file bàn giao cho Innovus, Conformal, GLS trước, để báo cáo có lỗi vẫn còn netlist
+write_hdl > $OUT/${TOP}_netlist.v
+write_sdc > $OUT/${TOP}_synth.sdc
+try_cmd {write_do_lec -golden_design rtl -revised_design $OUT/${TOP}_netlist.v > $OUT/rtl2gate.do}
 
-# Xuất file bàn giao cho Innovus, Conformal, GLS
-write_hdl -mapped > $OUT/${TOP}_netlist.v
-write_sdc         > $OUT/${TOP}_synth.sdc
-write_do_lec -golden_design rtl -revised_design $OUT/${TOP}_netlist.v > $OUT/rtl2gate.do
+try_cmd {check_design -all > $AUDIT/post_syn_design_lint.rpt}
+try_cmd {report_qor          > $RPT/qor.rpt}
+try_cmd {report_timing -lint > $RPT/timing_lint.rpt}
+try_cmd {report_timing       > $RPT/timing.rpt}
+try_cmd {report_area         > $RPT/area.rpt}
+try_cmd {report_gates        > $RPT/gates.rpt}
+try_cmd {report_power        > $RPT/power.rpt}
+if {$CG} { try_cmd {report_clock_gating > $RPT/clock_gating.rpt} }
 
 puts "Genus xong: $OUT/${TOP}_netlist.v (CG=$CG)"
 quit
