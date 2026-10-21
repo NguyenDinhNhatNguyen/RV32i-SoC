@@ -17,7 +17,11 @@ module tb_accel_wrapper;
 
     always #10 clk = ~clk;   // 50 MHz
 
+`ifdef GLS
+    accel_wrapper dut (          // netlist sau tổng hợp không còn parameter (make gls-accel)
+`else
     accel_wrapper #(.N(N)) dut (
+`endif
         .clk(clk), .rst_n(rst_n),
         .s_valid(s_valid), .s_we(s_we), .s_addr(s_addr), .s_wdata(s_wdata),
         .s_wstrb(s_wstrb), .s_ready(s_ready), .s_rdata(s_rdata), .irq(irq)

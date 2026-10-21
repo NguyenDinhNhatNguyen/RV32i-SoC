@@ -5,7 +5,7 @@ VVP      ?= vvp
 ACCEL_RTL = rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v
 ACCEL_TB  = tb/unit/tb_accel_wrapper.v
 
-.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel pnr-accel check-server clean
+.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel gls-accel pnr-accel check-server clean
 
 help:
 	@echo "make sim-accel     - mô phỏng wrapper accelerator (Icarus, chạy ở nhà)"
@@ -15,6 +15,7 @@ help:
 	@echo "make check-server  - kiểm tra thư viện/tool trên server trường"
 	@echo "make synth-accel   - Genus tổng hợp accelerator (server), CG=0 để chạy baseline"
 	@echo "make lec-accel     - Conformal so RTL với netlist sau make synth-accel (server)"
+	@echo "make gls-accel     - Xcelium mô phỏng netlist sau tổng hợp bằng testbench 40 phép nhân (server)"
 	@echo "make pnr-accel     - Innovus chạy thử accelerator (server)"
 
 sim-accel:
@@ -50,6 +51,16 @@ lec-accel:
 	mkdir -p syn/out_accel/reports
 	lec -nogui -dofile lec/accel_rtl2gate.do < /dev/null > syn/out_accel/lec.txt 2>&1 || true
 	@grep -E 'Compare Results|Non-equivalent|Equivalent|Abort|// Error' syn/out_accel/lec.txt | tail -12
+
+# Mô phỏng mức cổng, không delay (-nospecify): kiểm chức năng netlist, bù cho điểm LEC bị Abort.
+# Thư viện cell .v đọc từ PDK trên server, không copy về máy cá nhân.
+GLS_LIB ?= $(or $(PDK_DIR),$(HOME)/PDK_GPDK45)/lib/slow_vdd1v0_basiccells.v
+gls-accel:
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: chua co netlist, chay make synth-accel truoc"; exit 1; }
+	mkdir -p syn/out_accel/gls
+	cd syn/out_accel/gls && xrun -64bit -define GLS -timescale 1ns/1ps -nospecify -notimingchecks \
+	  $(CURDIR)/tb/unit/tb_accel_wrapper.v ../accel_wrapper_netlist.v $(GLS_LIB) -l xrun.log > /dev/null 2>&1 || true
+	@grep -E 'PASS|FAIL|ERROR|\*E,|\*F,' syn/out_accel/gls/xrun.log | head -15
 
 pnr-accel:
 	rm -f pnr/out_accel/accel_wrapper_pnr.v

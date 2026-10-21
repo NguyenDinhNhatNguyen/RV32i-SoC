@@ -16,8 +16,8 @@ set root module accel_wrapper -both
 set flatten model -gated_clock
 set system mode lec
 // Bộ nhân 8x8 + cộng tích luỹ 20 bit làm so cổng-với-cổng bị Abort (149 điểm ngày 21/10).
-// Phân tích datapath để so ở mức toán tử, rồi tăng effort cho điểm còn lại.
-analyze datapath -merge -verbose
+// analyze datapath cần license Conformal_Ultra, trường chỉ có Conformal_Asic, nên chỉ tăng effort.
+// Điểm còn Abort được kiểm thêm bằng mô phỏng mức cổng: make gls-accel
 set compare effort high
 add compared points -all
 compare

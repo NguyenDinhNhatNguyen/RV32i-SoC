@@ -14,7 +14,7 @@ set LIB_SLOW  slow_vdd1v0_basiccells.lib   ;# corner setup (1.0 V, 125 C) - tên
 set LIB_FAST  fast_vdd1v0_basicCells.lib   ;# corner hold. Tên có chữ C hoa, khác bản slow (HT-01, 21/10)
 set TECH_LEF  $PDK_DIR/lef/gsclib045_tech.lef
 set CELL_LEF  $PDK_DIR/lef/gsclib045_macro.lef
-set QRC_TECH  $PDK_DIR/qrc/gpdk045.tch     ;# bỏ qua file captable/ vì đó là của công nghệ 28 nm
+set QRC_TECH  {}                           ;# qrc/gpdk045.tch của Lab hỏng (IMPEXT-1211, 21/10), captable/ là của 28 nm. Để trống: Innovus ước lượng RC từ tech LEF
 set GDS_MAP   $PDK_DIR/streamOut.map
 set CELL_GDS  {}                           ;# GDS thư viện cell: HT-01 chưa thấy, để trống thì GDS chỉ có hình học của Innovus
 
