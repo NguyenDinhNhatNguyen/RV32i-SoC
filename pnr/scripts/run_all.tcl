@@ -47,6 +47,9 @@ globalNetConnect $GND_NET -type tielo -inst *
 
 # Floorplan + pin (Lab 02)
 floorPlan -site $CORE_SITE -r 1.0 $UTIL $IO_GAP $IO_GAP $IO_GAP $IO_GAP
+# gsclib045 có cell cao gấp đôi (SITE CoreSiteDouble). Thiếu hàng cho site này thì
+# Innovus báo IMPSP-365 và đặt sai vị trí các cell đó (368 TechSite violation ngày 21/10).
+try_cmd {createRow -site CoreSiteDouble}
 editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
 editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
 editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3
@@ -82,8 +85,11 @@ try_cmd {set_ccopt_property inverter_cells   $CTS_INVERTERS}
 try_cmd {set_ccopt_property target_skew      $SKEW}
 try_cmd {set_ccopt_property target_max_trans 0.150}
 try_cmd {setAnalysisMode -analysisType onChipVariation -cppr both}
-try_cmd {addNDR -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}}
-try_cmd {setAttribute -net clk -non_default_rule CLK_2W2S}
+# Dây clock rộng gấp đôi, cách gấp đôi (Lab 05). Innovus 21.1 dùng add_ndr và route type của CCOpt.
+try_mode {add_ndr -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}} \
+         {addNDR -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}}
+try_cmd {create_route_type -name clk_trunk -non_default_rule CLK_2W2S -bottom_preferred_layer Metal3 -top_preferred_layer Metal7}
+try_cmd {set_ccopt_property route_type clk_trunk -net_type trunk}
 
 create_ccopt_clock_tree_spec -file $OUT/ccopt.spec
 source $OUT/ccopt.spec
