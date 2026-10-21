@@ -22,6 +22,19 @@ Lệnh chạy: `make lint-core`, `make unit-core`, `make fw-core`, `make isa-cor
 | EX | Nhận lệnh thẳng từ ngõ ra IMEM (đọc đồng bộ), giải mã, sinh immediate, đọc register file, forward, ALU, so sánh nhánh, tính đích, tính địa chỉ load/store và kiểm tra lệch, phát yêu cầu bus dữ liệu (store ghi khi yêu cầu được nhận), M-unit |
 | WB | Nhận dữ liệu đọc từ bus, căn chỉnh byte/half và mở rộng dấu, ghi register file, thực thi CSR, xử lý trap/MRET/FENCE.I, tăng minstret |
 
+#### Sơ đồ vi kiến trúc
+
+![Vi kiến trúc rv32_core](../figures/core_microarch.svg)
+
+Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ độ trong script rồi chạy lại.
+
+- **Datapath (đen):** `if_pc_q` đưa thẳng ra `if_addr_o`. Lệnh từ IMEM vào EX (hoặc từ `ex_instr_hold_q` khi dừng), qua decoder, regfile, mux forward, ALU. `ex_result` (kết quả ALU, PC+4, toán hạng CSR hoặc kết quả `rv32_muldiv`) vào thanh ghi tầng WB.
+- **Forward (xanh dương):** `wb_rd_data` (kết quả ALU, giá trị CSR cũ, dữ liệu load đã căn chỉnh) quay về mux forward của rs1, rs2 và cổng ghi regfile trong cùng chu kỳ. Nhờ vậy không có stall load-use (mục 4.5).
+- **Chuyển hướng PC (đỏ):** EX gửi `ex_target` khi nhánh/JAL/JALR nhảy, phạt 1 chu kỳ. WB gửi `wb_target` (mtvec, mepc hoặc PC+4) khi trap, MRET, FENCE.I, WFI. Đường từ WB ưu tiên hơn, huỷ lệnh ở EX và lệnh đang lấy, phạt 2 chu kỳ. WFI đặt `sleep_q`, core thức khi `(mip & mie) != 0` (mục 4.4, 4.11).
+- **CSR và trap:** `rv32_csr` nằm ở WB. EX dùng cổng kiểm tra địa chỉ CSR, ngoại lệ và ngắt được gắn cờ ở EX, trap thực hiện ở WB (mục 4.7, 4.8).
+- **Cổng của core (xanh lá):** cổng lệnh `if_*` tới IMEM/boot ROM, bus dữ liệu valid/ready `d_req_*`, `d_rsp_*` (mục 5.1), cổng ngắt, `mtime_i`, `core_sleep_o`.
+- **Dừng (cam):** `pipe_stall = wb_wait | ex_wait` giữ IF và EX khi bus chậm hoặc M-unit chưa xong.
+
 ### 4.3 Timing lấy lệnh với SRAM đọc đồng bộ
 
 - Chu kỳ t: IMEM nhận địa chỉ `if_pc_q`. Chu kỳ t+1: lệnh ở ngõ ra IMEM, nằm ở EX với `ex_pc_q = if_pc_q` cũ.

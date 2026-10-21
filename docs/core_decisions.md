@@ -253,3 +253,14 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 - tb_core strict timing cộng 1 chu kỳ cho MUL* và 33 cho DIV/REM, suy ra từ mã lệnh. Lệnh M bị ngắt giữa chừng không xét.
 - `tb_rv32_muldiv`: 144 cặp toán hạng biên × 8 phép, 20000 phép ngẫu nhiên có thiên vị, số chu kỳ chính xác (2 và 34), `hold_i`, `go_i = 0` giữ kết quả, phép bị huỷ giữa chừng. Mô hình tham chiếu dùng phép nhân/chia 64 bit của Verilog.
 - Cấy 11 lỗi: MULHSU coi rs2 có dấu, chia cho 0 đổi dấu thương, dấu số dư theo số chia, dịch tích riêng sai, 31 bước chia, không về rảnh khi bị huỷ, bắt đầu khi WB chờ load, lệnh M bị ngắt vẫn giữ M-unit, `go_i` bị bỏ qua, không chọn kết quả M, thiếu dừng của phép nhân. Test hệ thống bắt 8 lỗi. Hai lỗi về `go_i` và về huỷ được `tb_rv32_muldiv` bắt (trong core `go_i = 0` không xảy ra khi khối đã xong). Lỗi "lệnh M bị ngắt vẫn giữ M-unit" chỉ làm ngắt chờ phép chia xong, kết quả vẫn đúng, nên không test nào bắt được (giống lỗi đã gặp ở D-032).
+
+---
+
+## Tài liệu
+
+### D-034. Sơ đồ vi kiến trúc sinh bằng script
+
+- **Lựa chọn:** `docs/figures/core_microarch.svg` sinh từ `docs/figures/core_microarch.py` (Python thuần, toạ độ viết tay). Mô tả hình ở `docs/spec/core.md` mục 4.2. Màu theo loại đường: dữ liệu, forward, chuyển hướng PC, cổng của core, dừng.
+- **Lý do:** Không cần cài tool vẽ trên máy nhóm. Sửa khi RTL đổi là sửa vài dòng rồi chạy lại, diff đọc được trong git. SVG hiển thị thẳng trên GitHub và chèn được vào báo cáo.
+- **Đã loại:** draw.io (file nguồn XML khó review, phải cài app), vẽ tay trong Inkscape (sửa lại tốn công, SVG xuất ra khó diff).
+- Hình chỉ vẽ các khối và đường chính. Tín hiệu chi tiết vẫn lấy từ RTL và mục 4.
