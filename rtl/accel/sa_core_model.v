@@ -38,19 +38,18 @@ module sa_core_model #(
     generate
         for (gi = 0; gi < N; gi = gi + 1) begin : g_row
             for (gj = 0; gj < N; gj = gj + 1) begin : g_col
-                localparam IDX = gi*N + gj;
 
                 wire [DW-1:0] a_left;
                 wire [DW-1:0] b_up;
                 if (gj == 0) begin : g_al
                     assign a_left = a_in[gi*DW +: DW];
                 end else begin : g_al
-                    assign a_left = a_out[(IDX-1)*DW +: DW];
+                    assign a_left = a_out[(gi*N + gj - 1)*DW +: DW];
                 end
                 if (gi == 0) begin : g_bu
                     assign b_up = b_in[gj*DW +: DW];
                 end else begin : g_bu
-                    assign b_up = b_out[(IDX-N)*DW +: DW];
+                    assign b_up = b_out[(gi*N + gj - N)*DW +: DW];
                 end
 
                 wire signed [2*DW+1:0] prod_s = $signed({{2{a_left[DW-1]}}, a_left}) *
@@ -78,9 +77,9 @@ module sa_core_model #(
                     end
                 end
 
-                assign a_out[IDX*DW +: DW] = a_q;
-                assign b_out[IDX*DW +: DW] = b_q;
-                assign c_out[IDX*AW +: AW] = acc_q;
+                assign a_out[(gi*N + gj)*DW +: DW] = a_q;
+                assign b_out[(gi*N + gj)*DW +: DW] = b_q;
+                assign c_out[(gi*N + gj)*AW +: AW] = acc_q;
             end
         end
     endgenerate

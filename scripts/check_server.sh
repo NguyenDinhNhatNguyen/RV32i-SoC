@@ -47,7 +47,7 @@ done | sort -u | head -n 40 | sed 's/^/  /' | tee -a "$OUT"
 section "4. File timing/LEF của thư viện cell (slow/fast/typical)"
 for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
-  find "$r" -maxdepth "$MAXDEPTH" -path '*.enc.dat' -prune -o \( -path '*gsclib045*' -o -path '*PDK_GPDK45*' \) \( -name '*basiccells*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' -o -name '*.map' -o -name '*.gds' \) -print 2>/dev/null
+  find "$r" -maxdepth "$MAXDEPTH" -path '*.enc.dat' -prune -o \( -path '*gsclib045*' -o -path '*PDK_GPDK45*' \) \( -iname '*basiccells*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' -o -name '*.map' -o -name '*.gds' \) -print 2>/dev/null
 done | sort -u | head -n 60 | sed 's/^/  /' | tee -a "$OUT"
 
 section "5. SRAM macro (LEF/LIB/GDS/Verilog)"

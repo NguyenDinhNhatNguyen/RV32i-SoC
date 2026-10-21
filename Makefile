@@ -39,10 +39,14 @@ check-server:
 	bash scripts/check_server.sh
 
 synth-accel:
+	rm -f syn/out_accel/accel_wrapper_netlist.v
 	cd syn && mkdir -p run_accel && cd run_accel && genus -batch -files ../scripts/synth_accel.tcl -log genus.log
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: Genus khong tao duoc netlist, xem syn/run_accel/genus.log"; exit 1; }
 
 pnr-accel:
+	rm -f pnr/out_accel/accel_wrapper_pnr.v
 	cd pnr && mkdir -p run_accel && cd run_accel && innovus -batch -files ../scripts/run_all.tcl -log innovus.log
+	@test -f pnr/out_accel/accel_wrapper_pnr.v || { echo "LOI: Innovus dung giua chung, xem pnr/run_accel/innovus.log"; exit 1; }
 
 clean:
 	rm -rf tb/unit/out syn/run* pnr/run*
