@@ -110,7 +110,11 @@ extractRC
 rcOut -spef $OUT/${TOP}.spef -rc_corner rc_typ                ; # Tempus (Phát), Power (Nguyên)
 write_sdf -view av_setup $OUT/${TOP}.sdf                      ; # GLS có SDF (Hiếu)
 if {$GDS_MAP ne ""} {
-    streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -merge $CELL_GDS -units 2000 -mode ALL
+    if {$CELL_GDS ne ""} {
+        streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -merge $CELL_GDS -units 2000 -mode ALL
+    } else {
+        streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -units 2000 -mode ALL
+    }
 }
 
 puts "Innovus xong. Copy $RPT vào appendix/pnr_accel/ cho phụ lục."

@@ -33,19 +33,21 @@ for t in xrun genus innovus tempus voltus joules lec pegasus pvs virtuoso; do
 done
 
 section "2. Biến môi trường liên quan"
-env | grep -iE 'cds|cadence|gpdk|gsclib|pdk|lm_license|cdslmd' | sed 's/^/  /' | tee -a "$OUT" >/dev/null
+# Bỏ PATH dài và che địa chỉ license server trước khi ghi ra file
+env | grep -iE 'cds|cadence|gpdk|gsclib|pdk|lm_license|cdslmd' | grep -vE '^(PATH|SPECMAN_PATH|LD_LIBRARY_PATH)=' \
+  | sed -E 's/^((LM_LICENSE_FILE|CDS_LIC_FILE)=).*/\1(da an)/; s/^/  /' | tee -a "$OUT" >/dev/null
 env | grep -iE 'cds|cadence|gpdk|gsclib|pdk|lm_license|cdslmd' >/dev/null || log "  (không thấy biến nào)"
 
 section "3. Thư viện GPDK45 (thư mục PDK_GPDK45 của Lab, gsclib045)"
 for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
-  find "$r" -maxdepth "$MAXDEPTH" \( -iname 'PDK_GPDK45' -o -iname 'gsclib045*' -o -iname 'gpdk045*' -o -iname 'gpdk45*' \) -print 2>/dev/null
+  find "$r" -maxdepth "$MAXDEPTH" -path '*.enc.dat' -prune -o \( -iname 'PDK_GPDK45' -o -iname 'gsclib045*' -o -iname 'gpdk045*' -o -iname 'gpdk45*' \) -print 2>/dev/null
 done | sort -u | head -n 40 | sed 's/^/  /' | tee -a "$OUT"
 
 section "4. File timing/LEF của thư viện cell (slow/fast/typical)"
 for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
-  find "$r" -maxdepth "$MAXDEPTH" \( -path '*gsclib045*' -o -path '*PDK_GPDK45*' \) \( -name '*basiccells*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' -o -name '*.map' -o -name '*.gds' \) -print 2>/dev/null
+  find "$r" -maxdepth "$MAXDEPTH" -path '*.enc.dat' -prune -o \( -path '*gsclib045*' -o -path '*PDK_GPDK45*' \) \( -name '*basiccells*.lib' -o -name '*.lef' -o -name '*.tch' -o -name '*.qrcTech' -o -name '*.capTbl' -o -name '*.map' -o -name '*.gds' \) -print 2>/dev/null
 done | sort -u | head -n 60 | sed 's/^/  /' | tee -a "$OUT"
 
 section "5. SRAM macro (LEF/LIB/GDS/Verilog)"
@@ -59,7 +61,7 @@ for r in "${ROOTS[@]}"; do
   [ -d "$r" ] || continue
   find "$r" -maxdepth "$MAXDEPTH" -iname '*sram*.lef' -print 2>/dev/null
 done | sort -u | head -n 20 | while read -r f; do
-  awk -v F="$f" '/^MACRO/{m=$2} /^[ \t]*SIZE/{printf "  %s: MACRO %s SIZE %s x %s um\n", F, m, $2, $4}' "$f"
+  awk -v F="$f" '{sub(/\r$/,"")} /^MACRO/{m=$2} /^[ \t]*SIZE/{printf "  %s: MACRO %s SIZE %s x %s um\n", F, m, $2, $4}' "$f"
 done | tee -a "$OUT"
 log "  Ghi chú: số word x số bit thường nằm trong tên macro hoặc file .lib (tìm 'address_width'/'word_width' hoặc tên pin A[..], D[..])."
 
