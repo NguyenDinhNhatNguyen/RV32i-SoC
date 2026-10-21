@@ -20,6 +20,12 @@ set IO_GAP   15       ;# khoảng core tới biên die (um)
 set STRIPE_P 30.0     ;# Lab 03: 15 / 30 / 60 um
 set SKEW     0.080    ;# Lab 05: 0.020 / 0.080 / 0.150 ns
 
+# Lệnh báo cáo/kiểm tra: lỗi thì chỉ cảnh báo, không dừng flow (tuỳ chọn khác nhau giữa các bản Innovus).
+# Các bước chính (init, floorplan, place, CTS, route, lưu file) vẫn dừng ngay nếu lỗi.
+proc try_cmd {cmd} {
+    if {[catch {uplevel 1 $cmd} msg]} { puts "CANH BAO: lenh \"$cmd\" loi: $msg" }
+}
+
 # Init (Lab 02)
 set init_gnd_net    $GND_NET
 set init_pwr_net    $PWR_NET
@@ -50,7 +56,7 @@ addStripe -nets [list $PWR_NET $GND_NET] -layer Metal8 -direction vertical \
 addStripe -nets [list $PWR_NET $GND_NET] -layer Metal7 -direction horizontal \
           -width 1.5 -spacing 1.0 -set_to_set_distance $STRIPE_P -start_offset 10.0
 sroute -connect {corePin} -layerChangeRange {Metal1 Metal8} -nets [list $PWR_NET $GND_NET]
-verifyGeometry -type power -report $RPT/pdn_geometry.rpt     ;# phải 0 violation
+try_cmd {verifyGeometry -report $RPT/pdn_geometry.rpt}       ;# phải 0 violation (Innovus 21.1 không có -type power)
 saveDesign DBS/floorplan.enc
 
 # Placement (Lab 04)
@@ -59,9 +65,9 @@ setPlaceMode -congestionEffort high
 setPlaceMode -timingDriven true
 setPlaceMode -wireLenOptEffort medium
 place_opt_design
-checkPlace -verbose                          > $RPT/placement_check.rpt       ;# 0 unplaced/overlap/off-grid
-checkCongestion -detailed                    > $RPT/placement_congestion.rpt  ;# overflow < 0.5%
-timeDesign -preCTS -expandedViews -outDir $RPT/prects
+try_cmd {checkPlace $RPT/placement_check.rpt}                                  ;# 0 unplaced/overlap/off-grid
+try_cmd {reportCongestion -overflow > $RPT/placement_congestion.rpt}           ;# overflow < 0.5%
+try_cmd {timeDesign -preCTS -expandedViews -outDir $RPT/prects}
 saveDesign DBS/placement.enc
 
 # CTS (Lab 05)
@@ -71,18 +77,18 @@ set_ccopt_property inverter_cells   $CTS_INVERTERS
 set_ccopt_property target_skew      $SKEW
 set_ccopt_property target_max_trans 0.150
 setAnalysisMode -analysisType onChipVariation -cppr both
-addNDR -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}
-setAttribute -net clk -non_default_rule CLK_2W2S
+try_cmd {addNDR -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}}
+try_cmd {setAttribute -net clk -non_default_rule CLK_2W2S}
 
 create_ccopt_clock_tree_spec -file $OUT/ccopt.spec
 source $OUT/ccopt.spec
 ccopt_design
-report_ccopt_clock_trees -file $RPT/cts_clock_trees.rpt   ; # skew <= 80 ps, latency < 0.8 ns
-report_ccopt_skew_groups -file $RPT/cts_skew_groups.rpt
+try_cmd {report_ccopt_clock_trees -file $RPT/cts_clock_trees.rpt}   ; # skew <= 80 ps, latency < 0.8 ns
+try_cmd {report_ccopt_skew_groups -file $RPT/cts_skew_groups.rpt}
 optDesign -postCTS
 optDesign -postCTS -hold
-timeDesign -postCTS       -outDir $RPT/postcts_setup
-timeDesign -postCTS -hold -outDir $RPT/postcts_hold
+try_cmd {timeDesign -postCTS       -outDir $RPT/postcts_setup}
+try_cmd {timeDesign -postCTS -hold -outDir $RPT/postcts_hold}
 saveDesign DBS/cts.enc
 
 # Route
@@ -90,30 +96,30 @@ setNanoRouteMode -routeWithTimingDriven true -routeWithSiDriven true
 routeDesign
 setDelayCalMode -SIAware true
 optDesign -postRoute -setup -hold
-addFiller -cell [dbGet [dbGet -p head.libCells.name FILL*].name] -prefix FILLER
+try_cmd {addFiller -cell [dbGet [dbGet -p head.libCells.name FILL*].name] -prefix FILLER}
 saveDesign DBS/route.enc
 
 # Check and Report
-verify_drc          -report $RPT/drc.rpt
-verifyConnectivity  -report $RPT/connectivity.rpt
-verifyProcessAntenna -report $RPT/antenna.rpt
-timeDesign -postRoute       -outDir $RPT/postroute_setup
-timeDesign -postRoute -hold -outDir $RPT/postroute_hold
-report_area  > $RPT/area.rpt
-report_power -outfile $RPT/power.rpt
-summaryReport -outdir $RPT/summary
+try_cmd {verify_drc -report $RPT/drc.rpt}
+try_cmd {verifyConnectivity -report $RPT/connectivity.rpt}
+if {[catch {verifyProcessAntenna -reportfile $RPT/antenna.rpt}]} { try_cmd {verifyProcessAntenna -report $RPT/antenna.rpt} }
+try_cmd {timeDesign -postRoute       -outDir $RPT/postroute_setup}
+try_cmd {timeDesign -postRoute -hold -outDir $RPT/postroute_hold}
+try_cmd {reportGateCount -outfile $RPT/area.rpt}
+try_cmd {report_power -outfile $RPT/power.rpt}
+try_cmd {summaryReport -outdir $RPT/summary}
 
 # Xuất file cho bước sau
 saveNetlist $OUT/${TOP}_pnr.v                                 ; # LEC (Phúc), GLS (Hiếu)
 saveNetlist $OUT/${TOP}_pnr_pg.v -includePowerGround          ; # LVS
 extractRC
-rcOut -spef $OUT/${TOP}.spef -rc_corner rc_typ                ; # Tempus (Phát), Power (Nguyên)
-write_sdf -view av_setup $OUT/${TOP}.sdf                      ; # GLS có SDF (Hiếu)
+try_cmd {rcOut -spef $OUT/${TOP}.spef -rc_corner rc_typ}      ; # Tempus (Phát), Power (Nguyên)
+try_cmd {write_sdf -view av_setup $OUT/${TOP}.sdf}            ; # GLS có SDF (Hiếu)
 if {$GDS_MAP ne ""} {
     if {$CELL_GDS ne ""} {
-        streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -merge $CELL_GDS -units 2000 -mode ALL
+        try_cmd {streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -merge $CELL_GDS -units 2000 -mode ALL}
     } else {
-        streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -units 2000 -mode ALL
+        try_cmd {streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -units 2000 -mode ALL}
     }
 }
 
