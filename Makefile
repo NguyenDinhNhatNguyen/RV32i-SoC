@@ -5,7 +5,7 @@ VVP      ?= vvp
 ACCEL_RTL = rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v
 ACCEL_TB  = tb/unit/tb_accel_wrapper.v
 
-.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel pnr-accel check-server clean
+.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel pnr-accel check-server clean
 
 help:
 	@echo "make sim-accel     - mô phỏng wrapper accelerator (Icarus, chạy ở nhà)"
@@ -14,6 +14,7 @@ help:
 	@echo "make lint-accel    - lint wrapper bằng Verilator nếu có"
 	@echo "make check-server  - kiểm tra thư viện/tool trên server trường"
 	@echo "make synth-accel   - Genus tổng hợp accelerator (server), CG=0 để chạy baseline"
+	@echo "make lec-accel     - Conformal so RTL với netlist sau make synth-accel (server)"
 	@echo "make pnr-accel     - Innovus chạy thử accelerator (server)"
 
 sim-accel:
@@ -42,6 +43,14 @@ synth-accel:
 	rm -f syn/out_accel/accel_wrapper_netlist.v
 	cd syn && mkdir -p run_accel && cd run_accel && rm -f genus.log* genus.cmd* && genus -batch -files ../scripts/synth_accel.tcl -log genus.log
 	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: Genus khong tao duoc netlist, xem syn/run_accel/genus.log"; exit 1; }
+
+# Dofile của Genus dùng đường dẫn tương đối fv/, nên chạy trong thư mục chạy Genus.
+# < /dev/null để Conformal tự thoát khi hết dofile.
+lec-accel:
+	cd syn/run_accel && for d in rtl2map map2final; do \
+	  lec -nogui -dofile ../out_accel/$$d.do < /dev/null > ../out_accel/lec_$$d.txt 2>&1; \
+	  echo "== $$d"; grep -E 'Compare Results|Non-equivalent|Equivalent  |Aborted|Error' ../out_accel/lec_$$d.txt | tail -8; \
+	done
 
 pnr-accel:
 	rm -f pnr/out_accel/accel_wrapper_pnr.v

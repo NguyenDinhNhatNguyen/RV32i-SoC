@@ -124,10 +124,10 @@ Kiểm tra sau tổng hợp (trong `syn/out_accel/reports/`):
 | `synthesis/clock_gating.rpt` (chỉ bản CG=1) | đa số flop được gate |
 | `synthesis/power.rpt` | so 2 bản CG=0 và CG=1 |
 
-LEC (giống Lab):
+LEC (chạy trong `syn/run_accel` vì dofile của Genus dùng đường dẫn tương đối `fv/`):
 
 ```bash
-cd syn/out_accel && lec -nogui -dofile rtl2gate.do | tee lec.log   # phải 0 non-equivalent
+make lec-accel     # 2 bước RTL -> fv_map -> netlist, mỗi bước phải 0 non-equivalent
 ```
 
 Place & Route:
@@ -162,7 +162,7 @@ Không copy `.lib`, `.lef`, `.gds`, file SRAM macro hay bất kỳ file nào c�
 | Triệu chứng | Nguyên nhân | Cách xử lý |
 | --- | --- | --- |
 | Innovus báo IMPSP-9099 | netlist có scan flop (SDFF*) | script Genus không chèn scan. Nếu vẫn gặp, kiểm tra netlist có cell SDFF và cấm chúng bằng `set_dont_use` |
-| LEC non-equivalent sau clock gating | dofile tự viết không biết cell gating | dùng `rtl2gate.do` do Genus sinh (`write_do_lec`) cùng lần chạy với netlist, như Lab |
+| LEC non-equivalent sau clock gating | dofile tự viết không biết cell gating | dùng dofile do Genus sinh (`rtl2map.do`, `map2final.do`) cùng lần chạy với netlist, chạy bằng `make lec-accel` |
 | Hold vi phạm sau CTS | chỉ chạy setup | `optDesign -postCTS -hold` với view fast |
 | Skew lớn | dùng CLKBUFX2 | `setDontUse CLKBUFX2 true` trước `ccopt_design` |
 | `PDK_DIR` không tìm thấy | chưa export | `echo $PDK_DIR`, sửa trong `pnr/scripts/config.tcl` |
