@@ -25,6 +25,11 @@ set SRAM_LEF       {}
 set SRAM_LIB_SLOW  {}
 set SRAM_LIB_FAST  {}
 
+# Cell cao gấp đôi (SITE CoreSiteDouble) trong gsclib045: BUFX2 và các cell low-power
+# (switch, isolation, level shifter). Floorplan chỉ có hàng CoreSite nên cấm BUFX2 ở cả Genus
+# và Innovus, nếu không Innovus đặt sai vị trí (IMPSP-365, 368 cell ngày 21/10).
+set DONT_USE_CELLS {BUFX2}
+
 set PWR_NET   VDD
 set GND_NET   VSS
 set CORE_SITE CoreSite

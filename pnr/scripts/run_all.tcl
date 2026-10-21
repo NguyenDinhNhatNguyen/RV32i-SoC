@@ -47,9 +47,8 @@ globalNetConnect $GND_NET -type tielo -inst *
 
 # Floorplan + pin (Lab 02)
 floorPlan -site $CORE_SITE -r 1.0 $UTIL $IO_GAP $IO_GAP $IO_GAP $IO_GAP
-# gsclib045 có cell cao gấp đôi (SITE CoreSiteDouble). Thiếu hàng cho site này thì
-# Innovus báo IMPSP-365 và đặt sai vị trí các cell đó (368 TechSite violation ngày 21/10).
-try_cmd {createRow -site CoreSiteDouble}
+# Cell cao gấp đôi (BUFX2...) bị cấm thay vì tạo hàng CoreSiteDouble, xem DONT_USE_CELLS trong config.tcl
+foreach c $DONT_USE_CELLS { try_cmd {setDontUse $c true} }
 editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
 editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
 editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3

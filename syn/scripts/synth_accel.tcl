@@ -19,6 +19,8 @@ read_libs $LIB_SLOW
 
 # Không dùng scan flop: netlist có scan flop mà không có scan chain làm Innovus báo IMPSP-9099 (bài học các Lab trước).
 foreach c [get_db lib_cells -if {.base_name == SDFF*}] { set_db $c .dont_use true }
+# Cell cao gấp đôi, xem DONT_USE_CELLS trong config.tcl
+foreach n $DONT_USE_CELLS { foreach c [get_db lib_cells -if ".base_name == $n"] { set_db $c .dont_use true } }
 
 # Clock gating phải bật trước elaborate, nếu không Genus bỏ qua (POPT-104)
 if {$CG} { set_db lp_insert_clock_gating true }
