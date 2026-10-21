@@ -25,6 +25,11 @@ set SKEW     0.080    ;# Lab 05: 0.020 / 0.080 / 0.150 ns
 proc try_cmd {cmd} {
     if {[catch {uplevel 1 $cmd} msg]} { puts "CANH BAO: lenh \"$cmd\" loi: $msg" }
 }
+# Tuỳ chọn mode: thử tên mới của Innovus 21.1 (dạng -place_...), không được thì tên cũ như Lab.
+# Sai cả hai thì Innovus dùng mặc định, chỉ cảnh báo.
+proc try_mode {new old} {
+    if {[catch {uplevel 1 $new}]} { try_cmd $old }
+}
 
 # Init (Lab 02)
 set init_gnd_net    $GND_NET
@@ -60,10 +65,10 @@ try_cmd {verifyGeometry -report $RPT/pdn_geometry.rpt}       ;# phải 0 violati
 saveDesign DBS/floorplan.enc
 
 # Placement (Lab 04)
-setPlaceMode -fp false
-setPlaceMode -congestionEffort high
-setPlaceMode -timingDriven true
-setPlaceMode -wireLenOptEffort medium
+try_cmd  {setPlaceMode -fp false}
+try_mode {setPlaceMode -place_global_cong_effort high}           {setPlaceMode -congestionEffort high}
+try_mode {setPlaceMode -place_global_timing_effort medium}       {setPlaceMode -timingDriven true}
+try_mode {setPlaceMode -place_detail_wire_length_opt_effort medium} {setPlaceMode -wireLenOptEffort medium}
 place_opt_design
 try_cmd {checkPlace $RPT/placement_check.rpt}                                  ;# 0 unplaced/overlap/off-grid
 try_cmd {reportCongestion -overflow > $RPT/placement_congestion.rpt}           ;# overflow < 0.5%
@@ -71,12 +76,12 @@ try_cmd {timeDesign -preCTS -expandedViews -outDir $RPT/prects}
 saveDesign DBS/placement.enc
 
 # CTS (Lab 05)
-foreach c $CTS_DONT_USE { setDontUse $c true }
-set_ccopt_property buffer_cells     $CTS_BUFFERS
-set_ccopt_property inverter_cells   $CTS_INVERTERS
-set_ccopt_property target_skew      $SKEW
-set_ccopt_property target_max_trans 0.150
-setAnalysisMode -analysisType onChipVariation -cppr both
+foreach c $CTS_DONT_USE { try_cmd {setDontUse $c true} }
+try_cmd {set_ccopt_property buffer_cells     $CTS_BUFFERS}
+try_cmd {set_ccopt_property inverter_cells   $CTS_INVERTERS}
+try_cmd {set_ccopt_property target_skew      $SKEW}
+try_cmd {set_ccopt_property target_max_trans 0.150}
+try_cmd {setAnalysisMode -analysisType onChipVariation -cppr both}
 try_cmd {addNDR -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}}
 try_cmd {setAttribute -net clk -non_default_rule CLK_2W2S}
 
@@ -92,9 +97,9 @@ try_cmd {timeDesign -postCTS -hold -outDir $RPT/postcts_hold}
 saveDesign DBS/cts.enc
 
 # Route
-setNanoRouteMode -routeWithTimingDriven true -routeWithSiDriven true
+try_mode {setNanoRouteMode -route_with_timing_driven true -route_with_si_driven true} {setNanoRouteMode -routeWithTimingDriven true -routeWithSiDriven true}
 routeDesign
-setDelayCalMode -SIAware true
+try_cmd {setDelayCalMode -SIAware true}
 optDesign -postRoute -setup -hold
 try_cmd {addFiller -cell [dbGet [dbGet -p head.libCells.name FILL*].name] -prefix FILLER}
 saveDesign DBS/route.enc
