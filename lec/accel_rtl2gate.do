@@ -15,9 +15,9 @@ set root module accel_wrapper -both
 // nếu không Conformal báo 3 DLAT unmapped và gần hết flop non-equivalent.
 set flatten model -gated_clock
 set system mode lec
-// Bộ nhân 8x8 + cộng tích luỹ 20 bit làm so cổng-với-cổng bị Abort (149 điểm ngày 21/10).
-// analyze datapath cần license Conformal_Ultra, trường chỉ có Conformal_Asic, nên chỉ tăng effort.
-// Điểm còn Abort được kiểm thêm bằng mô phỏng mức cổng: make gls-accel
+// Effort mặc định để lại 149 điểm Abort sau bộ nhân 8x8. analyze datapath cần license
+// Conformal_Ultra (trường chỉ có Conformal_Asic). Effort high cho PASS 812/812 (21/10, khoảng 9 phút).
+// Kiểm thêm chức năng bằng mô phỏng mức cổng: make gls-accel
 set compare effort high
 add compared points -all
 compare
