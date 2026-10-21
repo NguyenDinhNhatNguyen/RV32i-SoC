@@ -72,6 +72,8 @@ Mọi lệnh từ đây gõ trong **cửa sổ Ubuntu**. Không clone vào ổ W
 git config --global core.autocrlf input
 git config --global user.name  "Ho Ten Day Du"
 git config --global user.email "email@gmail.com"
+git config --global pull.rebase true
+git config --global rebase.autoStash true
 
 mkdir -p ~/eda/designs && cd ~/eda
 git clone --depth 1 https://github.com/iic-jku/IIC-OSIC-TOOLS.git
@@ -82,9 +84,13 @@ docker pull hpretl/iic-osic-tools:2026.10
 
 Lệnh cuối tải khoảng 4 GB, chờ tới khi in `Status: Downloaded newer image ...`. Nếu chạy lại mà thấy `fatal: destination path ... already exists` thì nghĩa là đã clone rồi, bỏ qua.
 
+Hai dòng `pull.rebase` và `rebase.autoStash` để `git pull` không tạo commit thừa và chạy được cả khi đang sửa dở. Các bước pull, commit, push hằng ngày ở README mục "Git hằng ngày".
+
 ## 3. Bật môi trường (mỗi lần làm việc)
 
-Trong cửa sổ Ubuntu:
+Mở **Docker Desktop** trước và chờ chữ xanh **Engine running**. Docker Desktop tắt thì mọi lệnh `docker` và `scripts/eda.sh` trong Ubuntu đều báo `docker: command not found`.
+
+Rồi trong cửa sổ Ubuntu:
 
 ```sh
 cd ~/eda/designs/rv32i-soc
@@ -163,13 +169,15 @@ Cài VS Code bình thường trên Windows, rồi cài 2 extension của Microso
 
 Cách nhanh: trong cửa sổ Ubuntu gõ `cd ~/eda/designs/rv32i-soc && code .`
 
-**Chạy `make` ngay trong VS Code:** container phải đang chạy (`scripts/eda.sh start`), rồi `Ctrl+Shift+P` > **Dev Containers: Attach to Running Container** > chọn `iic-osic-tools_xvnc_uid_1000` > File > Open Folder > `/foss/designs/rv32i-soc`. Terminal ở cửa sổ này có `make`, `iverilog`, `verilator`.
+**Chạy `make` ngay trong VS Code:** container phải đang chạy (`scripts/eda.sh start`), rồi `Ctrl+Shift+P` > **Dev Containers: Attach to Running Container** > chọn `iic-osic-tools_xvnc_uid_<số>` (thường là `uid_1000`, xem đúng tên bằng `scripts/eda.sh status`) > File > Open Folder > `/foss/designs/rv32i-soc`. Terminal ở cửa sổ này có `make`, `iverilog`, `verilator`.
 
-**Extension nên cài thêm:**
+**Extension:** lần đầu mở repo, VS Code hiện thông báo gợi ý cài bộ extension của nhóm (lấy từ `.vscode/extensions.json`), bấm **Install All**. Không thấy thông báo thì vào Extensions, gõ `@recommended`. Các extension chính:
 
 - **Verilog-HDL/SystemVerilog** (mshr-h): tô màu, báo lỗi khi gõ. Trong cửa sổ Attach, chọn linter `verilator`.
-- **VaporView**: mở file `.vcd` thành tab sóng ngay trong VS Code. Cài bằng nút **Install in Container**. Bấm `+` cạnh tên tín hiệu để thêm vào khung sóng.
-- **Claude Code** (Anthropic), cài ở cửa sổ WSL: bấm biểu tượng tia lửa góc trên bên phải để mở. Claude Code chạy mô phỏng bằng `scripts/eda.sh check` hoặc `scripts/eda.sh run "<lệnh>"`.
+- **VaporView**: mở file `.vcd` thành tab sóng ngay trong VS Code. Trong cửa sổ Attach, cài bằng nút **Install in Container**. Bấm `+` cạnh tên tín hiệu để thêm vào khung sóng.
+- **Tcl**, **markdownlint**: tô màu script Genus/Innovus (cả file `.sdc`, `.view`) và kiểm tra lỗi định dạng tài liệu.
+
+Không cài **Markdown All in One**: extension này tự chèn dấu gạch đầu dòng hoặc số thứ tự khi nhấn Enter, làm hỏng file `.md`.
 
 Không mở repo bằng đường dẫn `\\wsl.localhost\...` trong File > Open Folder kiểu Windows: chậm và git Windows làm hỏng ký tự xuống dòng.
 
@@ -177,7 +185,7 @@ Không mở repo bằng đường dẫn `\\wsl.localhost\...` trong File > Open 
 
 | Triệu chứng | Cách xử lý |
 | --- | --- |
-| `docker: command not found` trong Ubuntu | Docker Desktop chưa bật WSL integration cho Ubuntu (mục 1 bước 2) |
+| `docker: command not found` trong Ubuntu | Docker Desktop chưa mở, hoặc chưa hiện **Engine running**: mở rồi chờ. Nếu vẫn lỗi thì chưa bật WSL integration cho Ubuntu (bước 1.2) |
 | `permission denied ... docker.sock` | Docker Desktop chưa khởi động xong. Chờ chữ **Engine running** rồi thử lại |
 | Docker Desktop báo "There was a problem with WSL ... `wsl.exe --unmount docker_data.vhdx`" | Bấm **Quit**. PowerShell: `wsl --shutdown`, chờ 10 giây, mở lại Docker Desktop |
 | `docker pull` báo `read-only file system` | Như dòng trên. Nếu vẫn lỗi: Docker Desktop > biểu tượng con bọ (Troubleshoot) > **Clean / Purge data** > tick WSL 2 > Delete (chỉ xoá image Docker, không mất code), rồi pull lại |
