@@ -8,7 +8,7 @@ Tài liệu này giải thích từng task Nguyên đang làm (nó là gì, vì 
 
 Trường không mở VPN. Hệ quả: mọi bước Cadence (Genus, Conformal, Innovus) chỉ chạy được khi ngồi ở trường. Ở nhà chỉ làm RTL, mô phỏng và flow mã nguồn mở. Phải dồn việc Cadence vào các buổi lên trường và chuẩn bị script sẵn ở nhà.
 
-### HT-01 Kiểm tra server (30%)
+### HT-01 Kiểm tra server (Xong 21/10)
 
 Mục tiêu: biết chắc server có gì trước khi cả nhóm viết script: phiên bản Genus/Innovus/Conformal, đường dẫn `PDK_GPDK45`, file `.lib` slow/fast, **SRAM hard macro** (tên, kích thước trong LEF, có `.lib` không), toolchain RISC-V, server có ra GitHub được không.
 Xong khi: có file `appendix/server_check/server_check_<ngày>.txt` gửi cho Phát và điền đường dẫn `PDK_DIR` vào nhóm.
@@ -45,15 +45,15 @@ Bản đồ thanh ghi (base `0x3000_0000`):
 
 Quy trình firmware: ghi A, B -> ghi CTRL = 1 (hoặc 3 nếu dùng ngắt) -> chờ DONE (hoặc ngắt) -> đọc C -> ghi STATUS = 2 để xoá DONE.
 
-### PD-01 Chạy thử flow Cadence trên accelerator (30%)
+### PD-01 Chạy thử flow Cadence trên accelerator (90%)
 
 Mục tiêu: chạy trọn Genus -> LEC -> Innovus trên một khối nhỏ (accelerator) trước khi có SoC, để khi SoC sẵn sàng chỉ việc đổi tên top. Script viết đúng cú pháp Lab 01-05 nên dễ đối chiếu.
 Xong khi: tất cả tiêu chí trong `docs/flow_notes.md` đạt ở bước tới CTS (WNS >= 0, 0 violation geometry, skew <= 80 ps), báo cáo nằm trong `appendix/`.
 
-### PD-02 Ước lượng die (20%)
+### PD-02 Ước lượng die (30%)
 
 Mục tiêu: chọn kích thước floorplan cho SoC: đủ chỗ cho 2 SRAM macro + cell chuẩn ở mật độ 70%, chừa 15 um cho power ring.
-Cần đầu vào: kích thước SRAM (từ HT-01) và diện tích cell chuẩn SoC (Genus của Phát, M2). Trước đó có thể chạy với số tạm để biết cỡ.
+Cần đầu vào: kích thước SRAM (đã có: 80 x 100 um, từ HT-01) và diện tích cell chuẩn SoC (Genus của Phát, M2). Trước đó có thể chạy với số tạm để biết cỡ.
 
 ### Các task tiếp theo (chưa tới hạn)
 

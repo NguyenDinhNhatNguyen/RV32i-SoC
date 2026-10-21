@@ -1,22 +1,36 @@
-# Bàn giao task của Nguyên (cập nhật 20/10)
+# Bàn giao task của Nguyên (cập nhật 21/10)
 
 Giải thích chi tiết và lệnh chạy: xem `docs/runbook_nguyen.md`. Ở nhà mọi lệnh mô phỏng chạy qua `scripts/eda.sh` (xem `docs/setup_home.md`).
 
 | Task | Trạng thái | Đã có trong repo | Còn phải làm |
 | --- | --- | --- | --- |
 | HT-02 Hỏi VPN | Xong | — | Trường không mở VPN: Cadence chỉ chạy khi lên trường |
-| HT-01 Kiểm tra server | Script sẵn sàng (30%) | `scripts/check_server.sh` | Thứ 4 (21/10) lên trường, source môi trường Cadence như Lab, chạy `make check-server`, gửi file trong `appendix/server_check/` cho Phát |
+| HT-01 Kiểm tra server | Xong 21/10 | `appendix/server_check/server_check_20261021_0749.txt` | Không còn. Kết quả: đủ tool, PDK ở `~/PDK_GPDK45` (có lib slow và fast), SRAM `sram_2k_macro` 1024 x 32 bit, 80 x 100 um, chưa có GDS |
 | HT-04 Môi trường ở nhà | Hướng dẫn đã kiểm chứng trên máy Nguyên (80%) | `docs/setup_home.md`, `scripts/eda.sh`, `.vscode/` | Một bạn khác cài theo hướng dẫn, chạy `scripts/eda.sh check` ra 2 dòng PASS và gửi ảnh |
 | RTL-05 Wrapper accelerator | RTL + testbench pass với lõi giả, có thêm vỏ APB3, lint 0 warning (70%) | `rtl/accel/`, `tb/unit/tb_accel_wrapper.v`, `tb/unit/tb_accel_apb.v`, `fw/accel.h` | Thay `sa_core_model.v` bằng lõi Lab 2, chỉnh `LAT`, chạy lại `scripts/eda.sh check` |
-| PD-01 Chạy thử Innovus | Script sẵn sàng, viết theo cú pháp Lab 01-05 (30%) | `syn/scripts/synth_accel.tcl`, `pnr/scripts/run_all.tcl`, `pnr/scripts/mmmc.view`, `syn/constraints/accel.sdc`, `docs/flow_notes.md` | Đặt `PDK_DIR` tới thư mục `PDK_GPDK45` của Lab, chạy `make synth-accel` rồi `make pnr-accel`. Bước route/signoff đối chiếu khi học Lab route |
-| PD-02 Ước lượng die | Công cụ sẵn sàng (20%) | `pnr/scripts/estimate_die.py` | Chờ kích thước SRAM macro (HT-01) và diện tích SoC từ Phát |
+| PD-01 Chạy thử Innovus | Flow chạy trọn 21/10 (90%): LEC PASS, GLS PASS, DRC/connectivity/antenna 0 lỗi, setup +7,68 ns, hold +0,005 ns | `appendix/synth_accel/`, `appendix/pnr_accel/`, `lec/accel_rtl2gate.do` | Skew 113 ps > 80 ps: 4 flop điều khiển (`state`, `done`, `irq_en`) không qua clock gating nên nhận clock sớm hơn |
+| PD-02 Ước lượng die | Đã có kích thước SRAM 80 x 100 um (30%) | `pnr/scripts/estimate_die.py` | Chờ diện tích cell chuẩn SoC từ Phát |
 
-## Buổi lên trường đầu tiên (theo thứ tự)
+## Buổi lên trường tiếp theo
 
-1. `git clone` repo (hoặc `scp` nếu server không ra internet, script check sẽ báo).
-2. `make check-server` → gửi báo cáo cho Phát, `export PDK_DIR=<đường dẫn PDK_GPDK45>`.
-3. `make synth-accel` → xem `syn/out_accel/reports/clock_gating.rpt`: phần lớn flop của mảng phải được gate.
-4. `make pnr-accel` → copy `pnr/out_accel/reports/` vào `appendix/pnr_accel/`, commit.
+Server ra GitHub được, dùng `git pull` trực tiếp. Không cần `export PDK_DIR`, script tự dùng `~/PDK_GPDK45`. Chạy cả flow một lần, lệnh chỉ gõ 1 lần:
+
+```bash
+( make synth-accel && make lec-accel && make gls-accel && make pnr-accel ) > full_run.txt 2>&1 &
+grep -E 'Genus xong|Compare Results|PASS|Innovus xong|LOI' full_run.txt   # xem tiến độ
+```
+
+Việc còn mở: sửa skew 113 ps của PD-01 (4 flop không clock gating).
+
+## Bài học buổi 21/10 (Genus 21.1, Innovus 21.1, Conformal_Asic)
+
+- Genus đọc RTL ở chế độ Verilog-2001: không khai báo `localparam` trong `generate`.
+- `lp_insert_clock_gating` phải đặt trước `elaborate`. Lệnh `remove_assigns` đã bỏ, dùng thuộc tính cùng tên.
+- Dofile LEC do Genus sinh cần license Conformal_Ultra. Dùng `lec/accel_rtl2gate.do` (mẫu Lab 1) với `set flatten model -gated_clock` và `set compare effort high`.
+- Thư viện fast tên `fast_vdd1v0_basicCells.lib` (C hoa). File `qrc/gpdk045.tch` của Lab không đọc được.
+- `BUFX2` của gsclib045 là cell cao gấp đôi, phải cấm ở cả Genus và Innovus.
+- Innovus 21.1 đổi tên nhiều tuỳ chọn (`setPlaceMode -place_...`, `add_ndr`, `verifyGeometry` không có `-type`).
+- Genus và Innovus không ghi đè log mà tạo `genus.log1`, `genus.log2`. `make` đã xoá log cũ trước mỗi lần chạy.
 
 ## Giả định trong wrapper cần xác nhận với code Lab 2
 
