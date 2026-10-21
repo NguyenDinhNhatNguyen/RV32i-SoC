@@ -62,10 +62,8 @@ try_cmd {set_db write_vlog_unconnected_port_style none}
 # Xuất file bàn giao cho Innovus, Conformal, GLS trước, để báo cáo có lỗi vẫn còn netlist
 write_hdl > $OUT/${TOP}_netlist.v
 write_sdc > $OUT/${TOP}_synth.sdc
-# LEC 2 bước theo Cadence: RTL -> fv_map (netlist trung gian), rồi fv_map -> netlist cuối.
-# Dofile dùng đường dẫn tương đối fv/, nên phải chạy LEC trong syn/run_accel: make lec-accel
-try_cmd {write_do_lec -revised_design fv_map -logfile lec_rtl2map.log > $OUT/rtl2map.do}
-try_cmd {write_do_lec -golden_design fv_map -revised_design $OUT/${TOP}_netlist.v -logfile lec_map2final.log > $OUT/map2final.do}
+# LEC dùng lec/accel_rtl2gate.do (make lec-accel), không dùng write_do_lec
+# vì dofile của Genus cần license Conformal Ultra mà server trường không có.
 
 try_cmd {check_design -all > $AUDIT/post_syn_design_lint.rpt}
 try_cmd {report_qor          > $RPT/qor.rpt}

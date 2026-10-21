@@ -44,13 +44,12 @@ synth-accel:
 	cd syn && mkdir -p run_accel && cd run_accel && rm -f genus.log* genus.cmd* && genus -batch -files ../scripts/synth_accel.tcl -log genus.log
 	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: Genus khong tao duoc netlist, xem syn/run_accel/genus.log"; exit 1; }
 
-# Dofile của Genus dùng đường dẫn tương đối fv/, nên chạy trong thư mục chạy Genus.
-# < /dev/null để Conformal tự thoát khi hết dofile.
+# < /dev/null để Conformal tự thoát nếu dofile dừng giữa chừng.
 lec-accel:
-	cd syn/run_accel && for d in rtl2map map2final; do \
-	  lec -nogui -dofile ../out_accel/$$d.do < /dev/null > ../out_accel/lec_$$d.txt 2>&1; \
-	  echo "== $$d"; grep -E 'Compare Results|Non-equivalent|Equivalent  |Aborted|Error' ../out_accel/lec_$$d.txt | tail -8; \
-	done
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: chua co netlist, chay make synth-accel truoc"; exit 1; }
+	mkdir -p syn/out_accel/reports
+	lec -nogui -dofile lec/accel_rtl2gate.do < /dev/null > syn/out_accel/lec.txt 2>&1 || true
+	@grep -E 'Compare Results|Non-equivalent|Equivalent|Abort|// Error' syn/out_accel/lec.txt | tail -12
 
 pnr-accel:
 	rm -f pnr/out_accel/accel_wrapper_pnr.v
