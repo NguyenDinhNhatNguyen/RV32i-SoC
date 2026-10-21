@@ -1,0 +1,94 @@
+Server check 2026-10-21 07:49  host=asiclab  user=s23521043
+OS: Linux 3.10.0-1160.119.1.el7.x86_64
+
+==== 1. Tool Cadence (tìm trong PATH) ====
+[OK]  xrun -> /home/eda/cadence/XCELIUM2403/tools/bin/xrun  TOOL:	xrun(64)	24.03-s013 
+[OK]  genus -> /home/eda/cadence/GENUS211/bin/genus  TMPDIR is being set to /tmp/genus_temp_112115_asiclab_s23521043_K4qjd1 Program Name: Genus(TM) Synthesis Solution, Version: 21.10-p002_1 
+[OK]  innovus -> /home/eda/cadence/INNOVUS211/bin/innovus  @(#)CDS: Innovus v21.19-s058_1 (64bit) 04/04/2024 09:59 (Linux 3.10.0-693.el7.x86_64) @(#)CDS: NanoRoute 21.19-s058_1 NR231113-0413/21_19-UB (database version 18.20.605) {superthreading v2.17} 
+[OK]  tempus -> /home/eda/cadence/SSV231/tools/bin/tempus  @(#)CDS: Tempus Timing Solution v23.14-s089_1 (64bit) 03/07/2025 10:32 (Linux 3.10.0-693.el7.x86_64) @(#)CDS: NanoRoute 23.14-s089_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20} 
+[OK]  voltus -> /home/eda/cadence/SSV231/tools/bin/voltus  @(#)CDS: Voltus IC Power Integrity Solution v23.14-s089_1 (64bit) 03/07/2025 10:32 (Linux 3.10.0-693.el7.x86_64) @(#)CDS: NanoRoute 23.14-s089_1 NR250219-0822/23_14-UB (database version 18.20.661) {superthreading v2.20} 
+[OK]  joules -> /home/eda/cadence/JLS211/bin/joules  Loading joules config file: $env(RTLSCORE_ROOT)/config/joules.config TMPDIR is being set to /tmp/joules_temp_112530_asiclab_s23521043_ai1M2u 
+[OK]  lec -> /home/eda/cadence/CONFRML241/bin/lec  Tool:	lec	24.10-s300 
+[OK]  pegasus -> /home/eda/cadence/PEGASUS241/bin/pegasus  Pegasus 24.10-p017 SXqG/SI8/J1TJiVOElVDWA 2026-10-21 07:49:10 112703 asiclab Copyright 2024 Cadence Design Systems, Inc. 
+[OK]  pvs -> /usr/sbin/pvs  
+[OK]  virtuoso -> /home/eda/cadence/IC231/tools/dfII/bin/virtuoso  
+
+==== 2. Biến môi trường liên quan ====
+  QRC_HOME=/home/eda/cadence/EXT191
+  XKEYSYMDB=/home/eda/cadence/IC231/tools/plot/etc/XKeysymDB
+  CDSROOT=/home/eda/cadence/IC231
+  CADENCE_VIP_LIC_ORDER=newrev:soc:portfolio:alacarte
+  CDS_LOAD_ENV=CWD
+  CDK_DIR=/opt/PDKs/ncsu-cdk-1.6.0.beta
+  ALTOSHOME=/home/eda/cadence/LIBERATE231
+  CDS=/home/eda/cadence/IC231
+  TSMC_ASU_DFM_PATH=/opt/PDKs/tsmc/CRNxxG/Assura/lvs_rcx/DFM
+  MMSIMHOME=/home/eda/cadence/MMSIM151
+  K2_VIEWER_HOME=/home/eda/cadence/PVS231/tools/K2/Viewer
+  ml_seq_dir=/home/eda/cadence/XCELIUM2403/specman/src
+  CDS_AUTO_CPU_LIMIT=1
+  CADENCE_DIR=/home/eda/cadence/IC231
+  CDSDIR=/home/eda/cadence/IC231
+  uvm_home=/home/eda/cadence/XCELIUM2403/tools/uvm
+  K2_MASKCOMPOSE_HOME=/home/eda/cadence/PVS231/tools/K2/MaskCompose
+  CDN_VIP_ROOT=/home/eda/cadence/VIPCAT113
+  CDSHOME=/home/eda/cadence/IC231
+  CDS_Netlisting_Mode=Digital
+  LM_LICENSE_FILE=(da an)
+  DENALI=/home/eda/cadence/VIPCAT113/tools/denali_64bit
+  CDS_AUTO_64BIT=ALL
+  CADHOME=/home/eda/cadence
+  SPECTREHOME=/home/eda/cadence/SPECTRE231
+  CDS_LIC_FILE=(da an)
+  TSMC_CAL_DFM_PATH=/opt/PDKs/tsmc/CRNxxG/Calibre/lvs/DFM
+  CDS_SPECTRE_ARGS=+mt=1
+  ABVIP_ISNT_DIR=/home/eda/cadence/VIPCAT113/tools/abvip
+  CDS_ENABLE_VMS=1
+  CDS_LIC_ONLY=1
+  CDS_ROOT=/home/eda/cadence/IC231
+  ml_uvm=/home/eda/cadence/XCELIUM2403/tools/uvm/uvm_lib/uvm_ml/sc/ml_uvm
+  ASSURAHOME=/home/eda/cadence/ASSURA41
+  CDS_INST_DIR=/home/eda/cadence/IC231
+  K2_HOME=/home/eda/cadence/PVS231/tools/K2
+
+==== 3. Thư viện GPDK45 (thư mục PDK_GPDK45 của Lab, gsclib045) ====
+  /home/s23521043/PDK_GPDK45
+  /home/s23521043/PDK_GPDK45/gpdk045.map
+  /home/s23521043/PDK_GPDK45/lef/gsclib045_macro.lef
+  /home/s23521043/PDK_GPDK45/lef/gsclib045_tech.lef
+  /home/s23521043/PDK_GPDK45/qrc/gpdk045.tch
+
+==== 4. File timing/LEF của thư viện cell (slow/fast/typical) ====
+  /home/s23521043/PDK_GPDK45/captable/cln28hpl_1p10m+alrdl_5x2yu2yz_typical.capTbl
+  /home/s23521043/PDK_GPDK45/gpdk045.map
+  /home/s23521043/PDK_GPDK45/lef/gsclib045_macro.lef
+  /home/s23521043/PDK_GPDK45/lef/gsclib045_tech.lef
+  /home/s23521043/PDK_GPDK45/lef/sram_2k_macro.lef
+  /home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.lib
+  /home/s23521043/PDK_GPDK45/qrc/gpdk045.tch
+  /home/s23521043/PDK_GPDK45/streamOut.map
+
+==== 5. SRAM macro (LEF/LIB/GDS/Verilog) ====
+  /home/s23521043/PDK_GPDK45/lef/sram_2k_macro.lef
+  /home/s23521043/PDK_GPDK45/lib/sram_2k_macro.lib
+  /home/s23521043/PDK_GPDK45/lib/sram_2k_macro.v
+
+==== 6. Kích thước SRAM macro (đọc SIZE trong LEF) ====
+  /home/s23521043/PDK_GPDK45/lef/sram_2k_macro.lef: MACRO sram_2k_macro SIZE 80.000 x 100.000 um
+  Ghi chú: số word x số bit thường nằm trong tên macro hoặc file .lib (tìm 'address_width'/'word_width' hoặc tên pin A[..], D[..]).
+
+==== 7. Toolchain RISC-V ====
+[OK]  riscv64-unknown-elf-gcc -> /home/eda/xilinx/Vitis/2023.2/gnu/riscv/lin/riscv64-unknown-elf/bin/riscv64-unknown-elf-gcc  riscv32-xilinx-elf-gcc.real (GCC) 12.2.0
+
+==== 8. Python / git trên server ====
+[OK]  python3 -> /usr/bin/python3
+[OK]  git -> /usr/bin/git
+[OK]  make -> /usr/bin/make
+[--]  tmux
+  Kết nối GitHub: được (dùng git pull/push trực tiếp)
+
+==== 9. Dung lượng home ====
+  /dev/mapper/centos-home  3.3T  2.1T  1.3T  63% /home
+
+Gợi ý: đặt PDK_DIR=<đường dẫn PDK_GPDK45 ở mục 3> trước khi chạy make synth-accel / make pnr-accel.
+Xong. Gửi file này cho Phát: /home/s23521043/rv32i-soc/appendix/server_check/server_check_20261021_0749.txt

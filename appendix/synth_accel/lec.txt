@@ -1,0 +1,123 @@
+                          CONFORMAL (R)
+                   Version 24.10-s300 (06-Dec-2024) (64 bit executable)
+   Copyright (c) Cadence Design Systems, Inc., 1997-2024. All Rights Reserved
+
+
+This program is proprietary and confidential information belonging to
+Cadence Design Systems, Inc., and may be used and disclosed only as authorized
+in a license agreement controlling such use and disclosure.
+
+// Warning: This version is 683 days old. You can download the latest version from http://downloads.cadence.com.
+
+// Check out Conformal_Asic 24.1 license
+// Command: set dofile abort off
+CPU time     : 0.15    seconds
+Elapse time  : 0       seconds
+Memory usage : 63.50   M bytes
+// Command: read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+// Parsing file /home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v ...
+// Warning: (RTL14.1) Fanout load of the signal is removed (occurrence:56)
+// Warning: (VLG5.5) Internal primitive is recognized (occurrence:120)
+// Warning: (VLG5.6) Named port association is ignored for primitive gate (occurrence:120)
+// Warning: (IGN7.1) trireg net is modeled as a latch to hold value (occurrence:1)
+// Warning: (HRC1.4) Module/entity is empty (blackboxed) (occurrence:1)
+// Note: (HRC3.5b) Open output port connection is detected (occurrence:80)
+// Warning: (HRC3.10b) An input port is declared, but it is not used. Module is empty (occurrence:1)
+// Note: Read VERILOG library successfully
+CPU time     : 0.27    seconds
+Elapse time  : 0       seconds
+Memory usage : 87.01   M bytes
+// Command: read design -golden -verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v
+// Parsing file rtl/accel/sa_core_model.v ...
+// Parsing file rtl/accel/accel_wrapper.v ...
+// Golden root module is set to 'accel_wrapper'
+// Warning: (RTL1.5b) Potential loss of RHS msb or carry-out bit (occurrence:17)
+// Note: (RTL1.9h) Parameter declaration with no type or range specification (occurrence:11)
+// Note: (RTL5.5a) Default case item with non-X assignment(s) (occurrence:2)
+// Note: (RTL5.7) Default case item with inconsistent assignment(s). (occurrence:1)
+// Warning: (RTL7.3) Array index in RHS might be out of range (occurrence:18)
+// Warning: (RTL7.4) Array index in LHS might be out of range (occurrence:8)
+// Warning: (RTL7.10a) Comparison with different data sizes (occurrence:2)
+// Warning: (RTL7.10d) Comparison with positive constant of different signedness (occurrence:2)
+// Warning: (RTL7.11b) Unsigned reference with index/part selection to a signed variable (occurrence:1)
+// Note: (RTL8.1) Multiple multipliers/dividers are in module/entity (occurrence:1)
+// Warning: (RTL8.3) Unreachable DFF/DLAT is removed (occurrence:64)
+// Warning: (RTL14.1) Fanout load of the signal is removed (occurrence:64)
+// Warning: (DIR6.1) Ignored compiler directive is detected (occurrence:2)
+// Warning: (HRC3.10a) An input port is declared, but it is not completely used in the module (occurrence:2)
+// Note: Read VERILOG design successfully
+// Command: read design -revised -verilog syn/out_accel/accel_wrapper_netlist.v
+// Parsing file syn/out_accel/accel_wrapper_netlist.v ...
+// Revised root module is set to 'accel_wrapper'
+// Warning: (HRC3.10a) An input port is declared, but it is not completely used in the module (occurrence:2)
+// Note: Read VERILOG design successfully
+CPU time     : 0.51    seconds
+Elapse time  : 1       seconds
+Memory usage : 101.83  M bytes
+// Command: set root module accel_wrapper -both
+// Warning: Golden root module is already at 'accel_wrapper'
+// Warning: Revised root module is already at 'accel_wrapper'
+// Command: set flatten model -gated_clock
+// Command: set system mode lec
+// Processing Golden ...
+//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  26% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  33% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  53% completed//  54% completed//  56% completed//  57% completed//  59% completed//  60% completed//  62% completed//  63% completed//  65% completed//  66% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  73% completed//  74% completed//  75% completed//  76% completed//  78% completed//  79% completed//  81% completed//  82% completed// 100% completed// Modeling Golden ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   7% completed// Warning: (F34) Converted 149 X assignment(s) as don't care(s)
+//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed// 100% completed// Processing Revised ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  26% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  33% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  53% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  59% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  66% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  73% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  79% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  86% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  93% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed// 100% completed// Modeling Revised ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  80% completed// (F14) Remodeled 774 gated-clock DFF/DLAT(s)
+//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed// 100% completedCPU time     : 0.71    seconds
+Elapse time  : 1       seconds
+Memory usage : 130.69  M bytes
+// Warning: Golden and Revised have different numbers of key points:
+// Golden  key points = 864
+// Revised key points = 867
+// Mapping key points ...
+//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  26% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  33% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  53% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  59% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  66% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  73% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  79% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  86% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  93% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed//  99% completed// 100% completed================================================================================
+Mapped points: SYSTEM class
+--------------------------------------------------------------------------------
+Mapped points     PI     PO     DFF       Total   
+--------------------------------------------------------------------------------
+Golden            52     34     778       864     
+--------------------------------------------------------------------------------
+Revised           52     34     778       864     
+================================================================================
+Unmapped points:
+================================================================================
+Revised:
+--------------------------------------------------------------------------------
+Unmapped points   DLAT      Total   
+--------------------------------------------------------------------------------
+Unreachable       3         3       
+================================================================================
+// Command: set compare effort high
+// Command: add compared points -all
+// 812 compared points added to compare list
+// Command: compare
+//   0% Comparing 0 out of 812 points, 0 Non-equivalent//   0% Comparing 1 out of 812 points, 0 Non-equivalent//  65% Comparing 532 out of 812 points, 0 Non-equivalent// 100% Comparing 812 out of 812 points, 0 Non-equivalent================================================================================
+Compared points      PO     DFF       Total   
+--------------------------------------------------------------------------------
+Equivalent           34     778       812     
+================================================================================
+CPU time     : 105.65  seconds
+Elapse time  : 106     seconds
+Memory usage : 148.71  M bytes
+// Command: report verification > syn/out_accel/reports/lec_verification.rpt
+// Command: report verification
+================================================================================
+                            Verification Report
+--------------------------------------------------------------------------------
+Category                                                                  Count
+--------------------------------------------------------------------------------
+1. Non-standard modeling options used:                                      0
+--------------------------------------------------------------------------------
+2. Incomplete verification:                                                 0
+--------------------------------------------------------------------------------
+3. User modification to design:                                             0
+--------------------------------------------------------------------------------
+4. Conformal Constraint Designer clock domain crossing checks recommended:  0
+--------------------------------------------------------------------------------
+5. Design ambiguity:                                                        0
+--------------------------------------------------------------------------------
+6. Compare Results:                                                        PASS
+================================================================================
+// Command: exit -force
