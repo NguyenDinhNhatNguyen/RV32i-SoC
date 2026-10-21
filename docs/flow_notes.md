@@ -13,7 +13,7 @@ Tóm tắt các quy ước và tiêu chí nghiệm thu từ Lab 01-05 để scri
 | Bước | Lệnh chính (theo Lab) | Tiêu chí phải đạt | Script trong repo |
 | --- | --- | --- | --- |
 | Tổng hợp, kiểm tra trước | `check_design -unresolved`, `check_design -all`, `check_timing_intent -verbose` | 0 unresolved, 0 latch/loop/multi-driven, 0 unconstrained endpoint | `syn/scripts/synth_accel.tcl` |
-| Tổng hợp | `syn_generic`, `syn_map`, `syn_opt` (effort medium), clock gating `lp_insert_clock_gating`, `lp_clock_gating_min_flops 4` | WNS >= 0, 0 max_transition/max_capacitance | như trên |
+| Tổng hợp | `syn_generic`, `syn_map`, `syn_opt` (effort medium), clock gating `lp_insert_clock_gating` (đặt trước elaborate), `lp_clock_gating_min_flops 4` (thuộc tính design) | WNS >= 0, 0 max_transition/max_capacitance | như trên |
 | Tổng hợp, kiểm tra sau | `remove_assigns -all`, `check_design -all`, `write_hdl -mapped` | không còn assign, 0 floating input | như trên |
 | LEC | `lec -nogui -dofile ...` | 0 non-equivalent | `syn/out_accel/rtl2gate.do` (Genus sinh ra) |
 | Floorplan | `floorPlan -site CoreSite -r 1.0 <util> 15 15 15 15`, `editPin` | | `pnr/scripts/run_all.tcl` bước 2 |

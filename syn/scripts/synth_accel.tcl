@@ -20,8 +20,17 @@ read_libs $LIB_SLOW
 # Không dùng scan flop: netlist có scan flop mà không có scan chain làm Innovus báo IMPSP-9099 (bài học các Lab trước).
 foreach c [get_db lib_cells -if {.base_name == SDFF*}] { set_db $c .dont_use true }
 
+# Clock gating phải bật trước elaborate, nếu không Genus bỏ qua (POPT-104)
+if {$CG} { set_db lp_insert_clock_gating true }
+
 read_hdl -language v2001 {sa_core_model.v accel_wrapper.v}
 elaborate $TOP
+
+# Số flop tối thiểu cho một clock gate là thuộc tính của design trong Genus 21.1, không phải của root.
+# Bọc catch để bản Genus khác tên thuộc tính chỉ cảnh báo, không dừng cả script.
+if {$CG && [catch {set_db [get_db designs] .lp_clock_gating_min_flops 4} msg]} {
+    puts "CANH BAO: khong dat duoc lp_clock_gating_min_flops ($msg), dung mac dinh cua Genus"
+}
 
 # Kiểm định trước tổng hợp (Quality Gate 1)
 check_design -unresolved > $AUDIT/pre_syn_unresolved.rpt     ;# phải 0 unresolved
@@ -30,10 +39,6 @@ read_sdc $REPO/syn/constraints/accel.sdc
 check_timing_intent -verbose > $AUDIT/pre_syn_timing_intent.rpt  ;# 0 unconstrained endpoint
 
 # Tổng hợp 3 giai đoạn
-if {$CG} {
-    set_db lp_insert_clock_gating true
-    set_db lp_clock_gating_min_flops 4
-}
 set_db syn_generic_effort medium
 set_db syn_map_effort     medium
 set_db syn_opt_effort     medium
