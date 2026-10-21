@@ -225,3 +225,31 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 
 - `make isa-core` 440/440, `make fw-core` 80/80 (5 test × 4 cấu hình × 4 chế độ), `make unit-core` 8/8, `make lint-core` 0 warning.
 - Cấy 24 lỗi vào bản sao RTL (không chặn ngắt khi ghi mstatus/mie, ngắt bỏ yêu cầu đang wait state, lệnh bị ngắt vẫn phát yêu cầu bus, chuyển hướng WB không chặn yêu cầu bus, không huỷ lệnh ở EX, không huỷ lệnh đang lấy, FENCE.I không chuyển hướng, WFI không ngủ, chỉ thức khi MIE=1, `if_req_o` không xoá khi ngủ, lệnh trap vẫn tăng minstret, load lỗi bus vẫn ghi rd, mtval lệch địa chỉ bằng 0, mtval nhảy lệch sai, tắt kiểm tra CSR, cho ghi CSR chỉ đọc, sai ưu tiên ngắt, MRET không đặt MPIE, ghi minstreth không thay lần tăng, mcycle không nhớ sang nửa cao, RC thành RS, mất bit 31 của mcause khi ngắt, cùng 2 lỗi tương đương về logic). 22 lỗi không tương đương đều bị bắt. Lệnh bị ngắt phát yêu cầu bus và FENCE.I không chuyển hướng chỉ bị bắt sau khi thêm hai kiểm tra của D-028.
+
+---
+
+## P7 – RV32M
+
+### D-031. Khối `rv32_muldiv`
+
+- **Vị trí:** ở EX, toán hạng là `ex_rs1`, `ex_rs2` sau forward. Kết quả mux vào `ex_result` (như ghi chú của D-008), đi qua `wb_result_q` và được forward như kết quả ALU. `ENABLE_M=0` thì không tạo khối (generate), decoder đã báo illegal cho lệnh M.
+- **Nhân 2 chu kỳ:** toán hạng mở rộng thành 33 bit có dấu theo phép. Chu kỳ 1 tính hai tích riêng `A × B[15:0]` (49 bit) và `A × B[32:16]` (48 bit thấp) rồi chốt vào thanh ghi. Chu kỳ 2 cộng thành tích 64 bit. Mỗi chu kỳ chỉ có nửa bộ nhân, không cần multicycle path (mục 4.9). EX dừng đúng 1 chu kỳ.
+- **Chia 1 bit/chu kỳ:** restoring trên giá trị tuyệt đối, 1 chu kỳ nạp, 32 bước, chu kỳ cuối sửa dấu. EX dừng 33 chu kỳ. Chia cho 0 và tràn `-2^31 / -1` cho đúng kết quả đặc tả mà không cần nhánh riêng: thương không dấu toàn bit 1 và không đổi dấu khi số chia bằng 0, `|-2^31| / 1 = 2^31` đổi dấu vẫn là `-2^31`, số dư 0.
+- **Giao tiếp:** `req_i = ex_valid & ex_md & ~ex_trap & ~wb_redirect`. Phép bắt đầu khi `req_i & ~busy & ~hold_i`, với `hold_i = wb_wait` vì lúc WB còn chờ phản hồi thì toán hạng forward từ load chưa có. `req_i = 0` (lệnh bị huỷ, nhận trap hay bị ngắt) đưa khối về rảnh. Khối rảnh lại sau chu kỳ `done & go`.
+- **Đã loại:** nhân 33 × 33 trong một chu kỳ (đường dài gấp đôi, phải khai multicycle path trong SDC, trái mục 4.9), chia radix-4 (nhanh gấp đôi nhưng tốn bảng chọn thương, không cần ở 50 MHz), bộ chia không khôi phục (tiết kiệm một mux nhưng cần bước sửa số dư cuối).
+- **Theo dõi timing:** chu kỳ 1 của phép nhân là forward mux → bộ nhân 33 × 17 → flop. Giá trị tuyệt đối của phép chia là forward mux → bộ trừ 32 bit → flop. Chu kỳ 2 là bộ cộng 64 bit → mux `ex_result` → `wb_result_q`. Cần xem lại khi tổng hợp core.
+
+### D-032. Ngắt khi M-unit đang chạy
+
+- `ex_req_wait_q` (D-024) chỉ chốt wait state của bus (`ex_bus_wait`), không chốt thời gian chờ M-unit. Phép chia đang chạy vẫn bị ngắt: lệnh nhận trap với mepc = PC của nó, phép bị bỏ và chạy lại từ đầu sau MRET. Độ trễ ngắt không cộng thêm 33 chu kỳ.
+- Bản đầu của P7 dùng `ex_wait` cho `ex_req_wait_q` nên ngắt phải chờ phép chia xong. Test `muldiv` vẫn đạt (chỉ chậm hơn), lỗi được phát hiện khi đếm mepc của các lần ngắt trong vết.
+- Hệ quả: ngắt lặp lại nhanh hơn khoảng 34 chu kỳ cộng thời gian của trình xử lý sẽ làm phép chia không bao giờ xong. Ngắt của SoC (Timer, UART, GPIO) chậm hơn nhiều nên chấp nhận.
+- `ex_hold_q` không chốt lệnh ở chu kỳ `wb_redirect`. Trong thiết kế hiện tại `pipe_stall` luôn bằng 0 ở chu kỳ đó, điều kiện thêm vào để bất biến này không phụ thuộc vào việc `md_req` có chặn `wb_redirect` hay không.
+- Xoá cờ `wb_unsup_q` và waiver `unused_p7`. Waiver duy nhất còn lại trong `rtl/core` là `unused_ok` của regfile (bit enable của x0, có từ P2).
+
+### D-033. Bằng chứng kiểm tra P7
+
+- `make isa-core` 472/472 (thêm rv32um 8 test × 4 chế độ, nominal có strict timing). `make fw-core` 96/96 (6 test × 4 cấu hình × 4 chế độ). `make unit-core` 9/9 (thêm `tb_rv32_muldiv`). `make lint-core` 0 warning.
+- tb_core strict timing cộng 1 chu kỳ cho MUL* và 33 cho DIV/REM, suy ra từ mã lệnh. Lệnh M bị ngắt giữa chừng không xét.
+- `tb_rv32_muldiv`: 144 cặp toán hạng biên × 8 phép, 20000 phép ngẫu nhiên có thiên vị, số chu kỳ chính xác (2 và 34), `hold_i`, `go_i = 0` giữ kết quả, phép bị huỷ giữa chừng. Mô hình tham chiếu dùng phép nhân/chia 64 bit của Verilog.
+- Cấy 11 lỗi: MULHSU coi rs2 có dấu, chia cho 0 đổi dấu thương, dấu số dư theo số chia, dịch tích riêng sai, 31 bước chia, không về rảnh khi bị huỷ, bắt đầu khi WB chờ load, lệnh M bị ngắt vẫn giữ M-unit, `go_i` bị bỏ qua, không chọn kết quả M, thiếu dừng của phép nhân. Test hệ thống bắt 8 lỗi. Hai lỗi về `go_i` và về huỷ được `tb_rv32_muldiv` bắt (trong core `go_i = 0` không xảy ra khi khối đã xong). Lỗi "lệnh M bị ngắt vẫn giữ M-unit" chỉ làm ngắt chờ phép chia xong, kết quả vẫn đúng, nên không test nào bắt được (giống lỗi đã gặp ở D-032).

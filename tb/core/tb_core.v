@@ -5,7 +5,6 @@
 //   - ghi vào tohost: 1 = PASS, giá trị lẻ khác = FAIL, mã lỗi = giá trị >> 1
 //   - trap khi mtvec vẫn bằng 0 (giá trị reset, chương trình chưa cài trình
 //     xử lý trap): FAIL. Test có trình xử lý thì trap là hợp lệ.
-//   - lệnh RV32M tới WB khi core chưa thực thi (trước P7): FAIL
 //   - sai giao thức bus, X trên bus hoặc rd, core làm việc khi đang ngủ,
 //     quá thời gian: FAIL
 // Giải mã bus dữ liệu: IMEM (dùng chung với cổng lệnh, dữ liệu được ưu tiên
@@ -334,6 +333,8 @@ module tb_core;
     integer    gap, allowed;
 
     wire [4:0] wb_opcode_hi = dut.wb_instr_q[6:2];
+    wire       wb_is_md     = (dut.wb_instr_q[6:0] == `RV_OPC_OP) &&
+                              (dut.wb_instr_q[31:25] == `RV_F7_MULDIV) && (ENABLE_M != 0);
 
     // Lệnh nhảy rời EX với ex_redirect = 1 và luôn hoàn thành ở chu kỳ sau
     always @(posedge clk)
@@ -350,11 +351,6 @@ module tb_core;
                     $sformat(msg, "trap cause %0s%0d at pc %08h (instr %08h, tval %08h) with no handler",
                              dut.wb_int_q ? "irq " : "", dut.wb_trap_cause, dut.wb_pc_q,
                              dut.wb_instr_q, dut.wb_trap_tval);
-                    end_test(1'b0, msg);
-                end
-                if (dut.wb_unsup_q) begin
-                    $sformat(msg, "RV32M instr %08h at pc %08h (not executed yet)",
-                             dut.wb_instr_q, dut.wb_pc_q);
                     end_test(1'b0, msg);
                 end
                 // Lệnh nhận trap không được truy cập bus (trừ khi chính truy
@@ -393,11 +389,14 @@ module tb_core;
                 // thật (lệnh sai đường bị huỷ, kể cả khi đích là pc+4), 1 sau
                 // truy cập dữ liệu vào IMEM (cổng lệnh không được cấp quyền),
                 // 2 sau chuyển hướng từ WB (trap, MRET, FENCE.I, WFI), cộng số
-                // chu kỳ ngủ. Còn lại bằng 0, nghĩa là không có stall load-use.
-                if (strict_timing && have_prev) begin
+                // chu kỳ ngủ. Lệnh RV32M tự dừng EX trước khi tới WB: 1 chu kỳ
+                // với MUL*, 33 với DIV/REM (mục 4.9), không xét lệnh M bị ngắt
+                // giữa chừng. Còn lại bằng 0, nghĩa là không có stall load-use.
+                if (strict_timing && have_prev && !(wb_is_md && dut.wb_trap)) begin
                     gap     = cycle - prev_cycle - 1;
                     allowed = (prev_taken ? 1 : 0) + (prev_imem_data ? 1 : 0) +
-                              (prev_wb_redir ? 2 : 0) + (sleep_cycles - prev_sleep);
+                              (prev_wb_redir ? 2 : 0) + (sleep_cycles - prev_sleep) +
+                              (wb_is_md ? (dut.wb_instr_q[14] ? 33 : 1) : 0);
                     if (gap != allowed) begin
                         $sformat(msg, "timing: %0d bubble(s) before pc %08h, expected %0d",
                                  gap, dut.wb_pc_q, allowed);

@@ -6,9 +6,11 @@ Cập nhật sau mỗi phase của core. Bảng riscv-tests sinh bằng `python3
 - Link bằng `fw/common/link_isa.ld` (mọi section ở IMEM, xem D-029).
 - Cấu hình tb_core: `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`. Mỗi ô là số chế độ đạt trên 4 chế độ (nominal có `+strict_timing`, stall1, stall2, stall3).
 
-## Phase P4 (CSR, trap, ngắt, WFI)
+## Kết quả hiện tại (sau P7, RV32M)
 
-Tổng: rv32ui-p 41/41 test áp dụng được, rv32mi-p 14/14 test áp dụng được, 440/440 lần chạy đạt. rv32um chạy từ P7.
+Tổng: rv32ui-p 41/41, rv32mi-p 14/14 và rv32um-p 8/8 test áp dụng được, 472/472 lần chạy đạt. rv32um chỉ chạy với ENABLE_M=1.
+
+Lịch sử: P4 đạt 440/440 (rv32ui, rv32mi). P7 thêm rv32um.
 
 ### riscv-tests
 
@@ -69,6 +71,14 @@ Tổng: rv32ui-p 41/41 test áp dụng được, rv32mi-p 14/14 test áp dụng 
 | rv32mi-p-shamt | 4/4 | 4/4 | PASS |
 | rv32mi-p-sw-misaligned | 4/4 | 4/4 | PASS |
 | rv32mi-p-zicntr | 4/4 | 4/4 | PASS |
+| rv32um-p-div | - | 4/4 | PASS |
+| rv32um-p-divu | - | 4/4 | PASS |
+| rv32um-p-mul | - | 4/4 | PASS |
+| rv32um-p-mulh | - | 4/4 | PASS |
+| rv32um-p-mulhsu | - | 4/4 | PASS |
+| rv32um-p-mulhu | - | 4/4 | PASS |
+| rv32um-p-rem | - | 4/4 | PASS |
+| rv32um-p-remu | - | 4/4 | PASS |
 
 ### Test bị loại
 
@@ -87,5 +97,6 @@ Tổng: rv32ui-p 41/41 test áp dụng được, rv32mi-p 14/14 test áp dụng 
 | trap | 4/4 | 4/4 | 4/4 | 4/4 | Giá trị reset và mặt nạ CSR, CSR không tồn tại và ghi CSR chỉ đọc, mọi ngoại lệ đồng bộ (mcause, mepc, mtval, rd và bộ nhớ không đổi), mstatus khi trap và MRET, mcycle, minstret, time |
 | irq | 4/4 | 4/4 | 4/4 | 4/4 | mip theo cổng, MIE và mie chặn ngắt, ưu tiên MEI > MSI > MTI, ngắt chính xác (90 thời điểm ngắt khác nhau trong đoạn tính toán), không nhận ngắt sau lệnh tắt MIE / mie |
 | wfi | 4/4 | 4/4 | 4/4 | 4/4 | WFI với MIE = 0 và MIE = 1, nguồn bị tắt trong mie không đánh thức, ngắt chờ sẵn thì không ngủ, số chu kỳ ngủ, mepc = PC(WFI)+4 |
+| muldiv | 4/4 | 4/4 | 4/4 | 4/4 | M0: lệnh M là illegal, mtval = mã lệnh, rd không đổi. M1: forward vào và ra M-unit, load ngay trước lệnh M, kết quả M làm địa chỉ/dữ liệu store và điều kiện nhánh, rd = x0, ngắt rơi vào giữa phép chia ở 60 thời điểm |
 
 Số chu kỳ ngủ của `wfi` (nominal): với W1 core ngủ 801 trên 1003 chu kỳ và chỉ chạy 177 lệnh. Với W0 (WFI là NOP, chờ bằng vòng lặp) cùng test chạy 625 lệnh trong 954 chu kỳ.

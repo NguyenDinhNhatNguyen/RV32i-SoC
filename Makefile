@@ -225,8 +225,6 @@ CORE_ISA_ENV  := fw/riscv-tests/env/p
 CORE_ISA_OUT  := $(CORE_OUT)/isa
 core_isa_list = $(addprefix $(1)-p-,$(basename $(notdir $(wildcard $(CORE_ISA_DIR)/$(1)/*.S))))
 CORE_ISA_SKIP := rv32ui-p-ma_data rv32mi-p-breakpoint rv32mi-p-pmpaddr
-# Chưa có M-unit (P7)
-CORE_ISA_SKIP += $(call core_isa_list,rv32um)
 CORE_ISA_BASE := $(filter-out $(CORE_ISA_SKIP),$(call core_isa_list,rv32ui) $(call core_isa_list,rv32mi))
 CORE_ISA_M    := $(filter-out $(CORE_ISA_SKIP),$(call core_isa_list,rv32um))
 CORE_ISA_CFGS := M0W0 M1W1

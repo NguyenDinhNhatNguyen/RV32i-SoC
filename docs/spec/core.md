@@ -2,7 +2,7 @@
 
 Chép từ đặc tả riêng của phần core (mục 4, 5.1 và 10), giữ nguyên số mục để `docs/core_decisions.md` và comment trong code trỏ tới được. Chỉ đổi đường dẫn theo cấu trúc repo này và cách viết câu.
 
-Trạng thái: P4 xong (pipeline 3 tầng, CSR, trap, ngắt, MRET, FENCE.I, WFI ngủ). RV32M (mục 4.9) là đặc tả cho P7, chưa có trong RTL.
+Trạng thái: P7 xong (pipeline 3 tầng, CSR, trap, ngắt, MRET, FENCE.I, WFI ngủ, RV32M khi `ENABLE_M=1`).
 
 Lệnh chạy: `make lint-core`, `make unit-core`, `make fw-core`, `make isa-core` (xem mục 10.4).
 
@@ -160,7 +160,7 @@ Target của core trong repo này có tiền tố riêng, chạy ở nhà:
 
 | Target | Việc |
 | --- | --- |
-| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` với 4 tổ hợp ENABLE_M × ENABLE_WFI_SLEEP, `rv32_decoder` và `rv32_csr` với ENABLE_M=0 và 1), 0 warning (waiver có comment lý do) |
+| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` với 4 tổ hợp ENABLE_M × ENABLE_WFI_SLEEP, `rv32_decoder` và `rv32_csr` với ENABLE_M=0 và 1), 0 warning (waiver duy nhất là `unused_ok` của regfile, có comment lý do) |
 | `unit-core` | Mọi `tb/unit/tb_rv32_*.v`, `TB=<tên>` để chạy một bài, `PLUSARGS="+seed=7 +n=1000"` để đổi seed |
 | `fw-core` | Biên dịch `fw/tests/asm/*.S` và chạy trên `tb/core/tb_core.v` với 4 cấu hình `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`, mỗi bài 4 chế độ (đúng timing không stall và 3 bộ stall bus ngẫu nhiên). `T=<tên>` để chạy một bài, `PLUSARGS=+trace` để in vết |
 | `isa-core` | riscv-tests rv32ui, rv32mi (và rv32um khi ENABLE_M=1) với cấu hình M0W0 và M1W1, 4 chế độ. `T=rv32ui-p-add` để chạy một bài. Test bị loại nằm trong `CORE_ISA_SKIP` |

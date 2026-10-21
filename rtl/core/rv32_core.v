@@ -13,9 +13,8 @@
 // giữ IF và EX (và giữ cả WB trong trường hợp đầu).
 //
 // Ngoại lệ được phát hiện ở EX (hoặc lỗi bus ở WB), lệnh mang cờ tới WB và
-// nhận trap ở đó. Ngắt được gắn vào lệnh ở EX (mục 4.8). Lệnh RV32M chưa
-// thực thi (P7): được gắn cờ "chưa hỗ trợ", tb_core dừng mô phỏng khi lệnh
-// như vậy tới WB.
+// nhận trap ở đó. Ngắt được gắn vào lệnh ở EX (mục 4.8). Lệnh RV32M chạy ở
+// rv32_muldiv trong EX (ENABLE_M=1), EX dừng đến khi có kết quả.
 `include "rv32_defs.vh"
 
 module rv32_core #(
@@ -59,7 +58,7 @@ module rv32_core #(
     // Điều khiển pipeline (khai báo trước vì mọi tầng đều dùng)
     // =======================================================================
     wire wb_wait;      // WB giữ load/store đang chờ phản hồi
-    wire ex_wait;      // yêu cầu bus của EX chưa được nhận trong chu kỳ này
+    wire ex_wait;      // yêu cầu bus của EX chưa được nhận, hoặc M-unit chưa xong
     wire pipe_stall = wb_wait | ex_wait;
     wire ex_go      = ~pipe_stall;   // EX chuyển lệnh (hoặc bubble) sang WB
 
@@ -135,7 +134,7 @@ module rv32_core #(
         if (!rst_n)
             ex_hold_q <= 1'b0;
         else
-            ex_hold_q <= pipe_stall & ex_valid;
+            ex_hold_q <= pipe_stall & ex_valid & ~wb_redirect;
     end
 
     always @(posedge clk or negedge rst_n) begin
@@ -323,9 +322,6 @@ module rv32_core #(
             ex_exc = 1'b0;
     end
 
-    // Thực thi ở M-unit (P7), chưa có.
-    wire ex_unsup = ex_md;
-
     // ---- Ngắt (mục 4.8) ----------------------------------------------------------
     // Lệnh hợp lệ ở EX bị đánh dấu "bị ngắt" khi MIE = 1 và có ngắt chờ được
     // bật: không thực thi, không phát yêu cầu bus, tới WB thì nhận trap với
@@ -353,23 +349,58 @@ module rv32_core #(
     assign d_be_o        = ex_be;
     assign d_wdata_o     = ex_wdata;
 
-    assign ex_wait     = d_req_valid_o & ~d_req_ready_i;
+    // ---- RV32M --------------------------------------------------------------------
+    // M-unit chỉ bắt đầu khi WB không chờ phản hồi, vì lúc đó toán hạng
+    // forward từ load ở WB chưa có. Lệnh bị huỷ hoặc nhận trap thì req = 0
+    // và M-unit quay về rảnh.
+    wire        md_req = ex_valid & ex_md & ~ex_trap & ~wb_redirect;
+    wire        md_done;
+    wire [31:0] md_result;
+
+    generate
+        if (ENABLE_M != 0) begin : g_md
+            rv32_muldiv u_muldiv (
+                .clk      (clk),
+                .rst_n    (rst_n),
+                .req_i    (md_req),
+                .hold_i   (wb_wait),
+                .go_i     (ex_go),
+                .op_i     (ex_funct3),
+                .a_i      (ex_rs1),
+                .b_i      (ex_rs2),
+                .done_o   (md_done),
+                .result_o (md_result)
+            );
+        end else begin : g_no_md
+            // Decoder báo illegal cho lệnh M nên md_req luôn bằng 0
+            assign md_done   = 1'b0;
+            assign md_result = 32'h0;
+        end
+    endgenerate
+
+    // Yêu cầu bus đang ở wait state: chỉ phần này khoá ngắt (ex_req_wait_q).
+    // Lệnh M đang chạy vẫn bị ngắt được, phép bị bỏ và chạy lại sau MRET.
+    wire ex_bus_wait = d_req_valid_o & ~d_req_ready_i;
+
+    assign ex_wait     = ex_bus_wait | (md_req & ~md_done);
     assign ex_redirect = ex_go & ex_valid & ex_jump & ~ex_trap & ~wb_redirect;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             ex_req_wait_q <= 1'b0;
         else
-            ex_req_wait_q <= ex_wait;
+            ex_req_wait_q <= ex_bus_wait;
     end
 
     // Giá trị mang sang WB (wb_result_q):
     //   - JAL/JALR: địa chỉ trả về, hoặc đích nhảy khi lệnh bị ngoại lệ
     //     (làm mtval của instruction misaligned),
     //   - CSR: toán hạng ghi (rs1 hoặc uimm),
+    //   - RV32M: kết quả M-unit,
     //   - còn lại: kết quả ALU (cũng là địa chỉ load/store cho mtval).
     wire [31:0] ex_csr_wdata = ex_funct3[2] ? ex_imm : ex_rs1;
     wire [31:0] ex_result    = ex_csr ? ex_csr_wdata :
+                               ex_md  ? md_result :
                                (ex_wb_sel == `RV_WB_PC4) ? (ex_exc ? ex_target : ex_pc_q + 32'd4) :
                                ex_alu_res;
 
@@ -384,7 +415,6 @@ module rv32_core #(
     reg         wb_exc_q;         // ngoại lệ từ EX hoặc bị ngắt
     reg         wb_int_q;         // bị ngắt (mcause bit 31)
     reg  [4:0]  wb_cause_q;
-    reg         wb_unsup_q;
     reg         wb_csr_q;
     reg         wb_csr_we_q;
     reg         wb_mret_q;
@@ -416,7 +446,6 @@ module rv32_core #(
             wb_exc_q     <= 1'b0;
             wb_int_q     <= 1'b0;
             wb_cause_q   <= 5'd0;
-            wb_unsup_q   <= 1'b0;
             wb_csr_q     <= 1'b0;
             wb_csr_we_q  <= 1'b0;
             wb_mret_q    <= 1'b0;
@@ -426,7 +455,7 @@ module rv32_core #(
             wb_pc_q      <= ex_pc_q;
             wb_instr_q   <= ex_instr;
             wb_rd_q      <= ex_rd_addr;
-            wb_rd_we_q   <= ex_rd_we & ~ex_trap & ~ex_unsup;
+            wb_rd_we_q   <= ex_rd_we & ~ex_trap;
             wb_result_q  <= ex_result;
             wb_load_q    <= ex_load;
             wb_mem_q     <= d_req_valid_o;   // ex_go nghĩa là yêu cầu đã được nhận
@@ -435,7 +464,6 @@ module rv32_core #(
             wb_exc_q     <= ex_trap;
             wb_int_q     <= ex_irq;
             wb_cause_q   <= ex_irq ? csr_irq_cause : ex_cause;
-            wb_unsup_q   <= ex_unsup & ~ex_trap;
             wb_csr_q     <= ex_csr & ~ex_trap;
             wb_csr_we_q  <= ex_csr_we;
             wb_mret_q    <= ex_mret & ~ex_trap;
@@ -551,9 +579,6 @@ module rv32_core #(
     assign wb_rd_data = wb_load_q ? wb_load_data : wb_nonload_data;
     // Lệnh nhận trap (kể cả load bị lỗi bus) không ghi rd.
     assign wb_rf_we   = wb_retire & wb_rd_we_q & ~wb_trap;
-
-    // Chỉ tb_core đọc để báo lệnh RV32M chưa thực thi (P7 sẽ xoá).
-    wire unused_p7 = wb_unsup_q;
 
 endmodule
 
