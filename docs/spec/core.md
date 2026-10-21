@@ -2,9 +2,9 @@
 
 Chép từ đặc tả riêng của phần core (mục 4, 5.1 và 10), giữ nguyên số mục để `docs/core_decisions.md` và comment trong code trỏ tới được. Chỉ đổi đường dẫn theo cấu trúc repo này và cách viết câu.
 
-Trạng thái: P3 xong (pipeline 3 tầng, chưa có CSR/trap). Các mục CSR, trap, ngắt, WFI, RV32M là đặc tả cho P4 và P7, chưa có trong RTL.
+Trạng thái: P4 xong (pipeline 3 tầng, CSR, trap, ngắt, MRET, FENCE.I, WFI ngủ). RV32M (mục 4.9) là đặc tả cho P7, chưa có trong RTL.
 
-Lệnh chạy: `make lint-core`, `make unit-core`, `make fw-core` (xem mục 10.4).
+Lệnh chạy: `make lint-core`, `make unit-core`, `make fw-core`, `make isa-core` (xem mục 10.4).
 
 ## 4. Core `rv32_core`
 
@@ -143,11 +143,13 @@ Luật:
 - Testbench theo dõi lệnh ghi vào `tohost` (`+tohost=<hex>`): 1 = PASS, giá trị lẻ khác 1 = FAIL, mã lỗi = giá trị >> 1.
 - Testbench bắt lệnh ghi vào UART DATA và in ký tự ngay (không chờ mô phỏng baud).
 - Timeout `+timeout=<chu kỳ>`. Khi kết thúc in số chu kỳ, số lệnh, CPI.
-- `+trace`: ghi vết từng lệnh hoàn thành (PC, mã lệnh, rd, giá trị) theo định dạng gần commit log của Spike.
+- `+trace`: ghi vết từng lệnh hoàn thành (PC, mã lệnh, rd, giá trị) theo định dạng gần commit log của Spike. Lệnh nhận trap in một dòng `trap` với mcause, mepc, mtval.
+- Trap khi `mtvec` còn bằng 0 (chưa cài trình xử lý) là FAIL.
+- Khối điều khiển riêng của tb ở `CORE_TB_CTRL_BASE` (0x2FFF_0000): đặt mức 3 đường ngắt sau N chu kỳ, đọc số chu kỳ ngủ, đọc cấu hình. Macro `TB_*` trong `fw/tests/asm/test_macros.h`. `mtime_i` tăng mỗi chu kỳ.
 
 ### 10.3 Bộ test ISA
 
-- riscv-tests env `p` với `link.ld` riêng. Core chỉ M-mode, MPP cố định 11, CSR không hỗ trợ trap đúng chuẩn, nên env p chạy được.
+- riscv-tests env `p` (submodule `fw/riscv-tests`, ghim commit) với `fw/common/link_isa.ld` riêng: mọi section ở IMEM vì `fence_i` chạy lệnh trong `.data`. Core chỉ M-mode, MPP cố định 11, CSR không hỗ trợ trap đúng chuẩn, nên env p chạy được.
 - Mục tiêu: 100% `rv32ui-p-*` (kể cả fence_i), 100% `rv32mi-p-*` áp dụng được cho core M-mode không có debug trigger, 100% `rv32um-p-*` khi ENABLE_M=1.
 - riscv-arch-test (qua RISCOF, so với Spike) làm bằng chứng tuân thủ chính thức trong báo cáo.
 - Kết quả từng test ghi vào `docs/riscv-tests-status.md`, test bị loại có lý do.
@@ -158,9 +160,12 @@ Target của core trong repo này có tiền tố riêng, chạy ở nhà:
 
 | Target | Việc |
 | --- | --- |
-| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` và `rv32_decoder` với ENABLE_M=0 và 1), 0 warning (waiver có comment lý do) |
+| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` với 4 tổ hợp ENABLE_M × ENABLE_WFI_SLEEP, `rv32_decoder` và `rv32_csr` với ENABLE_M=0 và 1), 0 warning (waiver có comment lý do) |
 | `unit-core` | Mọi `tb/unit/tb_rv32_*.v`, `TB=<tên>` để chạy một bài, `PLUSARGS="+seed=7 +n=1000"` để đổi seed |
-| `fw-core` | Biên dịch `fw/tests/asm/*.S` và chạy trên `tb/core/tb_core.v` với ENABLE_M=0 và 1, mỗi bài 4 chế độ (đúng timing không stall và 3 bộ stall bus ngẫu nhiên). `T=<tên>` để chạy một bài, `PLUSARGS=+trace` để in vết |
+| `fw-core` | Biên dịch `fw/tests/asm/*.S` và chạy trên `tb/core/tb_core.v` với 4 cấu hình `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`, mỗi bài 4 chế độ (đúng timing không stall và 3 bộ stall bus ngẫu nhiên). `T=<tên>` để chạy một bài, `PLUSARGS=+trace` để in vết |
+| `isa-core` | riscv-tests rv32ui, rv32mi (và rv32um khi ENABLE_M=1) với cấu hình M0W0 và M1W1, 4 chế độ. `T=rv32ui-p-add` để chạy một bài. Test bị loại nằm trong `CORE_ISA_SKIP` |
 | `clean-core` | Xoá `tb/core/out` và `tb/unit/out/core` |
 
-Dự kiến thêm theo phase: `isa-core` (riscv-tests trên `tb_core`, P4), `regress-core` (lint + unit + isa + fw với ENABLE_M và ENABLE_WFI_SLEEP bằng 0 và 1).
+`fw-core` và `isa-core` chạy song song `CORE_JOBS` tiến trình (mặc định bằng số nhân CPU) qua `scripts/core_run.sh`, tổng kết ghi ở `tb/core/out/<target>.summary`. Bảng kết quả riscv-tests: `python3 scripts/isa_status.py`.
+
+Dự kiến thêm: `regress-core` (lint + unit + isa + fw).

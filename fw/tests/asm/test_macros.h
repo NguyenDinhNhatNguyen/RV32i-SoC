@@ -93,6 +93,17 @@ tohost: .word 0;                 \
     li   x7, exp_word;           \
     bne  x14, x7, fail
 
+// Khối điều khiển của tb_core, chỉ có trong mô phỏng (khớp CORE_TB_CTRL_BASE
+// trong tb/core/core_tb_map.vh)
+#define TB_CTRL         0x2FFF0000
+#define TB_IRQ          0x0     // ghi: mức ngắt + số chu kỳ chờ, đọc: mức hiện tại
+#define TB_SLEEP        0x4     // đọc: tổng số chu kỳ core_sleep_o = 1
+#define TB_CFG          0x8     // đọc: bit 0 = ENABLE_M, bit 1 = ENABLE_WFI_SLEEP
+#define TB_IRQ_MSI      (1 << 3)
+#define TB_IRQ_MTI      (1 << 7)
+#define TB_IRQ_MEI      (1 << 11)
+#define TB_DELAY(n)     ((n) << 16)
+
 // So thanh ghi r với một hằng số
 #define CHECK(n, r, exp)         \
     li   TESTNUM, n;             \

@@ -144,3 +144,84 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Comment trong code chuyển sang tiếng Việt theo quy ước repo. Logic RTL và testbench không đổi, trừ việc đổi tên macro địa chỉ trong `tb_core`.
 - **Lý do:** Bản đồ địa chỉ đầy đủ của SoC thuộc phần bus/bộ nhớ (Phát) và accelerator (Nguyên). Chép nguyên `soc_defs.vh` sẽ tạo một nguồn thứ hai mâu thuẫn với RTL accelerator của nhóm. Khi có header SoC chung, `core_tb_map.vh` chỉ cần khớp hoặc trỏ sang đó.
 - **Đã loại:** Chép nguyên `rtl/soc/soc_defs.vh` (mâu thuẫn bản đồ accelerator, lấn phần của người khác), đặt vùng địa chỉ trong `rtl/core` (core không phụ thuộc bản đồ địa chỉ, chỉ có `RESET_PC`).
+
+---
+
+## P4 – CSR, trap, ngắt, WFI
+
+### D-021. Khối `rv32_csr` với cổng kiểm tra ở EX và cổng đọc/ghi ở WB
+
+- **Bối cảnh:** Mục 4.7 cho lệnh CSR thực thi ở WB. D-009 để việc kiểm tra địa chỉ CSR cho `rv32_csr`.
+- **Lựa chọn:** `rv32_csr` có hai cổng. Cổng kiểm tra (tổ hợp) nhận `ex_csr_addr` và `ex_csr_we` từ decoder, báo CSR không tồn tại hoặc ghi vào vùng chỉ đọc `addr[11:10]=11`. Lỗi này gộp vào illegal của EX nên đi chung đường ngoại lệ với mọi lỗi khác. Cổng đọc/ghi dùng địa chỉ `wb_instr_q[31:20]`, đọc giá trị cũ và ghi theo RW/RS/RC ở WB. Giá trị cũ đi vào `wb_rd_data` nên được forward sang EX như kết quả ALU.
+- **Lý do:** Phát hiện ở EX giữ đúng mô hình "ngoại lệ gắn cờ ở EX, xử lý ở WB" của D-016. WB không cần thêm điều kiện trap, nên `d_req_valid_o` không phụ thuộc kết quả giải mã CSR.
+- **Đã loại:** Kiểm tra ở WB (thêm một nguồn trap ở WB, kéo dài đường `wb_redirect` → `d_req_valid_o`), đọc CSR ở EX (lệnh CSR ghi ở WB cùng chu kỳ sẽ cần bypass riêng, bộ đếm đổi mỗi chu kỳ).
+- **Theo dõi timing:** Đường forward giờ có thêm mux đọc CSR (khoảng 23 nguồn) từ flop `wb_instr_q`. Ngắn hơn đường găng 1 (DMEM clk→Q → căn chỉnh) nhưng cần xem khi tổng hợp.
+
+### D-022. Giá trị mang sang WB và mtval
+
+- **Lựa chọn:** `wb_result_q` chở thêm thông tin, không thêm flop 32 bit mới.
+  - Lệnh CSR: toán hạng ghi (`funct3[2] ? uimm : rs1`).
+  - JAL/JALR bị ngoại lệ: đích nhảy đã xoá bit 0 thay cho PC+4.
+  - Load/store và nhánh: kết quả ALU (địa chỉ, đích).
+- **mtval:** illegal = mã lệnh (`wb_instr_q`), instruction access fault = PC, lệch địa chỉ và access fault của load/store = `wb_result_q`, ECALL, EBREAK và ngắt = 0. Đúng mục 4.8.
+- **mcause** lưu bit 31 và 5 bit mã (WLRL, chỉ cần giữ giá trị hợp lệ 0..11). **mtvec** reset về 0, chế độ direct. **mepc** và **mtvec** không lưu bit 1:0.
+- CSR ngoài bảng mục 4.7 (mstatush, mcounteren, mcountinhibit, PMP, debug, CSR của S/U) là illegal. riscv-tests env `p` chịu được điều này vì luôn đặt `mtvec` trước khi chạm các CSR đó.
+
+### D-023. Chuyển hướng từ WB
+
+- **Lựa chọn:** `wb_redirect = trap | MRET | FENCE.I | WFI (khi ENABLE_WFI_SLEEP=1)`, chỉ ở chu kỳ lệnh rời WB. Đích: `mtvec` (trap), `mepc` (MRET), PC+4 (FENCE.I, WFI). Ưu tiên hơn `ex_redirect` ở `if_pc_q`. Lệnh ở EX bị huỷ (`wb_valid_q` không nạp), lệnh đang lấy bị huỷ (`ex_fetch_q`), `d_req_valid_o` bị chặn tổ hợp bởi `wb_redirect`.
+- **Không vi phạm luật bus 1:** `wb_redirect` chỉ xảy ra ở chu kỳ đầu lệnh ở WB, hoặc ở chu kỳ có phản hồi của chính nó. Trước đó yêu cầu của EX đã bị chặn bởi `wb_wait`, nên chưa có yêu cầu nào của EX đang ở wait state khi bị huỷ.
+- **Hệ quả:** `d_req_valid_o` phụ thuộc tổ hợp vào `d_rsp_err_i` (lỗi bus thành trap). Đã có phụ thuộc vào `d_rsp_valid_i` từ P3, luật 5 chỉ cấm phụ thuộc `ready`.
+- **Phạt:** 2 chu kỳ trống sau lệnh chuyển hướng từ WB. tb_core kiểm tra đúng con số này ở chế độ nominal (D-028).
+- **FENCE.I:** Trong tb và SoC, ghi IMEM đi qua cùng cổng với lấy lệnh nên lệnh lấy sau lệnh store luôn thấy giá trị mới. Chuyển hướng vẫn làm đúng đặc tả và là điều kiện an toàn khi có nguồn ghi IMEM khác.
+- `minstret` tăng khi lệnh rời WB mà không trap. Lệnh bị trap (kể cả bị ngắt) không tính.
+
+### D-024. Ngắt
+
+- **Lựa chọn:** `ex_irq = ex_valid & MIE & (mip & mie != 0) & ~wb_irq_block & ~ex_req_wait_q`. Lệnh bị ngắt không thực thi, không phát yêu cầu bus, không chuyển hướng, không ghi rd. Mã ngắt (MEI > MSI > MTI) được chốt vào `wb_cause_q` lúc lệnh rời EX vì đường ngắt có thể hạ trước khi lệnh tới WB.
+- **`wb_irq_block`:** WB đang ghi mstatus hoặc mie. EX đọc giá trị CSR từ flop nên ở chu kỳ đó còn thấy giá trị cũ. Chặn để lệnh ngay sau `csrci mstatus, MIE` không bị ngắt. Khi bật MIE, ngắt được nhận chậm nhất ở lệnh thứ hai sau lệnh bật (test `irq` kiểm tra).
+- **`ex_req_wait_q`:** Chu kỳ trước yêu cầu bus của lệnh ở EX đã hiện ra mà chưa được nhận. Không ngắt lệnh này nữa vì luật bus 1 bắt master giữ nguyên yêu cầu. Lệnh hoàn thành rồi ngắt được nhận ở lệnh sau.
+- **Đã loại:** Chốt quyết định ngắt vào flop (chậm 1 chu kỳ so với lệnh ghi mstatus/mie, phải thêm logic bù), nhận ngắt ở WB (phải huỷ lệnh đã thực thi ở WB, mất tính chính xác với store).
+- Đường ngắt đi tổ hợp vào `d_req_valid_o`. Cổng ngắt của SoC lấy từ flop của Timer, UART, GPIO nên không thành đường dài.
+
+### D-025. WFI ngủ
+
+- **Lựa chọn:** `ENABLE_WFI_SLEEP` mặc định 1. WFI ở WB chuyển hướng tới PC+4 và đặt `sleep_q`. `if_req_o = ~sleep_q` lấy từ flop. Thức khi `(mip & mie) != 0`, không xét `mstatus.MIE`. Lúc ngủ EX và WB trống nên flop pipeline, regfile giữ nguyên (enable bằng 0). `mcycle` và `mtime` vẫn chạy.
+- Sau khi thức, lệnh PC+4 được lấy lại. Nếu MIE=1 lệnh đó bị ngắt với mepc = PC(WFI)+4. Nếu MIE=0 chạy tiếp.
+- Ngủ tối thiểu 1 chu kỳ kể cả khi ngắt đã chờ sẵn (không đưa ngắt tổ hợp vào `sleep_q`/`if_req_o`). Từ lúc ngắt lên tới lúc lệnh PC+4 tới WB mất 3 chu kỳ.
+- `ENABLE_WFI_SLEEP=0`: WFI là NOP, không chuyển hướng.
+
+### D-026. Bộ đếm
+
+- `mcycle`, `minstret` 64 bit. Lệnh ghi nửa thấp hoặc nửa cao thay cho lần tăng trong chu kỳ đó (đặc tả Zicntr, riscv-tests `instret_overflow` kiểm tra cả nửa cao). Ghi nửa thấp không đổi nửa cao.
+- `cycle`, `instret` và nửa cao là bí danh chỉ đọc. `time`, `timeh` đọc thẳng `mtime_i`.
+
+### D-027. Cổng mới và waiver lint
+
+- Thêm `irq_software_i`, `irq_timer_i`, `irq_external_i`, `mtime_i[63:0]`, `core_sleep_o` và tham số `ENABLE_WFI_SLEEP`. Xoá waiver `unused_p4` của D-016 vì mọi tín hiệu đều đã dùng.
+- Waiver duy nhất còn lại là `unused_p7 = wb_unsup_q`, cờ "lệnh RV32M chưa thực thi" chỉ tb_core đọc. P7 xoá.
+- `lint-core` chạy `rv32_core` với đủ 4 tổ hợp `ENABLE_M` × `ENABLE_WFI_SLEEP`, `rv32_csr` với `ENABLE_M=0/1`.
+- `irq_cause_o` viết bằng `assign` thay cho `always @(*)`: Icarus không chạy `always @(*)` ở thời điểm 0 nếu đầu vào không đổi, ngõ ra sẽ là X trong mô phỏng dù logic đúng.
+
+### D-028. tb_core cho P4
+
+- **Cấu hình:** tên `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`. `fw-core` chạy đủ 4 cấu hình × 4 chế độ.
+- **Khối điều khiển của tb** ở `CORE_TB_CTRL_BASE` (0x2FFF_0000, chỉ có trong tb): ghi mức 3 đường ngắt kèm số chu kỳ chờ, đọc số chu kỳ ngủ, đọc cấu hình. `mtime_i` tăng mỗi chu kỳ.
+- **Trap hợp lệ** khi chương trình đã cài `mtvec`. Trap lúc `mtvec` còn bằng 0 (giá trị reset) là FAIL, để test P3 không có trình xử lý vẫn dừng ngay khi gặp ngoại lệ.
+- **Kiểm tra mới:** lệnh nhận trap không được truy cập bus (trừ khi chính truy cập đó lỗi), lúc ngủ không lấy lệnh, không truy cập bus và WB trống.
+- **Strict timing:** thêm 2 chu kỳ sau chuyển hướng từ WB và cộng số chu kỳ ngủ. tb tự suy ra chuyển hướng từ mã lệnh (MRET, FENCE.I, WFI) và cờ trap, không lấy `wb_redirect` của core, để bắt lỗi thiếu chuyển hướng.
+- **Chạy song song:** `scripts/core_run.sh` chạy một lần mô phỏng, Makefile gọi qua `xargs -P` (biến `CORE_JOBS`). Kết quả ở `tb/core/out/<target>.summary`.
+- Dòng PASS in thêm số chu kỳ ngủ khi khác 0.
+
+### D-029. riscv-tests
+
+- **Submodule** `fw/riscv-tests` ghim commit `3df703cd52d5`, chạy env `p` gốc, không sửa file nào của submodule.
+- **`fw/common/link_isa.ld`:** mọi section ở IMEM. `rv32ui-p-fence_i` ghi lệnh vào `.data` rồi nhảy tới đó, mà core chỉ lấy lệnh từ IMEM/boot ROM (mục 4.3). Đặt `.data` ở DMEM thì test này nhận instruction access fault. Load/store vào IMEM vẫn đi qua bus dữ liệu, DMEM đã được `smoke` và `hazard` phủ.
+- **`make isa-core`:** danh sách test lấy từ thư mục `isa/rv32ui`, `isa/rv32mi`, `isa/rv32um` trừ `CORE_ISA_SKIP`. Chạy cấu hình M0W0 và M1W1 (mỗi tham số có cả hai giá trị), 4 chế độ. rv32um chỉ chạy khi ENABLE_M=1.
+- **Loại có lý do:** `rv32ui-p-ma_data` (cần load/store lệch chạy đúng, trái mục 4.1), `rv32mi-p-breakpoint` (cần debug trigger), `rv32mi-p-pmpaddr` (cần PMP). Chi tiết trong `docs/riscv-tests-status.md`.
+- **`tb_rv32_csr`:** quét đủ 4096 địa chỉ × đọc/ghi ở cổng kiểm tra so với bảng mục 4.7 viết lại bằng số, giá trị reset, ưu tiên ngắt.
+
+### D-030. Bằng chứng kiểm tra P4
+
+- `make isa-core` 440/440, `make fw-core` 80/80 (5 test × 4 cấu hình × 4 chế độ), `make unit-core` 8/8, `make lint-core` 0 warning.
+- Cấy 24 lỗi vào bản sao RTL (không chặn ngắt khi ghi mstatus/mie, ngắt bỏ yêu cầu đang wait state, lệnh bị ngắt vẫn phát yêu cầu bus, chuyển hướng WB không chặn yêu cầu bus, không huỷ lệnh ở EX, không huỷ lệnh đang lấy, FENCE.I không chuyển hướng, WFI không ngủ, chỉ thức khi MIE=1, `if_req_o` không xoá khi ngủ, lệnh trap vẫn tăng minstret, load lỗi bus vẫn ghi rd, mtval lệch địa chỉ bằng 0, mtval nhảy lệch sai, tắt kiểm tra CSR, cho ghi CSR chỉ đọc, sai ưu tiên ngắt, MRET không đặt MPIE, ghi minstreth không thay lần tăng, mcycle không nhớ sang nửa cao, RC thành RS, mất bit 31 của mcause khi ngắt, cùng 2 lỗi tương đương về logic). 22 lỗi không tương đương đều bị bắt. Lệnh bị ngắt phát yêu cầu bus và FENCE.I không chuyển hướng chỉ bị bắt sau khi thêm hai kiểm tra của D-028.

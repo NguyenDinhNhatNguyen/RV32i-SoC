@@ -20,6 +20,7 @@ help:
 	@echo "make lint-core     - lint core RV32I bằng Verilator, 0 warning"
 	@echo "make unit-core     - unit test các khối của core (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - test assembly trên tb_core (T=tên để chạy một bài)"
+	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) trên tb_core (T=rv32ui-p-add)"
 	@echo "make clean-core    - xoá kết quả mô phỏng của core"
 
 sim-accel:
@@ -98,14 +99,17 @@ CORE_IVFLAGS  := -g2012 -Wall $(addprefix -I,$(CORE_INC))
 CORE_VLFLAGS  := --lint-only -Wall -Irtl/core -y rtl/core
 
 # Recipe của core dùng cú pháp bash và pipefail. Chỉ đặt cho target core để không đổi target có sẵn.
-lint-core unit-core fw-core: SHELL := /bin/bash
-lint-core unit-core fw-core: .SHELLFLAGS := -o pipefail -c
+lint-core unit-core: SHELL := /bin/bash
+lint-core unit-core: .SHELLFLAGS := -o pipefail -c
 
 # Bộ tham số cho từng module / testbench: mỗi lần chạy cách nhau dấu cách,
 # trong một lần chạy là danh sách NAME=VALUE cách nhau dấu phẩy. Không khai báo thì dùng mặc định.
 CORE_LINT_CFG_rv32_decoder    := ENABLE_M=0 ENABLE_M=1
-CORE_LINT_CFG_rv32_core       := ENABLE_M=0 ENABLE_M=1
+CORE_LINT_CFG_rv32_core       := ENABLE_M=0,ENABLE_WFI_SLEEP=0 ENABLE_M=0,ENABLE_WFI_SLEEP=1 \
+                                 ENABLE_M=1,ENABLE_WFI_SLEEP=0 ENABLE_M=1,ENABLE_WFI_SLEEP=1
+CORE_LINT_CFG_rv32_csr        := ENABLE_M=0 ENABLE_M=1
 CORE_UNIT_CFG_tb_rv32_decoder := ENABLE_M=0 ENABLE_M=1
+CORE_UNIT_CFG_tb_rv32_csr     := ENABLE_M=0 ENABLE_M=1
 core_cfgs = $(or $(CORE_LINT_CFG_$(1)),$(CORE_UNIT_CFG_$(1)),default)
 
 # Lint từng module làm top riêng, rv32_core kéo theo cả phân cấp qua -y.
@@ -156,23 +160,28 @@ unit-core:
 # Tự dò tiền tố toolchain (đổi bằng: make fw-core RV_PREFIX=...)
 RV_PREFIX ?= $(firstword $(foreach p,riscv64-unknown-elf riscv-none-elf riscv32-unknown-elf,\
                $(if $(shell command -v $(p)-gcc 2>/dev/null),$(p))))
-CORE_RV_ASFLAGS := -march=rv32i_zicsr_zifencei -mabi=ilp32 -nostdlib -nostartfiles -static \
-                   -T fw/common/link.ld -Ifw/tests/asm
+CORE_RV_LDFLAGS := -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld
+CORE_RV_ASFLAGS := -march=rv32i_zicsr_zifencei $(CORE_RV_LDFLAGS) -Ifw/tests/asm
+
+# Cấu hình tb_core: M<ENABLE_M>W<ENABLE_WFI_SLEEP>
+core_cfg_m = $(word 1,$(subst W, ,$(subst M,,$(1))))
+core_cfg_w = $(word 2,$(subst W, ,$(subst M,,$(1))))
+
+# Chế độ chạy: đúng timing pipeline khi không stall, rồi 3 bộ stall bus ngẫu nhiên
+# (cổng lệnh không được cấp quyền, wait state, phản hồi trễ) với seed cố định.
+CORE_MODES := nominal stall1 stall2 stall3
+CORE_PLUS_nominal := +strict_timing
+CORE_PLUS_stall1  := +seed=1 +if_stall=25 +d_stall=30 +rsp_delay=3
+CORE_PLUS_stall2  := +seed=2 +if_stall=50 +d_stall=50 +rsp_delay=5
+CORE_PLUS_stall3  := +seed=3 +if_stall=10 +d_stall=70 +rsp_delay=1
 
 CORE_FW_OUT   := $(CORE_OUT)/fw
 CORE_FW_TESTS := $(basename $(notdir $(wildcard fw/tests/asm/*.S)))
 ifneq ($(T),)
 CORE_FW_TESTS := $(filter $(T),$(CORE_FW_TESTS))
 endif
-CORE_FW_M     := 0 1
-# Chế độ chạy: đúng timing pipeline khi không stall, rồi 3 bộ stall bus ngẫu nhiên
-# (cổng lệnh không được cấp quyền, wait state, phản hồi trễ) với seed cố định.
-CORE_FW_MODES := nominal stall1 stall2 stall3
-CORE_FW_PLUS_nominal := +strict_timing
-CORE_FW_PLUS_stall1  := +seed=1 +if_stall=25 +d_stall=30 +rsp_delay=3
-CORE_FW_PLUS_stall2  := +seed=2 +if_stall=50 +d_stall=50 +rsp_delay=5
-CORE_FW_PLUS_stall3  := +seed=3 +if_stall=10 +d_stall=70 +rsp_delay=1
-CORE_FW_RUNS  := $(foreach m,$(CORE_FW_M),$(foreach t,$(CORE_FW_TESTS),$(foreach md,$(CORE_FW_MODES),$(t)@$(m)@$(md))))
+CORE_FW_CFGS  := M0W0 M0W1 M1W0 M1W1
+CORE_FW_RUNS  := $(foreach c,$(CORE_FW_CFGS),$(foreach t,$(CORE_FW_TESTS),$(foreach md,$(CORE_MODES),$(t)@$(c)@$(md))))
 
 .PRECIOUS: $(CORE_FW_OUT)/%.elf
 $(CORE_FW_OUT)/%.elf: fw/tests/asm/%.S fw/tests/asm/test_macros.h fw/common/link.ld
@@ -181,28 +190,79 @@ $(CORE_FW_OUT)/%.elf: fw/tests/asm/%.S fw/tests/asm/test_macros.h fw/common/link
 	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
 
 # elf2hex in ra "tohost=<hex>", giữ lại làm plusarg khi chạy
-$(CORE_FW_OUT)/%.tohost: $(CORE_FW_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
-	$(PYTHON) scripts/elf2hex.py $< --imem $(CORE_FW_OUT)/$*.imem.hex --dmem $(CORE_FW_OUT)/$*.dmem.hex > $@
+$(CORE_OUT)/%.tohost: $(CORE_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
+	@$(PYTHON) scripts/elf2hex.py $< --imem $(CORE_OUT)/$*.imem.hex --dmem $(CORE_OUT)/$*.dmem.hex > $@
 
-$(CORE_OUT)/tb_core_M%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_RTL) $(CORE_MODELS) rtl/core/rv32_defs.vh
+$(CORE_OUT)/tb_core_%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_RTL) $(CORE_MODELS) rtl/core/rv32_defs.vh
 	@mkdir -p $(@D)
-	$(IVERILOG) $(CORE_IVFLAGS) -s tb_core -Ptb_core.ENABLE_M=$* -o $@ $(CORE_RTL) $(CORE_MODELS) tb/core/tb_core.v
+	$(IVERILOG) $(CORE_IVFLAGS) -s tb_core -Ptb_core.ENABLE_M=$(call core_cfg_m,$*) \
+	  -Ptb_core.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -o $@ $(CORE_RTL) $(CORE_MODELS) tb/core/tb_core.v
 
-fw-core: $(foreach m,$(CORE_FW_M),$(CORE_OUT)/tb_core_M$(m).vvp) $(foreach t,$(CORE_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost)
-	@pass=0; fail=0; \
-	run_one() { \
-	  t=$$1; m=$$2; md=$$3; log=$(CORE_FW_OUT)/$$t.M$$m.$$md.log; \
-	  if $(VVP) -n $(CORE_OUT)/tb_core_M$$m.vvp +imem=$(CORE_FW_OUT)/$$t.imem.hex \
-	       +dmem=$(CORE_FW_OUT)/$$t.dmem.hex +$$(cat $(CORE_FW_OUT)/$$t.tohost) \
-	       +test=$$t/M$$m/$$md $$4 $(PLUSARGS) > $$log 2>&1 && \
-	     grep -q '^PASS' $$log && ! grep -q '^FAIL' $$log; then \
-	    pass=$$((pass+1)); echo "  $$(grep '^PASS' $$log | tail -n 1)"; \
-	  else \
-	    fail=$$((fail+1)); echo "  [FAIL] $$t M$$m $$md (log: $$log)"; tail -n 20 $$log; \
-	  fi; \
-	}; \
-	$(foreach r,$(CORE_FW_RUNS),run_one $(subst @, ,$(r)) "$(CORE_FW_PLUS_$(lastword $(subst @, ,$(r))))";) \
-	echo "FW-CORE: $$pass passed, $$fail failed"; [ $$fail = 0 ]
+# Chạy danh sách "<thư mục>/<test>@<cấu hình>@<chế độ>" song song (CORE_JOBS tiến trình)
+# bằng scripts/core_run.sh. Kết quả từng lần chạy ghi vào $(CORE_OUT)/<nhãn>.summary.
+CORE_JOBS ?= $(shell nproc 2>/dev/null || echo 4)
+export CORE_PLUS_nominal CORE_PLUS_stall1 CORE_PLUS_stall2 CORE_PLUS_stall3 PLUSARGS VVP
+define core_run
+	@printf '%s\n' $(2) | xargs -P $(CORE_JOBS) -n 1 bash scripts/core_run.sh $(CORE_OUT) \
+	  > $(CORE_OUT)/$(1).summary; \
+	cat $(CORE_OUT)/$(1).summary; \
+	pass=$$(grep -c '^  PASS' $(CORE_OUT)/$(1).summary); \
+	fail=$$(grep -c '^  \[FAIL\]' $(CORE_OUT)/$(1).summary); \
+	echo "$(1): $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass -gt 0 ]
+endef
+
+fw-core: $(foreach c,$(CORE_FW_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) $(foreach t,$(CORE_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost)
+	$(call core_run,fw-core,$(addprefix $(CORE_FW_OUT)/,$(CORE_FW_RUNS)))
+
+# ---------------------------------------------------------------------------
+# riscv-tests (submodule fw/riscv-tests, env p) trên tb_core, docs/spec/core.md mục 10.3.
+# Test bị loại có lý do trong docs/riscv-tests-status.md.
+#   make isa-core                  mọi test với ENABLE_M=0 và 1
+#   make isa-core T=rv32ui-p-add   chạy một test
+# ---------------------------------------------------------------------------
+CORE_ISA_DIR  := fw/riscv-tests/isa
+CORE_ISA_ENV  := fw/riscv-tests/env/p
+CORE_ISA_OUT  := $(CORE_OUT)/isa
+core_isa_list = $(addprefix $(1)-p-,$(basename $(notdir $(wildcard $(CORE_ISA_DIR)/$(1)/*.S))))
+CORE_ISA_SKIP := rv32ui-p-ma_data rv32mi-p-breakpoint rv32mi-p-pmpaddr
+# Chưa có M-unit (P7)
+CORE_ISA_SKIP += $(call core_isa_list,rv32um)
+CORE_ISA_BASE := $(filter-out $(CORE_ISA_SKIP),$(call core_isa_list,rv32ui) $(call core_isa_list,rv32mi))
+CORE_ISA_M    := $(filter-out $(CORE_ISA_SKIP),$(call core_isa_list,rv32um))
+CORE_ISA_CFGS := M0W0 M1W1
+ifneq ($(T),)
+CORE_ISA_BASE := $(filter $(T),$(CORE_ISA_BASE))
+CORE_ISA_M    := $(filter $(T),$(CORE_ISA_M))
+endif
+# Test RV32M chỉ chạy với ENABLE_M=1
+core_isa_tests = $(CORE_ISA_BASE) $(if $(filter 1,$(call core_cfg_m,$(1))),$(CORE_ISA_M))
+CORE_ISA_RUNS := $(foreach c,$(CORE_ISA_CFGS),$(foreach t,$(call core_isa_tests,$(c)),$(foreach md,$(CORE_MODES),$(t)@$(c)@$(md))))
+
+CORE_ISA_FLAGS := -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link_isa.ld \
+                  -I$(CORE_ISA_ENV) -I$(CORE_ISA_DIR)/macros/scalar
+
+.PRECIOUS: $(CORE_ISA_OUT)/rv32ui-p-%.elf $(CORE_ISA_OUT)/rv32mi-p-%.elf $(CORE_ISA_OUT)/rv32um-p-%.elf
+$(CORE_ISA_OUT)/rv32ui-p-%.elf: $(CORE_ISA_DIR)/rv32ui/%.S fw/common/link_isa.ld
+	@mkdir -p $(@D)
+	@$(RV_PREFIX)-gcc -march=rv32i_zicsr_zifencei $(CORE_ISA_FLAGS) -o $@ $<
+$(CORE_ISA_OUT)/rv32mi-p-%.elf: $(CORE_ISA_DIR)/rv32mi/%.S fw/common/link_isa.ld
+	@mkdir -p $(@D)
+	@$(RV_PREFIX)-gcc -march=rv32i_zicsr_zifencei $(CORE_ISA_FLAGS) -o $@ $<
+$(CORE_ISA_OUT)/rv32um-p-%.elf: $(CORE_ISA_DIR)/rv32um/%.S fw/common/link_isa.ld
+	@mkdir -p $(@D)
+	@$(RV_PREFIX)-gcc -march=rv32im_zicsr_zifencei $(CORE_ISA_FLAGS) -o $@ $<
+
+isa-core: SHELL := /bin/bash
+isa-core: .SHELLFLAGS := -o pipefail -c
+fw-core: SHELL := /bin/bash
+fw-core: .SHELLFLAGS := -o pipefail -c
+
+isa-core: $(foreach c,$(CORE_ISA_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) \
+          $(foreach t,$(CORE_ISA_BASE) $(CORE_ISA_M),$(CORE_ISA_OUT)/$(t).tohost)
+	@test -f $(CORE_ISA_ENV)/riscv_test.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive fw/riscv-tests"; exit 1; }
+	$(call core_run,isa-core,$(addprefix $(CORE_ISA_OUT)/,$(CORE_ISA_RUNS)))
+
+.PHONY: isa-core
 
 clean-core:
 	rm -rf $(CORE_OUT) $(CORE_UNIT_OUT)
