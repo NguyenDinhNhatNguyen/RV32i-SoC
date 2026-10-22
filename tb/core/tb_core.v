@@ -29,6 +29,8 @@
 //   +rsp_delay=<max>          phản hồi trễ thêm ngẫu nhiên 0..max chu kỳ
 //   +strict_timing            kiểm tra đúng số bubble (chỉ khi không stall)
 //   +trace                    in vết gần định dạng commit log của Spike
+//   +signature=<file>         khi PASS, ghi vùng [+sig_begin, +sig_end) (hex) ra file,
+//                             mỗi dòng một word, theo định dạng signature của riscv-arch-test
 `include "core_tb_map.vh"
 `include "rv32_defs.vh"
 
@@ -253,10 +255,34 @@ module tb_core;
     integer instret = 0;
     reg     done    = 1'b0;
 
+    // Signature cho riscv-arch-test, đọc thẳng từ mô hình bộ nhớ
+    reg  [8*512-1:0] sig_file;
+    reg  [31:0]      sig_begin = 32'h0, sig_end = 32'h0;
+    reg              sig_en    = 1'b0;
+
+    task dump_signature;
+        integer    fd;
+        reg [31:0] a;
+        begin
+            fd = $fopen(sig_file, "w");
+            for (a = sig_begin; a < sig_end; a = a + 32'd4) begin
+                if ((a - `CORE_TB_IMEM_BASE) < IMEM_SIZE)
+                    $fdisplay(fd, "%08x", u_imem.mem[(a - `CORE_TB_IMEM_BASE) >> 2]);
+                else if (a >= `CORE_TB_DMEM_BASE && a < `CORE_TB_DMEM_BASE + DMEM_SIZE)
+                    $fdisplay(fd, "%08x", u_dmem.mem[(a - `CORE_TB_DMEM_BASE) >> 2]);
+                else
+                    $fdisplay(fd, "xxxxxxxx");
+            end
+            $fclose(fd);
+        end
+    endtask
+
     task end_test(input pass, input [8*96-1:0] why);
         begin
             if (!done) begin
                 done = 1'b1;
+                if (pass && sig_en)
+                    dump_signature;
                 if (pass && sleep_cycles > 0)
                     $display("PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, sleep %0d, seed %0d)",
                              test_name, cycle, instret,
@@ -440,6 +466,9 @@ module tb_core;
         if ($value$plusargs("test=%s", test_name)) ;
         strict_timing = $test$plusargs("strict_timing");
         trace_en      = $test$plusargs("trace");
+        sig_en        = $value$plusargs("signature=%s", sig_file);
+        if ($value$plusargs("sig_begin=%h", sig_begin)) ;
+        if ($value$plusargs("sig_end=%h", sig_end)) ;
         if (tohost == 32'hFFFF_FFFF)
             $display("WARNING: no +tohost=, the test can only end by timeout");
         if (strict_timing && (if_stall_pct != 0 || d_stall_pct != 0 || rsp_delay_max != 0))

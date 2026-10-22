@@ -348,3 +348,62 @@ bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
 	      echo "  [FAIL] $$t: CoreMark khong tu kiem duoc ket qua"; fail=1; fi;; \
 	  esac; \
 	done; [ $$fail = 0 ]
+
+# ---------------------------------------------------------------------------
+# riscv-arch-test (submodule fw/riscv-arch-test, tag 3.10.0) qua RISCOF, mô hình
+# tham chiếu là Spike. Hướng dẫn, lệnh cài: docs/riscof.md.
+#   make arch-core          RISCOF so signature của core với Spike (cần riscof, spike)
+#   make arch-core-dut      chỉ chạy phía core: dịch, chạy, ghi signature, không so
+#                           (dùng khi chưa cài RISCOF/Spike, T=add-01 để chạy một bài)
+# tb_core cho arch-test dịch với IMEM 2 MB vì jal-01 dài khoảng 1,7 MB.
+# ---------------------------------------------------------------------------
+ARCH_IMEM_SIZE := 2097152
+ARCH_SUITE     := fw/riscv-arch-test/riscv-test-suite
+ARCH_OUT       := tb/riscof/out
+ARCH_CFGS      := M0W1 M1W1
+# Bộ test RISCOF sẽ chọn cho core (RV32I/IM, Zicsr, Zifencei, không C, không
+# hỗ trợ truy cập lệch): I, M, Zifencei, privilege/ecall, ebreak, misalign2-jalr
+ARCH_BASE      := $(wildcard $(ARCH_SUITE)/rv32i_m/I/src/*.S) $(wildcard $(ARCH_SUITE)/rv32i_m/Zifencei/src/*.S)
+ARCH_PRIV      := $(addprefix $(ARCH_SUITE)/rv32i_m/privilege/src/,ecall.S ebreak.S misalign2-jalr-01.S)
+ARCH_M         := $(wildcard $(ARCH_SUITE)/rv32i_m/M/src/*.S)
+ifneq ($(T),)
+arch_pick       = $(foreach f,$(1),$(if $(filter $(T),$(basename $(notdir $(f)))),$(f)))
+ARCH_BASE      := $(call arch_pick,$(ARCH_BASE))
+ARCH_PRIV      := $(call arch_pick,$(ARCH_PRIV))
+ARCH_M         := $(call arch_pick,$(ARCH_M))
+endif
+# <cấu hình>@<file .S>@<macro,...>, test M chỉ chạy với ENABLE_M=1
+arch_runs = $(foreach f,$(ARCH_BASE),$(1)@$(f)@TEST_CASE_1=True) \
+            $(foreach f,$(ARCH_PRIV),$(1)@$(f)@TEST_CASE_1=True,rvtest_mtrap_routine=True) \
+            $(if $(filter M1%,$(1)),$(foreach f,$(ARCH_M),$(1)@$(f)@TEST_CASE_1=True))
+
+$(CORE_OUT)/tb_core_arch_%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_RTL) $(CORE_MODELS) rtl/core/rv32_defs.vh
+	@mkdir -p $(@D)
+	$(IVERILOG) $(CORE_IVFLAGS) -DCORE_TB_IMEM_SIZE=$(ARCH_IMEM_SIZE) -s tb_core \
+	  -Ptb_core.ENABLE_M=$(call core_cfg_m,$*) -Ptb_core.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) \
+	  -o $@ $(CORE_RTL) $(CORE_MODELS) tb/core/tb_core.v
+
+.PHONY: arch-core arch-core-dut
+arch-core-dut: SHELL := /bin/bash
+arch-core-dut: .SHELLFLAGS := -o pipefail -c
+arch-core-dut: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
+	@test -f $(ARCH_SUITE)/env/arch_test.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	@mkdir -p $(ARCH_OUT)
+	@printf '%s\n' $(foreach c,$(ARCH_CFGS),$(call arch_runs,$(c))) | \
+	  xargs -P $(CORE_JOBS) -I{} bash -c 'r={}; c=$${r%%@*}; x=$${r#*@}; f=$${x%%@*}; m=$${x#*@}; \
+	    ARCH_IMEM_SIZE=$(ARCH_IMEM_SIZE) RV_PREFIX=$(RV_PREFIX) scripts/arch_run.sh $$c $$f \
+	    $(CURDIR)/$(ARCH_OUT)/dut/$$c/$$(basename $$f .S) $${m//,/ }' > $(ARCH_OUT)/dut.summary || true
+	@sort $(ARCH_OUT)/dut.summary; \
+	pass=$$(grep -c '^  PASS' $(ARCH_OUT)/dut.summary); fail=$$(grep -c '^  \[FAIL\]' $(ARCH_OUT)/dut.summary); \
+	echo "arch-core-dut: $$pass passed, $$fail failed (chi chay phia core, chua so voi Spike)"; [ $$fail = 0 ]
+
+# RISCOF chọn test theo ISA yaml của từng cấu hình, chạy core và Spike rồi so signature.
+# Báo cáo HTML ở tb/riscof/out/<cấu hình>/report.html.
+arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
+	@command -v riscof > /dev/null || { echo "LOI: chua co riscof, xem lenh cai trong docs/riscof.md"; exit 1; }
+	@command -v spike > /dev/null || { echo "LOI: chua co spike, xem lenh cai trong docs/riscof.md"; exit 1; }
+	@for c in $(ARCH_CFGS); do \
+	  echo "== RISCOF $$c =="; \
+	  (cd tb/riscof && riscof run --config config_$$c.ini --suite $(CURDIR)/$(ARCH_SUITE) \
+	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c --no-browser) || exit 1; \
+	done
