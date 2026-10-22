@@ -7,3 +7,6 @@
 [submodule "fw/riscv-arch-test"]
 	path = fw/riscv-arch-test
 	url = https://github.com/riscv-non-isa/riscv-arch-test.git
+[submodule "ref/picorv32"]
+	path = ref/picorv32
+	url = https://github.com/YosysHQ/picorv32.git

@@ -25,6 +25,7 @@ help:
 	@echo "make arch-core-dut - riscv-arch-test chỉ chạy phía core, ghi signature (T=add-01)"
 	@echo "make arch-core     - riscv-arch-test qua RISCOF, so với Spike (cần riscof, spike)"
 	@echo "make synth-core-yosys - Yosys tổng hợp thử rv32_core, chỉ xem xu hướng"
+	@echo "make synth-compare-yosys - như trên, thêm PicoRV32 (ref/picorv32) để so sánh"
 	@echo "make clean-core    - xoá kết quả mô phỏng của core"
 
 sim-accel:
@@ -432,3 +433,20 @@ endef
 synth-core-yosys:
 	$(call yosys_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
 	$(call yosys_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
+
+# PicoRV32 (submodule ref/picorv32, không sửa) qua cùng flow, để so sánh sơ bộ
+# với rv32_core. Bảng kết quả: docs/yosys_compare.md.
+#   make synth-ref-yosys           3 cấu hình PicoRV32
+#   make synth-compare-yosys       rv32_core và PicoRV32
+PICO_SRC := ref/picorv32/picorv32.v
+PICO_CFG_I  := BARREL_SHIFTER=1 ENABLE_IRQ=1
+PICO_CFG_IM := BARREL_SHIFTER=1 ENABLE_IRQ=1 ENABLE_FAST_MUL=1 ENABLE_DIV=1
+
+.PHONY: synth-ref-yosys synth-compare-yosys
+synth-ref-yosys:
+	@test -f $(PICO_SRC) || { echo "LOI: chua co submodule, chay: git submodule update --init ref/picorv32"; exit 1; }
+	$(call yosys_run,picorv32_default,picorv32,$(PICO_SRC),,)
+	$(call yosys_run,picorv32_I,picorv32,$(PICO_SRC),,$(PICO_CFG_I))
+	$(call yosys_run,picorv32_IM,picorv32,$(PICO_SRC),,$(PICO_CFG_IM))
+
+synth-compare-yosys: synth-core-yosys synth-ref-yosys
