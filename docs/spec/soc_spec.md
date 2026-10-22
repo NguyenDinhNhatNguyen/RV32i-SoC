@@ -57,7 +57,7 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 | Kích thước | 80 × 100 µm |
 | Chân | `CLK`, `CEN` (tích cực thấp), `WEN` (tích cực thấp), `A[9:0]`, `D[31:0]`, `Q[31:0]` |
 | Ghi theo byte | Không có |
-| File | LEF, `.lib`, model `.v`. Chưa có GDS |
+| File | LEF, `.lib`, model `.v`. Không có GDS và CDL, thầy xác nhận không cần (22/10) |
 
 Đọc đồng bộ: `Q` có ở chu kỳ sau, khớp luật `rsp_valid` ở chu kỳ sau của bus.
 

@@ -12,7 +12,8 @@ Thầy nhắc xem kỹ cách làm với macro. Tài liệu này gom những gì 
 | Chân | `CLK`, `CEN` (tích cực thấp), `WEN` (tích cực thấp), `A[9:0]`, `D[31:0]`, `Q[31:0]` |
 | Ghi theo byte | Không có |
 | File trên server | `~/PDK_GPDK45/lef/sram_2k_macro.lef`, `lib/sram_2k_macro.lib`, `lib/sram_2k_macro.v` |
-| Thiếu | GDS, file CDL/SPICE cho LVS, có thể thiếu `.lib` corner fast |
+| Không có | GDS, file CDL/SPICE. Thầy xác nhận ngày 22/10 là không cần (mục 3.7) |
+| Còn phải kiểm tra | `.lib` có corner fast không |
 
 ## 2. Việc cần kiểm tra trên server
 
@@ -66,18 +67,21 @@ Chạy `bash scripts/macro_info.sh` và dán output vào chat. Script trả lờ
 
 - Dùng `.lib` của macro cho cả setup và hold. Nếu chỉ có corner slow, view hold dùng tạm `.lib` slow cho macro và ghi rõ trong report.
 
-### 3.7 DRC, LVS, xuất GDS
+### 3.7 Kiểm tra cuối và xuất file
 
-- **Rủi ro lớn nhất:** chưa có GDS của macro. `streamOut` không ghép được hình học bên trong macro, nên DRC và LVS toàn chip thiếu hoặc sai ở vùng macro.
-- LVS còn cần netlist CDL/SPICE của macro.
+- Thầy xác nhận ngày 22/10: đồ án không đi tới sản xuất, chỉ cần đủ flow PD như bình thường. Không cần GDS và CDL của macro.
+- Kiểm tra cuối làm trong Innovus như PD-01: `verify_drc`, `verifyConnectivity`, `verifyProcessAntenna`, timing sau route. Macro được kiểm theo LEF (chân, OBS), không cần hình học bên trong.
+- `streamOut` vẫn chạy được, GDS chỉ có phần do Innovus vẽ, vùng macro để trống. Ghi rõ điều này trong report.
 
 ## 4. Hỏi thầy
 
-1. Có GDS và file CDL/SPICE của `sram_2k_macro` không, nằm ở đâu?
-2. Nếu không có: DRC/LVS làm với macro là hộp đen (chỉ kiểm phần ngoài macro) có được chấp nhận không?
-3. Macro có `.lib` corner fast không? Nếu không, hold cho đường qua macro tính thế nào?
-4. Tên "2k" là 2 KB hay 2K word? File `.v` cho thấy 1024 word × 32 bit = 4 KB.
-5. Được dùng bao nhiêu macro trong một thiết kế (spec SoC mục 7.2 đề xuất 8 macro cho 32 KB)?
+Đã trả lời (22/10): không cần GDS và CDL của macro, chỉ cần đủ flow PD.
+
+Còn hỏi:
+
+1. Macro có `.lib` corner fast không? Nếu không, hold cho đường qua macro tính thế nào?
+2. Tên "2k" là 2 KB hay 2K word? File `.v` cho thấy 1024 word × 32 bit = 4 KB.
+3. Được dùng bao nhiêu macro trong một thiết kế (spec SoC mục 7.2 đề xuất 8 macro cho 32 KB)?
 
 ## 5. Thử trước trên một khối nhỏ
 
