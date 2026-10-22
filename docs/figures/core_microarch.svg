@@ -1,0 +1,243 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 990" width="1480" height="990" font-family="Helvetica, Arial, sans-serif">
+<defs>
+<marker id="a_333333" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#333333"/></marker>
+<marker id="s_333333" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 0 L0 5 L10 10 Z" fill="#333333"/></marker>
+<marker id="a_1f6fd1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1f6fd1"/></marker>
+<marker id="s_1f6fd1" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 0 L0 5 L10 10 Z" fill="#1f6fd1"/></marker>
+<marker id="a_d23f31" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#d23f31"/></marker>
+<marker id="s_d23f31" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 0 L0 5 L10 10 Z" fill="#d23f31"/></marker>
+<marker id="a_2e8b57" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#2e8b57"/></marker>
+<marker id="s_2e8b57" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 0 L0 5 L10 10 Z" fill="#2e8b57"/></marker>
+<marker id="a_e08a00" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#e08a00"/></marker>
+<marker id="s_e08a00" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10 0 L0 5 L10 10 Z" fill="#e08a00"/></marker>
+</defs>
+<rect width="1480" height="990" fill="#ffffff"/>
+<text x="20" y="32" font-size="20" text-anchor="start" font-weight="bold" fill="#222">rv32_core: vi kiến trúc pipeline 3 tầng IF / EX / WB</text>
+<text x="20" y="54" font-size="12" text-anchor="start" font-weight="normal" fill="#555">RV32I + Zicsr + Zicntr + Zifencei, M-mode, RV32M khi ENABLE_M = 1 (docs/spec/core.md mục 4)</text>
+<rect x="170" y="80" width="1160" height="800" fill="none" stroke="#444" stroke-width="2" rx="6"/>
+<rect x="171" y="81" width="228" height="798" fill="#eaf2fb"/>
+<text x="285" y="100" text-anchor="middle" fill="#333"><tspan font-size="15" font-weight="bold">IF</tspan><tspan font-size="11.5" fill="#555" dx="8">lấy lệnh</tspan></text>
+<rect x="401" y="81" width="598" height="798" fill="#eef7ea"/>
+<text x="700" y="100" text-anchor="middle" fill="#333"><tspan font-size="15" font-weight="bold">EX</tspan><tspan font-size="11.5" fill="#555" dx="8">giải mã, thực thi, phát yêu cầu bus</tspan></text>
+<rect x="1001" y="81" width="328" height="798" fill="#fbf1e6"/>
+<text x="1068" y="100" text-anchor="middle" fill="#333"><tspan font-size="15" font-weight="bold">WB</tspan><tspan font-size="11.5" fill="#555" dx="8">ghi rd, CSR, trap</tspan></text>
+<line x1="400" y1="81" x2="400" y2="879" stroke="#999" stroke-dasharray="5 4"/>
+<line x1="1000" y1="81" x2="1000" y2="879" stroke="#999" stroke-dasharray="5 4"/>
+<rect x="170" y="80" width="1160" height="800" fill="none" stroke="#444" stroke-width="2" rx="6"/>
+<rect x="20" y="170" width="120" height="570" rx="4" fill="#f4f4f4" stroke="#555" stroke-width="1.3"/>
+<text x="80" y="417" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#222">IMEM</text>
+<text x="80" y="431" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">boot ROM</text>
+<text x="80" y="445" font-size="11" text-anchor="middle" font-weight="normal" fill="#222"></text>
+<text x="80" y="459" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">SRAM đọc</text>
+<text x="80" y="473" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">đồng bộ:</text>
+<text x="80" y="487" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">lệnh có ở</text>
+<text x="80" y="501" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">chu kỳ sau</text>
+<rect x="430" y="915" width="880" height="50" rx="4" fill="#f4f4f4" stroke="#555" stroke-width="1.3"/>
+<text x="870" y="937" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#222">Bus dữ liệu valid/ready (mục 5.1) → sys_bus</text>
+<text x="870" y="951" font-size="11" text-anchor="middle" font-weight="normal" fill="#222">DMEM, IMEM qua imem_port, cầu APB (Timer, UART, GPIO, accelerator)</text>
+<rect x="200" y="110" width="80" height="32" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="240" y="130" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">sleep_q</text>
+<path d="M234 142 L240 135 L246 142" fill="none" stroke="#8a6d00" stroke-width="1"/>
+<path d="M200 126 L80 126 L80 170" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="20" y="120" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">if_req_o = ~sleep_q</text>
+<path d="M240 110 L240 66" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="246" y="72" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">core_sleep_o</text>
+<rect x="180" y="400" width="90" height="46" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="225" y="420.5" font-size="11" text-anchor="middle" font-weight="bold" fill="#222">if_fire</text>
+<text x="225" y="433.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">req &amp; gnt</text>
+<path d="M140 423 L180 423" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="143" y="416" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">if_gnt_i</text>
+<rect x="185" y="560" width="120" height="110" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="245" y="592" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">Chọn PC kế</text>
+<text x="245" y="605.5" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">1. wb_target (WB)</text>
+<text x="245" y="619" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">2. ex_target (EX)</text>
+<text x="245" y="632.5" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">3. if_pc_q + 4</text>
+<text x="245" y="646" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">4. giữ khi dừng</text>
+<rect x="315" y="595" width="70" height="40" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="350" y="619" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">if_pc_q</text>
+<path d="M344 635 L350 628 L356 635" fill="none" stroke="#8a6d00" stroke-width="1"/>
+<path d="M305 615 L315 615" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M350 635 L350 730 L140 730" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="143" y="724" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">if_addr_o</text>
+<circle cx="350" cy="640" r="3" fill="#333333"/>
+<circle cx="270" cy="700" r="14" fill="#fff" stroke="#555" stroke-width="1.3"/>
+<text x="270" y="704" font-size="11" text-anchor="middle" font-weight="bold" fill="#222">+4</text>
+<path d="M270 730 L270 714" fill="none" stroke="#333333" stroke-width="1.6"/>
+<circle cx="270" cy="730" r="3" fill="#2e8b57"/>
+<path d="M270 686 L270 670" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M385 615 L410 615 L410 288 L430 288" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="180" y="850" font-size="10.5" text-anchor="start" font-weight="normal" fill="#555" font-style="italic">Không có thanh ghi IF/EX: ngõ ra IMEM</text>
+<text x="180" y="863" font-size="10.5" text-anchor="start" font-weight="normal" fill="#555" font-style="italic">đọc đồng bộ là ranh giới hai tầng</text>
+<rect x="430" y="205" width="90" height="40" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="475" y="222.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">ex_instr_hold_q</text>
+<text x="475" y="235.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">giữ lệnh khi dừng</text>
+<path d="M469 245 L475 238 L481 245" fill="none" stroke="#8a6d00" stroke-width="1"/>
+<rect x="430" y="270" width="90" height="36" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="475" y="292" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">ex_pc_q</text>
+<path d="M469 306 L475 299 L481 306" fill="none" stroke="#8a6d00" stroke-width="1"/>
+<rect x="430" y="318" width="90" height="36" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="475" y="333.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">ex_fetch_q</text>
+<text x="475" y="346.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">ex_hold_q</text>
+<path d="M469 354 L475 347 L481 354" fill="none" stroke="#8a6d00" stroke-width="1"/>
+<path d="M540 170 L558 184.4 L558 235.6 L540 250 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<path d="M140 185 L540 185" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="143" y="179" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">if_rdata_i, if_err_i</text>
+<circle cx="470" cy="185" r="3" fill="#2e8b57"/>
+<path d="M470 185 L470 205" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<path d="M520 228 L540 228" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M558 210 L580 210" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="549" y="264" font-size="10" text-anchor="middle" font-weight="normal" fill="#555">ex_instr</text>
+<rect x="430" y="420" width="130" height="140" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="495" y="448.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">Ngoại lệ, ngắt</text>
+<text x="495" y="461.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">lỗi lấy lệnh, illegal,</text>
+<text x="495" y="474.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">CSR sai (cổng kiểm</text>
+<text x="495" y="487.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">tra của rv32_csr),</text>
+<text x="495" y="500.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">ECALL, EBREAK,</text>
+<text x="495" y="513.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">nhảy/load/store lệch,</text>
+<text x="495" y="526.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">ngắt: MIE, mip &amp; mie</text>
+<text x="495" y="539.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">→ ex_trap gắn cờ</text>
+<rect x="430" y="600" width="130" height="90" rx="4" fill="#ffffff" stroke="#e08a00" stroke-width="1.3"/>
+<text x="495" y="623" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">Dừng IF và EX</text>
+<text x="495" y="636" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">pipe_stall =</text>
+<text x="495" y="649" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">wb_wait | ex_wait</text>
+<text x="495" y="662" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">(bus chưa nhận,</text>
+<text x="495" y="675" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">M-unit chưa xong)</text>
+<path d="M430 645 L370 645 L370 635" fill="none" stroke="#e08a00" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#a_e08a00)"/>
+<text x="375" y="658" font-size="10" text-anchor="start" font-weight="normal" fill="#e08a00">giữ</text>
+<rect x="580" y="180" width="110" height="60" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="635" y="201" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">rv32_decoder</text>
+<text x="635" y="214" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">rs1, rs2, rd, imm_type,</text>
+<text x="635" y="227" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">chọn ALU, cờ lệnh</text>
+<rect x="580" y="270" width="110" height="100" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="635" y="304.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">rv32_regfile</text>
+<text x="635" y="317.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">31 × 32 bit</text>
+<text x="635" y="330.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">2 cổng đọc tổ hợp</text>
+<text x="635" y="343.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">ghi ở WB</text>
+<path d="M635 240 L635 270" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<rect x="580" y="385" width="110" height="40" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="635" y="409" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">rv32_imm_gen</text>
+<path d="M690 282 L715 282" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M690 342 L715 342" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M715 270 L735 277.2 L735 302.8 L715 310 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<text x="725" y="266" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">fwd</text>
+<path d="M715 330 L735 337.2 L735 362.8 L715 370 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<text x="725" y="326" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">fwd</text>
+<path d="M770 262 L788 271 L788 303 L770 312 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<text x="779" y="258" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">A: rs1, pc, 0</text>
+<path d="M770 330 L788 339 L788 371 L770 380 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<text x="779" y="326" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">B: rs2, imm</text>
+<path d="M735 290 L770 290" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M735 350 L770 350" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M756 271 L770 271" fill="none" stroke="#333333" stroke-width="1" marker-end="url(#a_333333)"/>
+<path d="M690 405 L762 405 L762 368 L770 368" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="722" y="418" font-size="10" text-anchor="middle" font-weight="normal" fill="#555">imm</text>
+<rect x="795" y="180" width="70" height="50" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="830" y="202.5" font-size="11" text-anchor="middle" font-weight="bold" fill="#222">So sánh</text>
+<text x="830" y="215.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">nhánh</text>
+<text x="830" y="244" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">rs1, rs2</text>
+<rect x="830" y="260" width="70" height="120" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="865" y="304.5" font-size="13" text-anchor="middle" font-weight="bold" fill="#222">ALU</text>
+<text x="865" y="317.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">cộng</text>
+<text x="865" y="330.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">địa chỉ,</text>
+<text x="865" y="343.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">đích nhảy</text>
+<path d="M788 287 L830 287" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M788 355 L830 355" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M930 250 L950 284.2 L950 405.8 L930 440 Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>
+<text x="940" y="246" font-size="9.5" text-anchor="middle" font-weight="normal" fill="#555">ex_result</text>
+<path d="M900 320 L930 320" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="908" y="272" font-size="9.5" text-anchor="start" font-weight="normal" fill="#555">pc+4</text>
+<path d="M906 280 L930 280" fill="none" stroke="#333333" stroke-width="1" marker-end="url(#a_333333)"/>
+<text x="905" y="391" font-size="9.5" text-anchor="start" font-weight="normal" fill="#555">CSR</text>
+<path d="M906 398 L930 398" fill="none" stroke="#333333" stroke-width="1" marker-end="url(#a_333333)"/>
+<path d="M950 345 L1010 345" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="975" y="337" font-size="10" text-anchor="middle" font-weight="normal" fill="#555">ex_result</text>
+<rect x="712" y="470" width="112" height="90" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="768" y="499.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">rv32_muldiv</text>
+<text x="768" y="512.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">ENABLE_M = 1</text>
+<text x="768" y="525.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">MUL*: dừng 1</text>
+<text x="768" y="538.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">DIV/REM: dừng 33</text>
+<circle cx="752" cy="350" r="3" fill="#333333"/>
+<path d="M752 350 L752 470" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="756" y="462" font-size="9.5" text-anchor="start" font-weight="normal" fill="#555">rs1, rs2</text>
+<path d="M824 515 L940 515 L940 440" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<rect x="830" y="560" width="160" height="60" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="910" y="581" font-size="11" text-anchor="middle" font-weight="bold" fill="#222">Làn byte (lsu_align)</text>
+<text x="910" y="594" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">byte enable, lặp dữ liệu,</text>
+<text x="910" y="607" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">kiểm tra lệch</text>
+<circle cx="865" cy="380" r="3" fill="#333333"/>
+<path d="M865 380 L865 560" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="869" y="458" font-size="9.5" text-anchor="start" font-weight="normal" fill="#555">địa chỉ</text>
+<path d="M910 620 L910 915" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<path d="M950 915 L950 620" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="905" y="900" font-size="10.5" text-anchor="end" font-weight="normal" fill="#2e8b57">d_req_valid_o, d_addr_o, d_we_o, d_be_o, d_wdata_o</text>
+<text x="955" y="900" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">d_req_ready_i</text>
+<path d="M870 680 L1010 680" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="865" y="676" font-size="9.5" text-anchor="end" font-weight="normal" fill="#555">pc, instr, rd,</text>
+<text x="865" y="688" font-size="9.5" text-anchor="end" font-weight="normal" fill="#555">cờ trap/CSR/MRET/WFI</text>
+<path d="M885 260 L885 160 L290 160 L290 560" fill="none" stroke="#d23f31" stroke-width="2" marker-end="url(#a_d23f31)"/>
+<path d="M865 205 L885 205" fill="none" stroke="#d23f31" stroke-width="1.6"/>
+<text x="600" y="154" font-size="11" text-anchor="start" font-weight="normal" fill="#d23f31">ex_target, ex_redirect: nhánh/JAL/JALR nhảy, phạt 1 chu kỳ</text>
+<rect x="1010" y="150" width="40" height="610" rx="4" fill="#fff4cc" stroke="#8a6d00" stroke-width="1.3"/>
+<text x="1034" y="455" font-size="11.5" text-anchor="middle" font-weight="normal" fill="#222" transform="rotate(-90 1034 455)">Thanh ghi tầng WB (wb_*_q), chỉ nạp khi có lệnh</text>
+<rect x="1085" y="130" width="225" height="150" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="1197.5" y="175.25" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#222">rv32_csr</text>
+<text x="1197.5" y="188.75" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">mstatus, misa, mie, mip, mtvec,</text>
+<text x="1197.5" y="202.25" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">mepc, mcause, mtval, mscratch,</text>
+<text x="1197.5" y="215.75" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">mcycle(h), minstret(h), time(h)</text>
+<text x="1197.5" y="229.25" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">cổng kiểm tra cho EX,</text>
+<text x="1197.5" y="242.75" font-size="10.5" text-anchor="middle" font-weight="normal" fill="#222">đọc/ghi RW/RS/RC ở WB</text>
+<path d="M1160 66 L1160 130" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<path d="M1205 66 L1205 130" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<path d="M1250 66 L1250 130" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<path d="M1295 66 L1295 130" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="1155" y="62" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">irq_software_i, irq_timer_i, irq_external_i, mtime_i</text>
+<rect x="1085" y="310" width="150" height="110" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="1160" y="336.5" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">Trap / tuần tự hoá</text>
+<text x="1160" y="349.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">trap (cả lỗi bus),</text>
+<text x="1160" y="362.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">MRET, FENCE.I, WFI</text>
+<text x="1160" y="375.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">→ wb_redirect,</text>
+<text x="1160" y="388.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">wb_target = mtvec |</text>
+<text x="1160" y="401.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">mepc | pc + 4</text>
+<path d="M1160 310 L1160 280" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)" marker-start="url(#s_333333)"/>
+<text x="1166" y="300" font-size="9.5" text-anchor="start" font-weight="normal" fill="#555">trap, MRET / mtvec, mepc</text>
+<rect x="1085" y="470" width="225" height="70" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="1197.5" y="496" font-size="11.5" text-anchor="middle" font-weight="bold" fill="#222">wb_rd_data</text>
+<text x="1197.5" y="509" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">load ? dữ liệu load :</text>
+<text x="1197.5" y="522" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">CSR ? giá trị CSR cũ : wb_result_q</text>
+<path d="M1295 280 L1295 470" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="1291" y="450" font-size="9.5" text-anchor="end" font-weight="normal" fill="#555">CSR</text>
+<rect x="1085" y="590" width="115" height="50" rx="4" fill="#ffffff" stroke="#555" stroke-width="1.3"/>
+<text x="1142.5" y="612.5" font-size="11" text-anchor="middle" font-weight="bold" fill="#222">Căn chỉnh load</text>
+<text x="1142.5" y="625.5" font-size="10" text-anchor="middle" font-weight="normal" fill="#222">lsu_align, dấu</text>
+<path d="M1140 590 L1140 540" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M1140 915 L1140 640" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="1146" y="900" font-size="10.5" text-anchor="start" font-weight="normal" fill="#2e8b57">d_rsp_valid_i, d_rsp_rdata_i, d_rsp_err_i</text>
+<path d="M1050 205 L1085 205" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M1050 365 L1085 365" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M1050 505 L1085 505" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M1050 615 L1085 615" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<path d="M1270 540 L1270 750 L570 750 L570 355 L580 355" fill="none" stroke="#1f6fd1" stroke-width="2" marker-end="url(#a_1f6fd1)"/>
+<circle cx="703" cy="750" r="3" fill="#1f6fd1"/>
+<path d="M703 750 L703 300 L715 300" fill="none" stroke="#1f6fd1" stroke-width="2" marker-end="url(#a_1f6fd1)"/>
+<circle cx="703" cy="360" r="3" fill="#1f6fd1"/>
+<path d="M703 360 L715 360" fill="none" stroke="#1f6fd1" stroke-width="2" marker-end="url(#a_1f6fd1)"/>
+<text x="1040" y="768" font-size="11" text-anchor="middle" font-weight="normal" fill="#1f6fd1">forward WB → EX (kết quả ALU, CSR, dữ liệu load): không có stall load-use</text>
+<text x="575" y="744" font-size="10.5" text-anchor="start" font-weight="normal" fill="#1f6fd1">ghi rd</text>
+<path d="M1085 400 L1068 400 L1068 820 L210 820 L210 670" fill="none" stroke="#d23f31" stroke-width="2" marker-end="url(#a_d23f31)"/>
+<text x="640" y="814" font-size="11" text-anchor="middle" font-weight="normal" fill="#d23f31">wb_target, wb_redirect: trap, MRET, FENCE.I, WFI (ưu tiên hơn EX, huỷ lệnh ở EX và lệnh đang lấy, phạt 2 chu kỳ)</text>
+<path d="M1085 330 L1062 330 L1062 126 L280 126" fill="none" stroke="#d23f31" stroke-width="1.6" stroke-dasharray="6 3" marker-end="url(#a_d23f31)"/>
+<text x="660" y="120" font-size="11" text-anchor="start" font-weight="normal" fill="#d23f31">WFI: sleep_q ← 1, thức khi (mip &amp; mie) ≠ 0</text>
+<text x="20" y="768" font-size="12" text-anchor="start" font-weight="bold" fill="#222">Chú thích</text>
+<path d="M20 782 L54 782" fill="none" stroke="#333333" stroke-width="1.6" marker-end="url(#a_333333)"/>
+<text x="60" y="786" font-size="11" text-anchor="start" font-weight="normal" fill="#222">dữ liệu</text>
+<path d="M20 800 L54 800" fill="none" stroke="#1f6fd1" stroke-width="1.6" marker-end="url(#a_1f6fd1)"/>
+<text x="60" y="804" font-size="11" text-anchor="start" font-weight="normal" fill="#222">forward, ghi rd</text>
+<path d="M20 818 L54 818" fill="none" stroke="#d23f31" stroke-width="1.6" marker-end="url(#a_d23f31)"/>
+<text x="60" y="822" font-size="11" text-anchor="start" font-weight="normal" fill="#222">chuyển hướng PC</text>
+<path d="M20 836 L54 836" fill="none" stroke="#2e8b57" stroke-width="1.6" marker-end="url(#a_2e8b57)"/>
+<text x="60" y="840" font-size="11" text-anchor="start" font-weight="normal" fill="#222">cổng của core</text>
+<path d="M20 854 L54 854" fill="none" stroke="#e08a00" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#a_e08a00)"/>
+<text x="60" y="858" font-size="11" text-anchor="start" font-weight="normal" fill="#222">dừng pipeline</text>
+<rect x="26" y="872" width="22" height="12" fill="#fff4cc" stroke="#8a6d00"/>
+<text x="60" y="882" font-size="11" text-anchor="start" font-weight="normal" fill="#222">thanh ghi</text>
+</svg>
