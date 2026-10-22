@@ -54,6 +54,7 @@ Xong khi: tất cả tiêu chí trong `docs/flow_notes.md` đạt ở bước t�
 
 Mục tiêu: chọn kích thước floorplan cho SoC: đủ chỗ cho 2 SRAM macro + cell chuẩn ở mật độ 70%, chừa 15 um cho power ring.
 Cần đầu vào: kích thước SRAM (đã có: 80 x 100 um, từ HT-01) và diện tích cell chuẩn SoC (Genus của Phát, M2). Trước đó có thể chạy với số tạm để biết cỡ.
+Cách làm với SRAM macro ở từng tool (Genus, LEC, Innovus, STA, DRC/LVS) và việc cần kiểm tra trên server: `docs/macro_notes.md`, chạy `bash scripts/macro_info.sh`.
 
 ### Các task tiếp theo (chưa tới hạn)
 
