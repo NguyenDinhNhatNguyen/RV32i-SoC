@@ -22,6 +22,9 @@ help:
 	@echo "make fw-core       - test assembly trên tb_core (T=tên để chạy một bài)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) trên tb_core (T=rv32ui-p-add)"
 	@echo "make bench-core    - Dhrystone và CoreMark trên tb_core (ENABLE_M=0 và 1), in CPI (T=coremark)"
+	@echo "make arch-core-dut - riscv-arch-test chỉ chạy phía core, ghi signature (T=add-01)"
+	@echo "make arch-core     - riscv-arch-test qua RISCOF, so với Spike (cần riscof, spike)"
+	@echo "make synth-core-yosys - Yosys tổng hợp thử rv32_core, chỉ xem xu hướng"
 	@echo "make clean-core    - xoá kết quả mô phỏng của core"
 
 sim-accel:
@@ -407,3 +410,25 @@ arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	  (cd tb/riscof && riscof run --config config_$$c.ini --suite $(CURDIR)/$(ARCH_SUITE) \
 	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c --no-browser) || exit 1; \
 	done
+
+# ---------------------------------------------------------------------------
+# Tổng hợp thử bằng Yosys (flow nhà), chỉ xem xu hướng diện tích và độ sâu logic.
+# Không dùng thư viện GPDK45. Số chính thức lấy từ Genus ở trường.
+#   make synth-core-yosys          rv32_core với ENABLE_M=0 và 1
+# Kết quả: syn/run_yosys/<nhãn>/{stat.txt,stat_cmos.txt,ltp.txt}, tóm tắt in ra màn hình.
+# ---------------------------------------------------------------------------
+YOSYS ?= yosys
+YS_RUN := syn/run_yosys
+
+# $(1) nhãn, $(2) top, $(3) file nguồn, $(4) include, $(5) tham số
+define yosys_run
+	@mkdir -p $(YS_RUN)/$(1)
+	@YS_TOP=$(2) YS_SRCS="$(3)" YS_INC="$(4)" YS_PARAMS="$(5)" YS_OUT=$(YS_RUN)/$(1) \
+	  $(YOSYS) -q -l $(YS_RUN)/$(1)/yosys.log -c syn/yosys/synth.tcl > /dev/null
+	@bash scripts/yosys_summary.sh $(1) $(YS_RUN)/$(1)
+endef
+
+.PHONY: synth-core-yosys
+synth-core-yosys:
+	$(call yosys_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
+	$(call yosys_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
