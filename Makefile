@@ -264,3 +264,120 @@ isa-core: $(foreach c,$(CORE_ISA_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) \
 
 clean-core:
 	rm -rf $(CORE_OUT) $(CORE_UNIT_OUT)
+
+# ---------------------------------------------------------------------------
+# Bus và bộ nhớ (Phát): RTL-03 rtl/bus, RTL-08 rtl/mem. Tài liệu: docs/bus_mem.md
+# Chạy ở nhà (Icarus, Verilator). Kết quả ở tb/unit/out/bus và tb/soc/out (bị ignore).
+#   make lint-bus                  Verilator -Wall từng module trong rtl/bus, rtl/mem, 0 warning
+#   make unit-bus                  tb_sys_bus, tb_apb_bridge, tb_sram_wrap, tb_imem_port (TB=tb_sys_bus để chạy một bài)
+#   make fw-bus                    core chạy test assembly và riscv-tests trên sys_bus + SRAM macro (T=smoke)
+#   make unit-bus PLUSARGS="+seed=7"
+# ---------------------------------------------------------------------------
+BUS_RTL     := $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v)
+BUS_MODELS  := tb/models/sram_2k_macro.v
+BUS_ACCEL   := $(ACCEL_RTL) rtl/accel/accel_apb.v
+BUS_OUT     := tb/unit/out/bus
+BUS_SOC_OUT := tb/soc/out
+BUS_IVFLAGS := -g2012 -Wall -Irtl/bus -Irtl/mem
+BUS_VLFLAGS := --lint-only -Wall -Irtl/bus -Irtl/mem -y rtl/bus -y rtl/mem -y tb/models
+
+lint-bus unit-bus fw-bus: SHELL := /bin/bash
+lint-bus unit-bus fw-bus: .SHELLFLAGS := -o pipefail -c
+
+# Bộ tham số, cùng quy ước với phần core: các lần chạy cách nhau dấu cách, NAME=VALUE cách nhau dấu phẩy
+BUS_LINT_CFG_sys_bus    := N_MASTER=1 N_MASTER=2 N_MASTER=4
+BUS_LINT_CFG_sram_array := BANK_W=0 BANK_W=2
+BUS_LINT_CFG_sram_wrap  := BANK_W=0 BANK_W=2
+BUS_LINT_CFG_imem_port  := BANK_W=0 BANK_W=2
+BUS_UNIT_CFG_tb_sys_bus    := N_MASTER=1 N_MASTER=2
+BUS_UNIT_CFG_tb_sram_wrap  := BANK_W=0 BANK_W=2
+BUS_UNIT_CFG_tb_imem_port  := BANK_W=0 BANK_W=2
+bus_cfgs = $(or $(BUS_LINT_CFG_$(1)),$(BUS_UNIT_CFG_$(1)),default)
+
+BUS_LINT_RUNS := $(foreach f,$(BUS_RTL),$(foreach c,$(call bus_cfgs,$(basename $(notdir $(f)))),$(f)@$(c)))
+BUS_UNIT_TBS  := tb_sys_bus tb_apb_bridge tb_sram_wrap tb_imem_port
+BUS_UNIT_RUNS := $(foreach t,$(BUS_UNIT_TBS),$(foreach c,$(call bus_cfgs,$(t)),$(t)@$(c)))
+ifneq ($(TB),)
+BUS_UNIT_RUNS := $(filter $(TB)@%,$(BUS_UNIT_RUNS))
+endif
+
+.PHONY: lint-bus unit-bus fw-bus clean-bus
+
+lint-bus:
+	@fail=0; \
+	for run in $(BUS_LINT_RUNS); do \
+	  f=$${run%%@*}; m=$$(basename $$f .v); cfg=$${run#*@}; gflags=""; \
+	  if [ "$$cfg" != default ]; then for kv in $${cfg//,/ }; do gflags="$$gflags -G$$kv"; done; fi; \
+	  if $(VERILATOR) $(BUS_VLFLAGS) --top-module $$m $$gflags $$f; then \
+	    echo "  [ OK ] lint $$m ($$cfg)"; \
+	  else \
+	    echo "  [FAIL] lint $$m ($$cfg)"; fail=1; \
+	  fi; \
+	done; \
+	if [ $$fail = 0 ]; then echo "LINT-BUS PASS"; else echo "LINT-BUS FAIL"; exit 1; fi
+
+# Testbench đạt khi log có dòng bắt đầu bằng PASS và không có dòng FAIL.
+unit-bus:
+	@mkdir -p $(BUS_OUT); pass=0; fail=0; \
+	for run in $(BUS_UNIT_RUNS); do \
+	  tb=$${run%%@*}; cfg=$${run#*@}; pflags=""; tag=$$tb; \
+	  if [ "$$cfg" != default ]; then \
+	    for kv in $${cfg//,/ }; do pflags="$$pflags -P$$tb.$$kv"; done; \
+	    tag="$${tb}_$${cfg//[=,]/_}"; \
+	  fi; \
+	  log=$(BUS_OUT)/$$tag.log; \
+	  if $(IVERILOG) $(BUS_IVFLAGS) -s $$tb $$pflags -o $(BUS_OUT)/$$tag.vvp \
+	       $(BUS_RTL) $(BUS_MODELS) $(BUS_ACCEL) tb/unit/$$tb.v > $$log 2>&1 && \
+	     $(VVP) -n $(BUS_OUT)/$$tag.vvp $(PLUSARGS) >> $$log 2>&1 && \
+	     grep -q '^PASS' $$log && ! grep -q '^FAIL' $$log; then \
+	    pass=$$((pass+1)); echo "  $$(grep '^PASS' $$log | tail -n 1)"; \
+	  else \
+	    fail=$$((fail+1)); echo "  [FAIL] $$tag (log: $$log)"; tail -n 20 $$log; \
+	  fi; \
+	done; \
+	echo "UNIT-BUS: $$pass passed, $$fail failed"; [ $$fail = 0 ]
+
+# Core trên bus thật: test assembly không dùng khối điều khiển riêng của tb_core
+# (irq, trap, wfi, muldiv cần nó), test riêng của bus ở fw/tests/bus và riscv-tests
+# như isa-core. Dùng lại rule elf2hex của core.
+BUS_FW_TESTS  := smoke hazard
+BUS_OWN_TESTS := $(basename $(notdir $(wildcard fw/tests/bus/*.S)))
+BUS_OWN_OUT   := $(BUS_SOC_OUT)/fw
+ifneq ($(T),)
+BUS_FW_TESTS  := $(filter $(T),$(BUS_FW_TESTS))
+BUS_OWN_TESTS := $(filter $(T),$(BUS_OWN_TESTS))
+endif
+BUS_FW_CFGS  := M0W0 M1W1
+bus_tests = $(addprefix $(CORE_FW_OUT)/,$(BUS_FW_TESTS)) \
+            $(addprefix $(BUS_OWN_OUT)/,$(BUS_OWN_TESTS)) \
+            $(addprefix $(CORE_ISA_OUT)/,$(call core_isa_tests,$(1)))
+
+.PRECIOUS: $(BUS_OWN_OUT)/%.elf
+$(BUS_OWN_OUT)/%.elf: fw/tests/bus/%.S fw/tests/asm/test_macros.h fw/common/link.ld
+	@mkdir -p $(@D)
+	@test -n "$(RV_PREFIX)" || { echo "LOI: khong tim thay riscv gcc"; exit 1; }
+	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
+
+$(BUS_OWN_OUT)/%.tohost: $(BUS_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
+	@$(PYTHON) scripts/elf2hex.py $< --imem $(BUS_OWN_OUT)/$*.imem.hex --dmem $(BUS_OWN_OUT)/$*.dmem.hex > $@
+BUS_FW_RUNS  := $(foreach c,$(BUS_FW_CFGS),$(foreach t,$(call bus_tests,$(c)),$(t)@$(c)))
+
+$(BUS_SOC_OUT)/tb_core_bus_%.vvp: tb/soc/tb_core_bus.v $(BUS_RTL) $(BUS_MODELS) $(BUS_ACCEL) $(CORE_RTL) rtl/core/rv32_defs.vh
+	@mkdir -p $(@D)
+	$(IVERILOG) $(BUS_IVFLAGS) -Irtl/core -s tb_core_bus -Ptb_core_bus.ENABLE_M=$(call core_cfg_m,$*) \
+	  -Ptb_core_bus.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -o $@ \
+	  $(CORE_RTL) $(BUS_RTL) $(BUS_MODELS) $(BUS_ACCEL) tb/soc/tb_core_bus.v
+
+fw-bus: $(foreach c,$(BUS_FW_CFGS),$(BUS_SOC_OUT)/tb_core_bus_$(c).vvp) \
+        $(foreach t,$(BUS_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost) \
+        $(foreach t,$(BUS_OWN_TESTS),$(BUS_OWN_OUT)/$(t).tohost) \
+        $(foreach t,$(CORE_ISA_BASE) $(CORE_ISA_M),$(CORE_ISA_OUT)/$(t).tohost)
+	@printf '%s\n' $(BUS_FW_RUNS) | xargs -P $(CORE_JOBS) -n 1 bash scripts/bus_run.sh $(BUS_SOC_OUT) \
+	  > $(BUS_SOC_OUT)/fw-bus.summary; \
+	cat $(BUS_SOC_OUT)/fw-bus.summary; \
+	pass=$$(grep -c '^  PASS' $(BUS_SOC_OUT)/fw-bus.summary); \
+	fail=$$(grep -c '^  \[FAIL\]' $(BUS_SOC_OUT)/fw-bus.summary); \
+	echo "fw-bus: $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass -gt 0 ]
+
+clean-bus:
+	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
