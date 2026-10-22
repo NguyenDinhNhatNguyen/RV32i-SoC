@@ -21,6 +21,7 @@ help:
 	@echo "make unit-core     - unit test các khối của core (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - test assembly trên tb_core (T=tên để chạy một bài)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) trên tb_core (T=rv32ui-p-add)"
+	@echo "make bench-core    - Dhrystone và CoreMark trên tb_core (ENABLE_M=0 và 1), in CPI (T=coremark)"
 	@echo "make clean-core    - xoá kết quả mô phỏng của core"
 
 sim-accel:
@@ -264,3 +265,86 @@ isa-core: $(foreach c,$(CORE_ISA_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) \
 
 clean-core:
 	rm -rf $(CORE_OUT) $(CORE_UNIT_OUT)
+
+# ---------------------------------------------------------------------------
+# Benchmark trên tb_core: Dhrystone (riscv-tests) và CoreMark (submodule fw/coremark).
+# Bản rv32i chạy với ENABLE_M=0, bản rv32im với ENABLE_M=1. Không chèn stall, có
+# +strict_timing. CPI đo trong vùng đo của benchmark (mcycle/minstret), dòng
+# "BENCH ..." trong log. Kết quả: docs/bench_core.md.
+#   make bench-core                         cả 4 lần chạy
+#   make bench-core T=coremark              một benchmark
+#   make bench-core CM_ITER=10              số vòng CoreMark (mặc định 3)
+# ---------------------------------------------------------------------------
+CM_ITER         ?= 3
+CORE_BENCH_OUT  := $(CORE_OUT)/bench
+CORE_BENCH_LIST := dhrystone coremark
+ifneq ($(T),)
+CORE_BENCH_LIST := $(filter $(T),$(CORE_BENCH_LIST))
+endif
+# <tên>_<march>@<cấu hình tb_core>@bench
+CORE_BENCH_RUNS := $(foreach b,$(CORE_BENCH_LIST),$(b)_rv32i@M0W1@bench $(b)_rv32im@M1W1@bench)
+CORE_PLUS_bench := +strict_timing +timeout=50000000
+export CORE_PLUS_bench
+
+BENCH_OPT     := -O2
+BENCH_CFLAGS  := -mabi=ilp32 $(BENCH_OPT) -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns \
+                 -Ifw/bench/common
+BENCH_LDFLAGS := -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld
+BENCH_COMMON  := fw/bench/common/crt0.S fw/bench/common/bench.c
+BENCH_DHRY    := fw/riscv-tests/benchmarks/dhrystone
+BENCH_DHRY_C  := fw/bench/dhrystone/dhry_wrap.c $(BENCH_DHRY)/dhrystone.c
+BENCH_CM_SRC  := $(addprefix fw/coremark/,core_list_join.c core_main.c core_matrix.c core_state.c core_util.c) \
+                 fw/bench/coremark/core_portme.c
+bench_march    = -march=$(1)_zicsr
+# Kích thước vùng nhớ đọc từ tb/core/core_tb_map.vh
+core_map       = $(shell awk '/CORE_TB_$(1) /{print $$3}' tb/core/core_tb_map.vh)
+
+.PRECIOUS: $(CORE_BENCH_OUT)/dhrystone_%.elf $(CORE_BENCH_OUT)/coremark_%.elf
+
+# Mã gốc Dhrystone viết kiểu K&R nên tắt cảnh báo (-w). dhrystone_main.c
+# đổi main thành dhry_main, dhry_wrap.c gọi nó rồi tự kiểm kết quả.
+$(CORE_BENCH_OUT)/dhrystone_%.elf: $(BENCH_COMMON) $(BENCH_DHRY_C) $(BENCH_DHRY)/dhrystone_main.c \
+                                   $(wildcard fw/bench/dhrystone/*.h) fw/bench/common/bench.h fw/common/link.ld
+	@mkdir -p $(@D)
+	@test -f $(BENCH_DHRY)/dhrystone.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
+	  -Dmain=dhry_main -c -o $(@D)/dhrystone_main_$*.o $(BENCH_DHRY)/dhrystone_main.c
+	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
+	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(BENCH_DHRY_C) $(@D)/dhrystone_main_$*.o -lgcc
+
+$(CORE_BENCH_OUT)/coremark_%.elf: $(BENCH_COMMON) $(BENCH_CM_SRC) fw/bench/coremark/core_portme.h \
+                                  fw/bench/common/bench.h fw/common/link.ld FORCE_CM_ITER
+	@mkdir -p $(@D)
+	@test -f fw/coremark/coremark.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/coremark -Ifw/coremark \
+	  -DITERATIONS=$(CM_ITER) -DPERFORMANCE_RUN=1 '-DFLAGS_STR="$(BENCH_OPT)"' \
+	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(BENCH_CM_SRC) -lgcc
+
+# CM_ITER không nằm trong tên file nên luôn dịch lại CoreMark
+.PHONY: FORCE_CM_ITER bench-core
+FORCE_CM_ITER:
+
+bench-core: SHELL := /bin/bash
+bench-core: .SHELLFLAGS := -o pipefail -c
+
+# CoreMark tự kiểm CRC. Lỗi "phải chạy ít nhất 10 giây" là bình thường khi mô phỏng
+# nên không tính, mọi dòng ERROR khác làm lần chạy FAIL.
+bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
+            $(foreach r,$(CORE_BENCH_RUNS),$(CORE_BENCH_OUT)/$(firstword $(subst @, ,$(r))).tohost)
+	@for r in $(CORE_BENCH_RUNS); do \
+	  t=$${r%%@*}; e=$(CORE_BENCH_OUT)/$$t.elf; \
+	  printf '  %-18s .text %6d B (IMEM %d B), DMEM dùng %6d B (%d B)\n' $$t \
+	    $$($(RV_PREFIX)-size -A $$e | awk '$$1==".text"{print $$2}') $(call core_map,IMEM_SIZE) \
+	    $$($(RV_PREFIX)-size -A $$e | awk '$$1~/^\.(rodata|data|tohost|bss)$$/{s+=$$2} END{print s}') \
+	    $(call core_map,DMEM_SIZE); \
+	done
+	$(call core_run,bench-core,$(addprefix $(CORE_BENCH_OUT)/,$(CORE_BENCH_RUNS)))
+	@fail=0; for r in $(CORE_BENCH_RUNS); do \
+	  t=$${r%%@*}; rest=$${r#*@}; log=$(CORE_BENCH_OUT)/$$t.$${rest%@*}.bench.log; \
+	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t] /"; \
+	  case $$t in coremark*) \
+	    if ! grep -q 'performance run parameters' $$log || \
+	       grep 'ERROR' $$log | grep -vq 'at least 10 secs'; then \
+	      echo "  [FAIL] $$t: CoreMark khong tu kiem duoc ket qua"; fail=1; fi;; \
+	  esac; \
+	done; [ $$fail = 0 ]
