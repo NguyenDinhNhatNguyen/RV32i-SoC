@@ -26,6 +26,7 @@ help:
 	@echo "make arch-core     - riscv-arch-test qua RISCOF, so với Spike (cần riscof, spike)"
 	@echo "make synth-core-yosys - Yosys tổng hợp thử rv32_core, chỉ xem xu hướng"
 	@echo "make synth-compare-yosys - như trên, thêm PicoRV32 (ref/picorv32) để so sánh"
+	@echo "make sta-core-nangate - Yosys + OpenSTA với thư viện mở Nangate45, đường găng ns và F_max (xu hướng)"
 	@echo "make clean-core    - xoá kết quả mô phỏng của core"
 
 sim-accel:
@@ -465,6 +466,32 @@ synth-ref-yosys:
 	$(call yosys_run,picorv32_IM,picorv32,$(PICO_SRC),,$(PICO_CFG_IM))
 
 synth-compare-yosys: synth-core-yosys synth-ref-yosys
+
+# Timing ước lượng ở nhà: Yosys map sang thư viện mở Nangate45, OpenSTA tính
+# đường găng (ns) và F_max. Chỉ xem xu hướng, không phải số GPDK45.
+# Bảng kết quả: docs/timing_core.md.
+#   make sta-core-nangate          rv32_core với ENABLE_M=0 và 1
+# Kết quả: syn/run_yosys/<nhãn>_ng/{stat.txt,sta.txt,path_reg2reg.txt,...}
+STA ?= sta
+NG_LIB := syn/run_yosys/lib/NangateOpenCellLibrary_typical.lib
+
+# $(1) nhãn, $(2) top, $(3) file nguồn, $(4) include, $(5) tham số
+define nangate_run
+	@mkdir -p $(YS_RUN)/$(1)_ng
+	@YS_TOP=$(2) YS_SRCS="$(3)" YS_INC="$(4)" YS_PARAMS="$(5)" YS_OUT=$(YS_RUN)/$(1)_ng YS_LIB=$(NG_LIB) \
+	  $(YOSYS) -q -l $(YS_RUN)/$(1)_ng/yosys.log -c syn/yosys/synth_nangate.tcl > /dev/null 2>&1
+	@YS_TOP=$(2) YS_OUT=$(YS_RUN)/$(1)_ng YS_LIB=$(NG_LIB) \
+	  $(STA) -no_splash -exit syn/yosys/sta_nangate.tcl > $(YS_RUN)/$(1)_ng/sta.log 2>&1
+	@printf '  %-14s dien tich %s um2\n' $(1) "$$(awk '/Chip area/ {print $$NF}' $(YS_RUN)/$(1)_ng/stat.txt)"
+	@sed 's/^/                 /' $(YS_RUN)/$(1)_ng/sta.txt
+endef
+
+.PHONY: sta-core-nangate
+sta-core-nangate:
+	@command -v $(STA) > /dev/null || { echo "LOI: khong thay OpenSTA ($(STA)), xem docs/timing_core.md"; exit 1; }
+	@bash scripts/get_nangate45.sh > /dev/null
+	$(call nangate_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
+	$(call nangate_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
 
 # ---------------------------------------------------------------------------
 # Bus và bộ nhớ (Phát): RTL-03 rtl/bus, RTL-08 rtl/mem. Tài liệu: docs/bus_mem.md
