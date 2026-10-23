@@ -138,7 +138,7 @@ Luật:
 3. Tối đa 1 yêu cầu đang chờ. Master được phát yêu cầu mới ngay trong chu kỳ nhận `rsp_valid` của yêu cầu trước (cho phép load liên tiếp mỗi chu kỳ).
 4. `err` chỉ có nghĩa khi `rsp_valid=1`. Khi `err=1` thì `rdata=0`.
 5. `req_valid` không phụ thuộc tổ hợp vào `req_ready`.
-6. SRAM: `req_ready=1` luôn, `rsp_valid` ở chu kỳ ngay sau (khớp đọc đồng bộ).
+6. SRAM (`rtl/mem/sram_wrap.v`): đọc và SW được nhận ngay (`req_ready=1`), `rsp_valid` ở chu kỳ ngay sau (khớp đọc đồng bộ). SB/SH có 1 wait state (`req_ready=0`) do macro không ghi theo byte nên phải đọc-sửa-ghi.
 7. Vẽ timing diagram cho đọc SRAM, ghi SRAM, đọc qua APB có wait state, và lỗi vào `docs/timing_bus.md` (dùng trong báo cáo).
 
 `sys_bus`: tham số `N_MASTER` (mặc định 1, phải chạy đúng với 2 khi có DMA, trọng tài round-robin), giải mã địa chỉ theo bản đồ địa chỉ của SoC, slave lỗi trả `err` cho địa chỉ không ánh xạ hoặc tính năng đang tắt, định tuyến phản hồi về đúng master.

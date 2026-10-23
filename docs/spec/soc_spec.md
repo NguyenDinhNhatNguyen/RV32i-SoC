@@ -42,6 +42,7 @@ Giải mã bằng `addr[31:28]` chọn vùng, `addr[15:12]` chọn ngoại vi tr
 | SPI | 0x2000_3000 | 4 KB | Tầng 1 |
 | I2C | 0x2000_4000 | 4 KB | Tầng 2 |
 | PWM | 0x2000_5000 | 4 KB | Tầng 1 |
+| IRQ ctrl | 0x2000_6000 | 4 KB | Bộ gom ngắt rút gọn (RTL-11) |
 | Accelerator | 0x3000_0000 | 4 KB | Bản đồ thanh ghi ở `docs/runbook_nguyen.md` |
 | DMA | 0x4000_0000 | 4 KB | Tầng 2 |
 
@@ -66,7 +67,12 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 - Lõi có 3 ngõ vào mức: `irq_software_i`, `irq_timer_i`, `irq_external_i` (`docs/spec/core.md` mục 4.10).
 - `irq_timer_i` lấy từ Timer (mtime ≥ mtimecmp).
 - `irq_external_i` là OR của các nguồn ngoại vi qua bộ gom ngắt rút gọn (RTL-11): UART, GPIO, accelerator (`irq` của wrapper), sau này SPI và DMA.
-- Mỗi nguồn có bit enable và bit pending riêng trong bộ gom ngắt, ghi 1 để xoá.
+- Thanh ghi của bộ gom ngắt:
+  - `PENDING` (0x00) chỉ đọc. Mỗi bit phản ánh trực tiếp mức của một nguồn ngắt.
+  - `ENABLE` (0x04) đọc ghi.
+  - `irq_external_i = OR(PENDING & ENABLE)`.
+- Phần mềm xoá ngắt tại chính ngoại vi, ví dụ đọc `DATA` của UART, ghi 1 vào bit `DONE` của thanh ghi `STATUS` (0x004) của accelerator.
+- Lý do: các nguồn ngắt là dạng mức. Nếu `PENDING` kiểu ghi 1 để xoá thì bit sẽ bật lại ngay khi nguồn vẫn còn giữ mức.
 
 ## 6. Accelerator
 
