@@ -279,7 +279,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 - **Bối cảnh:** 99,8% flop của core đã có enable theo Yosys. Nhưng nửa cao 32 bit của hai bộ đếm dùng chung enable với nửa thấp, tức bật mọi chu kỳ (`mcycle`) hoặc mỗi lệnh (`minstret`), nên Genus gate clock cũng không chặn được gì.
 - **Lựa chọn:** mỗi nửa 32 bit có always riêng. Nửa cao chỉ nạp khi bị ghi hoặc khi nửa thấp toàn bit 1 và đang tăng. Thứ tự ưu tiên giữ như cũ: ghi nửa nào thì nửa đó lấy giá trị ghi, nửa kia giữ nguyên, không tăng.
 - **Lý do:** khoảng 58 flop ít nhận clock hơn mỗi chu kỳ (ước lượng với CPI 1,2), không đổi giá trị đọc ra, không đổi timing (lệch trong mức nhiễu).
-- **Đã loại:** chặn hẳn bộ đếm khi không đọc (sai đặc tả, có `mcountinhibit` mới được). Tách thành thanh ghi `_lo_q`, `_hi_q` riêng (đổi tên tín hiệu mà testbench và GLS đang theo dõi, không lợi gì thêm). Chặn `wb_instr_q` khi lệnh không cần (chưa kiểm được ảnh hưởng tới vết của `tb_core`, để nhóm xem lại).
+- **Đã loại:** chặn hẳn bộ đếm khi không đọc (sai đặc tả, có `mcountinhibit` mới được). Tách thành thanh ghi `_lo_q`, `_hi_q` riêng (Genus thấy cùng cấu trúc, chỉ thêm tên mới khi xem sóng). Chặn `wb_instr_q` khi lệnh không cần (`tb_core` dùng `wb_instr_q` để in vết lệnh và nhận ra lệnh M, MRET, FENCE.I, nên phải sửa cả testbench, để nhóm xem lại).
 - **Kiểm tra:** tương đương hình thức với bộ đếm cũ (Yosys `equiv_induct`, 0 điểm không chứng minh được, cả ENABLE_M=0 và 1). Regression đủ, số chu kỳ bench không đổi. `trap.S` test 83, 84 kiểm nhớ sang nửa cao của `mcycle`.
 
 ---

@@ -109,7 +109,7 @@ Kiểm tra:
 
 Timing và diện tích sau thay đổi (ns, µm², D=2000): ENABLE_M=0 2,575 và 17 032, ENABLE_M=1 3,067 và 28 559. Lệch so với gốc trong mức nhiễu của abc (±3%).
 
-Các nhóm khác đã có enable hợp lý: regfile (enable riêng từng thanh ghi), `ex_instr_hold_q` (chỉ nạp khi dừng), thanh ghi WB (`ex_go & ex_valid`), CSR ít ghi (`mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`), M-unit (tích riêng chỉ nạp khi bắt đầu phép nhân, thanh ghi chia chỉ nạp khi đang chia). `wb_instr_q` (32 bit) nạp mỗi lệnh dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa đổi vì `tb_core` và GLS có thể đang theo dõi nó, nhóm cần xem lại trước.
+Các nhóm khác đã có enable hợp lý: regfile (enable riêng từng thanh ghi), `ex_instr_hold_q` (chỉ nạp khi dừng), thanh ghi WB (`ex_go & ex_valid`), CSR ít ghi (`mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`), M-unit (tích riêng chỉ nạp khi bắt đầu phép nhân, thanh ghi chia chỉ nạp khi đang chia). `wb_instr_q` (32 bit) nạp mỗi lệnh dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa đổi vì `tb_core` dùng `wb_instr_q` để in vết lệnh và nhận ra lệnh M, MRET, FENCE.I, nên phải sửa cả testbench. Nhóm cần xem lại trước.
 
 ## Còn lại
 
