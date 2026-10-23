@@ -86,7 +86,7 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 
 - Ngoại lệ được gắn cờ khi phát hiện (EX hoặc lỗi bus ở WB) và xử lý tại WB: ghi mepc, mcause, mtval, rồi MPIE ← MIE, MIE ← 0, PC ← mtvec, huỷ lệnh ở EX. MRET: MIE ← MPIE, MPIE ← 1, PC ← mepc.
 - mcause: 0 instruction misaligned (đích nhảy có bit 1 = 1), 1 instruction access fault, 2 illegal, 3 breakpoint, 4 load misaligned, 5 load access fault, 6 store misaligned, 7 store access fault, 11 ECALL.
-- mtval: illegal → mã lệnh, lệch địa chỉ/access fault → địa chỉ, còn lại 0.
+- mtval: illegal → mã lệnh, lệch địa chỉ/access fault → địa chỉ, breakpoint (EBREAK) → PC của lệnh EBREAK, còn lại 0 (D-035).
 - Ngoại lệ chính xác: trong chu kỳ WB chuyển hướng, chặn yêu cầu bus của lệnh ở EX (tín hiệu valid của bus phụ thuộc tổ hợp vào việc WB có chuyển hướng hay không).
 - Ngắt: MEI (11) > MSI (3) > MTI (7), mcause bit 31 = 1. Khi `MIE=1` và có ngắt chờ được bật, lệnh hợp lệ ở EX được đánh dấu "bị ngắt": không thực thi, không phát yêu cầu bus, tới WB thì nhận trap với mepc = PC của nó.
 - Không nhận ngắt trong chu kỳ WB đang ghi mstatus hoặc mie, hoặc đang chuyển hướng, để thay đổi bật/tắt ngắt có hiệu lực đúng ngay từ lệnh kế tiếp.

@@ -1,0 +1,10 @@
+# Platform của rv32_core trên tb_core. mtime nối vào core qua mtime_i,
+# bộ test I/M/Zifencei/privilege không dùng tới mtime, mtimecmp.
+mtime:
+  implemented: false
+mtimecmp:
+  implemented: false
+nmi:
+  label: nmi_vector
+reset:
+  label: reset_vector

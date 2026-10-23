@@ -24,6 +24,21 @@
     li   x7, tval;               \
     bne  s4, x7, fail
 
+// Như EXPECT_TRAP nhưng mtval phải bằng PC của lệnh trap (ebreak)
+#define EXPECT_TRAP_PC(n, cause, ...) \
+    li   TESTNUM, n;             \
+    li   s5, 0;                  \
+    la   s6, 1f;                 \
+2:  __VA_ARGS__;                 \
+    j    fail;                   \
+1:  li   x7, 1;                  \
+    bne  s5, x7, fail;           \
+    li   x7, cause;              \
+    bne  s2, x7, fail;           \
+    la   x7, 2b;                 \
+    bne  s3, x7, fail;           \
+    bne  s4, x7, fail
+
 // Lệnh csr bằng mã máy cố định (để kiểm tra mtval = mã lệnh)
 #define CSRRS_A0_7C0      0x7c002573      // csrrs a0, 0x7c0, x0  (CSR không tồn tại)
 #define CSRRW_X0_CYCLE_A0 0xc0051073      // csrrw x0, cycle, a0  (ghi CSR chỉ đọc)
@@ -118,7 +133,7 @@ TEST_CODE_BEGIN
 
     // ---- Ngoại lệ đồng bộ -------------------------------------------------------
     EXPECT_TRAP(30, 11, 0, ecall)
-    EXPECT_TRAP(31, 3, 0, ebreak)
+    EXPECT_TRAP_PC(31, 3, ebreak)   // mtval = PC của ebreak (D-035)
     EXPECT_TRAP(32, 2, ILLEGAL_WORD, .word ILLEGAL_WORD)
     EXPECT_TRAP(33, 2, 0, .word 0)
 

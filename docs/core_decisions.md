@@ -163,7 +163,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Lệnh CSR: toán hạng ghi (`funct3[2] ? uimm : rs1`).
   - JAL/JALR bị ngoại lệ: đích nhảy đã xoá bit 0 thay cho PC+4.
   - Load/store và nhánh: kết quả ALU (địa chỉ, đích).
-- **mtval:** illegal = mã lệnh (`wb_instr_q`), instruction access fault = PC, lệch địa chỉ và access fault của load/store = `wb_result_q`, ECALL, EBREAK và ngắt = 0. Đúng mục 4.8.
+- **mtval:** illegal = mã lệnh (`wb_instr_q`), instruction access fault = PC, lệch địa chỉ và access fault của load/store = `wb_result_q`, ECALL, EBREAK và ngắt = 0. Đúng mục 4.8. EBREAK đổi thành PC ở D-035.
 - **mcause** lưu bit 31 và 5 bit mã (WLRL, chỉ cần giữ giá trị hợp lệ 0..11). **mtvec** reset về 0, chế độ direct. **mepc** và **mtvec** không lưu bit 1:0.
 - CSR ngoài bảng mục 4.7 (mstatush, mcounteren, mcountinhibit, PMP, debug, CSR của S/U) là illegal. riscv-tests env `p` chịu được điều này vì luôn đặt `mtvec` trước khi chạm các CSR đó.
 
@@ -253,6 +253,13 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 - tb_core strict timing cộng 1 chu kỳ cho MUL* và 33 cho DIV/REM, suy ra từ mã lệnh. Lệnh M bị ngắt giữa chừng không xét.
 - `tb_rv32_muldiv`: 144 cặp toán hạng biên × 8 phép, 20000 phép ngẫu nhiên có thiên vị, số chu kỳ chính xác (2 và 34), `hold_i`, `go_i = 0` giữ kết quả, phép bị huỷ giữa chừng. Mô hình tham chiếu dùng phép nhân/chia 64 bit của Verilog.
 - Cấy 11 lỗi: MULHSU coi rs2 có dấu, chia cho 0 đổi dấu thương, dấu số dư theo số chia, dịch tích riêng sai, 31 bước chia, không về rảnh khi bị huỷ, bắt đầu khi WB chờ load, lệnh M bị ngắt vẫn giữ M-unit, `go_i` bị bỏ qua, không chọn kết quả M, thiếu dừng của phép nhân. Test hệ thống bắt 8 lỗi. Hai lỗi về `go_i` và về huỷ được `tb_rv32_muldiv` bắt (trong core `go_i = 0` không xảy ra khi khối đã xong). Lỗi "lệnh M bị ngắt vẫn giữ M-unit" chỉ làm ngắt chờ phép chia xong, kết quả vẫn đúng, nên không test nào bắt được (giống lỗi đã gặp ở D-032).
+
+### D-035. mtval của EBREAK = PC
+
+- **Lựa chọn:** EBREAK ghi mtval = PC của chính lệnh EBREAK (`wb_pc_q`), giống instruction access fault. Thay quy ước "EBREAK = 0" của D-022.
+- **Lý do:** Đặc tả privileged cho phép cả 0 lẫn PC. Spike và Sail ghi PC, trap handler của riscv-arch-test 3.10.0 mặc định cũng coi tval của breakpoint là địa chỉ trong vùng code. Với mtval = 0, test `privilege/ebreak` lệch signature và handler bỏ dở test (docs/riscof.md). Phần cứng chỉ thêm một nhãn vào nhánh chọn PC sẵn có của mux mtval.
+- **Đã loại:** giữ mtval = 0 và xoá bit breakpoint trong `SET_REL_TVAL_MSK` của `model_test.h`. Test chạy hết nhưng vẫn lệch một word so với Spike, không có bằng chứng tuân thủ sạch.
+- Kiểm tra: `trap.S` test 31 so mtval với địa chỉ lệnh EBREAK. Không unit test nào kiểm mtval vì mux nằm trong `rv32_core`.
 
 ---
 
