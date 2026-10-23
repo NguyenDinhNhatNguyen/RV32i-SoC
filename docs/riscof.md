@@ -16,18 +16,21 @@ RISCOF dịch từng test cho core và cho Spike, chạy cả hai rồi so signa
 tb_core cho arch-test dịch với IMEM 2 MB (`-DCORE_TB_IMEM_SIZE`), vì `jal-01` dài khoảng 1,7 MB và các test nhánh khoảng 300 KB.
 Mọi section nằm trong IMEM như `fw/common/link_isa.ld`.
 
+IMEM của tb_core cho arch-test đặt ở 0x8000_0000 (`-DCORE_TB_IMEM_BASE`, `RESET_PC` của core lấy theo giá trị này), trùng địa chỉ nạp của Spike.
+`link.ld`, `scripts/arch_run.sh` (`ARCH_IMEM_BASE`) và `elf2hex.py --imem-base` dùng cùng địa chỉ. Các test khác của tb_core vẫn ở 0x0.
+Lý do: signature của `misalign-jal-01` là `a0 - địa chỉ nhãn`, phụ thuộc địa chỉ nạp. Ở 0x0 core lệch Spike đúng 0x80000000 dù hành vi giống hệt.
+Chọn dời tb_core thay vì chạy Spike ở 0x0, vì Spike đặt debug module ở 0x0–0xFFF, boot ROM ở 0x1000 và CLINT ở 0x2000000.
+Chạy Spike ở 0x0 phải sửa memory map và boot của Spike, còn dời tb_core chỉ đổi một macro lúc dịch, không đụng RTL.
+
 Bộ test mà ISA yaml chọn (RV32I/IM, Zicsr, Zifencei, không C, không hỗ trợ truy cập lệch):
 
 - ENABLE_M=0: `I` (39 test), `Zifencei/Fencei`, 15 test `privilege` (`ecall`, `ebreak` và 13 test `misalign-*`). Tổng 55.
 - ENABLE_M=1: thêm 8 test `M`. Tổng 63.
 
-RISCOF 3.10.0 còn chọn 41 test `pmp32`, vì các test này chỉ kiểm ISA khớp `RV32I.*Zicsr`.
-Chúng cần S/U-mode và thanh ghi PMP (lệnh đầu tiên đọc `medeleg` đã trap), mà core chỉ có M-mode.
-`make arch-core` chạy `riscof testlist`, lọc bỏ `pmp32` rồi mới `riscof run --testfile`.
-
-`model_test.h` của core định nghĩa lại `SET_REL_TVAL_MSK`, bỏ bit breakpoint, vì core ghi mtval = 0 khi ebreak.
-Đây là cách `arch_test.h` hướng dẫn cho core ghi tval bằng 0.
-Nếu không, trap handler coi tval = 0 là địa chỉ ngoài vùng code và bỏ dở test `ebreak`.
+RISCOF 3.10.0 còn chọn 41 test `pmp32`. Chúng cần S/U-mode và thanh ghi PMP (lệnh đầu tiên đọc `medeleg` đã trap), mà core chỉ có M-mode.
+Không loại được bằng ISA yaml: cả 41 test chỉ có điều kiện `check ISA:=regex(.*32.*)` và `check ISA:=regex(.*I.*Zicsr.*)`,
+và RISCOF (`eval_cond` trong `riscof/framework/test.py`) chỉ xét các điều kiện `check` này. Muốn loại thì phải bỏ Zicsr khỏi ISA,
+khi đó mất luôn `ecall`, `ebreak` và các test `misalign-*`. Vì vậy `make arch-core` chạy `riscof testlist`, lọc bỏ `pmp32` rồi mới `riscof run --testfile`.
 
 ## Chạy
 
@@ -48,20 +51,15 @@ riscv64-unknown-elf-gcc 13.2.0, Icarus Verilog 12.0, riscv-arch-test 3.10.0.
 
 | Cấu hình | Số test | Passed | Failed |
 | --- | --- | --- | --- |
-| M0W1 (ENABLE_M=0) | 55 | 53 | 2 |
-| M1W1 (ENABLE_M=1) | 63 | 61 | 2 |
+| M0W1 (ENABLE_M=0) | 55 | 55 | 0 |
+| M1W1 (ENABLE_M=1) | 63 | 63 | 0 |
 
 `make arch-core` mất khoảng 3 phút. `make arch-core-dut`: 118/118 PASS (55 + 63).
 
-Toàn bộ `I`, `M`, `Zifencei`, `ecall` và 12/13 test `misalign-*` khớp signature với Spike.
-Hai test lệch, giống nhau ở cả hai cấu hình:
+Lần chạy đầu (cùng ngày) có 2 test lệch ở cả hai cấu hình, đã sửa:
 
-- `privilege/ebreak`: lệch đúng 1 word, là mtval mà trap handler lưu. Core ghi 0, Spike ghi PC của lệnh ebreak (`0x3c` sau khi trừ đầu vùng code).
-  Đặc tả privileged cho phép cả hai cách, nhưng Spike và Sail ghi PC.
-  Muốn qua test thì sửa core ghi mtval = PC khi ebreak (và cập nhật `docs/spec/core.md`), rồi bỏ `SET_REL_TVAL_MSK` trong `model_test.h`.
-- `privilege/misalign-jal-01`: core 0xfffffda2, Spike 0x7ffffda2. Không phải lỗi core.
-  Cả hai đều trap khi nhảy lệch và không ghi `a0`, test lấy `a0 - địa chỉ nhãn` làm signature.
-  Code của core nằm ở 0x0, của Spike ở 0x80000000, nên kết quả lệch đúng 0x80000000.
+- `privilege/ebreak`: core ghi mtval = 0, Spike ghi PC của lệnh EBREAK. Đã đổi core ghi PC (D-035 trong `docs/core_decisions.md`).
+- `privilege/misalign-jal-01`: core 0xfffffda2, Spike 0x7ffffda2, chỉ do khác địa chỉ nạp. Đã dời IMEM của tb_core cho arch-test lên 0x8000_0000 (mục trên).
 
 ## Cài RISCOF và Spike (Ubuntu/WSL)
 

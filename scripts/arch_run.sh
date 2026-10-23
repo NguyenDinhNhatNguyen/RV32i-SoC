@@ -18,6 +18,7 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 env_dir=$root/tb/riscof/rv32_core/env
 suite_env=$root/fw/riscv-arch-test/riscv-test-suite/env
 vvp_file=$root/tb/core/out/tb_core_arch_$cfg.vvp
+imem_base=${ARCH_IMEM_BASE:-0x80000000} # phải khớp lúc dịch tb_core_arch_*.vvp và link.ld
 imem_size=${ARCH_IMEM_SIZE:-2097152}     # phải khớp lúc dịch tb_core_arch_*.vvp
 prefix=${RV_PREFIX:-riscv64-unknown-elf}
 name=$(basename "$src" .S)
@@ -49,7 +50,7 @@ end=$(sym end_signature)
 [ -n "$begin" ] && [ -n "$end" ] || fail "no begin_signature/end_signature"
 
 tohost=$(python3 "$root/scripts/elf2hex.py" my.elf --imem my.imem.hex --dmem my.dmem.hex \
-         --imem-size "$imem_size" 2>>tb.log) || fail "elf2hex"
+         --imem-base "$imem_base" --imem-size "$imem_size" 2>>tb.log) || fail "elf2hex"
 
 ${VVP:-vvp} -n "$vvp_file" +imem=my.imem.hex +dmem=my.dmem.hex +"$tohost" +test="$name/$cfg" \
     +signature=DUT-rv32_core.signature +sig_begin="$begin" +sig_end="$end" \

@@ -493,14 +493,16 @@ module rv32_core #(
             wb_trap_cause = wb_load_q ? `RV_EXC_LOAD_ACCESS : `RV_EXC_STORE_ACCESS;
     end
 
-    // mtval: illegal = mã lệnh, instruction access fault = PC, lệch địa chỉ
-    // và access fault của load/store = địa chỉ (đã ở wb_result_q), còn lại 0.
+    // mtval: illegal = mã lệnh, instruction access fault và breakpoint = PC,
+    // lệch địa chỉ và access fault của load/store = địa chỉ (đã ở wb_result_q),
+    // còn lại 0.
     always @(*) begin
         wb_trap_tval = 32'h0;
         if (!wb_int_q) begin
             case (wb_trap_cause)
                 `RV_EXC_ILLEGAL:     wb_trap_tval = wb_instr_q;
-                `RV_EXC_INSTR_ACCESS: wb_trap_tval = wb_pc_q;
+                `RV_EXC_INSTR_ACCESS, `RV_EXC_BREAKPOINT:
+                                     wb_trap_tval = wb_pc_q;
                 `RV_EXC_INSTR_MISALIGNED, `RV_EXC_LOAD_MISALIGNED, `RV_EXC_LOAD_ACCESS,
                 `RV_EXC_STORE_MISALIGNED, `RV_EXC_STORE_ACCESS:
                                      wb_trap_tval = wb_result_q;

@@ -86,12 +86,13 @@ def main():
     ap.add_argument("elf")
     ap.add_argument("--imem", required=True)
     ap.add_argument("--dmem", required=True)
+    ap.add_argument("--imem-base", type=lambda v: int(v, 0), default=map_define("IMEM_BASE"))
     ap.add_argument("--imem-size", type=int, default=map_define("IMEM_SIZE"))
     ap.add_argument("--dmem-size", type=int, default=map_define("DMEM_SIZE"))
     args = ap.parse_args()
 
     regions = {
-        "imem": (map_define("IMEM_BASE"), args.imem_size, bytearray()),
+        "imem": (args.imem_base, args.imem_size, bytearray()),
         "dmem": (map_define("DMEM_BASE"), args.dmem_size, bytearray()),
     }
 

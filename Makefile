@@ -359,8 +359,10 @@ bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
 #   make arch-core          RISCOF so signature của core với Spike (cần riscof, spike)
 #   make arch-core-dut      chỉ chạy phía core: dịch, chạy, ghi signature, không so
 #                           (dùng khi chưa cài RISCOF/Spike, T=add-01 để chạy một bài)
-# tb_core cho arch-test dịch với IMEM 2 MB vì jal-01 dài khoảng 1,7 MB.
+# tb_core cho arch-test dịch với IMEM 2 MB vì jal-01 dài khoảng 1,7 MB, đặt ở
+# 0x8000_0000 (RESET_PC theo IMEM) cho trùng địa chỉ nạp với Spike.
 # ---------------------------------------------------------------------------
+ARCH_IMEM_BASE := 80000000
 ARCH_IMEM_SIZE := 2097152
 ARCH_SUITE     := fw/riscv-arch-test/riscv-test-suite
 ARCH_OUT       := tb/riscof/out
@@ -384,7 +386,7 @@ arch_runs = $(foreach f,$(ARCH_BASE),$(1)@$(f)@TEST_CASE_1=True) \
 
 $(CORE_OUT)/tb_core_arch_%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_RTL) $(CORE_MODELS) rtl/core/rv32_defs.vh
 	@mkdir -p $(@D)
-	$(IVERILOG) $(CORE_IVFLAGS) -DCORE_TB_IMEM_SIZE=$(ARCH_IMEM_SIZE) -s tb_core \
+	$(IVERILOG) $(CORE_IVFLAGS) -DCORE_TB_IMEM_SIZE=$(ARCH_IMEM_SIZE) "-DCORE_TB_IMEM_BASE=32'h$(ARCH_IMEM_BASE)" -s tb_core \
 	  -Ptb_core.ENABLE_M=$(call core_cfg_m,$*) -Ptb_core.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) \
 	  -o $@ $(CORE_RTL) $(CORE_MODELS) tb/core/tb_core.v
 
@@ -396,15 +398,15 @@ arch-core-dut: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	@mkdir -p $(ARCH_OUT)
 	@printf '%s\n' $(foreach c,$(ARCH_CFGS),$(call arch_runs,$(c))) | \
 	  xargs -P $(CORE_JOBS) -I{} bash -c 'r={}; c=$${r%%@*}; x=$${r#*@}; f=$${x%%@*}; m=$${x#*@}; \
-	    ARCH_IMEM_SIZE=$(ARCH_IMEM_SIZE) RV_PREFIX=$(RV_PREFIX) scripts/arch_run.sh $$c $$f \
+	    ARCH_IMEM_BASE=0x$(ARCH_IMEM_BASE) ARCH_IMEM_SIZE=$(ARCH_IMEM_SIZE) RV_PREFIX=$(RV_PREFIX) scripts/arch_run.sh $$c $$f \
 	    $(CURDIR)/$(ARCH_OUT)/dut/$$c/$$(basename $$f .S) $${m//,/ }' > $(ARCH_OUT)/dut.summary || true
 	@sort $(ARCH_OUT)/dut.summary; \
 	pass=$$(grep -c '^  PASS' $(ARCH_OUT)/dut.summary); fail=$$(grep -c '^  \[FAIL\]' $(ARCH_OUT)/dut.summary); \
 	echo "arch-core-dut: $$pass passed, $$fail failed (chi chay phia core, chua so voi Spike)"; [ $$fail = 0 ]
 
 # RISCOF chọn test theo ISA yaml của từng cấu hình, chạy core và Spike rồi so signature.
-# Bộ 3.10.0 chọn cả pmp32 chỉ theo regex RV32I.*Zicsr, nên lọc bỏ khỏi testlist
-# trước khi chạy. testlist xoá và tạo lại work-dir, run --testfile dùng tiếp
+# Bộ 3.10.0 chọn cả pmp32 chỉ theo regex RV32I.*Zicsr (không có điều kiện nào về PMP
+# để ISA yaml loại được), nên lọc bỏ khỏi testlist trước khi chạy. testlist xoá và tạo lại work-dir, run --testfile dùng tiếp
 # work-dir đó (cần file ISA đã kiểm trong đó). Báo cáo HTML ở tb/riscof/out/<cấu hình>/report.html.
 arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	@command -v riscof > /dev/null || { echo "LOI: chua co riscof, xem lenh cai trong docs/riscof.md"; exit 1; }
