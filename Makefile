@@ -366,9 +366,10 @@ ARCH_SUITE     := fw/riscv-arch-test/riscv-test-suite
 ARCH_OUT       := tb/riscof/out
 ARCH_CFGS      := M0W1 M1W1
 # Bộ test RISCOF sẽ chọn cho core (RV32I/IM, Zicsr, Zifencei, không C, không
-# hỗ trợ truy cập lệch): I, M, Zifencei, privilege/ecall, ebreak, misalign2-jalr
+# hỗ trợ truy cập lệch): I, M, Zifencei, privilege (ecall, ebreak, 13 test misalign).
+# pmp32 bị loại vì core chỉ có M-mode, không có PMP (xem docs/riscof.md).
 ARCH_BASE      := $(wildcard $(ARCH_SUITE)/rv32i_m/I/src/*.S) $(wildcard $(ARCH_SUITE)/rv32i_m/Zifencei/src/*.S)
-ARCH_PRIV      := $(addprefix $(ARCH_SUITE)/rv32i_m/privilege/src/,ecall.S ebreak.S misalign2-jalr-01.S)
+ARCH_PRIV      := $(wildcard $(ARCH_SUITE)/rv32i_m/privilege/src/*.S)
 ARCH_M         := $(wildcard $(ARCH_SUITE)/rv32i_m/M/src/*.S)
 ifneq ($(T),)
 arch_pick       = $(foreach f,$(1),$(if $(filter $(T),$(basename $(notdir $(f)))),$(f)))
@@ -402,15 +403,27 @@ arch-core-dut: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	echo "arch-core-dut: $$pass passed, $$fail failed (chi chay phia core, chua so voi Spike)"; [ $$fail = 0 ]
 
 # RISCOF chọn test theo ISA yaml của từng cấu hình, chạy core và Spike rồi so signature.
-# Báo cáo HTML ở tb/riscof/out/<cấu hình>/report.html.
+# Bộ 3.10.0 chọn cả pmp32 chỉ theo regex RV32I.*Zicsr, nên lọc bỏ khỏi testlist
+# trước khi chạy. testlist xoá và tạo lại work-dir, run --testfile dùng tiếp
+# work-dir đó (cần file ISA đã kiểm trong đó). Báo cáo HTML ở tb/riscof/out/<cấu hình>/report.html.
 arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	@command -v riscof > /dev/null || { echo "LOI: chua co riscof, xem lenh cai trong docs/riscof.md"; exit 1; }
 	@command -v spike > /dev/null || { echo "LOI: chua co spike, xem lenh cai trong docs/riscof.md"; exit 1; }
 	@for c in $(ARCH_CFGS); do \
 	  echo "== RISCOF $$c =="; \
+	  (cd tb/riscof && riscof testlist --config config_$$c.ini --suite $(CURDIR)/$(ARCH_SUITE) \
+	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c) || exit 1; \
+	  awk '/^[^ ]/ { skip = /\/pmp32\// } !skip' $(ARCH_OUT)/$$c/test_list.yaml > $(ARCH_OUT)/$$c.testlist.yaml; \
 	  (cd tb/riscof && riscof run --config config_$$c.ini --suite $(CURDIR)/$(ARCH_SUITE) \
-	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c --no-browser) || exit 1; \
+	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c --no-browser \
+	     --testfile $(CURDIR)/$(ARCH_OUT)/$$c.testlist.yaml) || exit 1; \
 	done
+	@# riscof run trả 0 kể cả khi có test Failed, nên đếm lại trong report.html
+	@bad=0; for c in $(ARCH_CFGS); do \
+	  r=$(ARCH_OUT)/$$c/report.html; \
+	  p=$$(grep -c 'col-result">Passed<' $$r); f=$$(grep -c 'col-result">Failed<' $$r); \
+	  echo "arch-core $$c: $$p passed, $$f failed"; [ $$f = 0 ] || bad=1; \
+	done; [ $$bad = 0 ]
 
 # ---------------------------------------------------------------------------
 # Tổng hợp thử bằng Yosys (flow nhà), chỉ xem xu hướng diện tích và độ sâu logic.

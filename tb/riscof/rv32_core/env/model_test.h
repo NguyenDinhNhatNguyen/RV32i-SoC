@@ -6,6 +6,14 @@
 
 #define ALIGNMENT 2
 
+// Core ghi mtval = 0 khi ebreak (docs/spec/core.md), nên bỏ bit breakpoint khỏi
+// mặt nạ relocate tval như arch_test.h hướng dẫn. Nếu không, trap handler coi
+// tval = 0 là địa chỉ ngoài vùng code và bỏ dở test.
+#define SET_REL_TVAL_MSK ((1<<CAUSE_MISALIGNED_FETCH | 1<<CAUSE_FETCH_ACCESS                             | \
+                           1<<CAUSE_MISALIGNED_LOAD  | 1<<CAUSE_LOAD_ACCESS  | 1<<CAUSE_MISALIGNED_STORE | 1<<CAUSE_STORE_ACCESS | \
+                           1<<CAUSE_FETCH_PAGE_FAULT | 1<<CAUSE_LOAD_PAGE_FAULT                          | 1<<CAUSE_STORE_PAGE_FAULT) \
+                        & 0xFFFFFFFF)
+
 #define RVMODEL_DATA_SECTION \
         .pushsection .tohost,"aw",@progbits;            \
         .align 6; .global tohost; tohost: .word 0;      \
