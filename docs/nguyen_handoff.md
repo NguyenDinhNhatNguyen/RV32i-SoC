@@ -5,7 +5,7 @@ Giải thích chi tiết và lệnh chạy: xem `docs/runbook_nguyen.md`. Ở nh
 | Task | Trạng thái | Đã có trong repo | Còn phải làm |
 | --- | --- | --- | --- |
 | HT-02 Hỏi VPN | Xong | — | Trường không mở VPN: Cadence chỉ chạy khi lên trường |
-| HT-01 Kiểm tra server | Xong 21/10 | `appendix/server_check/server_check_20261021_0749.txt` | Không còn. Kết quả: đủ tool, PDK ở `~/PDK_GPDK45` (có lib slow và fast), SRAM `sram_2k_macro` 1024 x 32 bit, 80 x 100 um, chưa có GDS |
+| HT-01 Kiểm tra server | Xong 21/10 | `appendix/server_check/server_check_20261021_0749.txt` | Không còn. Kết quả: đủ tool, PDK ở `~/PDK_GPDK45` (có lib slow và fast), SRAM `sram_2k_macro` 1024 x 32 bit, 80 x 100 um, không có GDS và CDL (thầy xác nhận không cần, 22/10) |
 | HT-04 Môi trường ở nhà | Hướng dẫn đã kiểm chứng trên máy Nguyên (80%) | `docs/setup_home.md`, `scripts/eda.sh`, `.vscode/` | Một bạn khác cài theo hướng dẫn, chạy `scripts/eda.sh check` ra 2 dòng PASS và gửi ảnh |
 | RTL-05 Wrapper accelerator | RTL + testbench pass với lõi giả, có thêm vỏ APB3, lint 0 warning (70%) | `rtl/accel/`, `tb/unit/tb_accel_wrapper.v`, `tb/unit/tb_accel_apb.v`, `fw/accel.h` | Thay `sa_core_model.v` bằng lõi Lab 2, chỉnh `LAT`, chạy lại `scripts/eda.sh check` |
 | PD-01 Chạy thử Innovus | Flow chạy trọn 21/10 (90%): LEC PASS, GLS PASS, DRC/connectivity/antenna 0 lỗi, setup +7,68 ns, hold +0,005 ns | `appendix/synth_accel/`, `appendix/pnr_accel/`, `lec/accel_rtl2gate.do` | Skew 113 ps > 80 ps: 4 flop điều khiển (`state`, `done`, `irq_en`) không qua clock gating nên nhận clock sớm hơn |
