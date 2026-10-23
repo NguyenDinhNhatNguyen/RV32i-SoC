@@ -223,29 +223,47 @@ module rv32_csr #(
     end
 
     // ---- Bộ đếm 64 bit ---------------------------------------------------------------
-    wire [63:0] mcycle_inc   = mcycle_q + 64'd1;
-    wire [63:0] minstret_inc = minstret_q + 64'd1;
+    // Mỗi nửa 32 bit có enable riêng. Nửa cao chỉ nạp khi bị ghi hoặc khi nửa
+    // thấp tràn, nên Genus gate clock được 32 flop này gần như mọi chu kỳ
+    // (D-037). Giá trị giống hệt bộ đếm 64 bit một khối.
+    wire mcycle_lo_max   = &mcycle_q[31:0];
+    wire minstret_lo_max = &minstret_q[31:0];
+    wire minstret_inc    = instret_i & ~wr_minstret & ~wr_minstreth;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
-            mcycle_q <= 64'h0;
+            mcycle_q[31:0] <= 32'h0;
         else if (wr_mcycle)
             mcycle_q[31:0] <= wval;
-        else if (wr_mcycleh)
-            mcycle_q[63:32] <= wval;
-        else
-            mcycle_q <= mcycle_inc;
+        else if (!wr_mcycleh)
+            mcycle_q[31:0] <= mcycle_q[31:0] + 32'd1;
     end
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
-            minstret_q <= 64'h0;
+            mcycle_q[63:32] <= 32'h0;
+        else if (wr_mcycleh)
+            mcycle_q[63:32] <= wval;
+        else if (!wr_mcycle & mcycle_lo_max)
+            mcycle_q[63:32] <= mcycle_q[63:32] + 32'd1;
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            minstret_q[31:0] <= 32'h0;
         else if (wr_minstret)
             minstret_q[31:0] <= wval;
+        else if (minstret_inc)
+            minstret_q[31:0] <= minstret_q[31:0] + 32'd1;
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            minstret_q[63:32] <= 32'h0;
         else if (wr_minstreth)
             minstret_q[63:32] <= wval;
-        else if (instret_i)
-            minstret_q <= minstret_inc;
+        else if (minstret_inc & minstret_lo_max)
+            minstret_q[63:32] <= minstret_q[63:32] + 32'd1;
     end
 
     // ---- Ngắt ----------------------------------------------------------------------
