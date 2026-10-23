@@ -4,7 +4,7 @@
 Không có đặt cell và đi dây. Trễ dây lấy theo wire load mặc định của Nangate45, clock lý tưởng.
 Số chính thức (tần số, slack) lấy từ Genus và Innovus ở trường.
 
-**Trạng thái: đang làm (WIP).** Việc 1 có số liệu gốc. Việc 2 mới đo xong ENABLE_M=0. Việc 3, 4 chưa xong.
+**Trạng thái:** việc 1 và 2 đã chốt số liệu. Việc 3 đang làm.
 
 ## Cách chạy
 
@@ -51,23 +51,30 @@ Nghĩa là kết quả so sánh nhánh và bit thấp của ALU (bit 0 còn mux 
 
 Đường găng của ENABLE_M=1 đi vào bộ nhân (`p_lo_q`, `p_hi_q`) và `wb_result_q`. Bộ nhân đã chia 2 chu kỳ theo thiết kế nên không sửa.
 
-## Việc 2. Tối ưu đường găng (đang làm)
+## Việc 2. Thử tối ưu đường găng (không giữ thay đổi RTL)
 
-Thay đổi đang thử trong `rtl/core/rv32_core.v` (chưa commit, chưa chạy hết regression):
+Hai thay đổi đã thử trong `rtl/core/rv32_core.v`:
 
 1. `ex_addr_lo`: hai bit thấp địa chỉ load/store và đích nhảy tính bằng bộ cộng 2 bit trên toán hạng ALU, không lấy từ `ex_alu_res[1:0]`. Các lệnh này luôn dùng phép ADD nên giá trị bằng nhau.
 2. `ex_ok`: `d_req_valid_o`, `md_req`, `ex_redirect` dùng ngoại lệ theo nhóm lệnh thay cho `ex_trap`. Decoder ép mọi cờ về 0 khi illegal và mỗi lệnh chỉ bật một cờ, nên load/store chỉ còn lỗi lấy lệnh và lệch địa chỉ, lệnh M chỉ còn lỗi lấy lệnh, lệnh nhảy chỉ còn lỗi lấy lệnh và đích lệch.
 
-Kiểm tra tương đương hình thức với RTL gốc (Yosys `equiv_make`, `equiv_simple`, `equiv_induct`), cả ENABLE_M=0 và 1: mọi flop và ngõ ra đều chứng minh được, chỉ trừ 2 bit `u_lsu_align.req_addr_lo_i`. Hai bit này chỉ khác khi lệnh không phải ADD, lúc đó `d_req_valid_o = 0` và WB không phải load nên không ai dùng.
+Kiểm tra bản thử:
 
-Số liệu sau tối ưu (ns):
+- Tương đương hình thức với RTL gốc (Yosys `equiv_make`, `equiv_simple`, `equiv_induct`), cả ENABLE_M=0 và 1: mọi flop và ngõ ra đều chứng minh được, chỉ trừ 2 bit `u_lsu_align.req_addr_lo_i`. Hai bit này chỉ khác khi lệnh không phải ADD, lúc đó `d_req_valid_o = 0` và WB không phải load nên không ai dùng.
+- Regression đủ 12 target pass. Số chu kỳ của `make bench-core` giống hệt bản gốc (CPI không đổi).
+
+Chu kỳ nhỏ nhất của đường flop tới flop (ns), gốc → bản thử:
 
 | Cấu hình | D=1500 | D=2000 | D=2500 | D=3000 |
 | --- | ---: | ---: | ---: | ---: |
-| ENABLE_M=0 | 2,179 | 2,392 | 2,392 | 2,392 |
-| ENABLE_M=1 | chưa đo | chưa đo | chưa đo | chưa đo |
+| ENABLE_M=0 | 2,281 → 2,179 (−4,5%) | 2,529 → 2,392 (−5,4%) | 2,529 → 2,392 (−5,4%) | 2,529 → 2,392 (−5,4%) |
+| ENABLE_M=1 | 3,054 → 3,027 (−0,9%) | 3,054 → 3,027 (−0,9%) | 3,352 → 3,396 (+1,3%) | 3,484 → 3,594 (+3,2%) |
 
-ENABLE_M=0 nhanh hơn khoảng 4 đến 5% ở mọi D. Đường găng mới là đường dữ liệu tự nhiên: regfile → ALU → `wb_result_q` và `d_addr_o`.
+Mức dao động của abc: khi chỉ thêm `ex_addr_lo` (một thay đổi nhỏ), M0 nhanh hơn 2,3% còn M1 chậm đi 3,3%. Vậy nhiễu khoảng ±3%.
+
+**Kết luận:** ENABLE_M=0 nhanh hơn khoảng 5%, chỉ hơn mức nhiễu một chút. ENABLE_M=1 không cải thiện vì đường găng nằm ở bộ nhân và đường regfile → ALU → `wb_result_q`. Theo tiêu chí "chỉ giữ khi cải thiện rõ hơn mức dao động", **không giữ thay đổi RTL**, chỉ giữ số liệu (D-036). Đề bài cần 50 MHz (20 ns), core đã dư nhiều lần.
+
+Patch bản thử lưu ở `syn/run_timing/opt2_decision_path.patch` (bị ignore, chỉ có trên máy này). Nếu sau này Genus báo vi phạm setup trên đường `ex_trap` → `ex_go` thì áp lại patch này.
 
 ## Việc 3. Clock gating (đang làm)
 
