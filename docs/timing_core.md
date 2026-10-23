@@ -4,7 +4,7 @@
 Không có đặt cell và đi dây. Trễ dây lấy theo wire load mặc định của Nangate45, clock lý tưởng.
 Số chính thức (tần số, slack) lấy từ Genus và Innovus ở trường.
 
-**Trạng thái:** việc 1 và 2 đã chốt số liệu. Việc 3 đang làm.
+**Trạng thái:** đã xong việc 1, 2, 3. Quyết định ghi ở `docs/core_decisions.md` (D-036, D-037).
 
 ## Cách chạy
 
@@ -76,21 +76,44 @@ Mức dao động của abc: khi chỉ thêm `ex_addr_lo` (một thay đổi nh�
 
 Patch bản thử lưu ở `syn/run_timing/opt2_decision_path.patch` (bị ignore, chỉ có trên máy này). Nếu sau này Genus báo vi phạm setup trên đường `ex_trap` → `ex_go` thì áp lại patch này.
 
-## Việc 3. Clock gating (đang làm)
+## Việc 3. Clock gating
 
-Thống kê trên RTL gốc, ENABLE_M=1 (Yosys `opt_dff`, đếm flop có chân enable): 1 679 trên 1 682 flop có enable (99,8%). Ba flop không có enable là `ex_fetch_q`, `ex_hold_q`, `ex_req_wait_q` (mỗi cái 1 bit, không đáng gate).
+Genus chèn clock gating cho nhóm flop có enable rõ trong RTL (dạng `else if (en) q <= d`). Thống kê bằng Yosys `opt_dff` (đếm flop có chân enable):
 
-Tuy vậy, enable của `mcycle` bật mỗi chu kỳ và của `minstret` bật mỗi lệnh. Nửa cao 32 bit của hai bộ đếm chỉ đổi khi nửa thấp tràn, nhưng hiện dùng chung enable với nửa thấp nên Genus không tiết kiệm được gì. Định tách enable riêng cho nửa cao.
+| Cấu hình | Flop | Có enable, trước | Có enable, sau |
+| --- | ---: | ---: | ---: |
+| ENABLE_M=0 | 1 478 | 1 475 (99,8%) | 1 475 (99,8%) |
+| ENABLE_M=1 | 1 682 | 1 679 (99,8%) | 1 679 (99,8%) |
 
-## Việc 4. Nhật ký quyết định
+Ba flop không có enable là `ex_fetch_q`, `ex_hold_q`, `ex_req_wait_q`. Mỗi cái 1 bit và đổi gần như mọi chu kỳ, nên không đáng gate (Genus mặc định cũng không gate nhóm dưới 3 flop).
 
-Chưa ghi vào `docs/core_decisions.md`. Dự kiến D-036 (đường quyết định ở EX) và D-037 (enable nửa cao bộ đếm).
+Tỉ lệ không đổi vì vấn đề không nằm ở chỗ thiếu enable mà ở enable gần như luôn bật:
 
-## Bước tiếp theo
+- Trước: nửa cao 32 bit của `mcycle` có enable `~wr_mcycle`, tức bật mọi chu kỳ. Nửa cao của `minstret` bật mỗi lệnh hoàn thành. Clock của 64 flop này gần như không bao giờ bị chặn, dù giá trị chỉ đổi khi nửa thấp tràn (khoảng 86 giây một lần ở 50 MHz).
+- Sau (`rtl/core/rv32_csr.v`): mỗi nửa 32 bit có always riêng. Nửa cao chỉ nạp khi bị ghi (`mcycleh`, `minstreth`) hoặc khi nửa thấp toàn bit 1 và đang tăng.
 
-1. Đo ENABLE_M=1 sau tối ưu trên cùng dải D.
-2. Chạy hết regression (lint-core, unit-core, fw-core, isa-core, bench-core, arch-core, lint-bus, unit-bus, fw-bus, accel). So số chu kỳ của bench-core với bản gốc để chắc CPI không đổi.
-3. Chỉ giữ thay đổi RTL nếu cải thiện rõ hơn mức dao động của abc.
-4. Làm việc 3, ghi D-036, D-037.
+Ước lượng số flop bộ đếm nhận clock mỗi chu kỳ, với CPI 1,2 của CoreMark (`minstret` tăng ở khoảng 83% số chu kỳ):
+
+| | `mcycle` | `minstret` | Tổng |
+| --- | ---: | ---: | ---: |
+| Trước | 64 | 64 × 0,83 = 53 | 117 |
+| Sau | 32 | 32 × 0,83 = 27 | 59 |
+
+Khoảng 58 flop ít nhận clock hơn mỗi chu kỳ, khoảng 4% số flop của core. Đây là ước lượng tay, số công suất thật lấy từ Genus hoặc Innovus với SAIF ở trường.
+
+Kiểm tra:
+
+- Tương đương hình thức với bản cũ (Yosys `equiv_make`, `equiv_simple`, `equiv_induct`), cả ENABLE_M=0 và 1: mọi flop và ngõ ra chứng minh được, 0 điểm không chứng minh được.
+- Regression đủ 12 target pass, lint 0 warning. Số chu kỳ của `make bench-core` giống hệt bản gốc.
+- `fw/tests/asm/trap.S` (test 83, 84) đã kiểm nhớ từ nửa thấp sang nửa cao của `mcycle`. Tràn của `minstret` không có test mô phỏng (cần 2^32 lệnh), chỉ dựa vào chứng minh hình thức.
+
+Timing và diện tích sau thay đổi (ns, µm², D=2000): ENABLE_M=0 2,575 và 17 032, ENABLE_M=1 3,067 và 28 559. Lệch so với gốc trong mức nhiễu của abc (±3%).
+
+Các nhóm khác đã có enable hợp lý: regfile (enable riêng từng thanh ghi), `ex_instr_hold_q` (chỉ nạp khi dừng), thanh ghi WB (`ex_go & ex_valid`), CSR ít ghi (`mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`), M-unit (tích riêng chỉ nạp khi bắt đầu phép nhân, thanh ghi chia chỉ nạp khi đang chia). `wb_instr_q` (32 bit) nạp mỗi lệnh dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa đổi vì `tb_core` và GLS có thể đang theo dõi nó, nhóm cần xem lại trước.
+
+## Còn lại
+
+- Ở trường: chạy Genus với clock gating bật, so số ICG và công suất trước và sau D-037.
+- Nếu Genus báo vi phạm setup trên đường `ex_trap` → `ex_go`, áp lại patch của việc 2.
 
 Bản sao RTL thử nghiệm, kết quả quét và log regression gốc ở `syn/run_timing/` (bị ignore, chỉ có trên máy này).
