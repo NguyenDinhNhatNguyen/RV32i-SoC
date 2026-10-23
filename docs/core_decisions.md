@@ -263,6 +263,27 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 
 ---
 
+## PPA – Timing và clock gating (flow nhà)
+
+### D-036. Không tối ưu đường quyết định ở EX khi chưa có số của Genus
+
+- **Bối cảnh:** Timing ước lượng bằng Yosys và OpenSTA với Nangate45 (`docs/timing_core.md`). Đường găng ENABLE_M=0 đi từ so sánh nhánh và bit thấp của ALU qua `ex_exc`, `ex_trap`, `d_req_valid_o`, `pipe_stall` tới `ex_go`, rồi tới enable của mọi thanh ghi pipeline. Đường găng ENABLE_M=1 nằm ở bộ nhân và đường regfile → ALU → `wb_result_q`.
+- **Đã thử:** bộ cộng 2 bit riêng cho bit thấp địa chỉ (`ex_addr_lo`), và `d_req_valid_o`, `md_req`, `ex_redirect` dùng ngoại lệ theo nhóm lệnh (`ex_ok`) thay cho `ex_trap`. Bản thử tương đương hình thức với RTL gốc (trừ 2 bit vào `rv32_lsu_align` khi lệnh không phải ADD, không ai dùng), pass đủ regression, CPI không đổi.
+- **Lựa chọn:** không giữ thay đổi RTL, chỉ giữ số liệu.
+- **Lý do:** ENABLE_M=0 nhanh hơn khoảng 5%, ENABLE_M=1 không cải thiện. Mức dao động của abc khi sửa RTL nhỏ là khoảng ±3%, nên lợi ích chưa rõ. Đề bài chỉ cần 50 MHz và core đã dư nhiều lần. Giữ RTL đơn giản hơn, ít rủi ro hơn cho phần tích hợp. Quyết định tự chọn theo hướng an toàn khi nhóm chưa xem.
+- **Đã loại:** giữ bản thử chỉ vì M0 nhanh hơn một chút (thêm điều kiện dựa vào tính chất của decoder, người sửa decoder sau này phải nhớ). Sửa đường bộ nhân (đã chia 2 chu kỳ theo D-031).
+- Patch bản thử: `syn/run_timing/opt2_decision_path.patch` trên máy của Nhân (bị ignore). Áp lại nếu Genus báo vi phạm setup trên đường này.
+
+### D-037. Nửa cao của `mcycle` và `minstret` có enable riêng
+
+- **Bối cảnh:** 99,8% flop của core đã có enable theo Yosys. Nhưng nửa cao 32 bit của hai bộ đếm dùng chung enable với nửa thấp, tức bật mọi chu kỳ (`mcycle`) hoặc mỗi lệnh (`minstret`), nên Genus gate clock cũng không chặn được gì.
+- **Lựa chọn:** mỗi nửa 32 bit có always riêng. Nửa cao chỉ nạp khi bị ghi hoặc khi nửa thấp toàn bit 1 và đang tăng. Thứ tự ưu tiên giữ như cũ: ghi nửa nào thì nửa đó lấy giá trị ghi, nửa kia giữ nguyên, không tăng.
+- **Lý do:** khoảng 58 flop ít nhận clock hơn mỗi chu kỳ (ước lượng với CPI 1,2), không đổi giá trị đọc ra, không đổi timing (lệch trong mức nhiễu).
+- **Đã loại:** chặn hẳn bộ đếm khi không đọc (sai đặc tả, có `mcountinhibit` mới được). Tách thành thanh ghi `_lo_q`, `_hi_q` riêng (đổi tên tín hiệu mà testbench và GLS đang theo dõi, không lợi gì thêm). Chặn `wb_instr_q` khi lệnh không cần (chưa kiểm được ảnh hưởng tới vết của `tb_core`, để nhóm xem lại).
+- **Kiểm tra:** tương đương hình thức với bộ đếm cũ (Yosys `equiv_induct`, 0 điểm không chứng minh được, cả ENABLE_M=0 và 1). Regression đủ, số chu kỳ bench không đổi. `trap.S` test 83, 84 kiểm nhớ sang nửa cao của `mcycle`.
+
+---
+
 ## Tài liệu
 
 ### D-034. Sơ đồ vi kiến trúc sinh bằng script
