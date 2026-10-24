@@ -27,7 +27,8 @@ module timer_apb (
     output wire        PREADY,
     output wire        PSLVERR,
     output reg         irq_timer,
-    output wire        irq_software
+    output wire        irq_software,
+    output wire [63:0] mtime_o        // cho mtime_i cua core (CSR time, RTL-09)
 );
     reg [31:0] mtime_lo;
     reg [31:0] mtime_hi;
@@ -52,6 +53,7 @@ module timer_apb (
     assign PREADY       = 1'b1;
     assign PSLVERR      = access & ~addr_ok;
     assign irq_software = msip;
+    assign mtime_o      = {mtime_hi, mtime_lo};
 
     always @(posedge PCLK or negedge PRESETn) begin
         if (!PRESETn)         mtime_lo <= 32'd0;

@@ -122,7 +122,7 @@ Unit test kiểm tra:
 
 ## 7. Việc còn lại cho người khác
 
-- RTL-09 (Phát): `soc_top` nối các khối trên với bộ đồng bộ reset, Timer, UART, GPIO, bộ gom ngắt. `tb_core_bus` là khung tham khảo.
+- RTL-09 (Phát): đã có `soc_top` và bộ đồng bộ reset, xem `docs/soc_top.md`.
 - Phúc: ngoại vi APB nối vào khe theo bảng mục 3. PREADY của khe trống nối 1.
 - Nhân: bootloader UART sinh lại `boot_rom_init.vh`.
 - Hiếu: firmware ghi ngoại vi bằng `sw`/`lw`. Testbench SoC nạp chương trình vào mô hình macro như `tb_core_bus`.

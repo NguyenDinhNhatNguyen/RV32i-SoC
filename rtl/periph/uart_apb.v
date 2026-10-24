@@ -19,6 +19,7 @@
 // irq (muc, dang ky 1 flop) = TXIE&TXE | RXIE&RXNE | ERRIE&(OVR|FE|TXOVF)
 // Khung 8N1: start(0), 8 bit LSB truoc, stop(1). RX lay mau 16x, o giua bit.
 // Dau vao uart_rxd bat dong bo -> dong bo 2 flop.
+`timescale 1ns/1ps
 module uart_apb #(
     parameter        FIFO_AW   = 3,          // do sau FIFO = 2**FIFO_AW (TX va RX)
     parameter [15:0] DIV_RESET = 16'd27      // 50 MHz / (16 x 115200)

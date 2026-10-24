@@ -2,6 +2,7 @@
 // Do sau = 2**AW. Con tro AW+1 bit (bit cao phan biet day/rong).
 // Bo nho khong reset (chi doc khi khong rong) -> flop nho hon, khong anh huong chuc nang.
 // push khi day va pop khi rong deu bi bo qua; ben ngoai tu bao co loi.
+`timescale 1ns/1ps
 module uart_fifo #(
     parameter DW = 8,
     parameter AW = 3

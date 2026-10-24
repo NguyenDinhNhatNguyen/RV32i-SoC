@@ -501,7 +501,8 @@ sta-core-nangate:
 #   make fw-bus                    core chạy test assembly và riscv-tests trên sys_bus + SRAM macro (T=smoke)
 #   make unit-bus PLUSARGS="+seed=7"
 # ---------------------------------------------------------------------------
-BUS_RTL     := $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v)
+# soc_top cần cả core, ngoại vi và accelerator nên lint và chạy ở phần SoC, không ở đây
+BUS_RTL     := $(filter-out rtl/bus/soc_top.v,$(wildcard rtl/bus/*.v)) $(wildcard rtl/mem/*.v)
 BUS_MODELS  := tb/models/sram_2k_macro.v
 BUS_ACCEL   := $(ACCEL_RTL) rtl/accel/accel_apb.v
 BUS_OUT     := tb/unit/out/bus
@@ -609,3 +610,77 @@ fw-bus: $(foreach c,$(BUS_FW_CFGS),$(BUS_SOC_OUT)/tb_core_bus_$(c).vvp) \
 
 clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
+
+# ---------------------------------------------------------------------------
+# SoC (Phát): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v. Tài liệu: docs/soc_top.md
+# Chạy ở nhà (Icarus, Verilator). Kết quả ở tb/soc/out/soc (bị ignore).
+#   make lint-soc                  Verilator -Wall soc_top (4 cấu hình ENABLE_M x ENABLE_WFI_SLEEP), 0 warning
+#   make fw-soc                    soc_top chạy smoke, hazard, soc.S, bus.S và riscv-tests (T=soc để chạy một bài)
+# ---------------------------------------------------------------------------
+SOC_RTL     := $(CORE_RTL) $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v) $(wildcard rtl/periph/*.v) $(BUS_ACCEL)
+SOC_OUT     := tb/soc/out/soc
+SOC_VLFLAGS := --lint-only -Wall -Irtl/bus -Irtl/mem -Irtl/core \
+               -y rtl/bus -y rtl/mem -y rtl/core -y rtl/periph -y rtl/accel -y tb/models
+SOC_LINT_CFGS := M0W0 M0W1 M1W0 M1W1
+
+lint-soc fw-soc: SHELL := /bin/bash
+lint-soc fw-soc: .SHELLFLAGS := -o pipefail -c
+
+.PHONY: lint-soc fw-soc clean-soc
+
+lint-soc:
+	@fail=0; \
+	for c in $(SOC_LINT_CFGS); do \
+	  m=$${c:1:1}; w=$${c:3:1}; \
+	  if $(VERILATOR) $(SOC_VLFLAGS) --top-module soc_top -GENABLE_M=$$m -GENABLE_WFI_SLEEP=$$w rtl/bus/soc_top.v; then \
+	    echo "  [ OK ] lint soc_top ($$c)"; \
+	  else \
+	    echo "  [FAIL] lint soc_top ($$c)"; fail=1; \
+	  fi; \
+	done; \
+	if [ $$fail = 0 ]; then echo "LINT-SOC PASS"; else echo "LINT-SOC FAIL"; exit 1; fi
+
+# Test assembly không dùng khối điều khiển riêng của tb_core, test riêng của SoC ở
+# fw/tests/soc, bus.S (dùng lại rule của phần bus) và riscv-tests.
+SOC_FW_TESTS  := smoke hazard
+SOC_OWN_TESTS := $(basename $(notdir $(wildcard fw/tests/soc/*.S)))
+SOC_OWN_OUT   := $(SOC_OUT)/fw
+ifneq ($(T),)
+SOC_FW_TESTS  := $(filter $(T),$(SOC_FW_TESTS))
+SOC_OWN_TESTS := $(filter $(T),$(SOC_OWN_TESTS))
+endif
+SOC_FW_CFGS   := M0W0 M1W1
+soc_tests = $(addprefix $(CORE_FW_OUT)/,$(SOC_FW_TESTS)) \
+            $(addprefix $(SOC_OWN_OUT)/,$(SOC_OWN_TESTS)) \
+            $(addprefix $(BUS_OWN_OUT)/,$(BUS_OWN_TESTS)) \
+            $(addprefix $(CORE_ISA_OUT)/,$(call core_isa_tests,$(1)))
+SOC_FW_RUNS   := $(foreach c,$(SOC_FW_CFGS),$(foreach t,$(call soc_tests,$(c)),$(t)@$(c)))
+
+.PRECIOUS: $(SOC_OWN_OUT)/%.elf
+$(SOC_OWN_OUT)/%.elf: fw/tests/soc/%.S fw/tests/asm/test_macros.h fw/common/link.ld
+	@mkdir -p $(@D)
+	@test -n "$(RV_PREFIX)" || { echo "LOI: khong tim thay riscv gcc"; exit 1; }
+	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
+
+$(SOC_OWN_OUT)/%.tohost: $(SOC_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
+	@$(PYTHON) scripts/elf2hex.py $< --imem $(SOC_OWN_OUT)/$*.imem.hex --dmem $(SOC_OWN_OUT)/$*.dmem.hex > $@
+
+$(SOC_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v $(SOC_RTL) $(BUS_MODELS) rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
+	@mkdir -p $(@D)
+	$(IVERILOG) $(BUS_IVFLAGS) -Irtl/core -s tb_soc -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) \
+	  -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -o $@ $(SOC_RTL) $(BUS_MODELS) tb/soc/tb_soc.v
+
+fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
+        $(foreach t,$(SOC_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost) \
+        $(foreach t,$(SOC_OWN_TESTS),$(SOC_OWN_OUT)/$(t).tohost) \
+        $(foreach t,$(BUS_OWN_TESTS),$(BUS_OWN_OUT)/$(t).tohost) \
+        $(foreach t,$(CORE_ISA_BASE) $(CORE_ISA_M),$(CORE_ISA_OUT)/$(t).tohost)
+	@printf '%s\n' $(SOC_FW_RUNS) | xargs -P $(CORE_JOBS) -n 1 bash scripts/soc_run.sh $(SOC_OUT) \
+	  > $(SOC_OUT)/fw-soc.summary; \
+	cat $(SOC_OUT)/fw-soc.summary; \
+	pass=$$(grep -c '^  PASS' $(SOC_OUT)/fw-soc.summary); \
+	fail=$$(grep -c '^  \[FAIL\]' $(SOC_OUT)/fw-soc.summary); \
+	echo "fw-soc: $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass -gt 0 ]
+
+clean-soc:
+	rm -rf $(SOC_OUT)
