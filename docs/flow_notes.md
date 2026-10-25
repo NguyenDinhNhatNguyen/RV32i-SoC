@@ -1,40 +1,128 @@
-# Ghi chú flow Cadence theo các Lab (tóm tắt của nhóm)
+# Flow Cadence ở trường
 
-Tóm tắt các quy ước và tiêu chí nghiệm thu từ Lab 01-05 để script đồ án làm giống Lab. Tài liệu Lab gốc để trong Drive nhóm, không đưa lên repo công khai.
+Cách chạy flow Genus → Conformal → GLS → Innovus trên server trường, tiêu chí nghiệm thu theo Lab 01-05 và các lỗi đã gặp. Tài liệu Lab gốc để trong Drive nhóm, không đưa lên repo công khai.
 
-## Cấu trúc thư mục Lab và PDK
+Trường không mở VPN nên Cadence chỉ chạy khi ngồi ở trường. Ở nhà chỉ làm RTL, mô phỏng và flow mã nguồn mở (`docs/setup_home.md`). Dồn việc Cadence vào các buổi lên trường và chuẩn bị script sẵn ở nhà.
 
-- PDK nằm trong thư mục `PDK_GPDK45`: `lib/slow_vdd1v0_basiccells.lib` (corner setup, 1.0 V 125 C), `lef/gsclib045_tech.lef`, `lef/gsclib045_macro.lef`.
-- Site cell chuẩn: `CoreSite`. Net nguồn: `VDD`, `VSS`.
-- Repo dùng biến môi trường `PDK_DIR` trỏ tới thư mục này (xem `pnr/scripts/config.tcl`).
+## 1. Server và PDK
 
-## Bước và tiêu chí nghiệm thu
+Kết quả HT-01 (21/10) nằm ở `appendix/server_check/`. Chạy lại khi cần bằng `make check-server`.
 
-| Bước | Lệnh chính (theo Lab) | Tiêu chí phải đạt | Script trong repo |
+| Mục | Giá trị |
+| --- | --- |
+| Tool | Genus 21.1, Innovus 21.1, Conformal_Asic 24.1 (không có license Conformal_Ultra), Xcelium, Tempus và Voltus 23.1 |
+| PDK | `~/PDK_GPDK45` (bản Lab trong home mỗi người) |
+| Thư viện | `lib/slow_vdd1v0_basicCells.lib` (setup), `lib/fast_vdd1v0_basicCells.lib` (hold), `lef/gsclib045_tech.lef`, `lef/gsclib045_macro.lef` |
+| Site và nguồn | `CoreSite`, net `VDD` và `VSS` |
+| SRAM macro | `sram_2k_macro`, có LEF, `.lib`, model `.v`. Không có GDS và CDL, thầy xác nhận không cần (22/10). Chi tiết ở `docs/macro_notes.md` |
+| GitHub | Server ra được GitHub, dùng `git pull` trực tiếp |
+
+`pnr/scripts/config.tcl` tự dùng `~/PDK_GPDK45`. Chỉ cần `export PDK_DIR=...` khi PDK nằm chỗ khác.
+
+## 2. Chạy cả flow accelerator
+
+```bash
+cd ~/rv32i-soc && git pull
+( make synth-accel && make lec-accel && make gls-accel && make pnr-accel ) > full_run.txt 2>&1 &
+grep -E 'Genus done|Compare Results|PASS|Innovus done|ERROR' full_run.txt   # xem tiến độ
+```
+
+Từng bước riêng:
+
+| Lệnh | Làm gì | Kết quả |
+| --- | --- | --- |
+| `make synth-accel` | Genus, có clock gating | `syn/out_accel/` (netlist, SDC, `reports/`) |
+| `CG=0 make synth-accel` | Genus không clock gating, để so công suất | Đổi tên `syn/out_accel` thành `syn/out_accel_cg0` trước khi chạy bản CG=1 |
+| `make lec-accel` | Conformal theo `lec/accel_rtl2gate.do` | `syn/out_accel/lec.txt` |
+| `make gls-accel` | Xcelium chạy `tb_accel_wrapper.v` trên netlist, không SDF | `syn/out_accel/gls/xrun.log` |
+| `make pnr-accel` | Innovus theo `pnr/scripts/run_all.tcl` | `pnr/out_accel/`, database `DBS/*.enc` trong `pnr/run_accel/` |
+
+Xem layout và chụp hình cho report:
+
+```bash
+cd pnr/run_accel && innovus
+# Trong Innovus:
+source DBS/cts.enc      # hoặc floorplan.enc, placement.enc, route.enc
+```
+
+Chụp floorplan và power grid, placement, cây clock (CCOpt Clock Tree Debugger), bảng timing.
+
+## 3. Tiêu chí nghiệm thu
+
+### Sau tổng hợp (`syn/out_accel/reports/`)
+
+| Report | Đạt khi |
+| --- | --- |
+| `audit/pre_syn_unresolved.rpt`, `audit/pre_syn_design_lint.rpt` | 0 unresolved, 0 latch, 0 loop, 0 multi-driven |
+| `audit/post_syn_design_lint.rpt` | 0 floating input, không còn assign |
+| `audit/pre_syn_timing_intent.rpt` | 0 unconstrained endpoint |
+| `synthesis/timing.rpt` | Slack >= 0 ở 20 ns |
+| `synthesis/clock_gating.rpt` (bản CG=1) | Đa số flop được gate |
+| `synthesis/power.rpt` | So hai bản CG=0 và CG=1 |
+| `lec.txt` | 0 non-equivalent |
+| `gls/xrun.log` | Dòng `PASS` giống mô phỏng RTL |
+
+### Theo từng bước Lab
+
+| Bước | Lệnh chính (theo Lab) | Tiêu chí | Script |
 | --- | --- | --- | --- |
-| Tổng hợp, kiểm tra trước | `check_design -unresolved`, `check_design -all`, `check_timing_intent -verbose` | 0 unresolved, 0 latch/loop/multi-driven, 0 unconstrained endpoint | `syn/scripts/synth_accel.tcl` |
-| Tổng hợp | `syn_generic`, `syn_map`, `syn_opt` (effort medium), clock gating `lp_insert_clock_gating` (đặt trước elaborate), `lp_clock_gating_min_flops 4` (thuộc tính design) | WNS >= 0, 0 max_transition/max_capacitance | như trên |
-| Tổng hợp, kiểm tra sau | `remove_assigns -all`, `check_design -all`, `write_hdl -mapped` | không còn assign, 0 floating input | như trên |
-| LEC | `lec -nogui -dofile ...` | 0 non-equivalent | `syn/out_accel/rtl2gate.do` (Genus sinh ra) |
+| Kiểm tra trước tổng hợp | `check_design -unresolved`, `check_design -all`, `check_timing_intent -verbose` | Như bảng trên | `syn/scripts/synth_accel.tcl` |
+| Tổng hợp | `syn_generic`, `syn_map`, `syn_opt` (effort medium), `lp_insert_clock_gating` (trước elaborate), `lp_clock_gating_min_flops 4` | WNS >= 0, 0 max_transition, 0 max_capacitance | như trên |
+| Kiểm tra sau tổng hợp | Thuộc tính `remove_assigns`, `check_design -all`, `write_hdl -mapped` | Không còn assign, 0 floating input | như trên |
+| LEC | `lec -nogui -dofile ...` | 0 non-equivalent | `lec/accel_rtl2gate.do` |
 | Floorplan | `floorPlan -site CoreSite -r 1.0 <util> 15 15 15 15`, `editPin` | | `pnr/scripts/run_all.tcl` bước 2 |
-| Power plan | `addRing` M7/M8, `addStripe` M8 dọc + M7 ngang, `sroute`, `verifyGeometry -type power` | 0 violation | bước 3 |
-| Placement | `setPlaceMode`, `place_opt_design`, `checkPlace`, `checkCongestion`, `timeDesign -preCTS` | 0 unplaced/overlap/off-grid, overflow < 0.5%, WNS >= 0 | bước 4 |
-| CTS | `setDontUse CLKBUFX2`, buffer/inverter X3-X16, `target_skew 0.080`, `target_max_trans 0.150`, OCV + CPPR, NDR 2W2S cho clk, `ccopt_design`, `optDesign -postCTS [-hold]` | skew <= 80 ps, latency < 0.8 ns, setup/hold WNS >= 0 | bước 5 |
+| Power plan | `addRing` M7/M8, `addStripe` M8 dọc và M7 ngang, `sroute`, `verifyGeometry` | 0 violation | bước 3 |
+| Placement | `setPlaceMode`, `place_opt_design`, `checkPlace`, `checkCongestion`, `timeDesign -preCTS` | 0 unplaced, overlap, off-grid. Overflow < 0,5%. WNS >= 0 | bước 4 |
+| CTS | `setDontUse CLKBUFX2`, buffer và inverter X3-X16, `target_skew 0.080`, `target_max_trans 0.150`, OCV và CPPR, NDR 2W2S cho clk, `ccopt_design`, `optDesign -postCTS [-hold]` | Skew <= 80 ps, latency < 0,8 ns, setup và hold WNS >= 0 | bước 5 |
+| Route và signoff | `routeDesign`, `optDesign -postRoute`, `verify_drc`, `verifyConnectivity`, `verifyProcessAntenna` | 0 DRC, 0 lỗi kết nối, 0 antenna | bước 6 trở đi |
 
-Database lưu theo tên Lab: `DBS/floorplan.enc`, `DBS/placement.enc`, `DBS/cts.enc` (thêm `DBS/route.enc`).
+Database lưu theo tên Lab: `DBS/floorplan.enc`, `DBS/placement.enc`, `DBS/cts.enc`, `DBS/route.enc`.
 
-## Thử thách PPA trong Lab dùng lại cho điểm cộng đồ án
+## 4. Lưu kết quả vào repo
+
+Chỉ copy report, không copy netlist, SPEF, SDF hay database:
+
+```bash
+mkdir -p appendix/synth_accel appendix/pnr_accel
+cp -r syn/out_accel/reports/* appendix/synth_accel/
+cp -r pnr/out_accel/reports/* appendix/pnr_accel/
+git status --short          # không có .lib .lef .gds .spef .sdf
+git add appendix && git commit -m "Add accelerator synthesis and P&R reports" && git push
+```
+
+Không bao giờ copy `.lib`, `.lef`, `.gds`, file SRAM macro hay file nào của GPDK45 ra khỏi server.
+
+## 5. Bài học buổi 21/10
+
+- Genus đọc RTL ở chế độ Verilog-2001: không khai báo `localparam` trong `generate`.
+- `lp_insert_clock_gating` phải đặt trước `elaborate`. Lệnh `remove_assigns` đã bỏ, dùng thuộc tính cùng tên.
+- Dofile LEC do Genus sinh đòi Conformal_Ultra nên không chạy được. Dùng `lec/accel_rtl2gate.do` (mẫu `run_lec_cg.do` của Lab 1) với `set flatten model -gated_clock` và `set compare effort high`.
+- Thư viện fast tên `fast_vdd1v0_basicCells.lib` (C hoa). File `qrc/gpdk045.tch` của Lab không đọc được.
+- `BUFX2` của gsclib045 là cell cao gấp đôi, phải cấm ở cả Genus và Innovus.
+- Innovus 21.1 đổi tên nhiều tuỳ chọn (`setPlaceMode -place_...`, `add_ndr`, `verifyGeometry` không có `-type`).
+- Genus và Innovus không ghi đè log mà tạo `genus.log1`, `genus.log2`. `make` đã xoá log cũ trước mỗi lần chạy.
+
+Kết quả 21/10 (lõi accelerator cũ): LEC PASS, GLS PASS, DRC, connectivity và antenna 0 lỗi, setup +7,68 ns, hold +0,005 ns. Skew 113 ps vẫn vượt 80 ps vì 4 flop điều khiển không qua clock gating. Lõi đã đổi sang Lab 2 nên phải chạy lại cả flow.
+
+## 6. Lỗi thường gặp
+
+| Triệu chứng | Nguyên nhân | Cách xử lý |
+| --- | --- | --- |
+| Innovus báo IMPSP-9099 | Netlist có scan flop (SDFF*) | Script Genus không chèn scan. Nếu vẫn gặp, cấm SDFF bằng `set_dont_use` |
+| LEC non-equivalent sau clock gating | Dofile không biết cell gating | Xem `syn/out_accel/lec.txt`, so cell gating trong netlist với thư viện `.v` |
+| Hold vi phạm sau CTS | Chỉ tối ưu setup | `optDesign -postCTS -hold` với view fast |
+| Skew lớn | Dùng CLKBUFX2, hoặc flop không qua clock gating | `setDontUse CLKBUFX2 true` trước `ccopt_design`. Thử giảm `lp_clock_gating_min_flops` |
+| Không tìm thấy PDK | PDK không ở `~/PDK_GPDK45` | `export PDK_DIR=<đường dẫn>` hoặc sửa `pnr/scripts/config.tcl` |
+| Genus không ra netlist | Lỗi khi đọc RTL | Xem `syn/run_accel/genus.log`, tìm dòng `Error` |
+
+## 7. Quét PPA theo thử thách của Lab
 
 | Lab | Quét tham số | Biến trong script |
 | --- | --- | --- |
-| 01 | Chu kỳ clock, có/không clock gating | sửa `create_clock -period` trong SDC và `CG=0 make synth-accel` |
+| 01 | Chu kỳ clock, có hoặc không clock gating | `create_clock -period` trong SDC và `CG=0 make synth-accel` |
 | 02 | Core utilization 55 / 70 / 85% | `UTIL` trong `run_all.tcl` |
-| 03 | Khoảng cách stripe 15 / 30 / 60 um | `STRIPE_P` |
-| 04 | Density screen, cell padding | thêm `createDensityScreen`, `specifyCellPad` sau bước 4 |
+| 03 | Khoảng cách stripe 15 / 30 / 60 µm | `STRIPE_P` |
+| 04 | Density screen, cell padding | Thêm `createDensityScreen`, `specifyCellPad` sau bước 4 |
 | 05 | Target skew 20 / 80 / 150 ps, derate OCV, useful skew | `SKEW` và `set_timing_derate -early 0.90 -late 1.10 -cell_delay` |
 
-Mỗi lần quét, lưu báo cáo vào `appendix/<bước>/<cấu hình>/` để làm bảng PPA trade-off trong report.
-
-## Accelerator Lab 2 (đề Lab 01)
-
-Systolic array 4x4, 16 PE. Mỗi PE có bộ nhân 8x8, bộ cộng tích luỹ 20 bit, 2 thanh ghi pipeline 8 bit truyền ngang/dọc. Top của Lab là `accelerator_top` (file `pe.v`, `accelerator_top.v`), chân `a_row*`, `b_col*`, `res_out*`, `busy`, `done`. Wrapper của đồ án (`rtl/accel/accel_wrapper.v`) đang dùng mô hình thay thế cùng cấu trúc. Khi ghép code Lab thì nối theo các chân này.
+Mỗi lần quét, lưu report vào `appendix/<bước>/<cấu hình>/` để làm bảng PPA trong report.

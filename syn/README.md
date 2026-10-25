@@ -1,0 +1,9 @@
+# Tổng hợp
+
+| Thư mục | Nội dung | Chạy ở |
+| --- | --- | --- |
+| `constraints/` | SDC (clock 20 ns). Dùng chung cho flow trường và flow nhà | |
+| `scripts/` | Script Genus | Server trường: `make synth-accel` |
+| `yosys/` | Tổng hợp thử bằng Yosys và STA với Nangate45, chỉ xem xu hướng | Nhà: `make synth-core-yosys`, `make sta-core-nangate` |
+
+Thư mục chạy `run*/` và kết quả `out*/` bị ignore. Report chính thức copy vào `appendix/`. Cách chạy và tiêu chí: `docs/flow_notes.md`.

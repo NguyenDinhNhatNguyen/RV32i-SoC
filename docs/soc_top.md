@@ -70,6 +70,7 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 Khe chưa có RTL có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB.
 
 Thêm một khối mới vào `soc_top`, ví dụ IRQC (làm giống cách đã nối UART):
+
 1. Khởi tạo khối, nối `psel[SOC_APB_IRQC]`, `penable`, `pwrite`, `paddr`, `pwdata`.
 2. Nối `prdata`, `pready`, `pslverr` của khe vào chỗ đang gán giá trị rảnh.
 3. Thêm bit `SOC_APB_IRQC` vào `APB_EN`.
@@ -114,6 +115,7 @@ Kết quả ngày 24/10 (sau khi nối UART):
 `tb_soc` nối `uart_tx` vòng về `uart_rx`. Bộ giải mã 8N1 của tb đọc `uart_tx` theo `BAUDDIV` hiện tại, in ký tự ra log và báo FAIL nếu start bit hoặc stop bit sai.
 
 `soc.S` kiểm:
+
 - Timer: mtime chạy, CSR `time`/`timeh` khớp mtime sau khi ghi `MTIME_LO`/`MTIME_HI`.
 - Ngắt timer đánh thức WFI: với `ENABLE_WFI_SLEEP = 1` core ngủ 286 chu kỳ.
 - Ngắt phần mềm qua MSIP, handler xoá nguồn ngắt tại ngoại vi.

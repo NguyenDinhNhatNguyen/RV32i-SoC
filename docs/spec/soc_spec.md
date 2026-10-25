@@ -1,6 +1,6 @@
 # Đặc tả SoC (SP-01)
 
-Chốt ngày 25/10. Phần lõi chi tiết nằm ở `docs/spec/core.md`, tài liệu này chỉ ghi những gì các khối phải thống nhất với nhau: clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt và giao diện accelerator.
+Chốt ngày 25/10. Phần lõi chi tiết nằm ở `docs/spec/core.md`, tài liệu này chỉ ghi những gì các khối phải thống nhất với nhau: clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt và giao diện accelerator. Thanh ghi của từng ngoại vi và chân ngoài của `soc_top` nằm ở `docs/spec/periph.md`.
 
 Mục 7 ghi 5 điểm từng mâu thuẫn giữa Doc kế hoạch, spec lõi và kết quả kiểm tra server, cùng quyết định đã chốt. Cả 5 điểm đã được làm đúng như vậy trong RTL và đối chiếu với đề bài (FinalProject, 16/10): đề không quy định điểm nào trong số này.
 
@@ -34,16 +34,16 @@ Giải mã bằng `addr[31:28]` chọn vùng, `addr[15:12]` chọn ngoại vi tr
 | Vùng | Địa chỉ gốc | Kích thước | Ghi chú |
 | --- | --- | --- | --- |
 | IMEM | 0x0000_0000 | xem mục 7.2 | `.text`, đọc/ghi được từ bus để nạp chương trình |
-| Boot ROM | 0x0001_0000 | xem mục 7.1 | Chỉ khi chốt reset vector ở đây |
+| Boot ROM | 0x0001_0000 | 1 KB | Reset vector (mục 7.1), chỉ cổng nạp lệnh đọc. Xem `docs/spec/periph.md` |
 | DMEM | 0x1000_0000 | xem mục 7.2 | `.rodata`, `.data`, `.bss`, stack ở đỉnh |
-| Timer | 0x2000_0000 | 4 KB | mtime/mtimecmp kiểu CLINT |
-| UART | 0x2000_1000 | 4 KB | |
-| GPIO | 0x2000_2000 | 4 KB | |
+| Timer | 0x2000_0000 | 4 KB | mtime/mtimecmp kiểu CLINT. Thanh ghi ở `docs/spec/periph.md` |
+| UART | 0x2000_1000 | 4 KB | Thanh ghi ở `docs/spec/periph.md` |
+| GPIO | 0x2000_2000 | 4 KB | Thanh ghi ở `docs/spec/periph.md` |
 | SPI | 0x2000_3000 | 4 KB | Tầng 1 |
 | I2C | 0x2000_4000 | 4 KB | Tầng 2 |
 | PWM | 0x2000_5000 | 4 KB | Tầng 1 |
-| IRQ ctrl | 0x2000_6000 | 4 KB | Bộ gom ngắt rút gọn (RTL-11) |
-| Accelerator | 0x3000_0000 | 4 KB | Bản đồ thanh ghi ở `docs/runbook_nguyen.md` |
+| IRQ ctrl | 0x2000_6000 | 4 KB | Bộ gom ngắt rút gọn (RTL-11), xem mục 5 |
+| Accelerator | 0x3000_0000 | 4 KB | Bản đồ thanh ghi ở `docs/spec/accel.md` |
 | DMA | 0x4000_0000 | 4 KB | Tầng 2 |
 
 `tb/core/core_tb_map.vh` và `fw/common/link.ld` phải khớp bảng này.
@@ -66,7 +66,7 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 
 - Lõi có 3 ngõ vào mức: `irq_software_i`, `irq_timer_i`, `irq_external_i` (`docs/spec/core.md` mục 4.10).
 - `irq_timer_i` lấy từ Timer (mtime ≥ mtimecmp).
-- `irq_external_i` là OR của các nguồn ngoại vi qua bộ gom ngắt rút gọn (RTL-11): UART, GPIO, accelerator (`irq` của wrapper), sau này SPI và DMA.
+- `irq_external_i` là OR của các nguồn ngoại vi qua bộ gom ngắt rút gọn (RTL-11): UART, accelerator (`irq` của wrapper), sau này GPIO, SPI và DMA. Gán bit đề xuất ở `docs/spec/periph.md` mục 4.
 - Thanh ghi của bộ gom ngắt:
   - `PENDING` (0x00) chỉ đọc. Mỗi bit phản ánh trực tiếp mức của một nguồn ngắt.
   - `ENABLE` (0x04) đọc ghi.
@@ -77,7 +77,7 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 ## 6. Accelerator
 
 - Nối như một APB3 slave, dùng `rtl/accel/accel_apb.v` đã có (APB3 chỉ truy cập word, `PSLVERR` cho địa chỉ không định nghĩa và khi ghi vào C_BUF).
-- Bản đồ thanh ghi (base 0x3000_0000): CTRL 0x000, STATUS 0x004, INFO 0x008, A_BUF 0x100, B_BUF 0x200, C_BUF 0x300. Chi tiết ở `docs/runbook_nguyen.md`.
+- Bản đồ thanh ghi (base 0x3000_0000): CTRL 0x000, STATUS 0x004, INFO 0x008, A_BUF 0x100, B_BUF 0x200, C_BUF 0x300. Chi tiết ở `docs/spec/accel.md`.
 - `irq` của accelerator vào bộ gom ngắt (mục 5).
 - Firmware dùng `fw/accel.h`.
 

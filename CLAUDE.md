@@ -8,7 +8,7 @@ SoC RV32I 3 tầng (IF/EX/WB) + SRAM hard macro + accelerator systolic 4x4 (Lab 
 
 - Kế hoạch, phân công: `README.md` (có link Google Doc, Sheet).
 - Yêu cầu đề bài đã tóm tắt: `docs/spec/requirements.md`. Quy ước flow Cadence theo Lab: `docs/flow_notes.md`.
-- Bản đồ địa chỉ, thanh ghi accelerator: `docs/runbook_nguyen.md`, `rtl/accel/accel_wrapper.v`, `fw/accel.h`.
+- Bản đồ địa chỉ và thanh ghi: `docs/spec/soc_spec.md`, `docs/spec/periph.md`, `docs/spec/accel.md`. Mục lục tài liệu: `docs/README.md`.
 - Đặc tả core RV32I (pipeline, bus valid/ready, kiểm chứng): `docs/spec/core.md`, chạy `make lint-core unit-core fw-core isa-core` (riscv-tests là submodule: `git submodule update --init --recursive`).
 
 ## Chạy công cụ
@@ -46,5 +46,5 @@ Genus/Innovus/Conformal (`make synth-accel`, `make pnr-accel`, `make check-serve
 | `fw/` | Firmware C cho RV32I |
 | `syn/`, `lec/`, `pnr/`, `sta/`, `power/` | Script Genus, Conformal, Innovus, STA, công suất (chạy ở trường) |
 | `scripts/` | `eda.sh` (môi trường nhà), `check_server.sh` (server trường) |
-| `docs/` | Hướng dẫn, ghi chú flow, runbook |
+| `docs/` | Spec, hướng dẫn, ghi chú flow (mục lục ở `docs/README.md`) |
 | `appendix/` | Báo cáo copy từ server để đưa vào report |

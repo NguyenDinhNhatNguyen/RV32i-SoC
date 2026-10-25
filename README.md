@@ -12,17 +12,19 @@
 | --- | --- | --- |
 | `rtl/core` | Lõi RV32I | Nhân |
 | `rtl/bus`, `rtl/mem` | Interconnect, wrapper SRAM, soc_top | Phát |
-| `rtl/periph` | Timer, UART, GPIO, SPI, PWM, I2C | Phúc |
-| `rtl/accel` | Wrapper accelerator Lab 2 | Nguyên |
-| `tb/unit`, `tb/soc` | Testbench khối và mức SoC | Hiếu (+ chủ khối) |
-| `fw` | Firmware, linker script, crt0 | Hiếu |
-| `syn` | Script Genus, SDC | Phát |
+| `rtl/periph` | Timer, UART, GPIO (sau này SPI, PWM, I2C) | Phúc |
+| `rtl/accel` | Lõi Lab 2 và wrapper accelerator | Nguyên |
+| `tb/unit`, `tb/core`, `tb/soc` | Testbench khối, lõi và mức SoC | Hiếu (+ chủ khối) |
+| `fw` | Firmware, linker script, crt0, benchmark | Hiếu |
+| `syn` | Script Genus, SDC, Yosys thử ở nhà | Phát |
 | `pnr` | Script Innovus | Nguyên |
 | `lec`, `sta`, `power` | Conformal, Tempus, Voltus | Phúc, Phát, Hiếu/Nguyên |
-| `scripts` | Script tiện ích (kiểm tra server...) | Cả nhóm |
-| `docs` | Spec, hướng dẫn môi trường | Cả nhóm |
+| `scripts` | Script tiện ích (container, chạy test, kiểm tra server) | Cả nhóm |
+| `docs` | Spec, hướng dẫn, ghi chú thiết kế. Mục lục ở `docs/README.md` | Cả nhóm |
 | `ref` | Thiết kế tham chiếu (PicoRV32) | Nhân |
 | `appendix/<bước>/` | Log, report chính thức đưa vào phụ lục | Cả nhóm |
+
+Mỗi thư mục có `README.md` riêng ghi nội dung và lệnh chạy.
 
 ## Quy ước
 
@@ -71,7 +73,7 @@ Không bao giờ dùng `git push --force` lên `main`: lệnh này xoá commit c
 
 Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nhà dùng môi trường mã nguồn mở theo `docs/setup_home.md` (bật container và chạy test bằng `scripts/eda.sh`). Lần đầu lên trường chạy `scripts/check_server.sh` để ghi lại đường dẫn thư viện, SRAM macro và phiên bản tool.
 
-Hướng dẫn chạy chi tiết cho accelerator và flow Cadence: `docs/runbook_nguyen.md`.
+Chạy flow Cadence ở trường: `docs/flow_notes.md`. Mục lục mọi tài liệu: `docs/README.md`.
 
 ## Tự kiểm tra ở nhà
 
