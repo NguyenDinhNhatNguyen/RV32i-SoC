@@ -1,31 +1,31 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_soc - testbench mức SoC cho soc_top (RTL-09). Chỉ nhìn chân của chip và
-// đọc tín hiệu bên trong bằng tham chiếu phân cấp để kết luận.
+// tb_soc - SoC-level testbench for soc_top (RTL-09). It only drives the chip pins and
+// reads internal signals by hierarchical reference to decide the result.
 //
-// Trước khi chạy chương trình, kiểm bộ đồng bộ reset:
-//   - nhả rst_n giữa chu kỳ: rst_n_sync lên 1 đúng ở cạnh lên thứ hai
-//   - kéo rst_n xuống giữa chu kỳ: rst_n_sync xuống 0 ngay, không chờ clock
-// Ảnh bộ nhớ (elf2hex.py, 16 KB mỗi vùng) nạp thẳng vào mô hình sram_2k_macro.
-// Core khởi động từ boot ROM (RESET_PC mặc định 0x0001_0000).
+// Before running the program it checks the reset synchronizer:
+//   - Release rst_n mid-cycle: rst_n_sync rises exactly on the second rising edge
+//   - Pull rst_n low mid-cycle: rst_n_sync drops to 0 at once, without a clock
+// Memory images (elf2hex.py, 16 KB per region) load straight into the sram_2k_macro model.
+// The core boots from the boot ROM (default RESET_PC 0x0001_0000).
 //
-// Pad GPIO: chân có gpio_oe = 1 đọc lại chính gpio_o, chân còn lại đọc PAD_IN.
-// UART: uart_tx nối vòng về uart_rx. Bộ giải mã 8N1 của tb đọc uart_tx theo
-// BAUDDIV hiện tại của UART, in ký tự ra log và bắt lỗi start/stop bit.
+// GPIO pads: a pin with gpio_oe = 1 reads back its own gpio_o, the others read PAD_IN.
+// UART: uart_tx loops back to uart_rx. The tb 8N1 decoder samples uart_tx with the
+// UART's current BAUDDIV, prints characters to the log and catches start/stop bit errors.
 //
-// Kết luận giống tb_core:
-//   - ghi vào tohost: 1 = PASS, giá trị lẻ khác = FAIL, mã lỗi = giá trị >> 1
-//   - trap khi mtvec vẫn bằng 0: FAIL
-//   - uart_tx bằng X, hoặc khung UART sai start/stop bit: FAIL
-//   - quá thời gian: FAIL
+// Result rules, as in tb_core:
+//   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1
+//   - A trap while mtvec is still 0: FAIL
+//   - uart_tx is X, or a UART frame has a bad start/stop bit: FAIL
+//   - Timeout: FAIL
 //
-// Plusarg: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<tên> +timeout=<chu kỳ>
+// Plusargs: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<name> +timeout=<cycles>
 
 module tb_soc;
 
     parameter ENABLE_M         = 1;
     parameter ENABLE_WFI_SLEEP = 1;
-    localparam BANK_W          = 2;     // khớp SOC_IMEM_BANK_W, SOC_DMEM_BANK_W và link.ld
+    localparam BANK_W          = 2;     // Matches SOC_IMEM_BANK_W, SOC_DMEM_BANK_W and link.ld
     localparam WORDS           = 1024 << BANK_W;
     localparam [31:0] PAD_IN   = 32'hA5C3_0F96;
 
@@ -47,11 +47,11 @@ module tb_soc;
         .gpio_i  (gpio_i),
         .gpio_o  (gpio_o),
         .gpio_oe (gpio_oe),
-        .uart_rx (uart_tx),             // vòng lại
+        .uart_rx (uart_tx),             // Loopback
         .uart_tx (uart_tx)
     );
 
-    // ---------------------------------------------------------- nạp bộ nhớ
+    // ---------------------------------------------------------- memory load
     reg [31:0] img_i [0:WORDS-1];
     reg [31:0] img_d [0:WORDS-1];
     reg [8*512-1:0] file;
@@ -66,7 +66,7 @@ module tb_soc;
         if ($value$plusargs("dmem=%s", file)) $readmemh(file, img_d);
     end
 
-    // Mô hình macro tự xoá về 0 ở thời điểm 0, nên chép sau đó
+    // The macro model clears itself at time 0, so copy after that
     genvar gb;
     generate
         for (gb = 0; gb < (1 << BANK_W); gb = gb + 1) begin : g_load
@@ -81,7 +81,7 @@ module tb_soc;
         end
     endgenerate
 
-    // ---------------------------------------------------------- kết thúc
+    // ---------------------------------------------------------- end of test
     integer     cycle   = 0;
     integer     instret = 0;
     integer     sleep   = 0;
@@ -138,9 +138,9 @@ module tb_soc;
         end
     end
 
-    // ---------------------------------------------------------- giải mã UART 8N1
-    // Thấy start bit thì chờ nửa bit rồi lấy mẫu mỗi bit một lần: start, 8 bit dữ liệu
-    // (LSB trước), stop. Một bit dài 16 x BAUDDIV chu kỳ (BAUDDIV = 0 tính như 1).
+    // ---------------------------------------------------------- UART 8N1 decoder
+    // On a start bit, wait half a bit and then sample once per bit: start, 8 data bits
+    // (LSB first), stop. One bit lasts 16 x BAUDDIV cycles (BAUDDIV = 0 counts as 1).
     reg         ub_busy = 1'b0;
     integer     ub_cnt  = 0;
     integer     ub_bit  = 0;
@@ -160,11 +160,11 @@ module tb_soc;
                 ub_cnt = ub_cnt - 1;
                 if (ub_cnt == 0) begin
                     if (ub_bit == 0) begin
-                        if (uart_tx !== 1'b0) end_test(1'b0, "UART: start bit sai");
+                        if (uart_tx !== 1'b0) end_test(1'b0, "UART: bad start bit");
                     end else if (ub_bit <= 8) begin
                         ub_sh = {uart_tx, ub_sh[7:1]};
                     end else begin
-                        if (uart_tx !== 1'b1) end_test(1'b0, "UART: stop bit sai");
+                        if (uart_tx !== 1'b1) end_test(1'b0, "UART: bad stop bit");
                         $write("%c", ub_sh);
                         $fflush;
                         n_uart  = n_uart + 1;
@@ -192,23 +192,23 @@ module tb_soc;
         if ($value$plusargs("tohost=%h", tohost)) ;
         if ($value$plusargs("test=%s", test_name)) ;
         if (tohost == 32'hFFFF_FFFF)
-            $display("WARNING: khong co +tohost=, test chi ket thuc bang timeout");
+            $display("WARNING: no +tohost=, the test can only end by timeout");
 
-        #1 rst_n = 1'b0;                        // cạnh xuống: reset bất đồng bộ tác dụng ngay
-        #1 check_rst(1'b0, "khong xuong 0 khi assert");
+        #1 rst_n = 1'b0;                        // Falling edge: the asynchronous reset acts at once
+        #1 check_rst(1'b0, "did not drop to 0 on assert");
         repeat (3) @(posedge clk);
 
-        // Nhả reset giữa chu kỳ, rồi kéo xuống lại khi chuỗi đồng bộ mới đi nửa đường
+        // Release reset mid-cycle, then pull it low again halfway through the synchronizer
         @(negedge clk) rst_n = 1'b1;
-        @(posedge clk) #1 check_rst(1'b0, "len 1 som (sau 1 canh)");
+        @(posedge clk) #1 check_rst(1'b0, "rose too early (after 1 edge)");
         @(negedge clk) rst_n = 1'b0;
-        #1 check_rst(1'b0, "khong xuong 0 ngay khi assert");
+        #1 check_rst(1'b0, "did not drop to 0 at once on assert");
         repeat (2) @(posedge clk);
 
-        // Nhả reset lần cuối: lên 1 đúng ở cạnh lên thứ hai
+        // Final release: rises exactly on the second rising edge
         @(negedge clk) rst_n = 1'b1;
-        @(posedge clk) #1 check_rst(1'b0, "len 1 som (sau 1 canh)");
-        @(posedge clk) #1 check_rst(1'b1, "khong len 1 sau 2 canh");
+        @(posedge clk) #1 check_rst(1'b0, "rose too early (after 1 edge)");
+        @(posedge clk) #1 check_rst(1'b1, "did not rise after 2 edges");
         running = 1'b1;
     end
 

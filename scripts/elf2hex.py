@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Tách ELF RV32 thành ảnh IMEM / DMEM cho $readmemh.
+"""Split an RV32 ELF into IMEM / DMEM images for $readmemh.
 
-Mỗi ảnh phủ cả vùng nhớ, mỗi dòng một word 32 bit little-endian,
-word 0 = base của vùng (địa chỉ tương đối trong vùng). Section có nội dung
-được đặt theo địa chỉ chạy (VMA). .bss để mô hình bộ nhớ tự khởi tạo 0.
-Base và kích thước vùng lấy từ tb/core/core_tb_map.vh (một nguồn duy nhất).
+Each image covers the whole region, one little-endian 32-bit word per line,
+word 0 = the region base (addresses relative to the region). Sections with contents
+are placed at their run address (VMA). .bss is left to the memory model, which starts at 0.
+Region bases and sizes come from tb/core/core_tb_map.vh (single source).
 
-In "tohost=<hex>" khi ELF có symbol `tohost` (dùng làm +tohost=).
+Prints "tohost=<hex>" when the ELF has a `tohost` symbol (used as +tohost=).
 
-Cách dùng: elf2hex.py prog.elf --imem imem.hex --dmem dmem.hex
+Usage: elf2hex.py prog.elf --imem imem.hex --dmem dmem.hex
                       [--imem-size N] [--dmem-size N]
 """
 import argparse
@@ -26,7 +26,7 @@ SHT_SYMTAB = 2
 
 
 def map_define(name):
-    """Giá trị của `define CORE_TB_<name> trong core_tb_map.vh (cú pháp số Verilog)."""
+    """Value of `define CORE_TB_<name> in core_tb_map.vh (Verilog number syntax)."""
     with open(MAP_FILE, encoding="utf-8") as f:
         for line in f:
             m = re.match(r"\s*`define\s+CORE_TB_%s\s+(\S+)" % name, line)
@@ -39,7 +39,7 @@ def map_define(name):
 
 
 def read_elf(path):
-    """Trả về (sections, symbols), sections = [(name, flags, type, addr, size, bytes)]."""
+    """Returns (sections, symbols), sections = [(name, flags, type, addr, size, bytes)]."""
     with open(path, "rb") as f:
         data = f.read()
     if data[:4] != b"\x7fELF":
@@ -74,7 +74,7 @@ def read_elf(path):
 
 
 def write_hex(path, image, size):
-    """Ghi cả vùng (độn 0) để $readmemh nạp vừa khít bộ nhớ."""
+    """Write the whole region (zero padded) so $readmemh fills the memory exactly."""
     image = image + bytearray(size - len(image))
     with open(path, "w") as f:
         for w in range(size // 4):

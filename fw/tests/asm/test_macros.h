@@ -1,7 +1,7 @@
-// test_macros.h - macro cho test assembly tự kiểm tra (kiểu riscv-tests).
-// Thanh ghi: gp (x3) = số thứ tự test hiện tại, t0/t1 (x5/x6) bị PASS/FAIL
-// ghi đè, x7 chứa giá trị kỳ vọng, x14 chứa kết quả.
-// Kết thúc: ghi vào `tohost` (1 = PASS, (test << 1) | 1 = FAIL) rồi lặp tại chỗ.
+// test_macros.h - macros for self-checking assembly tests (riscv-tests style).
+// Registers: gp (x3) = current test number, t0/t1 (x5/x6) are clobbered by PASS/FAIL,
+// x7 holds the expected value and x14 the result.
+// End: write to `tohost` (1 = PASS, (test << 1) | 1 = FAIL), then loop in place.
 #ifndef TEST_MACROS_H
 #define TEST_MACROS_H
 
@@ -80,8 +80,8 @@ tohost: .word 0;                 \
     li   x7, exp;                \
     bne  x14, x7, fail
 
-// Ghi `init` vào word tại `base`, ghi `val` bằng lệnh `st` vào base + off,
-// rồi kiểm tra cả word (các làn không được chọn phải giữ nguyên).
+// Write `init` to the word at `base`, write `val` with the `st` instruction to base + off,
+// then check the whole word (lanes not selected must keep their value).
 #define TEST_ST(n, st, init, val, off, base, exp_word) \
     li   TESTNUM, n;             \
     la   x1, base;               \
@@ -93,18 +93,18 @@ tohost: .word 0;                 \
     li   x7, exp_word;           \
     bne  x14, x7, fail
 
-// Khối điều khiển của tb_core, chỉ có trong mô phỏng (khớp CORE_TB_CTRL_BASE
-// trong tb/core/core_tb_map.vh)
+// tb_core control block, simulation only (matches CORE_TB_CTRL_BASE
+// in tb/core/core_tb_map.vh)
 #define TB_CTRL         0x2FFF0000
-#define TB_IRQ          0x0     // ghi: mức ngắt + số chu kỳ chờ, đọc: mức hiện tại
-#define TB_SLEEP        0x4     // đọc: tổng số chu kỳ core_sleep_o = 1
-#define TB_CFG          0x8     // đọc: bit 0 = ENABLE_M, bit 1 = ENABLE_WFI_SLEEP
+#define TB_IRQ          0x0     // Write: interrupt level + wait cycles, read: current level
+#define TB_SLEEP        0x4     // Read: total cycles with core_sleep_o = 1
+#define TB_CFG          0x8     // Read: bit 0 = ENABLE_M, bit 1 = ENABLE_WFI_SLEEP
 #define TB_IRQ_MSI      (1 << 3)
 #define TB_IRQ_MTI      (1 << 7)
 #define TB_IRQ_MEI      (1 << 11)
 #define TB_DELAY(n)     ((n) << 16)
 
-// So thanh ghi r với một hằng số
+// Compare register r with a constant
 #define CHECK(n, r, exp)         \
     li   TESTNUM, n;             \
     li   x7, exp;                \

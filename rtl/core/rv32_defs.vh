@@ -1,11 +1,11 @@
-// rv32_defs.vh - hằng số ISA và core (RV32I + Zicsr + Zicntr + Zifencei + M).
-// Dùng macro thay vì localparam để module chỉ dùng một phần không bị
-// cảnh báo UNUSEDPARAM khi lint. Mọi tên có tiền tố RV_.
+// rv32_defs.vh - ISA and core constants (RV32I + Zicsr + Zicntr + Zifencei + M).
+// Macros instead of localparams, so a module that uses only part of them does not
+// get UNUSEDPARAM lint warnings. Every name has the RV_ prefix.
 `ifndef RV32_DEFS_VH
 `define RV32_DEFS_VH
 
 // ---------------------------------------------------------------------------
-// Opcode chính, instr[6:0]
+// Main opcodes, instr[6:0]
 // ---------------------------------------------------------------------------
 `define RV_OPC_LOAD       7'b0000011
 `define RV_OPC_MISC_MEM   7'b0001111
@@ -29,7 +29,7 @@
 `define RV_F3_BGE         3'b101
 `define RV_F3_BLTU        3'b110
 `define RV_F3_BGEU        3'b111
-// LOAD / STORE (bit 2 = load không dấu, bit 1:0 = kích thước)
+// LOAD / STORE (bit 2 = unsigned load, bits 1:0 = size)
 `define RV_F3_LB          3'b000
 `define RV_F3_LH          3'b001
 `define RV_F3_LW          3'b010
@@ -58,7 +58,7 @@
 `define RV_F3_CSRRWI      3'b101
 `define RV_F3_CSRRSI      3'b110
 `define RV_F3_CSRRCI      3'b111
-// OP có funct7 = MULDIV
+// OP with funct7 = MULDIV
 `define RV_F3_MUL         3'b000
 `define RV_F3_MULH        3'b001
 `define RV_F3_MULHSU      3'b010
@@ -76,7 +76,7 @@
 `define RV_F7_MULDIV      7'b0000001
 
 // ---------------------------------------------------------------------------
-// Mã lệnh cố định cả word
+// Fixed full-word encodings
 // ---------------------------------------------------------------------------
 `define RV_INSTR_NOP      32'h0000_0013   // addi x0, x0, 0
 `define RV_INSTR_ECALL    32'h0000_0073
@@ -85,9 +85,9 @@
 `define RV_INSTR_WFI      32'h1050_0073
 
 // ---------------------------------------------------------------------------
-// Mã điều khiển từ decoder sang datapath
+// Control codes from the decoder to the datapath
 // ---------------------------------------------------------------------------
-// Phép ALU = {bit alt (instr[30] cho SUB/SRA), funct3}
+// ALU op = {alt bit (instr[30] for SUB/SRA), funct3}
 `define RV_ALU_ADD        4'b0000
 `define RV_ALU_SUB        4'b1000
 `define RV_ALU_SLL        4'b0001
@@ -99,40 +99,40 @@
 `define RV_ALU_OR         4'b0110
 `define RV_ALU_AND        4'b0111
 
-// Chọn toán hạng A của ALU
+// ALU operand A select
 `define RV_ALU_A_RS1      2'd0
 `define RV_ALU_A_PC       2'd1
 `define RV_ALU_A_ZERO     2'd2
-// Chọn toán hạng B của ALU
+// ALU operand B select
 `define RV_ALU_B_RS2      1'b0
 `define RV_ALU_B_IMM      1'b1
 
-// Dạng immediate
+// Immediate format
 `define RV_IMM_I          3'd0
 `define RV_IMM_S          3'd1
 `define RV_IMM_B          3'd2
 `define RV_IMM_U          3'd3
 `define RV_IMM_J          3'd4
-`define RV_IMM_Z          3'd5   // uimm của CSR = trường rs1 mở rộng 0
+`define RV_IMM_Z          3'd5   // CSR uimm = rs1 field, zero-extended
 
-// Nguồn giá trị ghi rd
-`define RV_WB_ALU         2'd0   // kết quả ALU (hoặc M-unit) từ EX
-`define RV_WB_PC4         2'd1   // địa chỉ trả về của JAL/JALR
-`define RV_WB_LOAD        2'd2   // dữ liệu load đã căn chỉnh
-`define RV_WB_CSR         2'd3   // giá trị CSR cũ
+// Source of the rd write value
+`define RV_WB_ALU         2'd0   // ALU (or M-unit) result from EX
+`define RV_WB_PC4         2'd1   // JAL/JALR return address
+`define RV_WB_LOAD        2'd2   // Aligned load data
+`define RV_WB_CSR         2'd3   // Old CSR value
 
-// Kích thước truy cập bộ nhớ = funct3[1:0]
+// Memory access size = funct3[1:0]
 `define RV_MEM_B          2'b00
 `define RV_MEM_H          2'b01
 `define RV_MEM_W          2'b10
 
-// Phép CSR = funct3[1:0]
+// CSR op = funct3[1:0]
 `define RV_CSR_RW         2'b01
 `define RV_CSR_RS         2'b10
 `define RV_CSR_RC         2'b11
 
 // ---------------------------------------------------------------------------
-// Địa chỉ CSR
+// CSR addresses
 // ---------------------------------------------------------------------------
 `define RV_CSR_MSTATUS    12'h300
 `define RV_CSR_MISA       12'h301
@@ -158,16 +158,16 @@
 `define RV_CSR_MIMPID     12'hF13
 `define RV_CSR_MHARTID    12'hF14
 
-// Vị trí bit trong CSR
+// Bit positions inside CSRs
 `define RV_MSTATUS_MIE    3
 `define RV_MSTATUS_MPIE   7
 `define RV_MSTATUS_MPP_LO 11
 `define RV_MSTATUS_MPP_HI 12
-`define RV_MI_MSI         3      // vị trí bit trong mie/mip
+`define RV_MI_MSI         3      // Bit position in mie/mip
 `define RV_MI_MTI         7
 `define RV_MI_MEI         11
 
-// misa: MXL=1 (32 bit), extension I, thêm M khi ENABLE_M
+// misa: MXL=1 (32 bits), extension I, plus M when ENABLE_M
 `define RV_MISA_BASE      32'h4000_0100
 `define RV_MISA_M         32'h0000_1000
 
@@ -189,7 +189,7 @@
 `define RV_INT_MEI                 5'd11
 
 // ---------------------------------------------------------------------------
-// Giá trị mặc định của core
+// Core defaults
 // ---------------------------------------------------------------------------
 `define RV_RESET_PC_DEFAULT        32'h0001_0000   // boot ROM
 

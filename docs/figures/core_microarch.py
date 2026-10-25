@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Sinh docs/figures/core_microarch.svg (vi kiến trúc rv32_core).
+"""Generate docs/figures/core_microarch.svg (rv32_core microarchitecture).
 
-Toạ độ viết tay, sửa ở đây rồi chạy lại thay vì sửa SVG:
+Coordinates are hand-written. Edit them here and rerun instead of editing the SVG:
     python3 docs/figures/core_microarch.py
-Mô tả hình: docs/spec/core.md mục 4.2.
+The figure is described in docs/spec/core.md section 4.2.
+Labels stay in Vietnamese because the figure goes into the report.
 """
 import os
 import sys
@@ -38,7 +39,7 @@ def box(x, y, w, h, title, lines=(), fill="#ffffff", stroke="#555", title_size=1
 
 
 def flop(x, y, w, h, name, lines=()):
-    """Thanh ghi: nền vàng nhạt, tam giác clock ở cạnh dưới."""
+    """Register: light yellow fill, clock triangle on the bottom edge."""
     box(x, y, w, h, name, lines, fill="#fff4cc", stroke="#8a6d00", title_size=11.5, line_size=10)
     cx = x + w / 2
     add('<path d="M%g %g L%g %g L%g %g" fill="none" stroke="#8a6d00" stroke-width="1"/>'
@@ -46,7 +47,7 @@ def flop(x, y, w, h, name, lines=()):
 
 
 def mux(x, y, w, h, label=None):
-    """Mux hình thang, đầu vào bên trái, đầu ra bên phải."""
+    """Trapezoid mux, inputs on the left, output on the right."""
     d = h * 0.18
     add('<path d="M%g %g L%g %g L%g %g L%g %g Z" fill="#eef1f5" stroke="#555" stroke-width="1.3"/>'
         % (x, y, x + w, y + d, x + w, y + h - d, x, y + h))
@@ -81,7 +82,7 @@ add('<rect width="%d" height="%d" fill="#ffffff"/>' % (W, H))
 text(20, 32, "rv32_core: vi kiến trúc pipeline 3 tầng IF / EX / WB", 20, weight="bold")
 text(20, 54, "RV32I + Zicsr + Zicntr + Zifencei, M-mode, RV32M khi ENABLE_M = 1 (docs/spec/core.md mục 4)", 12, color="#555")
 
-# Biên core và các tầng
+# Core border and stages
 add('<rect x="170" y="80" width="1160" height="800" fill="none" stroke="#444" stroke-width="2" rx="6"/>')
 for x0, x1, xl, name, sub, fill in ((170, 400, 285, "IF", "lấy lệnh", "#eaf2fb"),
                                     (400, 1000, 700, "EX", "giải mã, thực thi, phát yêu cầu bus", "#eef7ea"),
@@ -93,7 +94,7 @@ add('<line x1="400" y1="81" x2="400" y2="879" stroke="#999" stroke-dasharray="5 
 add('<line x1="1000" y1="81" x2="1000" y2="879" stroke="#999" stroke-dasharray="5 4"/>')
 add('<rect x="170" y="80" width="1160" height="800" fill="none" stroke="#444" stroke-width="2" rx="6"/>')
 
-# ---------------------------------------------------------------- ngoài core
+# ---------------------------------------------------------------- outside the core
 box(20, 170, 120, 570, "IMEM", ["boot ROM", "", "SRAM đọc", "đồng bộ:", "lệnh có ở", "chu kỳ sau"], fill="#f4f4f4")
 box(430, 915, 880, 50, "Bus dữ liệu valid/ready (mục 5.1) → sys_bus",
     ["DMEM, IMEM qua imem_port, cầu APB (Timer, UART, GPIO, accelerator)"], fill="#f4f4f4")
@@ -126,7 +127,7 @@ wire([(385, 615), (410, 615), (410, 288), (430, 288)])
 text(180, 850, "Không có thanh ghi IF/EX: ngõ ra IMEM", 10.5, color="#555", italic=True)
 text(180, 863, "đọc đồng bộ là ranh giới hai tầng", 10.5, color="#555", italic=True)
 
-# ---------------------------------------------------------------- EX cột 1
+# ---------------------------------------------------------------- EX column 1
 flop(430, 205, 90, 40, "ex_instr_hold_q", ["giữ lệnh khi dừng"])
 flop(430, 270, 90, 36, "ex_pc_q")
 flop(430, 318, 90, 36, "ex_fetch_q", ["ex_hold_q"])
@@ -146,7 +147,7 @@ box(430, 600, 130, 90, "Dừng IF và EX", ["pipe_stall =", "wb_wait | ex_wait",
 wire([(430, 645), (370, 645), (370, 635)], C_STALL, dash="5 3")
 text(375, 658, "giữ", 10, color=C_STALL)
 
-# ---------------------------------------------------------------- EX cột 2-6
+# ---------------------------------------------------------------- EX columns 2-6
 box(580, 180, 110, 60, "rv32_decoder", ["rs1, rs2, rd, imm_type,", "chọn ALU, cờ lệnh"], title_size=11.5, line_size=10)
 box(580, 270, 110, 100, "rv32_regfile", ["31 × 32 bit", "2 cổng đọc tổ hợp", "ghi ở WB"], title_size=11.5, line_size=10)
 wire([(635, 240), (635, 270)])
@@ -194,7 +195,7 @@ wire([(950, 915), (950, 620)], C_BUS)
 text(905, 900, "d_req_valid_o, d_addr_o, d_we_o, d_be_o, d_wdata_o", 10.5, "end", color=C_BUS)
 text(955, 900, "d_req_ready_i", 10.5, color=C_BUS)
 
-# ---------------------------------------------------------------- EX -> WB, chuyển hướng EX
+# ---------------------------------------------------------------- EX -> WB, EX redirect
 wire([(870, 680), (1010, 680)])
 text(865, 676, "pc, instr, rd,", 9.5, "end", color="#555")
 text(865, 688, "cờ trap/CSR/MRET/WFI", 9.5, "end", color="#555")
@@ -228,7 +229,7 @@ text(1146, 900, "d_rsp_valid_i, d_rsp_rdata_i, d_rsp_err_i", 10.5, color=C_BUS)
 for y in (205, 365, 505, 615):
     wire([(1050, y), (1085, y)])
 
-# Forward và ghi register file
+# Forward and register file write
 wire([(1270, 540), (1270, 750), (570, 750), (570, 355), (580, 355)], C_FWD, width=2)
 dot(703, 750, C_FWD)
 wire([(703, 750), (703, 300), (715, 300)], C_FWD, width=2)
@@ -237,14 +238,14 @@ wire([(703, 360), (715, 360)], C_FWD, width=2)
 text(1040, 768, "forward WB → EX (kết quả ALU, CSR, dữ liệu load): không có stall load-use", 11, "middle", color=C_FWD)
 text(575, 744, "ghi rd", 10.5, color=C_FWD)
 
-# Chuyển hướng từ WB và WFI
+# Redirect from WB and WFI
 wire([(1085, 400), (1068, 400), (1068, 820), (210, 820), (210, 670)], C_RED, width=2)
 text(640, 814, "wb_target, wb_redirect: trap, MRET, FENCE.I, WFI (ưu tiên hơn EX, huỷ lệnh ở EX và lệnh đang lấy, phạt 2 chu kỳ)",
      11, "middle", color=C_RED)
 wire([(1085, 330), (1062, 330), (1062, 126), (280, 126)], C_RED, dash="6 3")
 text(660, 120, "WFI: sleep_q ← 1, thức khi (mip & mie) ≠ 0", 11, color=C_RED)
 
-# ---------------------------------------------------------------- chú thích
+# ---------------------------------------------------------------- legend
 lx, ly = 20, 768
 text(lx, ly, "Chú thích", 12, weight="bold")
 for i, (c, lab, dash) in enumerate(((C_DP, "dữ liệu", None), (C_FWD, "forward, ghi rd", None),

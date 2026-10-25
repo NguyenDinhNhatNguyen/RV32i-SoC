@@ -87,8 +87,8 @@ git pull
 ### 2. Bật container
 
 ```sh
-scripts/eda.sh status     # "Dang chay" thì sang bước 3 luôn
-scripts/eda.sh start      # nếu báo "Khong chay"
+scripts/eda.sh status     # "Running: ..." thì sang bước 3 luôn
+scripts/eda.sh start      # nếu báo "Not running"
 ```
 
 `start` có thể hỏi một câu và chờ bấm một phím:
@@ -110,8 +110,8 @@ scripts/eda.sh check
 Đạt khi không có dòng `%Warning` và cuối cùng có 2 dòng:
 
 ```text
-PASS: 40 phep nhan ma tran 4x4 khop mo hinh vang
-PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
+PASS: 40 matrix multiplies 4x4 match the golden model
+PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct
 ```
 
 ### 4. Tổng hợp thử bằng Yosys

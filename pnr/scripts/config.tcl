@@ -1,53 +1,57 @@
-# config.tcl - đường dẫn PDK dùng chung cho Genus và Innovus.
-# Cấu trúc theo thư mục Lab: <PDK_DIR>/lib/*.lib, <PDK_DIR>/lef/gsclib045_*.lef
-# Trên server, đặt biến môi trường PDK_DIR trỏ tới thư mục PDK_GPDK45 của Lab, hoặc sửa giá trị mặc định bên dưới.
-# Không commit thư viện, chỉ commit đường dẫn.
+# config.tcl - PDK paths shared by Genus and Innovus.
+# Lab folder layout: <PDK_DIR>/lib/*.lib, <PDK_DIR>/lef/gsclib045_*.lef
+# On the server, point the PDK_DIR environment variable at the Lab PDK_GPDK45 folder, or edit
+# the default below.
+# Never commit libraries, only paths.
 
 if {[info exists ::env(PDK_DIR)]} {
     set PDK_DIR $::env(PDK_DIR)
 } else {
-    set PDK_DIR $::env(HOME)/PDK_GPDK45   ;# bản copy của Lab nằm trong home mỗi người (HT-01, 21/10)
+    set PDK_DIR $::env(HOME)/PDK_GPDK45   ;# The Lab copy sits in each person's home (HT-01, 21/10)
 }
 
 set LIB_DIR   $PDK_DIR/lib
-set LIB_SLOW  slow_vdd1v0_basiccells.lib   ;# corner setup (1.0 V, 125 C) - tên như Lab 1
-set LIB_FAST  fast_vdd1v0_basicCells.lib   ;# corner hold. Tên có chữ C hoa, khác bản slow (HT-01, 21/10)
+set LIB_SLOW  slow_vdd1v0_basiccells.lib   ;# Setup corner (1.0 V, 125 C), same name as Lab 1
+set LIB_FAST  fast_vdd1v0_basicCells.lib   ;# Hold corner. Capital C, unlike the slow file (HT-01, 21/10)
 set TECH_LEF  $PDK_DIR/lef/gsclib045_tech.lef
 set CELL_LEF  $PDK_DIR/lef/gsclib045_macro.lef
-set QRC_TECH  {}                           ;# qrc/gpdk045.tch của Lab hỏng (IMPEXT-1211, 21/10), captable/ là của 28 nm. Để trống: Innovus ước lượng RC từ tech LEF
+set QRC_TECH  {}                           ;# The Lab qrc/gpdk045.tch is unreadable (IMPEXT-1211, 21/10) and captable/ is for 28 nm.
+                                           # Empty: Innovus estimates RC from the tech LEF
 set GDS_MAP   $PDK_DIR/streamOut.map
-set CELL_GDS  {}                           ;# GDS thư viện cell: HT-01 chưa thấy, để trống thì GDS chỉ có hình học của Innovus
+set CELL_GDS  {}                           ;# Cell library GDS: not found by HT-01. Empty means the GDS holds only Innovus geometry
 
-# SRAM macro (cần khi chạy soc_top). HT-01 (21/10): sram_2k_macro 80 x 100 um, có LEF, .lib và .v nhưng chưa thấy GDS.
-# Chạy accelerator thì để trống. Khi chạy soc_top điền:
-#   SRAM_LEF $PDK_DIR/lef/sram_2k_macro.lef, SRAM_LIB_SLOW và SRAM_LIB_FAST $PDK_DIR/lib/sram_2k_macro.lib
+# SRAM macro (needed for soc_top). HT-01 (21/10): sram_2k_macro 80 x 100 um with LEF, .lib and .v,
+# no GDS (not required, lecturer 22/10).
+# Leave empty for the accelerator. For soc_top set:
+#   SRAM_LEF $PDK_DIR/lef/sram_2k_macro.lef, SRAM_LIB_SLOW and SRAM_LIB_FAST $PDK_DIR/lib/sram_2k_macro.lib
 set SRAM_LEF       {}
 set SRAM_LIB_SLOW  {}
 set SRAM_LIB_FAST  {}
 
-# Cell cao gấp đôi (SITE CoreSiteDouble) trong gsclib045: BUFX2 và các cell low-power
-# (switch, isolation, level shifter). Floorplan chỉ có hàng CoreSite nên cấm BUFX2 ở cả Genus
-# và Innovus, nếu không Innovus đặt sai vị trí (IMPSP-365, 368 cell ngày 21/10).
+# Double-height cells (SITE CoreSiteDouble) in gsclib045: BUFX2 and the low-power cells
+# (switch, isolation, level shifter). The floorplan has only CoreSite rows, so BUFX2 is banned in
+# both Genus and Innovus, otherwise Innovus places them illegally (IMPSP-365, 368 cells on 21/10).
 set DONT_USE_CELLS {BUFX2}
 
 set PWR_NET   VDD
 set GND_NET   VSS
 set CORE_SITE CoreSite
 
-# Theo Lab 04: CLKBUFX2 có khoảng cách chân A tới blockage 0.035 um, vi phạm min spacing 0.06 um, nên cấm dùng khi CTS.
+# From Lab 04: CLKBUFX2 has 0.035 um from pin A to a blockage, below the 0.06 um min spacing,
+# so it is banned during CTS.
 set CTS_DONT_USE  {CLKBUFX2}
 set CTS_BUFFERS   {CLKBUFX3 CLKBUFX4 CLKBUFX8 CLKBUFX12 CLKBUFX16}
 set CTS_INVERTERS {CLKINVX3 CLKINVX4 CLKINVX8 CLKINVX12 CLKINVX16}
 
-# Thiếu thư viện fast thì tạm dùng slow cho cả hai corner để flow chạy được.
-# Kết quả hold lúc đó không có giá trị, không đưa vào report.
+# Without the fast library, use slow for both corners so the flow still runs.
+# Hold results are then meaningless and must not go into the report.
 if {![file exists $LIB_DIR/$LIB_FAST]} {
-    puts "CANH BAO: khong thay $LIB_DIR/$LIB_FAST, tam dung $LIB_SLOW cho corner hold"
+    puts "WARNING: cannot find $LIB_DIR/$LIB_FAST, using $LIB_SLOW for the hold corner"
     set LIB_FAST $LIB_SLOW
 }
 if {$QRC_TECH ne "" && ![file exists $QRC_TECH]} { set QRC_TECH {} }
 if {$GDS_MAP ne "" && ![file exists $GDS_MAP]} { set GDS_MAP {} }
 
 foreach f [list $LIB_DIR/$LIB_SLOW $TECH_LEF $CELL_LEF] {
-    if {![file exists $f]} { puts "CANH BAO: khong thay $f - sua pnr/scripts/config.tcl hoac dat PDK_DIR" }
+    if {![file exists $f]} { puts "WARNING: cannot find $f - edit pnr/scripts/config.tcl or set PDK_DIR" }
 }

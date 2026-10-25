@@ -1,4 +1,4 @@
-// string.h - bản rút gọn cho Dhrystone, hàm ở fw/bench/common/bench.c.
+// string.h - minimal version for Dhrystone, functions are in fw/bench/common/bench.c.
 #ifndef BENCH_STRING_H
 #define BENCH_STRING_H
 #include <stddef.h>

@@ -1,16 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_csr - thanh ghi CSR machine mode (docs/spec/core.md mục 4.7, 4.8).
+// rv32_csr - machine mode CSRs (docs/spec/core.md sections 4.7, 4.8).
 //
-// Hai cổng truy cập:
-//   - Cổng kiểm tra (tổ hợp, dùng ở EX): địa chỉ có tồn tại không, có ghi
-//     vào CSR chỉ đọc không. Lệnh CSR sai được gắn ngoại lệ illegal ngay ở
-//     EX như mọi ngoại lệ khác.
-//   - Cổng đọc/ghi (dùng ở WB): đọc giá trị cũ, ghi giá trị mới theo phép
-//     RW/RS/RC khi wr_en_i = 1.
-// Trap và MRET cập nhật mstatus, mepc, mcause, mtval tại WB.
-// mcycle tăng mỗi chu kỳ, minstret tăng khi instret_i = 1. Lệnh ghi bộ đếm
-// (cả nửa thấp lẫn nửa cao) thay cho lần tăng trong chu kỳ đó.
+// Two access ports:
+//   - Check port (combinational, used in EX): does the address exist, and is this a
+//     write to a read-only CSR. A bad CSR instruction gets the illegal exception in
+//     EX like any other exception.
+//   - Read/write port (used in WB): read the old value and write the new value for
+//     RW/RS/RC when wr_en_i = 1.
+// Traps and MRET update mstatus, mepc, mcause and mtval in WB.
+// mcycle counts every cycle and minstret counts when instret_i = 1. A write to a
+// counter (low or high half) replaces the increment in that cycle.
 `include "rv32_defs.vh"
 
 module rv32_csr #(
@@ -19,22 +19,22 @@ module rv32_csr #(
     input  wire        clk,
     input  wire        rst_n,
 
-    // Cổng kiểm tra (EX)
+    // Check port (EX)
     input  wire [11:0] chk_addr_i,
-    input  wire        chk_we_i,       // lệnh CSR có ghi (csr_we của decoder)
+    input  wire        chk_we_i,       // The CSR instruction writes (csr_we from the decoder)
     output reg         chk_illegal_o,
 
-    // Cổng đọc/ghi (WB)
+    // Read/write port (WB)
     input  wire [11:0] addr_i,
     input  wire [1:0]  op_i,           // RV_CSR_RW / RS / RC
-    input  wire [31:0] wdata_i,        // rs1 hoặc uimm
-    input  wire        wr_en_i,        // ghi trong chu kỳ này
+    input  wire [31:0] wdata_i,        // rs1 or uimm
+    input  wire        wr_en_i,        // Write this cycle
     output reg  [31:0] rdata_o,
 
-    // Trap, MRET, đếm lệnh (WB)
+    // Trap, MRET, instruction count (WB)
     input  wire        trap_i,
-    input  wire [31:2] trap_pc_i,      // PC luôn thẳng hàng 4 byte
-    input  wire        trap_int_i,     // ngắt: mcause bit 31 = 1
+    input  wire [31:2] trap_pc_i,      // The PC is always 4-byte aligned
+    input  wire        trap_int_i,     // Interrupt: mcause bit 31 = 1
     input  wire [4:0]  trap_cause_i,
     input  wire [31:0] trap_tval_i,
     input  wire        mret_i,
@@ -42,13 +42,13 @@ module rv32_csr #(
     output wire [31:0] mtvec_o,
     output wire [31:0] mepc_o,
 
-    // Ngắt
+    // Interrupts
     input  wire        irq_software_i,
     input  wire        irq_timer_i,
     input  wire        irq_external_i,
     input  wire [63:0] mtime_i,
-    output wire        irq_pending_o,  // (mip & mie) != 0, đánh thức WFI
-    output wire        irq_take_o,     // pending và mstatus.MIE = 1
+    output wire        irq_pending_o,  // (mip & mie) != 0, wakes up WFI
+    output wire        irq_take_o,     // Pending and mstatus.MIE = 1
     output wire [4:0]  irq_cause_o     // MEI > MSI > MTI
 );
 
@@ -59,13 +59,13 @@ module rv32_csr #(
     reg [31:0] mscratch_q;
     reg [31:2] mepc_q;
     reg        mcause_int_q;
-    reg [4:0]  mcause_code_q;    // WLRL: chỉ giữ mã hợp lệ (0..11)
+    reg [4:0]  mcause_code_q;    // WLRL: keeps only legal codes (0..11)
     reg [31:0] mtval_q;
     reg [63:0] mcycle_q, minstret_q;
 
     wire [31:0] misa = `RV_MISA_BASE | ((ENABLE_M != 0) ? `RV_MISA_M : 32'h0);
 
-    // MPP cố định 11 (chỉ có M-mode), bit khác đọc 0
+    // MPP is fixed at 11 (M-mode only), other bits read as 0
     reg [31:0] mstatus, mip, mie;
 
     always @(*) begin
@@ -86,7 +86,7 @@ module rv32_csr #(
     assign mtvec_o = {mtvec_q, 2'b00};
     assign mepc_o  = {mepc_q, 2'b00};
 
-    // ---- Cổng kiểm tra: CSR có tồn tại không ----------------------------------
+    // ---- Check port: does the CSR exist ---------------------------------------
     always @(*) begin
         case (chk_addr_i)
             `RV_CSR_MSTATUS, `RV_CSR_MISA, `RV_CSR_MIE, `RV_CSR_MTVEC,
@@ -99,13 +99,13 @@ module rv32_csr #(
             default:
                 chk_illegal_o = 1'b1;
         endcase
-        // addr[11:10] = 11: CSR chỉ đọc
+        // addr[11:10] = 11: read-only CSR
         if (chk_we_i && (chk_addr_i[11:10] == 2'b11))
             chk_illegal_o = 1'b1;
     end
 
-    // ---- Cổng đọc ----------------------------------------------------------------
-    // Lệnh tới đây đã qua cổng kiểm tra, địa chỉ không tồn tại đọc 0.
+    // ---- Read port ----------------------------------------------------------------
+    // Instructions reaching here passed the check port, unknown addresses read 0.
     always @(*) begin
         case (addr_i)
             `RV_CSR_MSTATUS:   rdata_o = mstatus;
@@ -131,7 +131,7 @@ module rv32_csr #(
         endcase
     end
 
-    // ---- Giá trị ghi --------------------------------------------------------------
+    // ---- Write value --------------------------------------------------------------
     reg [31:0] wval;
 
     always @(*) begin
@@ -198,7 +198,7 @@ module rv32_csr #(
             mscratch_q <= wval;
     end
 
-    // ---- mepc, mcause, mtval: trap ưu tiên hơn lệnh ghi (không xảy ra cùng lúc) ----
+    // ---- mepc, mcause, mtval: a trap wins over a CSR write (they never coincide) ----
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             mepc_q        <= 30'h0;
@@ -222,10 +222,10 @@ module rv32_csr #(
         end
     end
 
-    // ---- Bộ đếm 64 bit ---------------------------------------------------------------
-    // Mỗi nửa 32 bit có enable riêng. Nửa cao chỉ nạp khi bị ghi hoặc khi nửa
-    // thấp tràn, nên Genus gate clock được 32 flop này gần như mọi chu kỳ
-    // (D-037). Giá trị giống hệt bộ đếm 64 bit một khối.
+    // ---- 64-bit counters ------------------------------------------------------------
+    // Each 32-bit half has its own enable. The high half loads only when written or
+    // when the low half wraps, so Genus can gate these 32 flops almost every cycle
+    // (D-037). The value is identical to a single 64-bit counter.
     wire mcycle_lo_max   = &mcycle_q[31:0];
     wire minstret_lo_max = &minstret_q[31:0];
     wire minstret_inc    = instret_i & ~wr_minstret & ~wr_minstreth;
@@ -266,7 +266,7 @@ module rv32_csr #(
             minstret_q[63:32] <= minstret_q[63:32] + 32'd1;
     end
 
-    // ---- Ngắt ----------------------------------------------------------------------
+    // ---- Interrupts -----------------------------------------------------------------
     wire msi = irq_software_i & mie_msie_q;
     wire mti = irq_timer_i    & mie_mtie_q;
     wire mei = irq_external_i & mie_meie_q;

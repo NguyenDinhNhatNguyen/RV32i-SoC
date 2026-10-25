@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_alu - ALU số nguyên RV32I (thuần tổ hợp).
-// Core cũng dùng ALU (phép ADD) để tính địa chỉ load/store/JALR và đích
-// branch/JAL. Điều kiện nhánh dùng bộ so sánh riêng trong core.
+// rv32_alu - RV32I integer ALU (purely combinational).
+// The core also uses the ALU (ADD) for load/store/JALR addresses and branch/JAL
+// targets. Branch conditions use a separate comparator in the core.
 `include "rv32_defs.vh"
 
 module rv32_alu (
@@ -13,11 +13,11 @@ module rv32_alu (
 );
 
     wire [4:0]  shamt = b_i[4:0];
-    // Một bộ trừ dùng chung cho SUB, SLT và SLTU.
+    // One subtractor shared by SUB, SLT and SLTU.
     wire [32:0] diff  = {1'b0, a_i} - {1'b0, b_i};
-    // a < b (không dấu) khi phép trừ 33 bit có mượn.
+    // a < b (unsigned) when the 33-bit subtraction borrows.
     wire        lt_u  = diff[32];
-    // Có dấu: cùng dấu thì xét bit mượn, khác dấu thì a âm là nhỏ hơn.
+    // Signed: with equal signs use the borrow, with different signs a negative a is smaller.
     wire        lt_s  = (a_i[31] == b_i[31]) ? diff[32] : a_i[31];
 
     always @(*) begin

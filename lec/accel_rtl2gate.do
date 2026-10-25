@@ -1,23 +1,23 @@
-// accel_rtl2gate.do - LEC RTL với netlist Genus của accelerator (PD-01).
-// Theo mẫu run_lec_cg.do của Lab 1 (đã chạy được với license của trường).
-// Không dùng dofile do Genus sinh vì nó cần license Conformal Ultra.
-// Chạy từ gốc repo trên server: make lec-accel
-// Thư viện đọc từ ~/PDK_GPDK45 (bản copy của Lab trong home mỗi người).
+// accel_rtl2gate.do - LEC of the accelerator RTL against the Genus netlist (PD-01).
+// Based on run_lec_cg.do from Lab 1 (which runs with the school license).
+// The Genus-generated dofile is not used because it needs a Conformal Ultra license.
+// Run from the repo root on the server: make lec-accel
+// Libraries come from ~/PDK_GPDK45 (the Lab copy in each person's home).
 
-// Lệnh nào lỗi (ví dụ thiếu license) thì bỏ qua và chạy tiếp
+// Skip any failing command (for example a missing license) and keep going
 set dofile abort off
 
 read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
 read design -golden -verilog rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v
 read design -revised -verilog syn/out_accel/accel_wrapper_netlist.v
 set root module accel_wrapper -both
-// Netlist có cell clock gating (latch + AND): mô hình hoá nó thành enable của flop,
-// nếu không Conformal báo 3 DLAT unmapped và gần hết flop non-equivalent.
+// The netlist has clock gating cells (latch + AND): model them as flop enables,
+// otherwise Conformal reports 3 unmapped DLATs and almost every flop non-equivalent.
 set flatten model -gated_clock
 set system mode lec
-// Effort mặc định để lại 149 điểm Abort sau bộ nhân 8x8. analyze datapath cần license
-// Conformal_Ultra (trường chỉ có Conformal_Asic). Effort high cho PASS 812/812 (21/10, khoảng 9 phút).
-// Kiểm thêm chức năng bằng mô phỏng mức cổng: make gls-accel
+// The default effort leaves 149 aborted points behind the 8x8 multipliers. analyze datapath needs
+// Conformal_Ultra (the school has only Conformal_Asic). High effort gives PASS 812/812 (21/10, about 9 min).
+// Function is also checked by gate-level simulation: make gls-accel
 set compare effort high
 add compared points -all
 compare

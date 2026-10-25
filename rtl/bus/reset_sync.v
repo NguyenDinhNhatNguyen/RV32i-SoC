@@ -1,19 +1,19 @@
 `timescale 1ns/1ps
 `default_nettype none
-// reset_sync - bộ đồng bộ reset 2 flop (RTL-09), docs/spec/soc_spec.md mục 1.
-// Assert bất đồng bộ: rst_n_i = 0 thì rst_n_o = 0 ngay, không chờ clock.
-// Deassert đồng bộ: rst_n_o lên 1 ở cạnh lên thứ hai sau khi rst_n_i lên 1.
-// SDC: chỉ false path từ chân rst_n vào hai flop này. Đường từ rst_n_o tới chân
-// reset của các flop khác phải kiểm recovery/removal (STA-01).
+// reset_sync - 2-flop reset synchronizer (RTL-09), docs/spec/soc_spec.md section 1.
+// Asynchronous assert: rst_n_i = 0 drives rst_n_o = 0 at once, without waiting for a clock.
+// Synchronous deassert: rst_n_o rises on the second rising edge after rst_n_i rises.
+// SDC: only a false path from the rst_n pin into these two flops. Paths from rst_n_o to
+// the reset pins of other flops must be checked for recovery/removal (STA-01).
 
 module reset_sync (
     input  wire clk,
-    input  wire rst_n_i,        // chân reset ngoài, tích cực thấp
-    output wire rst_n_o         // reset dùng chung cho mọi khối
+    input  wire rst_n_i,        // External reset pin, active low
+    output wire rst_n_o         // Shared reset for every block
 );
 
-    // Hai flop tách riêng: flop 2 làm reset cho cả SoC, flop 1 chỉ làm dữ liệu
-    // (Verilator báo SYNCASYNCNET nếu gộp chung một vector)
+    // Two separate flops: flop 2 resets the whole SoC, flop 1 is data only
+    // (Verilator reports SYNCASYNCNET if they share one vector)
     reg meta_q;
     reg sync_q;
 

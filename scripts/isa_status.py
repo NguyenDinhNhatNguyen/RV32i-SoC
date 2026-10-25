@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Sinh bảng kết quả riscv-tests (markdown) từ tb/core/out/isa-core.summary.
+"""Build the riscv-tests result table (markdown) from tb/core/out/isa-core.summary.
 
-Mỗi ô là số chế độ chạy đạt / tổng số chế độ (nominal, stall1..3) của một
-cấu hình tb_core. Cách dùng: isa_status.py [summary] > bảng.md
+Each cell is passing run modes / total modes (nominal, stall1..3) of one
+tb_core configuration. Usage: isa_status.py [summary] > table.md
 """
 import collections
 import re

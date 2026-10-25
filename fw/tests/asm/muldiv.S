@@ -1,13 +1,13 @@
-// muldiv.S - RV32M trong pipeline (docs/spec/core.md mục 4.9).
-// Kết quả từng phép đã có riscv-tests rv32um. Test này kiểm tra phần nối với
-// pipeline: forward vào và ra khỏi M-unit, load ngay trước lệnh M, lệnh M
-// liên tiếp, kết quả vào x0, nhánh dùng kết quả M, ngắt rơi vào giữa phép
-// chia (phép bị huỷ rồi chạy lại sau MRET, kết quả không đổi).
-// Với ENABLE_M = 0 (đọc từ thanh ghi CFG của tb) lệnh M phải là illegal với
-// mtval = mã lệnh và rd không bị ghi.
+// muldiv.S - RV32M inside the pipeline (docs/spec/core.md section 4.9).
+// The result of each op is already covered by riscv-tests rv32um. This test checks the
+// pipeline hookup: forwarding into and out of the M-unit, a load right before an M
+// instruction, back-to-back M instructions, results to x0, branches using M results, and an
+// interrupt in the middle of a divide (the op is dropped and rerun after MRET, same result).
+// With ENABLE_M = 0 (read from the tb CFG register) M instructions must be illegal with
+// mtval = the instruction bits, and rd is not written.
 //
-// Trình xử lý (chỉ dùng t3-t6, s10, s11): ngoại lệ -> mcause vào s11 rồi
-// quay về s6. Ngắt -> tăng s10, hạ mọi đường ngắt.
+// Handler (uses only t3-t6, s10, s11): an exception puts mcause into s11 and
+// returns to s6. An interrupt increments s10 and lowers every interrupt line.
 #include "test_macros.h"
 
     .option arch, +m
@@ -20,7 +20,7 @@ TEST_CODE_BEGIN
     andi s0, s0, 1
     bnez s0, with_m
 
-    // ---- ENABLE_M = 0: lệnh M là illegal --------------------------------------
+    // ---- ENABLE_M = 0: M instructions are illegal --------------------------------
     li   TESTNUM, 2
     li   a0, 0x55
     li   a1, 3
@@ -43,12 +43,12 @@ TEST_CODE_BEGIN
     TEST_PASS
 
 with_m:
-    // ---- Forward vào và ra khỏi M-unit ----------------------------------------
+    // ---- Forward into and out of the M-unit -----------------------------------------
     li   a1, 7
     li   a2, 6
     mul  a0, a1, a2                 // 42
-    mul  a0, a0, a0                 // 1764, toán hạng forward từ lệnh M
-    addi a0, a0, 1                  // 1765, ALU dùng kết quả M ngay
+    mul  a0, a0, a0                 // 1764, operand forwarded from an M instruction
+    addi a0, a0, 1                  // 1765, the ALU uses the M result right away
     CHECK(10, a0, 1765)
     li   a1, 100
     div  a3, a0, a1                 // 17
@@ -59,12 +59,12 @@ with_m:
     li   a2, 3
     div  a3, a1, a2                 // -2
     rem  a4, a1, a2                 // -1
-    mulh a5, a1, a2                 // -1 (nửa cao của -21)
+    mulh a5, a1, a2                 // -1 (high half of -21)
     CHECK(12, a3, -2)
     CHECK(13, a4, -1)
     CHECK(14, a5, -1)
 
-    // Load ngay trước lệnh M (toán hạng forward từ dữ liệu load)
+    // Load right before an M instruction (operand forwarded from the load data)
     la   s1, tdat
     lw   a1, 0(s1)
     mul  a0, a1, a1
@@ -76,7 +76,7 @@ with_m:
     lw   a2, 4(s1)
     remu a0, a2, a1                 // 0x12345 % 0x3d
     CHECK(17, a0, 0x17)
-    // Kết quả M làm dữ liệu store và địa chỉ load
+    // M result as store data and as a load address
     li   a1, 4
     li   a2, 2
     mul  a0, a1, a2                 // 8
@@ -84,14 +84,14 @@ with_m:
     sw   a0, 0(a3)
     lw   a4, 8(s1)
     CHECK(18, a4, 8)
-    // Nhánh dùng kết quả M
+    // Branch using an M result
     li   TESTNUM, 19
     li   a1, 9
     li   a2, 3
     div  a0, a1, a2
     li   a3, 3
     bne  a0, a3, fail
-    // Lệnh M ghi x0 không đổi gì, lệnh sau không bị forward giá trị
+    // An M instruction writing x0 changes nothing, and the next instruction gets no forwarded value
     li   a1, 5
     mul  x0, a1, a1
     add  a0, x0, x0
@@ -100,8 +100,8 @@ with_m:
     add  a0, x0, a1
     CHECK(21, a0, 5)
 
-    // ---- Ngắt rơi vào giữa phép chia ----------------------------------------------
-    // a0 = 1000003 / 7 + 1000003 % 7 + 123 * 457, chạy lại với 60 thời điểm ngắt.
+    // ---- Interrupt in the middle of a divide ----------------------------------------------
+    // a0 = 1000003 / 7 + 1000003 % 7 + 123 * 457, rerun with 60 interrupt timings.
     li   t0, 0x80
     csrw mie, t0
     li   s2, 0
@@ -136,10 +136,10 @@ TEST_FAIL
 handler:
     csrr t3, mcause
     bltz t3, 1f
-    mv   s11, t3                    // ngoại lệ
+    mv   s11, t3                    // Exception
     csrw mepc, s6
     mret
-1:  addi s10, s10, 1                // ngắt
+1:  addi s10, s10, 1                // Interrupt
     li   t4, TB_CTRL
     sw   zero, TB_IRQ(t4)
     lw   t3, TB_IRQ(t4)

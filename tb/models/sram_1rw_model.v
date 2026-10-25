@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 `default_nettype none
-// sram_1rw_model - mô hình hành vi SRAM 1 cổng, CHỈ DÙNG KHI MÔ PHỎNG.
-// Đọc đồng bộ (dữ liệu ra rdata_o ở chu kỳ sau ce_i && !we_i), ghi theo
-// byte enable, rdata_o giữ giá trị cũ khi ghi và khi rảnh.
-// Nội dung khởi tạo 0, rồi nạp bằng $readmemh từ plusarg có tên
-// INIT_PLUSARG (ví dụ +imem=tb/core/out/x.imem.hex). Đây là file duy nhất
-// được dùng `initial` vì không phải RTL.
+// sram_1rw_model - single-port SRAM behavioral model, FOR SIMULATION ONLY.
+// Synchronous read (rdata_o arrives the cycle after ce_i && !we_i), writes use
+// byte enables, and rdata_o holds its old value on writes and when idle.
+// Contents start at 0, then load with $readmemh from the plusarg named
+// INIT_PLUSARG (for example +imem=tb/core/out/x.imem.hex). This is the only file
+// that uses `initial`, because it is not RTL.
 
 module sram_1rw_model #(
-    parameter DEPTH        = 4096,           // số word
+    parameter DEPTH        = 4096,           // Number of words
     parameter AW           = $clog2(DEPTH),
     parameter INIT_PLUSARG = "imem"
 ) (
@@ -16,7 +16,7 @@ module sram_1rw_model #(
     input  wire          ce_i,
     input  wire          we_i,
     input  wire [3:0]    be_i,
-    input  wire [AW-1:0] addr_i,             // địa chỉ word
+    input  wire [AW-1:0] addr_i,             // Word address
     input  wire [31:0]   wdata_i,
     output reg  [31:0]   rdata_o
 );

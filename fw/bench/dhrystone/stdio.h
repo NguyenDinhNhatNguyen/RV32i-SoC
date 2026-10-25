@@ -1,4 +1,4 @@
-// stdio.h - bản rút gọn cho Dhrystone trên tb_core (không có newlib).
+// stdio.h - minimal version for Dhrystone on tb_core (no newlib).
 #ifndef BENCH_STDIO_H
 #define BENCH_STDIO_H
 #include "bench.h"

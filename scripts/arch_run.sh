@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# arch_run.sh - dịch một test riscv-arch-test và chạy trên tb_core, ghi signature.
-# Dùng chung cho plugin RISCOF (tb/riscof/rv32_core) và make arch-core-dut.
+# arch_run.sh - compiles one riscv-arch-test test, runs it on tb_core and writes the signature.
+# Shared by the RISCOF plugin (tb/riscof/rv32_core) and make arch-core-dut.
 #
-#   arch_run.sh <cấu hình M0W1|M1W1> <test.S> <thư mục làm việc> [macro ...]
+#   arch_run.sh <config M0W1|M1W1> <test.S> <work dir> [macro ...]
 #
-# Macro là các "NAME=VALUE" (không có -D), lấy từ RVTEST_CASE của test.
-# Kết quả trong thư mục làm việc: my.elf, DUT-rv32_core.signature, tb.log.
-# In một dòng PASS hoặc [FAIL], mã thoát 0 khi PASS.
+# Macros are "NAME=VALUE" (without -D), taken from the test RVTEST_CASE.
+# Results in the work dir: my.elf, DUT-rv32_core.signature, tb.log.
+# Prints one PASS or [FAIL] line, exit code 0 on PASS.
 set -u
 
 cfg=$1
@@ -18,8 +18,8 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 env_dir=$root/tb/riscof/rv32_core/env
 suite_env=$root/fw/riscv-arch-test/riscv-test-suite/env
 vvp_file=$root/tb/core/out/tb_core_arch_$cfg.vvp
-imem_base=${ARCH_IMEM_BASE:-0x80000000} # phải khớp lúc dịch tb_core_arch_*.vvp và link.ld
-imem_size=${ARCH_IMEM_SIZE:-2097152}     # phải khớp lúc dịch tb_core_arch_*.vvp
+imem_base=${ARCH_IMEM_BASE:-0x80000000} # Must match the tb_core_arch_*.vvp build and link.ld
+imem_size=${ARCH_IMEM_SIZE:-2097152}     # Must match the tb_core_arch_*.vvp build
 prefix=${RV_PREFIX:-riscv64-unknown-elf}
 name=$(basename "$src" .S)
 

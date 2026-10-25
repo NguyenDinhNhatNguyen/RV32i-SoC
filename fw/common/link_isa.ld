@@ -1,8 +1,8 @@
-/* link_isa.ld - bố cục bộ nhớ cho riscv-tests env p (docs/spec/core.md mục 10.3).
- * Mọi section nằm trong IMEM từ 0x0000_0000. rv32ui-p-fence_i ghi lệnh vào .data
- * rồi nhảy tới đó, mà core chỉ lấy lệnh từ IMEM (hoặc boot ROM), nên .data
- * cũng phải ở IMEM. Load/store vào IMEM đi qua bus dữ liệu như firmware thật.
- * Kích thước phải khớp CORE_TB_IMEM_SIZE trong tb/core/core_tb_map.vh.
+/* link_isa.ld - memory layout for riscv-tests env p (docs/spec/core.md section 10.3).
+ * Every section is in IMEM from 0x0000_0000. rv32ui-p-fence_i writes instructions into .data
+ * and jumps there, but the core fetches only from IMEM (or the boot ROM), so .data
+ * must also be in IMEM. Loads and stores to IMEM go over the data bus like real firmware.
+ * The size must match CORE_TB_IMEM_SIZE in tb/core/core_tb_map.vh.
  */
 OUTPUT_ARCH("riscv")
 ENTRY(_start)
@@ -15,7 +15,7 @@ MEMORY
 SECTIONS
 {
     .text : {
-        *(.text.init)               /* _start phải đứng đầu */
+        *(.text.init)               /* _start must come first */
         *(.text .text.*)
     } > IMEM
 

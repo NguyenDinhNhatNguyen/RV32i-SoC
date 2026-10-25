@@ -31,7 +31,8 @@ Genus/Innovus/Conformal (`make synth-accel`, `make pnr-accel`, `make check-serve
 - **Không thêm dòng `Co-Authored-By` hay `Claude-Session`** hay bất kỳ dòng ghi công Claude/AI nào vào commit hoặc PR. Tác giả là người đang dùng máy (theo `git config`).
 - Trước khi commit thay đổi RTL hoặc testbench: `scripts/eda.sh check` phải PASS và lint 0 warning.
 - Repo công khai: **không** đưa vào file của GPDK45 (`*.lib`, `*.lef`, `*.gds`, SRAM macro), file Cadence, slide hay PDF của môn. `.gitignore` đã chặn phần lớn, nhưng vẫn kiểm `git status` trước khi commit.
-- RTL theo Verilog-2005, tổng hợp được (không `initial` trong RTL, không latch), reset tích cực mức thấp `rst_n`. Giữ ghi chú trong code bằng tiếng Việt như các file hiện có.
+- RTL theo Verilog-2005, tổng hợp được (không `initial` trong RTL, không latch), reset tích cực mức thấp `rst_n`.
+- **Comment trong code và chuỗi in ra (PASS/FAIL/ERROR, echo, puts) viết tiếng Anh.** Câu viết hoa chữ đầu (trừ khi mở đầu bằng tên tín hiệu), không dùng `;`, dòng dài quá 100 ký tự thì xuống dòng và thụt lề thẳng với dòng trên. Script nhận diện lỗi bằng dòng bắt đầu `FAIL` hoặc `ERROR`, đừng đổi hai chữ này.
 - Không sửa script Genus/Innovus để chạy được ở nhà. Flow nhà và flow trường tách riêng, chỉ dùng chung SDC.
 - Tài liệu trong `docs/` viết tiếng Việt, câu ngắn.
 - **Không dùng dấu `;` trong câu văn** (tài liệu, comment, commit message, PR, tin nhắn cho nhóm), vì người viết bình thường không dùng. Thay bằng "và"/"and", dấu phẩy, hoặc tách thành câu mới, chọn cách đọc tự nhiên nhất. Chỉ giữ `;` khi là cú pháp code (`;#` trong Tcl, `;` trong C/Verilog).

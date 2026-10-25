@@ -1,27 +1,27 @@
 // uart_apb.v - UART 8N1, APB3 slave (RTL-10)
-// Base: 0x2000_1000 (cua so 4 KB). Chi truy cap word, offset khac -> PSLVERR.
+// Base: 0x2000_1000 (4 KB window). Word access only, other offsets -> PSLVERR.
 //
-//   0x00 DATA     W: day byte [7:0] vao TX FIFO (day -> bo byte, set TXOVF)
-//                 R: lay byte [7:0] tu RX FIFO (rong -> tra 0, khong loi)
-//   0x04 STATUS   R: [0] TXF  TX FIFO day
-//                    [1] TXE  TX FIFO rong
-//                    [2] TXB  dang dich (TX shifter ban)
-//                    [3] RXF  RX FIFO day
-//                    [4] RXNE RX FIFO co du lieu
-//                    [5] OVR  RX FIFO day khi co byte moi (sticky)
+//   0x00 DATA     W: push byte [7:0] into the TX FIFO (full -> byte dropped, sets TXOVF)
+//                 R: pop byte [7:0] from the RX FIFO (empty -> returns 0, no error)
+//   0x04 STATUS   R: [0] TXF  TX FIFO full
+//                    [1] TXE  TX FIFO empty
+//                    [2] TXB  shifting (TX shifter busy)
+//                    [3] RXF  RX FIFO full
+//                    [4] RXNE RX FIFO has data
+//                    [5] OVR  RX FIFO full when a new byte arrived (sticky)
 //                    [6] FE   stop bit = 0 (sticky)
-//                    [7] TXOVF ghi DATA khi TX FIFO day (sticky)
-//                 W: ghi 1 vao bit 5..7 de xoa; cac bit khac bo qua
+//                    [7] TXOVF DATA written while the TX FIFO was full (sticky)
+//                 W: write 1 to bits 5..7 to clear them, other bits are ignored
 //   0x08 CTRL     RW [0] TXEN [1] RXEN [2] TXIE [3] RXIE [4] ERRIE   reset = 0x03
-//   0x0C BAUDDIV  RW [15:0] DIV: baud = f_clk / (16 * DIV); DIV=0 hoat dong nhu 1
-//                 reset = DIV_RESET (27 -> 115200 baud tai 50 MHz, sai so +0.47%)
+//   0x0C BAUDDIV  RW [15:0] DIV: baud = f_clk / (16 * DIV), DIV=0 works as 1
+//                 reset = DIV_RESET (27 -> 115200 baud at 50 MHz, error +0.47%)
 //
-// irq (muc, dang ky 1 flop) = TXIE&TXE | RXIE&RXNE | ERRIE&(OVR|FE|TXOVF)
-// Khung 8N1: start(0), 8 bit LSB truoc, stop(1). RX lay mau 16x, o giua bit.
-// Dau vao uart_rxd bat dong bo -> dong bo 2 flop.
+// irq (level, registered by 1 flop) = TXIE&TXE | RXIE&RXNE | ERRIE&(OVR|FE|TXOVF)
+// 8N1 frame: start(0), 8 bits LSB first, stop(1). RX samples at 16x, in the middle of each bit.
+// The uart_rxd input is asynchronous -> 2-flop synchronizer.
 `timescale 1ns/1ps
 module uart_apb #(
-    parameter        FIFO_AW   = 3,          // do sau FIFO = 2**FIFO_AW (TX va RX)
+    parameter        FIFO_AW   = 3,          // FIFO depth = 2**FIFO_AW (TX and RX)
     parameter [15:0] DIV_RESET = 16'd27      // 50 MHz / (16 x 115200)
 ) (
     input  wire        PCLK,
@@ -59,7 +59,7 @@ module uart_apb #(
     wire unused_ok = &{1'b0, PWDATA[31:16]};
 
     // ------------------------------------------------------------------
-    // Thanh ghi dieu khien
+    // Control registers
     // ------------------------------------------------------------------
     reg        tx_en, rx_en, tx_ie, rx_ie, err_ie;
     reg [15:0] div;
@@ -87,8 +87,8 @@ module uart_apb #(
     end
 
     // ------------------------------------------------------------------
-    // Baud generator: tick = 1 xung / DIV chu ky clk (tan so 16x baud)
-    // Chi chay khi TX hoac RX duoc bat.
+    // Baud generator: tick = 1 pulse every DIV clk cycles (16x the baud rate)
+    // Runs only when TX or RX is enabled.
     // ------------------------------------------------------------------
     wire [15:0] div_m1 = (div > 16'd1) ? (div - 16'd1) : 16'd0;
     reg  [15:0] bcnt;
@@ -111,13 +111,13 @@ module uart_apb #(
     end
 
     // ------------------------------------------------------------------
-    // TX FIFO + bo phat
+    // TX FIFO + transmitter
     // ------------------------------------------------------------------
     wire       tx_full, tx_empty;
     wire [7:0] tx_dout;
-    reg  [3:0] tx_bits;           // so bit con lai cua khung (0 = ranh)
-    reg  [3:0] tx_os;             // dem tick trong 1 bit
-    reg  [8:0] tx_sh;             // {stop, d7..d0}; start bit duoc phat truc tiep
+    reg  [3:0] tx_bits;           // Bits left in the frame (0 = idle)
+    reg  [3:0] tx_os;             // Tick counter inside 1 bit
+    reg  [8:0] tx_sh;             // {stop, d7..d0}, the start bit is sent directly
 
     wire tx_start = tick & (tx_bits == 4'd0) & tx_en & ~tx_empty;
     wire tx_bound = tick & (tx_bits != 4'd0) & (tx_os == 4'd15);
@@ -139,19 +139,19 @@ module uart_apb #(
                 if (tx_start) begin
                     tx_bits  <= 4'd10;
                     tx_os    <= 4'd0;
-                    uart_txd <= 1'b0;                 // start bit
+                    uart_txd <= 1'b0;                 // Start bit
                 end
             end else begin
                 tx_os <= tx_os + 4'd1;
                 if (tx_os == 4'd15) begin
                     tx_bits  <= tx_bits - 4'd1;
-                    uart_txd <= tx_sh[0];             // bit ke tiep (1 khi het)
+                    uart_txd <= tx_sh[0];             // Next bit (1 when done)
                 end
             end
         end
     end
 
-    // thanh ghi dich khong reset: chi duoc dung sau khi nap
+    // The shift register has no reset: used only after it is loaded
     always @(posedge PCLK) begin
         if (tx_start)      tx_sh <= {1'b1, tx_dout};
         else if (tx_bound) tx_sh <= {1'b1, tx_sh[8:1]};
@@ -160,7 +160,7 @@ module uart_apb #(
     wire tx_busy = (tx_bits != 4'd0);
 
     // ------------------------------------------------------------------
-    // RX: dong bo, nhan 16x, RX FIFO
+    // RX: synchronize, 16x sampling, RX FIFO
     // ------------------------------------------------------------------
     localparam [2:0] R_IDLE = 3'd0, R_START = 3'd1, R_DATA = 3'd2,
                      R_STOP = 3'd3, R_WAIT  = 3'd4;
@@ -204,19 +204,19 @@ module uart_apb #(
         end else if (tick) begin
             case (rx_st)
                 R_IDLE: begin
-                    if (rx_en & ~rx_s2) begin       // canh xuong: co the la start
+                    if (rx_en & ~rx_s2) begin       // Falling edge: maybe a start bit
                         rx_st <= R_START;
                         rx_os <= 4'd0;
                     end
                 end
-                R_START: begin                       // kiem tra lai o giua start bit
+                R_START: begin                       // Check again in the middle of the start bit
                     if (rx_os == 4'd7) begin
                         if (~rx_s2) begin
                             rx_st  <= R_DATA;
                             rx_os  <= 4'd0;
                             rx_bit <= 3'd0;
                         end else begin
-                            rx_st <= R_IDLE;         // nhieu, bo qua
+                            rx_st <= R_IDLE;         // Noise, ignore
                         end
                     end else begin
                         rx_os <= rx_os + 4'd1;
@@ -233,21 +233,21 @@ module uart_apb #(
                     rx_os <= rx_os + 4'd1;
                     if (rx_os == 4'd15) rx_st <= rx_s2 ? R_IDLE : R_WAIT;
                 end
-                default: begin                       // R_WAIT: cho duong ve muc cao
+                default: begin                       // R_WAIT: wait for the line to go high
                     if (rx_s2) rx_st <= R_IDLE;
                 end
             endcase
         end
     end
 
-    // thanh ghi dich khong reset: du 8 bit truoc khi duoc day vao FIFO
+    // The shift register has no reset: all 8 bits are filled before it is pushed to the FIFO
     always @(posedge PCLK) begin
         if (tick && rx_st == R_DATA && rx_os == 4'd15)
             rx_sh <= {rx_s2, rx_sh[7:1]};
     end
 
     // ------------------------------------------------------------------
-    // Co loi sticky (xoa bang ghi 1 vao STATUS[7:5]; set thang xoa)
+    // Sticky error flags (cleared by writing 1 to STATUS[7:5], set wins over clear)
     // ------------------------------------------------------------------
     always @(posedge PCLK or negedge PRESETn) begin
         if (!PRESETn) begin
@@ -265,7 +265,7 @@ module uart_apb #(
     end
 
     // ------------------------------------------------------------------
-    // Ngat va doc lai
+    // Interrupt and readback
     // ------------------------------------------------------------------
     always @(posedge PCLK or negedge PRESETn) begin
         if (!PRESETn) irq <= 1'b0;

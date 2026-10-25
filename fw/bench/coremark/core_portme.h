@@ -1,7 +1,7 @@
-// core_portme.h - port CoreMark cho tb_core, dựa trên coremark/barebones.
-// Không có số thực, thời gian tính bằng mcycle với giả định 1 MHz
-// (1 tick = 1 chu kỳ) nên "Iterations/Sec" CoreMark in ra chính là CoreMark/MHz
-// làm tròn xuống. Số chính xác do portable_fini in (dòng BENCH).
+// core_portme.h - CoreMark port for tb_core, based on coremark/barebones.
+// No floating point. Time is measured with mcycle assuming 1 MHz
+// (1 tick = 1 cycle), so the CoreMark "Iterations/Sec" output is CoreMark/MHz
+// rounded down. The exact value is printed by portable_fini (the BENCH line).
 #ifndef CORE_PORTME_H
 #define CORE_PORTME_H
 

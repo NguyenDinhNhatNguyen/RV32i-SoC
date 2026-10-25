@@ -1,6 +1,6 @@
-// model_test.h - macro RVMODEL_* của riscv-arch-test cho rv32_core trên tb_core.
-// Kết thúc: ghi 1 vào tohost, tb_core báo PASS và ghi signature
-// (vùng begin_signature..end_signature) ra file theo +signature=.
+// model_test.h - riscv-arch-test RVMODEL_* macros for rv32_core on tb_core.
+// End of test: write 1 to tohost, tb_core reports PASS and writes the signature
+// (begin_signature..end_signature) to the file given by +signature=.
 #ifndef _COMPLIANCE_MODEL_H
 #define _COMPLIANCE_MODEL_H
 
@@ -35,7 +35,7 @@
 #define RVMODEL_IO_ASSERT_SFPR_EQ(_F, _R, _I)
 #define RVMODEL_IO_ASSERT_DFPR_EQ(_D, _R, _I)
 
-// Bộ test I, M, Zifencei, privilege không dùng ngắt
+// The I, M, Zifencei and privilege tests do not use interrupts
 #define RVMODEL_SET_MSW_INT
 #define RVMODEL_CLEAR_MSW_INT
 #define RVMODEL_CLEAR_MTIMER_INT

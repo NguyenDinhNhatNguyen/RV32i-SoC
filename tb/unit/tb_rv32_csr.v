@@ -1,16 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_csr - testbench tự kiểm tra cho cổng kiểm tra và giá trị reset của
-// rv32_csr. Hành vi đọc/ghi, trap, ngắt và bộ đếm được kiểm tra trên cả core
-// (fw/tests/asm/trap.S, irq.S, wfi.S và riscv-tests rv32mi).
-// Kiểm tra:
-//   - quét đủ 4096 địa chỉ x {đọc, ghi}: illegal khi địa chỉ không nằm trong
-//     bảng CSR của đặc tả (mục 4.7, viết lại bằng số ở đây, không dùng macro
-//     của RTL) hoặc khi ghi vào vùng chỉ đọc addr[11:10] = 11,
-//   - giá trị đọc sau reset của từng CSR, địa chỉ không tồn tại đọc 0,
-//   - mip theo cổng ngắt, irq_pending/irq_take/irq_cause theo mie và mstatus.
-// Chạy với ENABLE_M=0 và 1 (misa).
-// Plusarg: +seed=<n> (không dùng ngẫu nhiên, nhận để đồng bộ với các tb khác)
+// tb_rv32_csr - self-checking testbench for the check port and reset values of
+// rv32_csr. Read/write behavior, traps, interrupts and counters are checked on the full core
+// (fw/tests/asm/trap.S, irq.S, wfi.S and riscv-tests rv32mi).
+// Checks:
+//   - Sweep all 4096 addresses x {read, write}: illegal when the address is not in the
+//     spec CSR table (section 4.7, rewritten with numbers here, not the RTL macros)
+//     or on a write to the read-only space addr[11:10] = 11,
+//   - The value of each CSR after reset, unknown addresses read 0,
+//   - mip follows the interrupt pins, irq_pending/irq_take/irq_cause follow mie and mstatus.
+// Runs with ENABLE_M=0 and 1 (misa).
+// Plusargs: +seed=<n> (no randomness, accepted to match the other tbs)
 
 module tb_rv32_csr;
 
@@ -18,7 +18,7 @@ module tb_rv32_csr;
 
     reg         clk = 1'b0;
     reg         rst_n = 1'b0;
-    reg  [11:0] chk_addr = 12'hfff;   // khác giá trị đầu tiên của vòng quét để always @(*) chạy
+    reg  [11:0] chk_addr = 12'hfff;   // Differs from the first sweep value so always @(*) runs
     reg         chk_we = 1'b0;
     wire        chk_illegal;
     reg  [11:0] addr = 12'h0;
@@ -50,7 +50,7 @@ module tb_rv32_csr;
     integer seed   = 1;
     integer a, w, n_exist;
 
-    // Bảng CSR của đặc tả mục 4.7
+    // CSR table from spec section 4.7
     function exists(input [11:0] x);
         begin
             case (x)
@@ -88,7 +88,7 @@ module tb_rv32_csr;
         if ($value$plusargs("seed=%d", seed)) ;
         #12 rst_n = 1'b1;
 
-        // ---- Cổng kiểm tra ---------------------------------------------------
+        // ---- Check port ---------------------------------------------------------
         n_exist = 0;
         for (a = 0; a < 4096; a = a + 1) begin
             for (w = 0; w < 2; w = w + 1) begin
@@ -102,7 +102,7 @@ module tb_rv32_csr;
         end
         check_eq(n_exist, 23, "number of CSRs in table");
 
-        // ---- Giá trị sau reset -----------------------------------------------
+        // ---- Values after reset -------------------------------------------------
         read_csr(12'h300, 32'h0000_1800);
         read_csr(12'h301, 32'h4000_0100 | (ENABLE_M ? 32'h1000 : 32'h0));
         read_csr(12'h304, 32'h0);
@@ -125,7 +125,7 @@ module tb_rv32_csr;
         read_csr(12'h7C0, 32'h0);
         read_csr(12'h3A0, 32'h0);
 
-        // ---- mip, ngắt chờ, ưu tiên ------------------------------------------------
+        // ---- mip, pending interrupts, priority ------------------------------------------
         msi = 1'b1; mti = 1'b1; mei = 1'b1;
         read_csr(12'h344, 32'h888);
         check_eq(irq_pending, 0, "pending with mie = 0");

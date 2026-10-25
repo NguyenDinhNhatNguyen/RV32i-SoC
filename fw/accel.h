@@ -1,4 +1,4 @@
-/* accel.h - truy cập wrapper accelerator từ firmware (khớp rtl/accel/accel_wrapper.v). */
+/* accel.h - firmware access to the accelerator wrapper (matches rtl/accel/accel_wrapper.v). */
 #ifndef ACCEL_H
 #define ACCEL_H
 #include <stdint.h>
@@ -18,7 +18,7 @@
 #define ACCEL_STATUS_BUSY  (1u << 0)
 #define ACCEL_STATUS_DONE  (1u << 1)
 
-/* C = A * B, ma trận int8 N x N lưu theo hàng; dùng polling. */
+/* C = A * B, int8 N x N matrices stored by row, polling. */
 static inline void accel_matmul(const int8_t *a, const int8_t *b, int32_t *c)
 {
     const uint32_t *aw = (const uint32_t *)a;

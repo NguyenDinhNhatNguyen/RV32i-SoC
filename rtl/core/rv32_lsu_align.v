@@ -1,30 +1,30 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_lsu_align - xử lý làn byte cho load/store (thuần tổ hợp).
-// Phía yêu cầu (EX): byte enable, dữ liệu ghi theo làn, kiểm tra lệch địa chỉ.
-// Phía phản hồi (WB): lấy byte/half được chọn rồi mở rộng dấu hoặc 0.
-// Cả hai phía dùng mã funct3 của load/store (bit 2 = load không dấu,
-// bit 1:0 = kích thước). Kích thước 2'b11 không bao giờ tới đây vì decoder
-// đã báo illegal.
+// rv32_lsu_align - byte lane handling for load/store (purely combinational).
+// Request side (EX): byte enables, write data per lane, misalignment check.
+// Response side (WB): pick the selected byte/half, then sign- or zero-extend.
+// Both sides use the load/store funct3 code (bit 2 = unsigned load,
+// bits 1:0 = size). Size 2'b11 never gets here because the decoder already
+// flagged it as illegal.
 `include "rv32_defs.vh"
 
 module rv32_lsu_align (
-    // Phía yêu cầu
+    // Request side
     input  wire [1:0]  req_size_i,       // funct3[1:0], RV_MEM_*
     input  wire [1:0]  req_addr_lo_i,    // addr[1:0]
     input  wire [31:0] req_wdata_i,      // rs2
     output reg  [3:0]  req_be_o,
     output reg  [31:0] req_wdata_o,
     output reg         req_misaligned_o,
-    // Phía phản hồi
+    // Response side
     input  wire [2:0]  rsp_funct3_i,
     input  wire [1:0]  rsp_addr_lo_i,
-    input  wire [31:0] rsp_rdata_i,      // word thô từ bus
-    output reg  [31:0] rsp_data_o        // giá trị ghi vào rd
+    input  wire [31:0] rsp_rdata_i,      // Raw word from the bus
+    output reg  [31:0] rsp_data_o        // Value written to rd
 );
 
-    // Dữ liệu ghi được lặp ra mọi làn thay vì dịch: làn được chọn luôn nhận
-    // đúng byte mà không cần bộ dịch, req_be_o báo cho slave làn nào có thật.
+    // Write data is replicated to every lane instead of shifted. The selected lane always
+    // gets the right byte without a shifter, and req_be_o tells the slave which lanes are real.
     always @(*) begin
         req_be_o         = 4'b0000;
         req_wdata_o      = req_wdata_i;
@@ -50,8 +50,8 @@ module rv32_lsu_align (
         endcase
     end
 
-    // Dời byte/half được chọn xuống bit 0 (truy cập luôn thẳng hàng nên
-    // half không bao giờ vắt qua hai word).
+    // Move the selected byte/half down to bit 0 (accesses are always aligned, so
+    // a half never crosses two words).
     wire [31:0] rsp_shifted = rsp_rdata_i >> {rsp_addr_lo_i, 3'b000};
     wire        rsp_signed  = ~rsp_funct3_i[2];
 

@@ -1,6 +1,7 @@
-# riscof_rv32_core.py - plugin RISCOF cho rv32_core chạy trên tb_core (Icarus).
-# Việc dịch và chạy từng test do scripts/arch_run.sh làm (dùng chung với
-# make arch-core-dut). Cấu hình tb_core (M0W1/M1W1) lấy từ khoá tb_cfg trong config.ini.
+# riscof_rv32_core.py - RISCOF plugin for rv32_core running on tb_core (Icarus).
+# Compiling and running each test is done by scripts/arch_run.sh (shared with
+# make arch-core-dut). The tb_core configuration (M0W1/M1W1) comes from the tb_cfg key
+# in config.ini.
 import os
 import logging
 
@@ -34,7 +35,7 @@ class rv32_core(pluginTemplate):
         self.suite_dir = suite
 
     def build(self, isa_yaml, platform_yaml):
-        # tb_core với IMEM 2 MB, dịch một lần cho cả bộ test
+        # tb_core with a 2 MB IMEM, compiled once for the whole suite
         vvp = "tb/core/out/tb_core_arch_{0}.vvp".format(self.tb_cfg)
         utils.shellCommand("make -C {0} {1}".format(ROOT, vvp)).run()
 
@@ -52,7 +53,7 @@ class rv32_core(pluginTemplate):
             if self.target_run:
                 cmd = "{0} {1} {2} {3} {4}".format(run, self.tb_cfg, entry["test_path"], test_dir,
                                                    " ".join(entry["macros"]))
-                # arch_run.sh luôn ghi DUT-rv32_core.signature
+                # arch_run.sh always writes DUT-rv32_core.signature
                 if sig != "DUT-rv32_core.signature":
                     cmd += "; mv DUT-rv32_core.signature " + sig
             else:

@@ -1,16 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
-// sram_2k_macro - mô hình ở nhà của SRAM hard macro trên server, CHỈ DÙNG KHI MÔ PHỎNG.
-// Đúng tên và chân của macro thật (docs/macro_notes.md mục 1): 1024 word x 32 bit,
-// CEN, WEN tích cực thấp, không ghi theo byte. Trên server thay file này bằng
-// ~/PDK_GPDK45/lib/sram_2k_macro.v (không đưa file đó lên repo).
+// sram_2k_macro - home model of the server SRAM hard macro, FOR SIMULATION ONLY.
+// Same name and pins as the real macro (docs/macro_notes.md section 1): 1024 words x 32 bits,
+// CEN and WEN active low, no byte write. On the server replace this file with
+// ~/PDK_GPDK45/lib/sram_2k_macro.v (never commit that file).
 //
-// Hành vi:
-//   - CEN=0, WEN=1: đọc, Q có ở chu kỳ sau (đọc đồng bộ).
-//   - CEN=0, WEN=0: ghi D vào A. Q thành X vì chưa biết macro thật làm gì khi
-//     ghi (macro_notes mục 2). Wrapper không được dùng Q sau chu kỳ ghi.
-//   - CEN=1: Q giữ nguyên.
-// Nội dung khởi tạo 0. Testbench nạp chương trình bằng tham chiếu phân cấp vào mem.
+// Behavior:
+//   - CEN=0, WEN=1: read, Q arrives one cycle later (synchronous read).
+//   - CEN=0, WEN=0: write D to A. Q becomes X because the real macro's behavior during
+//     a write is unknown (macro_notes section 2). The wrapper must not use Q after a write cycle.
+//   - CEN=1: Q holds its value.
+// Contents start at 0. Testbenches load programs into mem by hierarchical reference.
 
 module sram_2k_macro (
     input  wire        CLK,
@@ -38,11 +38,11 @@ module sram_2k_macro (
                 Q      <= mem[A];
             end else begin
                 Q      <= 32'hxxxx_xxxx;
-                $display("LOI: %m WEN = X khi CEN = 0 (t=%0t)", $time);
+                $display("ERROR: %m WEN = X while CEN = 0 (t=%0t)", $time);
             end
         end else if (CEN !== 1'b1) begin
             Q <= 32'hxxxx_xxxx;
-            $display("LOI: %m CEN = X (t=%0t)", $time);
+            $display("ERROR: %m CEN = X (t=%0t)", $time);
         end
     end
 

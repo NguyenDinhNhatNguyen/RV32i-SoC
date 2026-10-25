@@ -1,5 +1,5 @@
-# ISA của rv32_core với ENABLE_M=1 (docs/spec/core.md mục 4.7).
-# Chỉ M-mode, mtvec direct, không hỗ trợ truy cập lệch (trap).
+# rv32_core ISA with ENABLE_M=1 (docs/spec/core.md section 4.7).
+# M-mode only, direct mtvec, no misaligned access support (traps).
 hart_ids: [0]
 hart0:
   ISA: RV32IMZicsr_Zifencei

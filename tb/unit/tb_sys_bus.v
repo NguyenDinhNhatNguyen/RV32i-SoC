@@ -1,18 +1,18 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_sys_bus - kiểm tra sys_bus (RTL-03) với N_MASTER = 1 hoặc 2.
-//   - Mỗi master phát yêu cầu ngẫu nhiên tới IMEM, DMEM, vùng APB (0x2, 0x3, 0x4)
-//     và địa chỉ không ánh xạ, theo đúng luật của master: giữ yêu cầu khi
-//     ready = 0, tối đa 1 yêu cầu đang chờ, được phát mới ngay trong chu kỳ có phản hồi.
-//   - Slave là mô hình bộ nhớ có wait state (ready = 0) và phản hồi trễ ngẫu nhiên.
-//     Mô hình APB trả err ở offset 0xFC.
-//   - So dữ liệu đọc và err với tham chiếu cập nhật lúc yêu cầu được nhận, nên
-//     bắt được sai slave, sai địa chỉ, sai be, sai master nhận phản hồi.
-//   - Phía slave: yêu cầu giữ nguyên khi ready = 0 (luật 1), không có yêu cầu
-//     mới khi còn phản hồi chờ, cả bus tối đa 1 yêu cầu chờ, địa chỉ không ánh
-//     xạ không tới slave nào và nhận err ở chu kỳ ngay sau.
-//   - N_MASTER = 2: cả hai master đều được phục vụ (round-robin).
-// Plusarg: +seed=<n> +n=<số yêu cầu mỗi master> +stall=<% ready = 0> +delay=<trễ tối đa>
+// tb_sys_bus - tests sys_bus (RTL-03) with N_MASTER = 1 or 2.
+//   - Each master issues random requests to IMEM, DMEM, the APB regions (0x2, 0x3, 0x4)
+//     and unmapped addresses, following the master rules: hold the request while
+//     ready = 0, at most 1 request waiting, a new one may go out in the response cycle.
+//   - Slaves are memory models with wait states (ready = 0) and random response delay.
+//     The APB model returns err at offset 0xFC.
+//   - Read data and err are compared with a reference updated at request acceptance, so
+//     a wrong slave, address, be or response master is caught.
+//   - Slave side: the request is held while ready = 0 (rule 1), no new request while a
+//     response is pending, at most 1 request pending on the whole bus, and unmapped
+//     addresses reach no slave and get err in the very next cycle.
+//   - N_MASTER = 2: both masters are served (round-robin).
+// Plusargs: +seed=<n> +n=<requests per master> +stall=<% ready = 0> +delay=<max delay>
 
 module tb_sys_bus;
 
@@ -23,7 +23,7 @@ module tb_sys_bus;
     reg rst_n = 1'b0;
     always #5 clk = ~clk;
 
-    // ---------------------------------------------------------- tín hiệu
+    // ---------------------------------------------------------- signals
     reg  [NM-1:0]    m_req_valid = 0;
     wire [NM-1:0]    m_req_ready;
     reg  [NM*32-1:0] m_addr  = 0;
@@ -36,7 +36,7 @@ module tb_sys_bus;
     wire [31:0] s_addr, s_wdata;
     wire        s_we;
     wire [3:0]  s_be;
-    wire [2:0]  sv;                 // valid của IMEM, DMEM, APB
+    wire [2:0]  sv;                 // Valid for IMEM, DMEM, APB
     wire [2:0]  sr;                 // ready
     wire [2:0]  srv;                // rsp_valid
     wire [31:0] srd0, srd1, srd2;
@@ -94,13 +94,14 @@ module tb_sys_bus;
         end
     endfunction
 
-    // Vị trí trong bộ nhớ của mô hình slave
+    // Position inside the slave model memory
     function [10:0] key(input [31:0] a);
         key = {a[30:28], a[13:12], a[7:2]};
     endfunction
 
-    // Địa chỉ có slave không (khớp bản đồ: IMEM 16 KB, DMEM 16 KB, vùng 0x2-0x4 qua APB)
-    function [1:0] which(input [31:0] a);      // 0 IMEM, 1 DMEM, 2 APB, 3 lỗi
+    // Does the address have a slave (matches the map: IMEM 16 KB, DMEM 16 KB, regions 0x2-0x4
+    // via APB)
+    function [1:0] which(input [31:0] a);      // 0 IMEM, 1 DMEM, 2 APB, 3 error
         begin
             if (a < 32'h0000_4000)                          which = 2'd0;
             else if (a >= 32'h1000_0000 && a < 32'h1000_4000) which = 2'd1;
@@ -109,7 +110,7 @@ module tb_sys_bus;
         end
     endfunction
 
-    // ---------------------------------------------------------- mô hình slave
+    // ---------------------------------------------------------- slave model
     reg  [31:0] smem   [0:3*2048-1];
     reg  [31:0] refm   [0:3*2048-1];
     initial for (i = 0; i < 3*2048; i = i + 1) begin smem[i] = 32'h0; refm[i] = 32'h0; end
@@ -131,7 +132,7 @@ module tb_sys_bus;
     assign srd2    = srv[2] ? sdata[2] : 32'hBAD0_0002;
     assign apb_err = srv[2] & serr[2];
 
-    // Yêu cầu chưa được nhận ở chu kỳ trước, phía slave
+    // Request not accepted last cycle, slave side
     reg  [2:0]  sw_q = 3'b000;
     reg  [31:0] sw_addr_q, sw_wdata_q;
     reg         sw_we_q;
@@ -146,14 +147,14 @@ module tb_sys_bus;
             for (s = 0; s < 3; s = s + 1) begin
                 if (sw_q[s] && (!sv[s] || s_addr !== sw_addr_q || s_we !== sw_we_q ||
                                 s_be !== sw_be_q || (s_we && s_wdata !== sw_wdata_q)))
-                    fail("yeu cau phia slave doi khi ready = 0");
+                    fail("slave-side request changed while ready = 0");
                 if (sv[s] && pend[s] && !srv[s])
-                    fail("slave nhan yeu cau moi khi con phan hoi cho");
+                    fail("slave took a new request while a response was pending");
                 if (sv[s] && which(s_addr) != s)
-                    fail("yeu cau toi sai slave");
+                    fail("request went to the wrong slave");
             end
-            // Phản hồi xong, rồi nhận yêu cầu mới. Trạng thái mô hình gán non-blocking
-            // để DUT ở cùng cạnh lên vẫn thấy giá trị cũ.
+            // Finish the response, then accept a new request. Model state uses non-blocking
+            // assignments so the DUT on the same rising edge still sees the old values.
             for (s = 0; s < 3; s = s + 1) begin
                 pend_n[s] = pend[s];
                 if (srv[s]) pend_n[s] = 1'b0;
@@ -174,7 +175,7 @@ module tb_sys_bus;
             end
             pend <= pend_n;
             n_pend = pend_n[0] + pend_n[1] + pend_n[2];
-            if (n_pend > 1) fail("hon 1 yeu cau dang cho tren bus");
+            if (n_pend > 1) fail("more than 1 request pending on the bus");
             sw_q       <= sv & ~sr;
             sw_addr_q  <= s_addr;
             sw_wdata_q <= s_wdata;
@@ -188,8 +189,8 @@ module tb_sys_bus;
             ready_r[s] = ($unsigned($random(seed)) % 100) >= stall_pct;
 
     // ---------------------------------------------------------- master
-    reg  [NM-1:0] mp      = 0;      // master có yêu cầu đã nhận, chờ phản hồi
-    reg  [NM-1:0] macc_q  = 0;      // yêu cầu của master được nhận ở cạnh lên vừa qua
+    reg  [NM-1:0] mp      = 0;      // Master has an accepted request waiting for a response
+    reg  [NM-1:0] macc_q  = 0;      // The master request was accepted on the last rising edge
     reg  [NM-1:0] exp_err = 0;
     reg  [NM-1:0] exp_rd  = 0;
     reg  [31:0]   exp_data [0:NM-1];
@@ -205,29 +206,29 @@ module tb_sys_bus;
     always @(posedge clk) begin
         if (rst_n) begin
             for (m = 0; m < NM; m = m + 1) begin
-                if (m_rsp_err[m] && !m_rsp_valid[m]) fail("rsp_err khi khong co rsp_valid");
+                if (m_rsp_err[m] && !m_rsp_valid[m]) fail("rsp_err without rsp_valid");
                 if (m_rsp_valid[m]) begin
-                    if (!mp[m]) fail("phan hoi khi master khong cho");
+                    if (!mp[m]) fail("response while the master was not waiting");
                     if (m_rsp_err[m] !== exp_err[m]) begin
                         $display("      master %0d: err %b, mong doi %b", m, m_rsp_err[m], exp_err[m]);
-                        fail("err sai");
+                        fail("wrong err");
                     end
                     if (!exp_err[m] && exp_rd[m] && m_rsp_rdata !== exp_data[m]) begin
-                        $display("      master %0d: doc %h, mong doi %h", m, m_rsp_rdata, exp_data[m]);
-                        fail("du lieu doc sai");
+                        $display("      master %0d: read %h, expected %h", m, m_rsp_rdata, exp_data[m]);
+                        fail("wrong read data");
                     end
                     if (exp_err[m] && m_rsp_rdata !== 32'h0) fail("err nhung rdata khac 0");
                     mp[m] = 1'b0;
                 end
             end
-            // Địa chỉ không ánh xạ phải có phản hồi ở chu kỳ ngay sau
+            // Unmapped addresses must get a response in the very next cycle
             for (m = 0; m < NM; m = m + 1)
                 if (macc_q[m] && exp_unmapped[m] && !m_rsp_valid[m])
-                    fail("dia chi khong anh xa phai tra loi o chu ky sau");
+                    fail("an unmapped address must answer next cycle");
             for (m = 0; m < NM; m = m + 1) begin
                 macc_q[m] = m_req_valid[m] & m_req_ready[m];
                 if (macc_q[m]) begin
-                    if (mp[m]) fail("nhan yeu cau khi master con cho");
+                    if (mp[m]) fail("request accepted while the master was still waiting");
                     if (m_rsp_valid != 0) n_b2b = n_b2b + 1;
                     a = m_addr[m*32 +: 32];
                     w = which(a);
@@ -251,12 +252,12 @@ module tb_sys_bus;
         end
     end
 
-    // Phát yêu cầu ở cạnh xuống. m_rsp_valid lúc này là của chu kỳ hiện tại.
+    // Drive requests on the falling edge. m_rsp_valid here belongs to the current cycle.
     always @(negedge clk) begin
         if (rst_n) begin
             for (m = 0; m < NM; m = m + 1) begin
                 if (m_req_valid[m] && !macc_q[m]) begin
-                    // giữ nguyên (luật 1)
+                    // Hold unchanged (rule 1)
                 end else if (issued[m] < n_req && (!mp[m] || m_rsp_valid[m]) &&
                              ($unsigned($random(seed)) % 5) != 0) begin
                     case ($unsigned($random(seed)) % 12)
@@ -268,7 +269,7 @@ module tb_sys_bus;
                         default: begin
                             case ($unsigned($random(seed)) % 6)
                                 0: a = 32'h0000_4000;
-                                1: a = 32'h0001_0000;       // boot ROM: bus dữ liệu không đọc được
+                                1: a = 32'h0001_0000;       // Boot ROM: data bus cannot read it
                                 2: a = 32'h1000_4000;
                                 3: a = 32'h5000_0000;
                                 4: a = 32'hF000_0000;
@@ -317,12 +318,12 @@ module tb_sys_bus;
         total = 0;
         for (i = 0; i < NM; i = i + 1) begin
             total = total + accepted[i];
-            if (accepted[i] != n_req) fail("master khong duoc phuc vu du");
+            if (accepted[i] != n_req) fail("master not fully served");
         end
         if (n_err_unm == 0 || n_err_apb == 0 || n_rd == 0 || n_wr == 0 || n_b2b == 0)
-            fail("thieu loai giao dich");
+            fail("missing transaction type");
         if (errors == 0)
-            $display("PASS: tb_sys_bus N_MASTER=%0d: %0d yeu cau (%0d doc, %0d ghi, %0d err khong anh xa, %0d err APB), %0d yeu cau nhan trong chu ky phan hoi, %0d chu ky (seed %0d)",
+            $display("PASS: tb_sys_bus N_MASTER=%0d: %0d requests (%0d reads, %0d writes, %0d unmapped err, %0d APB err), %0d requests accepted in a response cycle, %0d cycles (seed %0d)",
                      NM, total, n_rd, n_wr, n_err_unm, n_err_apb, n_b2b, cycle, seed0);
         else
             $display("FAIL: tb_sys_bus N_MASTER=%0d: %0d loi (seed %0d)", NM, errors, seed0);

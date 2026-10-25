@@ -1,20 +1,21 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_core - pipeline RV32I 3 tầng IF / EX / WB, chỉ machine mode.
+// rv32_core - 3-stage RV32I pipeline IF / EX / WB, machine mode only.
 //
-//   IF : if_pc_q đưa thẳng từ flop ra địa chỉ IMEM.
-//   EX : lệnh lấy thẳng từ ngõ ra IMEM đọc đồng bộ (hoặc từ ex_instr_hold_q
-//        khi EX dừng). Giải mã, đọc register file, forward WB->EX, ALU,
-//        so sánh nhánh, phát yêu cầu bus cho load/store.
-//   WB : căn chỉnh dữ liệu load, ghi register file, thực thi CSR, xử lý
-//        trap, MRET, FENCE.I, WFI (chuyển hướng PC từ WB).
+//   IF : if_pc_q drives the IMEM address straight from a flop.
+//   EX : the instruction comes straight from the synchronous IMEM output (or from
+//        ex_instr_hold_q while EX is stalled). Decode, register file read, forward
+//        WB->EX, ALU, branch compare, and bus requests for load/store.
+//   WB : align load data, write the register file, execute CSRs, and handle
+//        traps, MRET, FENCE.I and WFI (PC redirect from WB).
 //
-// Dừng: WB chờ d_rsp_valid_i, hoặc yêu cầu bus của EX chưa được nhận, sẽ
-// giữ IF và EX (và giữ cả WB trong trường hợp đầu).
+// Stalls: WB waiting for d_rsp_valid_i, or an EX bus request not yet accepted,
+// holds IF and EX (and also WB in the first case).
 //
-// Ngoại lệ được phát hiện ở EX (hoặc lỗi bus ở WB), lệnh mang cờ tới WB và
-// nhận trap ở đó. Ngắt được gắn vào lệnh ở EX (mục 4.8). Lệnh RV32M chạy ở
-// rv32_muldiv trong EX (ENABLE_M=1), EX dừng đến khi có kết quả.
+// Exceptions are detected in EX (or as a bus error in WB). The instruction carries
+// the flag to WB and traps there. Interrupts are attached to the instruction in EX
+// (section 4.8). RV32M instructions run in rv32_muldiv inside EX (ENABLE_M=1), and
+// EX stalls until the result is ready.
 `include "rv32_defs.vh"
 
 module rv32_core #(
@@ -25,15 +26,15 @@ module rv32_core #(
     input  wire        clk,
     input  wire        rst_n,
 
-    // Cổng lệnh: địa chỉ được nhận khi if_req_o && if_gnt_i,
-    // lệnh và lỗi có ở chu kỳ sau.
+    // Instruction port: the address is accepted when if_req_o && if_gnt_i,
+    // instruction and error arrive one cycle later.
     output wire        if_req_o,
     output wire [31:0] if_addr_o,
     input  wire        if_gnt_i,
     input  wire [31:0] if_rdata_i,
     input  wire        if_err_i,
 
-    // Kênh yêu cầu bus dữ liệu (docs/spec/core.md mục 5.1)
+    // Data bus request channel (docs/spec/core.md section 5.1)
     output wire        d_req_valid_o,
     input  wire        d_req_ready_i,
     output wire [31:0] d_addr_o,
@@ -41,50 +42,50 @@ module rv32_core #(
     output wire [3:0]  d_be_o,
     output wire [31:0] d_wdata_o,
 
-    // Kênh phản hồi bus dữ liệu
+    // Data bus response channel
     input  wire        d_rsp_valid_i,
     input  wire [31:0] d_rsp_rdata_i,
     input  wire        d_rsp_err_i,
 
-    // Ngắt mức, bộ đếm thời gian, trạng thái ngủ
+    // Level interrupts, timer, sleep state
     input  wire        irq_software_i,
     input  wire        irq_timer_i,
     input  wire        irq_external_i,
     input  wire [63:0] mtime_i,
-    output wire        core_sleep_o     // đang ngủ do WFI, IMEM không được đọc
+    output wire        core_sleep_o     // Sleeping in WFI, IMEM is not read
 );
 
     // =======================================================================
-    // Điều khiển pipeline (khai báo trước vì mọi tầng đều dùng)
+    // Pipeline control (declared first because every stage uses it)
     // =======================================================================
-    wire wb_wait;      // WB giữ load/store đang chờ phản hồi
-    wire ex_wait;      // yêu cầu bus của EX chưa được nhận, hoặc M-unit chưa xong
+    wire wb_wait;      // WB holds a load/store waiting for its response
+    wire ex_wait;      // EX bus request not accepted yet, or the M-unit is busy
     wire pipe_stall = wb_wait | ex_wait;
-    wire ex_go      = ~pipe_stall;   // EX chuyển lệnh (hoặc bubble) sang WB
+    wire ex_go      = ~pipe_stall;   // EX passes its instruction (or a bubble) to WB
 
-    // Chuyển hướng từ WB (trap, MRET, FENCE.I, WFI): huỷ lệnh ở EX, kể cả
-    // yêu cầu bus của nó trong cùng chu kỳ (mục 4.4).
+    // Redirect from WB (trap, MRET, FENCE.I, WFI): kill the instruction in EX, including
+    // its bus request in the same cycle (section 4.4).
     wire        wb_redirect;
     wire [31:0] wb_target;
-    reg         sleep_q;         // ngủ do WFI
+    reg         sleep_q;         // Sleeping in WFI
 
     // =======================================================================
     // IF
     // =======================================================================
     reg  [31:0] if_pc_q;
-    wire        ex_redirect;        // nhánh/nhảy có nhảy rời EX trong chu kỳ này
+    wire        ex_redirect;        // A taken branch or jump leaves EX this cycle
     wire [31:0] ex_target;
 
-    // Luôn lấy lệnh trừ khi ngủ. sleep_q là flop nên chân enable IMEM
-    // không phụ thuộc tổ hợp vào bus hay ngắt.
+    // Always fetch unless sleeping. sleep_q is a flop, so the IMEM enable pin does not
+    // depend combinationally on the bus or on interrupts.
     assign if_req_o     = ~sleep_q;
     assign if_addr_o    = if_pc_q;
     assign core_sleep_o = sleep_q;
 
     wire if_fire = if_req_o & if_gnt_i;
 
-    // Chuyển hướng đi vào flop, không bao giờ đi tổ hợp ra if_addr_o.
-    // Không được cấp quyền thì chu kỳ sau phát lại cùng địa chỉ.
+    // Redirects go into the flop and never combinationally to if_addr_o.
+    // Without a grant, the same address is issued again next cycle.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             if_pc_q <= RESET_PC;
@@ -99,9 +100,9 @@ module rv32_core #(
     // =======================================================================
     // EX
     // =======================================================================
-    reg         ex_fetch_q;       // ngõ ra IMEM đang chứa lệnh thật
+    reg         ex_fetch_q;       // The IMEM output holds a real instruction
     reg  [31:0] ex_pc_q;
-    reg         ex_hold_q;        // lệnh đang nằm trong thanh ghi giữ
+    reg         ex_hold_q;        // The instruction sits in the hold register
     reg  [31:0] ex_instr_hold_q;
     reg         ex_ferr_hold_q;
 
@@ -109,10 +110,10 @@ module rv32_core #(
     wire [31:0] ex_instr = ex_hold_q ? ex_instr_hold_q : if_rdata_i;
     wire        ex_ferr  = ex_hold_q ? ex_ferr_hold_q  : if_err_i;
 
-    // Lệnh đang được lấy khi lệnh nhảy rời EX là PC+4 sai đường, bị huỷ ở
-    // đây (phạt 1 chu kỳ). Lệnh lấy trong lúc dừng cũng bị huỷ vì sau đó
-    // được lấy lại từ if_pc_q không đổi. Chuyển hướng từ WB cũng huỷ lệnh
-    // đang lấy.
+    // The instruction fetched while a jump leaves EX is the wrong-path PC+4 and is
+    // killed here (1-cycle penalty). An instruction fetched during a stall is also
+    // killed because it is fetched again from the unchanged if_pc_q. A redirect from
+    // WB also kills the instruction being fetched.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             ex_fetch_q <= 1'b0;
@@ -127,9 +128,9 @@ module rv32_core #(
             ex_pc_q <= if_pc_q;
     end
 
-    // Ngõ ra IMEM chỉ đúng trong một chu kỳ (if_pc_q đã trỏ tới lệnh kế),
-    // nên lệnh bị dừng được chốt ở chu kỳ dừng đầu tiên và đọc lại từ đây
-    // đến khi hết dừng.
+    // The IMEM output is valid for one cycle only (if_pc_q already points to the next
+    // instruction), so a stalled instruction is latched on the first stall cycle and
+    // read back from here until the stall ends.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             ex_hold_q <= 1'b0;
@@ -147,7 +148,7 @@ module rv32_core #(
         end
     end
 
-    // ---- Giải mã -----------------------------------------------------------
+    // ---- Decode --------------------------------------------------------------
     wire [4:0]  ex_rs1_addr, ex_rs2_addr, ex_rd_addr;
     wire [2:0]  ex_funct3;
     wire [11:0] ex_csr_addr;
@@ -192,7 +193,7 @@ module rv32_core #(
     );
 
     wire [31:0] ex_imm;
-    wire        ex_csr_illegal;   // địa chỉ CSR không tồn tại / ghi CSR chỉ đọc
+    wire        ex_csr_illegal;   // CSR address does not exist, or write to a read-only CSR
 
     rv32_imm_gen u_imm_gen (
         .instr_i    (ex_instr[31:7]),
@@ -200,7 +201,7 @@ module rv32_core #(
         .imm_o      (ex_imm)
     );
 
-    // ---- Register file và forward WB->EX -------------------------------------
+    // ---- Register file and forward WB->EX -------------------------------------
     wire        wb_rf_we;
     reg  [4:0]  wb_rd_q;
     wire [31:0] wb_rd_data;
@@ -220,9 +221,9 @@ module rv32_core #(
         .rs2_data_o (rf_rs2_data)
     );
 
-    // wb_rd_we_q đã bằng 0 khi rd = x0 và khi lệnh mang cờ.
-    // Giá trị WB vẫn được forward khi load đang chờ phản hồi. Lúc đó EX
-    // đang dừng nên không có gì dùng giá trị cũ.
+    // wb_rd_we_q is already 0 when rd = x0 and when the instruction carries a flag.
+    // The WB value is still forwarded while a load waits for its response. EX is
+    // stalled then, so nothing uses the stale value.
     wire wb_fwd_ok   = wb_valid_q & wb_rd_we_q;
     wire ex_fwd_rs1  = wb_fwd_ok & (wb_rd_q == ex_rs1_addr);
     wire ex_fwd_rs2  = wb_fwd_ok & (wb_rd_q == ex_rs2_addr);
@@ -251,8 +252,8 @@ module rv32_core #(
         .result_o (ex_alu_res)
     );
 
-    // ---- Nhánh / nhảy --------------------------------------------------------
-    // Bộ so sánh riêng, chạy song song với bộ cộng đích (D-007).
+    // ---- Branch / jump ---------------------------------------------------------
+    // A dedicated comparator runs in parallel with the target adder (D-007).
     wire ex_eq  = (ex_rs1 == ex_rs2);
     wire ex_lt  = ($signed(ex_rs1) < $signed(ex_rs2));
     wire ex_ltu = (ex_rs1 < ex_rs2);
@@ -271,12 +272,12 @@ module rv32_core #(
         endcase
     end
 
-    // ALU cho pc+imm (branch/JAL, luôn chẵn) hoặc rs1+imm (JALR, bit 0
-    // bị xoá theo đặc tả).
+    // ALU computes pc+imm (branch/JAL, always even) or rs1+imm (JALR, bit 0
+    // cleared as the spec requires).
     wire ex_jump = ex_jal | ex_jalr | (ex_branch & ex_br_cond);
     assign ex_target = {ex_alu_res[31:1], 1'b0};
 
-    // ---- Làn byte load/store -----------------------------------------------------
+    // ---- Load/store byte lanes -------------------------------------------------
     wire [3:0]  ex_be;
     wire [31:0] ex_wdata;
     wire        ex_mem_misaligned;
@@ -297,7 +298,7 @@ module rv32_core #(
         .rsp_data_o       (wb_load_data)
     );
 
-    // ---- Ngoại lệ phát hiện ở EX (ưu tiên theo đặc tả Privileged) -------------
+    // ---- Exceptions detected in EX (priority as in the Privileged spec) -------
     reg       ex_exc;
     reg [4:0] ex_cause;
 
@@ -322,27 +323,27 @@ module rv32_core #(
             ex_exc = 1'b0;
     end
 
-    // ---- Ngắt (mục 4.8) ----------------------------------------------------------
-    // Lệnh hợp lệ ở EX bị đánh dấu "bị ngắt" khi MIE = 1 và có ngắt chờ được
-    // bật: không thực thi, không phát yêu cầu bus, tới WB thì nhận trap với
-    // mepc = PC của nó. Không nhận ngắt khi:
-    //   - WB đang ghi mstatus hoặc mie, để bật/tắt ngắt có hiệu lực đúng từ
-    //     lệnh kế tiếp,
-    //   - yêu cầu bus của lệnh đã hiện ra ở chu kỳ trước mà chưa được nhận
-    //     (luật bus 1 bắt giữ nguyên yêu cầu).
-    // Khi WB chuyển hướng thì lệnh ở EX bị huỷ, nên không cần xét thêm.
+    // ---- Interrupts (section 4.8) ----------------------------------------------
+    // A valid instruction in EX is marked "interrupted" when MIE = 1 and an enabled
+    // interrupt is pending. It does not execute or issue a bus request, and traps in WB
+    // with mepc = its PC. Interrupts are not taken when:
+    //   - WB is writing mstatus or mie, so enabling or disabling takes effect from the
+    //     next instruction,
+    //   - the instruction's bus request appeared last cycle and was not accepted yet
+    //     (bus rule 1 requires the request to stay unchanged).
+    // When WB redirects, the instruction in EX is killed, so nothing else is needed.
     wire       csr_irq_take;
     wire [4:0] csr_irq_cause;
     wire       wb_irq_block;
-    reg        ex_req_wait_q;   // chu kỳ trước yêu cầu bus của EX bị wait state
+    reg        ex_req_wait_q;   // The EX bus request was in a wait state last cycle
 
     wire ex_irq = ex_valid & csr_irq_take & ~wb_irq_block & ~ex_req_wait_q;
     wire ex_trap = ex_exc | ex_irq;
 
-    // ---- Yêu cầu bus dữ liệu ---------------------------------------------------
-    // Chỉ một yêu cầu đang chờ. Yêu cầu mới được phát ngay trong chu kỳ
-    // phản hồi trước về (lúc đó wb_wait = 0). Không phụ thuộc
-    // d_req_ready_i (luật bus 5).
+    // ---- Data bus request ------------------------------------------------------
+    // Only one request is outstanding. A new request is issued in the same cycle the
+    // previous response returns (wb_wait = 0 then). It does not depend on
+    // d_req_ready_i (bus rule 5).
     assign d_req_valid_o = ex_valid & (ex_load | ex_store) & ~ex_trap & ~wb_wait & ~wb_redirect;
     assign d_addr_o      = ex_alu_res;
     assign d_we_o        = ex_store;
@@ -350,9 +351,9 @@ module rv32_core #(
     assign d_wdata_o     = ex_wdata;
 
     // ---- RV32M --------------------------------------------------------------------
-    // M-unit chỉ bắt đầu khi WB không chờ phản hồi, vì lúc đó toán hạng
-    // forward từ load ở WB chưa có. Lệnh bị huỷ hoặc nhận trap thì req = 0
-    // và M-unit quay về rảnh.
+    // The M-unit starts only when WB is not waiting for a response, because a
+    // forwarded operand from a load in WB is not ready yet. If the instruction is
+    // killed or traps, req = 0 and the M-unit returns to idle.
     wire        md_req = ex_valid & ex_md & ~ex_trap & ~wb_redirect;
     wire        md_done;
     wire [31:0] md_result;
@@ -372,14 +373,14 @@ module rv32_core #(
                 .result_o (md_result)
             );
         end else begin : g_no_md
-            // Decoder báo illegal cho lệnh M nên md_req luôn bằng 0
+            // The decoder flags M instructions as illegal, so md_req is always 0
             assign md_done   = 1'b0;
             assign md_result = 32'h0;
         end
     endgenerate
 
-    // Yêu cầu bus đang ở wait state: chỉ phần này khoá ngắt (ex_req_wait_q).
-    // Lệnh M đang chạy vẫn bị ngắt được, phép bị bỏ và chạy lại sau MRET.
+    // A bus request in a wait state is the only thing that blocks interrupts (ex_req_wait_q).
+    // A running M instruction can still be interrupted. It is dropped and rerun after MRET.
     wire ex_bus_wait = d_req_valid_o & ~d_req_ready_i;
 
     assign ex_wait     = ex_bus_wait | (md_req & ~md_done);
@@ -392,12 +393,12 @@ module rv32_core #(
             ex_req_wait_q <= ex_bus_wait;
     end
 
-    // Giá trị mang sang WB (wb_result_q):
-    //   - JAL/JALR: địa chỉ trả về, hoặc đích nhảy khi lệnh bị ngoại lệ
-    //     (làm mtval của instruction misaligned),
-    //   - CSR: toán hạng ghi (rs1 hoặc uimm),
-    //   - RV32M: kết quả M-unit,
-    //   - còn lại: kết quả ALU (cũng là địa chỉ load/store cho mtval).
+    // Value carried to WB (wb_result_q):
+    //   - JAL/JALR: the return address, or the jump target when the instruction
+    //     raises an exception (used as mtval for instruction misaligned),
+    //   - CSR: the write operand (rs1 or uimm),
+    //   - RV32M: the M-unit result,
+    //   - otherwise: the ALU result (also the load/store address for mtval).
     wire [31:0] ex_csr_wdata = ex_funct3[2] ? ex_imm : ex_rs1;
     wire [31:0] ex_result    = ex_csr ? ex_csr_wdata :
                                ex_md  ? md_result :
@@ -409,11 +410,11 @@ module rv32_core #(
     // =======================================================================
     reg  [31:0] wb_pc_q;
     reg  [31:0] wb_instr_q;
-    reg  [31:0] wb_result_q;      // kết quả ALU / địa chỉ trả về / địa chỉ load-store
+    reg  [31:0] wb_result_q;      // ALU result / return address / load-store address
     reg         wb_load_q;
-    reg         wb_mem_q;         // đã phát yêu cầu, đang chờ phản hồi
-    reg         wb_exc_q;         // ngoại lệ từ EX hoặc bị ngắt
-    reg         wb_int_q;         // bị ngắt (mcause bit 31)
+    reg         wb_mem_q;         // Request issued, waiting for the response
+    reg         wb_exc_q;         // Exception from EX or interrupted
+    reg         wb_int_q;         // Interrupted (mcause bit 31)
     reg  [4:0]  wb_cause_q;
     reg         wb_csr_q;
     reg         wb_csr_we_q;
@@ -427,11 +428,11 @@ module rv32_core #(
         else if (ex_go)
             wb_valid_q <= ex_valid & ~wb_redirect;
         else if (!wb_wait)
-            wb_valid_q <= 1'b0;   // WB hoàn thành lệnh trong lúc EX chờ d_req_ready_i
+            wb_valid_q <= 1'b0;   // WB retires while EX waits for d_req_ready_i
     end
 
-    // Chỉ nạp khi có lệnh thật (làm enable cho clock gating, và X từ ngõ ra
-    // IMEM lúc rảnh không lọt vào các flop này).
+    // Load only when a real instruction arrives (acts as the clock gating enable, and
+    // keeps X from the idle IMEM output out of these flops).
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             wb_pc_q      <= 32'h0;
@@ -458,7 +459,7 @@ module rv32_core #(
             wb_rd_we_q   <= ex_rd_we & ~ex_trap;
             wb_result_q  <= ex_result;
             wb_load_q    <= ex_load;
-            wb_mem_q     <= d_req_valid_o;   // ex_go nghĩa là yêu cầu đã được nhận
+            wb_mem_q     <= d_req_valid_o;   // ex_go means the request was accepted
             wb_funct3_q  <= ex_funct3;
             wb_addr_lo_q <= ex_alu_res[1:0];
             wb_exc_q     <= ex_trap;
@@ -474,12 +475,12 @@ module rv32_core #(
 
     assign wb_wait = wb_valid_q & wb_mem_q & ~d_rsp_valid_i;
 
-    // Lệnh rời WB trong chu kỳ này, hoàn thành hoặc nhận trap (tb_core lấy
-    // vết từ đây).
+    // The instruction leaves WB this cycle, retiring or trapping (tb_core traces
+    // from here).
     wire wb_retire = wb_valid_q & ~wb_wait;
 
     // ---- Trap ---------------------------------------------------------------------
-    // Lỗi bus của load/store thành access fault tại WB.
+    // A load/store bus error becomes an access fault in WB.
     wire wb_bus_err = wb_mem_q & d_rsp_err_i;
     wire wb_trap    = wb_retire & (wb_exc_q | wb_bus_err);
 
@@ -493,9 +494,9 @@ module rv32_core #(
             wb_trap_cause = wb_load_q ? `RV_EXC_LOAD_ACCESS : `RV_EXC_STORE_ACCESS;
     end
 
-    // mtval: illegal = mã lệnh, instruction access fault và breakpoint = PC,
-    // lệch địa chỉ và access fault của load/store = địa chỉ (đã ở wb_result_q),
-    // còn lại 0.
+    // mtval: illegal = instruction bits, instruction access fault and breakpoint = PC,
+    // load/store misaligned and access fault = address (already in wb_result_q),
+    // otherwise 0.
     always @(*) begin
         wb_trap_tval = 32'h0;
         if (!wb_int_q) begin
@@ -511,11 +512,11 @@ module rv32_core #(
         end
     end
 
-    // ---- Lệnh tuần tự hoá ở WB ----------------------------------------------------
+    // ---- Serializing instructions in WB ---------------------------------------
     wire wb_ok      = wb_retire & ~wb_trap;
     wire wb_mret    = wb_ok & wb_mret_q;
     wire wb_fence_i = wb_ok & wb_fence_i_q;
-    // ENABLE_WFI_SLEEP = 0: WFI là NOP
+    // ENABLE_WFI_SLEEP = 0: WFI is a NOP
     wire wb_wfi     = wb_ok & wb_wfi_q & (ENABLE_WFI_SLEEP != 0);
     wire wb_csr_wr  = wb_ok & wb_csr_q & wb_csr_we_q;
 
@@ -527,7 +528,7 @@ module rv32_core #(
     assign wb_target   = wb_trap ? csr_mtvec :
                          wb_mret ? csr_mepc  : (wb_pc_q + 32'd4);
 
-    // Chu kỳ WB ghi mstatus hoặc mie thì không nhận ngắt ở EX.
+    // While WB writes mstatus or mie, EX does not take interrupts.
     assign wb_irq_block = wb_valid_q & wb_csr_q & wb_csr_we_q &
                           ((wb_csr_addr == `RV_CSR_MSTATUS) | (wb_csr_addr == `RV_CSR_MIE));
 
@@ -562,10 +563,10 @@ module rv32_core #(
         .irq_cause_o    (csr_irq_cause)
     );
 
-    // ---- WFI ngủ (mục 4.11) ---------------------------------------------------------
-    // WFI ở WB: chuyển hướng tới PC+4 rồi ngủ. Thức khi (mip & mie) != 0,
-    // không phụ thuộc mstatus.MIE. Khi ngủ if_req_o = 0, EX và WB trống nên
-    // mọi flop pipeline giữ nguyên.
+    // ---- WFI sleep (section 4.11) ----------------------------------------------
+    // WFI in WB: redirect to PC+4, then sleep. Wake up when (mip & mie) != 0,
+    // regardless of mstatus.MIE. While asleep if_req_o = 0, and EX and WB are empty,
+    // so every pipeline flop holds its value.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             sleep_q <= 1'b0;
@@ -576,10 +577,10 @@ module rv32_core #(
     end
 
     // ---- Ghi rd ------------------------------------------------------------------------
-    // Giá trị CSR cũ được forward sang EX như kết quả ALU.
+    // The old CSR value is forwarded to EX like an ALU result.
     wire [31:0] wb_nonload_data = wb_csr_q ? csr_rdata : wb_result_q;
     assign wb_rd_data = wb_load_q ? wb_load_data : wb_nonload_data;
-    // Lệnh nhận trap (kể cả load bị lỗi bus) không ghi rd.
+    // An instruction that traps (including a load with a bus error) does not write rd.
     assign wb_rf_we   = wb_retire & wb_rd_we_q & ~wb_trap;
 
 endmodule

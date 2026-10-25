@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_imm_gen - testbench tự kiểm tra cho rv32_imm_gen.
-// Tham chiếu theo chiều ngược: rải giá trị immediate vào word lệnh theo bố cục
-// bit của đặc tả Unprivileged (các bit còn lại ngẫu nhiên), imm_gen phải trả
-// lại đúng giá trị đó.
-// Plusarg: +seed=<n> +n=<số vector ngẫu nhiên mỗi dạng> +timeout=<ns>
+// tb_rv32_imm_gen - self-checking testbench for rv32_imm_gen.
+// Reference in the reverse direction: scatter an immediate value into an instruction word
+// using the bit layout of the Unprivileged spec (other bits random), and imm_gen must return
+// exactly that value.
+// Plusargs: +seed=<n> +n=<random vectors per format> +timeout=<ns>
 `include "rv32_defs.vh"
 
 module tb_rv32_imm_gen;
@@ -22,8 +22,8 @@ module tb_rv32_imm_gen;
     integer n_rand = 20000;
     integer timeout_ns = 10000000;
 
-    // Mã hoá immediate v của dạng f vào các bit lệnh ngẫu nhiên r.
-    // v phải là giá trị hợp lệ của dạng đó.
+    // Encode immediate v of format f into the random instruction bits r.
+    // v must be a legal value for that format.
     function [31:0] encode(input [2:0] f, input [31:0] v, input [31:0] r);
         reg [31:0] w;
         begin
@@ -45,7 +45,7 @@ module tb_rv32_imm_gen;
         end
     endfunction
 
-    // Biến một word ngẫu nhiên thành immediate hợp lệ của dạng f.
+    // Turn a random word into a legal immediate of format f.
     function [31:0] legalize(input [2:0] f, input [31:0] r);
         begin
             case (f)
@@ -83,7 +83,7 @@ module tb_rv32_imm_gen;
         if ($value$plusargs("n=%d", n_rand)) ;
         if ($value$plusargs("timeout=%d", timeout_ns)) ;
 
-        // Biên của từng dạng
+        // Corner values of each format
         apply(`RV_IMM_I, 32'h0000_0000); apply(`RV_IMM_I, 32'hFFFF_FFFF);
         apply(`RV_IMM_I, 32'h0000_07FF); apply(`RV_IMM_I, 32'hFFFF_F800);
         apply(`RV_IMM_S, 32'h0000_0000); apply(`RV_IMM_S, 32'hFFFF_FFFF);
@@ -98,13 +98,13 @@ module tb_rv32_imm_gen;
         apply(`RV_IMM_J, 32'h0000_0800); apply(`RV_IMM_J, 32'h0000_0002);
         apply(`RV_IMM_Z, 32'h0000_0000); apply(`RV_IMM_Z, 32'h0000_001F);
 
-        // Mọi immediate chỉ có một bit 1 (walking one) ở từng dạng
+        // Every immediate with a single 1 bit (walking one) in each format
         for (f = 0; f < 6; f = f + 1)
             for (i = 0; i < 32; i = i + 1)
                 if (legalize(f, 32'h1 << i) == (32'h1 << i))
                     apply(f, 32'h1 << i);
 
-        // Giá trị ngẫu nhiên, các bit xung quanh ngẫu nhiên
+        // Random values with random surrounding bits
         for (f = 0; f < 6; f = f + 1)
             for (i = 0; i < n_rand; i = i + 1)
                 apply(f, legalize(f, $random(seed)));

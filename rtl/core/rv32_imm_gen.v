@@ -1,11 +1,11 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_imm_gen - sinh immediate cho các dạng lệnh RV32I (thuần tổ hợp).
-// Dạng immediate lấy từ rv32_decoder nên không cần các bit opcode ở đây.
+// rv32_imm_gen - immediate generator for RV32I formats (purely combinational).
+// The immediate format comes from rv32_decoder, so no opcode bits are needed here.
 `include "rv32_defs.vh"
 
 module rv32_imm_gen (
-    input  wire [31:7] instr_i,   // không dùng instr[6:0] (opcode)
+    input  wire [31:7] instr_i,   // instr[6:0] (opcode) is not used
     input  wire [2:0]  imm_type_i, // RV_IMM_*
     output reg  [31:0] imm_o
 );

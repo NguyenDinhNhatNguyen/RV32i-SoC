@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# macro_info.sh - tóm tắt SRAM macro trên server trường (đọc LEF, .lib, .v), không chép file.
-# Cách dùng (trong MobaXterm, thư mục repo):
-#   bash scripts/macro_info.sh                      # macro mặc định sram_2k_macro trong ~/PDK_GPDK45
-#   bash scripts/macro_info.sh <tên_macro> <PDK_DIR>
-# Phần cấu trúc (kích thước, chân, lớp kim loại) ghi vào appendix/macro_check/ để đưa lên repo.
-# Phần timing và hành vi mô hình .v chỉ in ra màn hình, không ghi file, vì là dữ liệu của thư viện.
+# macro_info.sh - summarizes the SRAM macro on the school server (reads LEF, .lib, .v), copies nothing.
+# Usage (in MobaXterm, from the repo folder):
+#   bash scripts/macro_info.sh                      # default macro sram_2k_macro in ~/PDK_GPDK45
+#   bash scripts/macro_info.sh <macro_name> <PDK_DIR>
+# The structural part (size, pins, metal layers) goes to appendix/macro_check/ for the repo.
+# Timing and the .v model behavior are printed to screen only, never to a file, because they are library data.
 
 set -u
 MACRO=${1:-sram_2k_macro}
@@ -17,13 +17,13 @@ mkdir -p "$OUTDIR"
 OUT="$OUTDIR/${MACRO}_$(date +%Y%m%d).txt"
 
 for f in "$LEF" "$LIB" "$VMOD"; do
-    [ -f "$f" ] || echo "CANH BAO: khong thay $f"
+    [ -f "$f" ] || echo "WARNING: cannot find $f"
 done
 
 {
-echo "Macro $MACRO, đọc từ $PDK, $(date '+%Y-%m-%d %H:%M')"
+echo "Macro $MACRO, read from $PDK, $(date '+%Y-%m-%d %H:%M')"
 echo
-echo "==== 1. LEF: thông tin chung ===="
+echo "==== 1. LEF: general ===="
 awk -v M="$MACRO" '{sub(/\r$/,"")}
     $1=="MACRO" && $2==M {in_m=1}
     in_m && $1=="END" && $2==M {in_m=0}
@@ -31,8 +31,8 @@ awk -v M="$MACRO" '{sub(/\r$/,"")}
 ' "$LEF"
 
 echo
-echo "==== 2. LEF: chân (gom bus) ===="
-echo "  Tên chân | hướng | loại | lớp kim loại"
+echo "==== 2. LEF: pins (buses grouped) ===="
+echo "  Pin name | direction | use | metal layers"
 awk -v M="$MACRO" '{sub(/\r$/,"")}
     $1=="MACRO" && $2==M {in_m=1}
     in_m && $1=="END" && $2==M {in_m=0}
@@ -46,39 +46,39 @@ awk -v M="$MACRO" '{sub(/\r$/,"")}
 ' "$LEF" | sed 's/ ;//g'
 
 echo
-echo "==== 3. LEF: vùng cấm (OBS) theo lớp ===="
+echo "==== 3. LEF: obstructions (OBS) per layer ===="
 awk -v M="$MACRO" '{sub(/\r$/,"")}
     $1=="MACRO" && $2==M {in_m=1}
     in_m && $1=="END" && $2==M {in_m=0}
     in_m && $1=="OBS" {in_o=1; next}
     in_o && $1=="END" {in_o=0}
     in_o && $1=="LAYER" {c[$2]++}
-    END {for (l in c) printf "  %s: %d hình\n", l, c[l]}
+    END {for (l in c) printf "  %s: %d shapes\n", l, c[l]}
 ' "$LEF" | sed 's/ ;//g' | sort
 
 echo
-echo "==== 4. .lib: corner và diện tích ===="
+echo "==== 4. .lib: corner and area ===="
 grep -m1 -E '^\s*library\s*\(' "$LIB" | sed 's/^/  /'
 grep -m3 -E 'nom_(voltage|temperature|process)' "$LIB" | sed 's/^/  /'
 grep -m2 -E 'operating_conditions\s*\(' "$LIB" | sed 's/^/  /'
 grep -m1 -E '^\s*area\s*:' "$LIB" | sed 's/^/  /'
-echo "  Số file .lib của macro trong PDK (mỗi file thường là 1 corner):"
+echo "  Number of macro .lib files in the PDK (usually 1 corner each):"
 ls "$PDK"/lib/"$MACRO"*.lib 2>/dev/null | sed 's/^/    /'
 
 echo
-echo "==== 5. Đối chiếu nhanh ===="
-echo "  GDS của macro: $(ls "$PDK"/*/"$MACRO"*.gds* "$PDK"/"$MACRO"*.gds* 2>/dev/null | head -1 || true)"
-echo "  CDL/SPICE cho LVS: $(ls "$PDK"/*/"$MACRO"*.cdl "$PDK"/*/"$MACRO"*.sp* 2>/dev/null | head -1 || true)"
+echo "==== 5. Quick checks ===="
+echo "  Macro GDS: $(ls "$PDK"/*/"$MACRO"*.gds* "$PDK"/"$MACRO"*.gds* 2>/dev/null | head -1 || true)"
+echo "  CDL/SPICE for LVS: $(ls "$PDK"/*/"$MACRO"*.cdl "$PDK"/*/"$MACRO"*.sp* 2>/dev/null | head -1 || true)"
 } | tee "$OUT"
 
 echo
-echo "==== 6. .lib: loại cung timing (chỉ in màn hình) ===="
+echo "==== 6. .lib: timing arc types (screen only) ===="
 grep -E 'timing_type|related_pin' "$LIB" | sed -E 's/^\s+//' | sort | uniq -c | sort -rn | head -20
 
 echo
-echo "==== 7. Mô hình .v: hành vi khi ghi và khi CEN=1 (chỉ in màn hình) ===="
+echo "==== 7. .v model: behavior on write and with CEN=1 (screen only) ===="
 grep -n -E 'always|posedge|CEN|WEN|Q\s*<?=' "$VMOD" | head -30
 
 echo
-echo "Đã ghi phần cấu trúc vào: $OUT"
-echo "Dán toàn bộ output màn hình vào chat để phân tích. Chỉ commit file trong appendix/macro_check/."
+echo "Structural part written to: $OUT"
+echo "Paste the whole screen output into the chat for analysis. Commit only the file in appendix/macro_check/."

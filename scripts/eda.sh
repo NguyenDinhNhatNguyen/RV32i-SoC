@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# eda.sh - điều khiển container IIC-OSIC-TOOLS từ Ubuntu (WSL), dùng chung cho cả nhóm.
+# eda.sh - controls the IIC-OSIC-TOOLS container from Ubuntu (WSL), shared by the whole team.
 #
-#   scripts/eda.sh start          bật container (VNC ở http://localhost:8080, mật khẩu abc123)
-#   scripts/eda.sh stop           tắt container
-#   scripts/eda.sh status         xem container có đang chạy không
-#   scripts/eda.sh check          lint + 2 bài mô phỏng accelerator (phải ra 2 dòng PASS)
-#   scripts/eda.sh run <lệnh>     chạy một lệnh bất kỳ trong container, tại thư mục repo
-#   scripts/eda.sh shell          mở shell trong container
-#   scripts/eda.sh wave           make wave-accel rồi mở GTKWave (preset accel.gtkw) trên desktop VNC
+#   scripts/eda.sh start          start the container (VNC at http://localhost:8080, password abc123)
+#   scripts/eda.sh stop           stop the container
+#   scripts/eda.sh status         show whether the container is running
+#   scripts/eda.sh check          lint + 2 accelerator simulations (must print 2 PASS lines)
+#   scripts/eda.sh run <command>  run any command in the container, from the repo folder
+#   scripts/eda.sh shell          open a shell in the container
+#   scripts/eda.sh wave           make wave-accel, then open GTKWave (accel.gtkw preset) on the VNC desktop
 #
-# Biến có thể đổi: IIC_DIR (mặc định ~/eda/IIC-OSIC-TOOLS), DESIGNS (~/eda/designs),
+# Variables you can override: IIC_DIR (default ~/eda/IIC-OSIC-TOOLS), DESIGNS (~/eda/designs),
 # DOCKER_TAG (2026.10), WEBSERVER_PORT (8080).
 set -euo pipefail
 
@@ -24,8 +24,8 @@ repo_workdir() {
     repo=$(cd "$(dirname "$0")/.." && pwd)
     rel=${repo#"$DESIGNS"/}
     if [ "$rel" = "$repo" ]; then
-        echo "LOI: repo phai nam trong $DESIGNS (hien tai: $repo)" >&2
-        echo "     Clone lai: git clone https://github.com/NguyenDinhNhatNguyen/rv32i-soc.git $DESIGNS/rv32i-soc" >&2
+        echo "ERROR: the repo must be inside $DESIGNS (now: $repo)" >&2
+        echo "     Clone again: git clone https://github.com/NguyenDinhNhatNguyen/rv32i-soc.git $DESIGNS/rv32i-soc" >&2
         exit 1
     fi
     echo "/foss/designs/$rel"
@@ -35,7 +35,7 @@ running() { [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null
 
 need_running() {
     if ! running; then
-        echo "Container chua chay. Chay truoc: scripts/eda.sh start" >&2
+        echo "Container is not running. Run first: scripts/eda.sh start" >&2
         exit 1
     fi
     WORKDIR=$(repo_workdir)
@@ -43,15 +43,15 @@ need_running() {
 
 case "${1:-}" in
     start)
-        [ -x "$IIC_DIR/start_vnc.sh" ] || { echo "Khong thay $IIC_DIR/start_vnc.sh (xem docs/setup_home.md muc 3)" >&2; exit 1; }
+        [ -x "$IIC_DIR/start_vnc.sh" ] || { echo "Cannot find $IIC_DIR/start_vnc.sh (see docs/setup_home.md section 3)" >&2; exit 1; }
         (cd "$IIC_DIR" && ./start_vnc.sh)
-        echo "Mo trinh duyet: http://localhost:$WEBSERVER_PORT  (mat khau abc123)"
+        echo "Open a browser at: http://localhost:$WEBSERVER_PORT  (password abc123)"
         ;;
     stop)
         docker stop "$CONTAINER"
         ;;
     status)
-        if running; then echo "Dang chay: $CONTAINER (http://localhost:$WEBSERVER_PORT)"; else echo "Khong chay"; fi
+        if running; then echo "Running: $CONTAINER (http://localhost:$WEBSERVER_PORT)"; else echo "Not running"; fi
         ;;
     check)
         need_running
@@ -60,7 +60,7 @@ case "${1:-}" in
     run)
         need_running
         shift
-        [ $# -gt 0 ] || { echo "Cach dung: scripts/eda.sh run <lenh>" >&2; exit 1; }
+        [ $# -gt 0 ] || { echo "Usage: scripts/eda.sh run <command>" >&2; exit 1; }
         docker exec -w "$WORKDIR" "$CONTAINER" bash -lc "$*"
         ;;
     shell)
@@ -70,9 +70,9 @@ case "${1:-}" in
     wave)
         need_running
         docker exec -w "$WORKDIR" "$CONTAINER" bash -lc "make wave-accel" | tail -1
-        # DISPLAY=:1 là desktop VNC, còn -d để GTKWave chạy nền và không giữ cửa sổ Ubuntu
+        # DISPLAY=:1 is the VNC desktop, and -d runs GTKWave in the background so it does not hold the Ubuntu window
         docker exec -d -e DISPLAY=:1 -w "$WORKDIR" "$CONTAINER" bash -lc "gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw"
-        echo "GTKWave đã mở trên desktop VNC: http://localhost:$WEBSERVER_PORT"
+        echo "GTKWave is open on the VNC desktop: http://localhost:$WEBSERVER_PORT"
         ;;
     *)
         sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'

@@ -1,7 +1,7 @@
-// uart_fifo.v - FIFO dong bo nho cho UART (RTL-10)
-// Do sau = 2**AW. Con tro AW+1 bit (bit cao phan biet day/rong).
-// Bo nho khong reset (chi doc khi khong rong) -> flop nho hon, khong anh huong chuc nang.
-// push khi day va pop khi rong deu bi bo qua; ben ngoai tu bao co loi.
+// uart_fifo.v - small synchronous FIFO for the UART (RTL-10)
+// Depth = 2**AW. Pointers are AW+1 bits (the top bit tells full from empty).
+// The storage has no reset (read only when not empty) -> smaller flops, no functional effect.
+// A push when full and a pop when empty are ignored, the caller reports its own error flag.
 `timescale 1ns/1ps
 module uart_fifo #(
     parameter DW = 8,

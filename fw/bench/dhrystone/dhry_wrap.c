@@ -1,10 +1,11 @@
-// dhry_wrap.c - chạy Dhrystone của riscv-tests trên tb_core.
-// dhrystone_main.c được dịch với -Dmain=dhry_main. File này đo vùng giữa
-// setStats(1) và setStats(0), in CPI và Dhrystone/MHz, rồi tự kiểm kết quả
-// cuối (giá trị "should be" trong mã gốc). Sai thì main trả mã lỗi để tb FAIL.
+// dhry_wrap.c - runs the riscv-tests Dhrystone on tb_core.
+// dhrystone_main.c is compiled with -Dmain=dhry_main. This file measures the region between
+// setStats(1) and setStats(0), prints CPI and Dhrystone/MHz, then checks the final
+// results (the "should be" values in the original code). On a mismatch main returns an
+// error code so the tb FAILs.
 #include "bench.h"
 
-#define NUMBER_OF_RUNS 500   // khớp NUMBER_OF_RUNS trong dhrystone.h
+#define NUMBER_OF_RUNS 500   // Matches NUMBER_OF_RUNS in dhrystone.h
 
 extern int  Int_Glob, Bool_Glob;
 extern char Ch_1_Glob, Ch_2_Glob;
@@ -27,8 +28,8 @@ int main(void)
     dhry_main(0, 0);
 
     bench_report("dhrystone", &stats);
-    // Dhrystone/s ở 1 MHz = số lần chạy * 10^6 / số chu kỳ.
-    // DMIPS/MHz chia thêm 1757 (Dhrystone/s của VAX 11/780).
+    // Dhrystone/s at 1 MHz = runs * 10^6 / cycles.
+    // DMIPS/MHz divides further by 1757 (the VAX 11/780 Dhrystone/s).
     uint32_t dps_mhz = (uint32_t)((uint64_t)NUMBER_OF_RUNS * 1000000u / stats.cycles);
     bench_printf("BENCH dhrystone: runs %u, cycles/run ", NUMBER_OF_RUNS);
     bench_print_ratio(stats.cycles, NUMBER_OF_RUNS);

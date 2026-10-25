@@ -1,21 +1,22 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_apb_bridge - kiểm tra apb_bridge (RTL-03).
-//   - Khe 0, 1, 2, 5, 6: mô hình APB slave có thanh ghi, wait state ngẫu nhiên
-//     (PREADY = 0 từ 0 tới 3 chu kỳ), PSLVERR khi offset >= 0x100.
-//   - Khe 7: accel_apb thật (accelerator Lab 2 qua wrapper).
-//   - Khe 3, 4, 8 tắt bằng APB_EN: phải trả err mà không có giao dịch APB.
-//   - Địa chỉ ngoài mọi khe và truy cập không đủ word: err ngay, không có giao dịch APB.
-//   - Kiểm tra giao thức APB3: PSEL one-hot, SETUP rồi ACCESS, tín hiệu giữ
-//     nguyên khi PREADY = 0, khe tắt không bao giờ được chọn.
-//   - Cuối cùng chạy một phép nhân ma trận 4x4 trên accelerator qua cầu và so với phần mềm.
-// Plusarg: +seed=<n> +n=<số yêu cầu ngẫu nhiên>
+// tb_apb_bridge - tests apb_bridge (RTL-03).
+//   - Slots 0, 1, 2, 5, 6: APB slave model with registers and random wait states
+//     (PREADY = 0 for 0 to 3 cycles), PSLVERR when offset >= 0x100.
+//   - Slot 7: the real accel_apb (Lab 2 accelerator behind the wrapper).
+//   - Slots 3, 4, 8 disabled by APB_EN: must return err with no APB transfer.
+//   - Addresses outside every slot and partial-word accesses: err at once, no APB transfer.
+//   - APB3 protocol checks: one-hot PSEL, SETUP then ACCESS, signals held
+//     while PREADY = 0, a disabled slot is never selected.
+//   - Finally runs a 4x4 matrix multiply on the accelerator through the bridge and compares
+//     it with software.
+// Plusargs: +seed=<n> +n=<number of random requests>
 `include "soc_map.vh"
 
 module tb_apb_bridge;
 
     localparam NS = `SOC_APB_N;
-    // Tắt SPI, I2C, DMA
+    // Disable SPI, I2C, DMA
     localparam [NS-1:0] APB_EN = ~((9'b1 << `SOC_APB_SPI) | (9'b1 << `SOC_APB_I2C) | (9'b1 << `SOC_APB_DMA));
 
     reg clk   = 1'b0;
@@ -71,8 +72,8 @@ module tb_apb_bridge;
         end
     endtask
 
-    // ---------------------------------------------------------- mô hình slave khe thường
-    reg  [31:0] regs [0:NS*64-1];       // 64 word mỗi khe
+    // ---------------------------------------------------------- normal slot slave model
+    reg  [31:0] regs [0:NS*64-1];       // 64 words per slot
     integer     wait_q = 0;
     integer     i;
     initial for (i = 0; i < NS*64; i = i + 1) regs[i] = 32'h0;
@@ -105,7 +106,7 @@ module tb_apb_bridge;
         end
     endgenerate
 
-    // Wait state chọn ở pha SETUP, giảm dần ở pha ACCESS. Ghi khi hoàn thành.
+    // The wait state is chosen in SETUP and counts down in ACCESS. Writes happen on completion.
     integer  sel_idx;
     always @(*) begin
         sel_idx = -1;
@@ -122,22 +123,22 @@ module tb_apb_bridge;
             regs[sel_idx*64 + paddr[7:2]] <= pwdata;
     end
 
-    // ---------------------------------------------------------- kiểm tra giao thức APB
+    // ---------------------------------------------------------- APB protocol checks
     reg [NS-1:0] psel_q    = 0;
     reg          penable_q = 1'b0, pwrite_q = 1'b0;
     reg [11:0]   paddr_q   = 12'h0;
     reg [31:0]   pwdata_q  = 32'h0;
-    reg          done_q    = 1'b0;     // chu kỳ trước kết thúc một giao dịch
-    integer      n_apb     = 0;        // số giao dịch APB đã bắt đầu
+    reg          done_q    = 1'b0;     // A transfer finished last cycle
+    integer      n_apb     = 0;        // APB transfers started
 
     always @(posedge clk) begin
         if (rst_n) begin
             cycle = cycle + 1;
-            if ((psel & (psel - 1'b1)) != 0)          fail("PSEL khong one-hot");
+            if ((psel & (psel - 1'b1)) != 0)          fail("PSEL not one-hot");
             if ((psel & ~APB_EN) != 0)                fail("chon khe dang tat");
-            if (penable && psel == 0)                 fail("PENABLE khi khong co PSEL");
+            if (penable && psel == 0)                 fail("PENABLE without PSEL");
             if (psel_q != 0 && !penable_q && !done_q) begin
-                if (psel !== psel_q || !penable)      fail("SETUP khong chuyen sang ACCESS");
+                if (psel !== psel_q || !penable)      fail("SETUP did not move to ACCESS");
             end
             if (psel_q != 0 && penable_q && !done_q) begin
                 if (psel !== psel_q || paddr !== paddr_q || pwrite !== pwrite_q ||
@@ -155,8 +156,8 @@ module tb_apb_bridge;
     end
 
     // ---------------------------------------------------------- master
-    // Đặt yêu cầu ở cạnh xuống, chờ được nhận, rồi chờ phản hồi.
-    // lat = số chu kỳ từ lúc nhận tới lúc có rsp_valid, trừ 1.
+    // Drive the request on the falling edge, wait for acceptance, then wait for the response.
+    // lat = cycles from acceptance to rsp_valid, minus 1.
     integer lat;
     integer apb_before;
     reg [31:0] rd;
@@ -186,7 +187,7 @@ module tb_apb_bridge;
         end
     endtask
 
-    reg [31:0] shadow [0:NS*64-1];      // giá trị kỳ vọng của thanh ghi mô hình
+    reg [31:0] shadow [0:NS*64-1];      // Expected values of the model registers
     initial for (i = 0; i < NS*64; i = i + 1) shadow[i] = 32'h0;
 
     integer n_ok = 0, n_slverr = 0, n_off = 0, n_dis = 0, n_be = 0, n_info = 0;
@@ -196,7 +197,7 @@ module tb_apb_bridge;
     reg        we, exp_err, exp_apb;
     reg [31:0] exp_rd;
 
-    // Phép nhân ma trận cho accelerator
+    // Matrix multiply for the accelerator
     reg signed [7:0]  ma [0:15];
     reg signed [7:0]  mb [0:15];
     reg signed [31:0] mc;
@@ -214,7 +215,7 @@ module tb_apb_bridge;
             be = 4'hF;
             kind = $unsigned($random(seed)) % 20;
             exp_err = 1'b0; exp_apb = 1'b1; exp_rd = 32'h0;
-            if (kind < 12) begin                        // thanh ghi khe thường
+            if (kind < 12) begin                        // Normal slot register
                 case ($unsigned($random(seed)) % 5)
                     0: slot = 0; 1: slot = 1; 2: slot = 2; 3: slot = 5; default: slot = 6;
                 endcase
@@ -222,15 +223,15 @@ module tb_apb_bridge;
                 if (!we) exp_rd = shadow[slot*64 + a[7:2]];
                 else     shadow[slot*64 + a[7:2]] = w;
                 n_ok = n_ok + 1;
-            end else if (kind < 14) begin               // PSLVERR từ slave
+            end else if (kind < 14) begin               // PSLVERR from the slave
                 case ($unsigned($random(seed)) % 3)
                     0: a = 32'h2000_0100 + (($unsigned($random(seed)) % 960) << 2);
                     1: a = 32'h2000_6F00;
-                    default: begin a = 32'h3000_0400; end        // accel_apb báo lỗi
+                    default: begin a = 32'h3000_0400; end        // accel_apb reports an error
                 endcase
                 exp_err = 1'b1;
                 n_slverr = n_slverr + 1;
-            end else if (kind < 16) begin               // ngoài mọi khe
+            end else if (kind < 16) begin               // Outside every slot
                 case ($unsigned($random(seed)) % 5)
                     0: a = 32'h2000_7000 + ($unsigned($random(seed)) % 9) * 32'h1000;
                     1: a = 32'h2001_0000;
@@ -240,7 +241,7 @@ module tb_apb_bridge;
                 endcase
                 exp_err = 1'b1; exp_apb = 1'b0;
                 n_off = n_off + 1;
-            end else if (kind < 18) begin               // khe tắt
+            end else if (kind < 18) begin               // Disabled slot
                 case ($unsigned($random(seed)) % 3)
                     0: a = `SOC_SPI_BASE;
                     1: a = `SOC_I2C_BASE + 32'h10;
@@ -248,12 +249,12 @@ module tb_apb_bridge;
                 endcase
                 exp_err = 1'b1; exp_apb = 1'b0;
                 n_dis = n_dis + 1;
-            end else if (kind < 19) begin               // không đủ word
+            end else if (kind < 19) begin               // Partial word
                 a  = `SOC_UART_BASE;
                 be = ($unsigned($random(seed)) % 2) ? 4'b0001 : 4'b0011;
                 exp_err = 1'b1; exp_apb = 1'b0;
                 n_be = n_be + 1;
-            end else begin                              // đọc INFO của accelerator
+            end else begin                              // Read accelerator INFO
                 a = `SOC_ACCEL_BASE + 32'h8;
                 we = 1'b0;
                 exp_rd = {8'd4, 8'd8, 8'd20, 8'd10};
@@ -263,21 +264,21 @@ module tb_apb_bridge;
             xfer(we, a, be, w);
             if (er !== exp_err) begin
                 $display("      addr %h we %b be %b: err %b, mong doi %b", a, we, be, er, exp_err);
-                fail("err sai");
+                fail("wrong err");
             end
             if (!exp_err && !we && rd !== exp_rd) begin
-                $display("      addr %h: doc %h, mong doi %h", a, rd, exp_rd);
-                fail("du lieu doc sai");
+                $display("      addr %h: read %h, expected %h", a, rd, exp_rd);
+                fail("wrong read data");
             end
             if ((we || exp_err) && rd !== 32'h0)
-                fail("rdata khac 0 khi ghi hoac loi");
+                fail("rdata not 0 on write or error");
             if (!exp_apb && (n_apb != apb_before || lat != 0))
-                fail("loi ngay phai tra o chu ky sau, khong co giao dich APB");
+                fail("an immediate error must answer next cycle with no APB transfer");
             if (exp_apb && (n_apb != apb_before + 1 || lat < 2))
-                fail("giao dich APB sai so luong hoac qua nhanh");
+                fail("wrong APB transfer count or too fast");
         end
 
-        // ------------------------------------------- nhân ma trận trên accelerator
+        // ------------------------------------------- matrix multiply on the accelerator
         for (k = 0; k < 16; k = k + 1) begin
             ma[k] = $random(seed);
             mb[k] = $random(seed);
@@ -293,22 +294,22 @@ module tb_apb_bridge;
             xfer(1'b0, `SOC_ACCEL_BASE + 32'h4, 4'hF, 32'h0);       // STATUS
             k = k + 1;
         end
-        if (!rd[1]) fail("accelerator khong bao DONE");
+        if (!rd[1]) fail("accelerator did not report DONE");
         for (k = 0; k < 16; k = k + 1) begin
             mc = ma[(k/4)*4+0] * mb[0*4 + k%4] + ma[(k/4)*4+1] * mb[1*4 + k%4] +
                  ma[(k/4)*4+2] * mb[2*4 + k%4] + ma[(k/4)*4+3] * mb[3*4 + k%4];
             xfer(1'b0, `SOC_ACCEL_BASE + 32'h300 + 4*k, 4'hF, 32'h0);
             if (er || rd !== mc) begin
                 $display("      C[%0d] = %h, mong doi %h", k, rd, mc);
-                fail("ket qua accelerator sai");
+                fail("wrong accelerator result");
             end
         end
         xfer(1'b1, `SOC_ACCEL_BASE + 32'h300, 4'hF, 32'h0);         // ghi C_BUF: PSLVERR
-        if (!er) fail("ghi C_BUF phai loi");
+        if (!er) fail("a C_BUF write must fail");
 
         repeat (3) @(posedge clk);
         if (errors == 0)
-            $display("PASS: tb_apb_bridge: %0d doc/ghi khe thuong, %0d PSLVERR, %0d ngoai khe, %0d khe tat, %0d khong du word, %0d doc INFO, nhan ma tran tren accel_apb dung (seed %0d)",
+            $display("PASS: tb_apb_bridge: %0d normal slot reads/writes, %0d PSLVERR, %0d outside slots, %0d disabled slot, %0d partial word, %0d INFO reads, matrix multiply on accel_apb correct (seed %0d)",
                      n_ok, n_slverr, n_off, n_dis, n_be, n_info, seed0);
         else
             $display("FAIL: tb_apb_bridge: %0d loi (seed %0d)", errors, seed0);

@@ -1,16 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_muldiv - testbench tự kiểm tra cho rv32_muldiv.
-// Mô hình tham chiếu dùng phép nhân/chia 64 bit có dấu của Verilog (khác
-// cách RTL tách tích riêng và chia từng bit), trường hợp đặc biệt viết theo
-// bảng của đặc tả (chia cho 0, tràn -2^31 / -1).
-// Kiểm tra:
-//   - mọi cặp toán hạng biên x 8 phép, rồi toán hạng ngẫu nhiên có thiên vị,
-//   - số chu kỳ: MUL* có kết quả ở chu kỳ thứ 2, DIV/REM ở chu kỳ thứ 34
-//     tính từ chu kỳ bắt đầu,
-//   - hold_i = 1 thì chưa bắt đầu, go_i = 0 thì kết quả giữ nguyên,
-//   - req_i hạ giữa chừng thì phép bị bỏ, phép sau vẫn đúng.
-// Plusarg: +seed=<n> +n=<số phép ngẫu nhiên>
+// tb_rv32_muldiv - self-checking testbench for rv32_muldiv.
+// The reference model uses Verilog 64-bit signed multiply/divide (unlike the RTL,
+// which splits partial products and divides bit by bit), with special cases written
+// from the spec table (divide by 0, -2^31 / -1 overflow).
+// Checks:
+//   - Every pair of corner operands x 8 ops, then biased random operands,
+//   - Cycle count: MUL* has the result in cycle 2, DIV/REM in cycle 34,
+//     counted from the start cycle,
+//   - With hold_i = 1 nothing starts, with go_i = 0 the result is held,
+//   - If req_i drops midway the op is dropped, and the next op is still correct.
+// Plusargs: +seed=<n> +n=<random ops>
 
 module tb_rv32_muldiv;
 
@@ -39,11 +39,11 @@ module tb_rv32_muldiv;
     integer n_rand = 20000;
     integer i, j, k;
 
-    // ---- Mô hình tham chiếu ----------------------------------------------------------
+    // ---- Reference model --------------------------------------------------------------
     function [31:0] ref_md(input [2:0] f, input [31:0] x, input [31:0] y);
         reg signed [63:0] sx, sy;
         reg        [63:0] ux, uy, p;
-        reg signed [31:0] sq, sr;   // tính riêng: trong biểu thức ?: có hằng không dấu thì / và % thành không dấu
+        reg signed [31:0] sq, sr;   // Separate, an unsigned constant in ?: makes / and % unsigned
         begin
             sq = $signed(x) / $signed(y);
             sr = $signed(x) % $signed(y);
@@ -68,14 +68,14 @@ module tb_rv32_muldiv;
         end
     endfunction
 
-    // Chạy một phép: bắt đầu ở chu kỳ đầu, đếm chu kỳ tới done, giữ go = 0
-    // thêm vài chu kỳ (kết quả phải giữ), rồi go = 1.
+    // Run one op: start in the first cycle, count cycles until done, keep go = 0
+    // for a few more cycles (the result must hold), then go = 1.
     task run_op(input [2:0] f, input [31:0] x, input [31:0] y, input integer extra_hold);
         integer cyc, lat;
         reg [31:0] exp, first;
         begin
             @(negedge clk);
-            // hold = 1 ít nhất một cạnh clock để biết chắc chu kỳ bắt đầu
+            // hold = 1 for at least one clock edge to pin down the start cycle
             op = f; a = x; b = y; req = 1'b1; go = 1'b0; hold = 1'b1;
             repeat (extra_hold) begin
                 @(posedge clk); #1;
@@ -106,7 +106,7 @@ module tb_rv32_muldiv;
                 if (errors <= 20)
                     $display("FAIL: op %0d a=%h b=%h got=%h exp=%h", f, x, y, result, exp);
             end
-            // go = 0 thêm 2 chu kỳ: kết quả giữ nguyên
+            // go = 0 for 2 more cycles: the result is held
             first = result;
             @(posedge clk); #1;
             @(posedge clk); #1;
@@ -124,7 +124,7 @@ module tb_rv32_muldiv;
         end
     endtask
 
-    // Phép bị huỷ sau k chu kỳ
+    // Op killed after k cycles
     task abort_op(input [2:0] f, input [31:0] x, input [31:0] y, input integer cyc);
         begin
             @(negedge clk);
@@ -172,7 +172,7 @@ module tb_rv32_muldiv;
 
         for (i = 0; i < n_rand; i = i + 1) begin
             k = $unsigned($random(seed)) % 8;
-            // Thỉnh thoảng có hold trước khi bắt đầu, hoặc một phép bị huỷ chen trước
+            // Sometimes hold before starting, or a killed op goes first
             if (($unsigned($random(seed)) % 8) == 0)
                 abort_op($unsigned($random(seed)) % 8, $random(seed), $random(seed),
                          1 + $unsigned($random(seed)) % 36);

@@ -1,5 +1,5 @@
-// tb_accel_apb.v - kiểm tra accelerator qua giao diện APB3.
-// Chạy: make sim-accel-apb. In "PASS" khi đúng.
+// tb_accel_apb.v - tests the accelerator through the APB3 interface.
+// Run: make sim-accel-apb. Prints "PASS" when correct.
 `timescale 1ns/1ps
 module tb_accel_apb;
     localparam N = 4;
@@ -21,7 +21,7 @@ module tb_accel_apb;
     integer errors = 0;
     reg err_seen;
 
-    // Giao dịch APB chuẩn: pha setup 1 chu kỳ, pha access tới khi pready
+    // Standard APB transfer: 1-cycle setup phase, access phase until pready
     task apb(input w, input [11:0] a, input [31:0] d, output [31:0] r);
     begin
         @(negedge clk); psel = 1; penable = 0; pwrite = w; paddr = a; pwdata = d;
@@ -62,16 +62,16 @@ module tb_accel_apb;
                 if (r !== G[i]) begin errors = errors + 1;
                     $display("ERROR test %0d C[%0d] = %0d, mong doi %0d", t, i, $signed(r), G[i]); end
             end
-            apb(1, 12'h004, 32'h2, r);                 // xoá DONE
+            apb(1, 12'h004, 32'h2, r);                 // Clear DONE
         end
 
-        // Truy cập vùng không định nghĩa phải trả PSLVERR
-        apb(0, 12'h400, 0, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: 0x400 khong bao loi"); end
-        apb(0, 12'h00C, 0, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: 0x00C khong bao loi"); end
-        apb(1, 12'h300, 1, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: ghi C_BUF khong bao loi"); end
-        apb(0, 12'h008, 0, r); if (err_seen)  begin errors = errors + 1; $display("ERROR: INFO bao loi sai"); end
+        // Accesses to undefined addresses must return PSLVERR
+        apb(0, 12'h400, 0, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: 0x400 gave no error"); end
+        apb(0, 12'h00C, 0, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: 0x00C gave no error"); end
+        apb(1, 12'h300, 1, r); if (!err_seen) begin errors = errors + 1; $display("ERROR: C_BUF write gave no error"); end
+        apb(0, 12'h008, 0, r); if (err_seen)  begin errors = errors + 1; $display("ERROR: INFO gave a wrong error"); end
 
-        if (errors == 0) $display("PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung");
+        if (errors == 0) $display("PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct");
         else             $display("FAIL: %0d loi", errors);
         $finish;
     end

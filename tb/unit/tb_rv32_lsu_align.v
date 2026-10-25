@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_lsu_align - testbench tự kiểm tra cho rv32_lsu_align.
-// Mô hình tham chiếu làm việc trên mảng byte (không dịch hay lặp làn như RTL):
-//   yêu cầu : lệch khi và chỉ khi addr % size != 0. Nếu không lệch thì byte
-//             enable phủ đúng các byte [addr, addr+size) và mỗi làn được bật
-//             mang byte thứ (làn - addr) của rs2. Làn không bật thì bỏ qua.
-//   phản hồi: các byte [addr, addr+size) của word trên bus, mở rộng dấu hoặc 0.
-// Mọi kích thước x offset với dữ liệu biên (bit dấu 0 và 1 ở từng byte),
-// sau đó dữ liệu ngẫu nhiên.
-// Plusarg: +seed=<n> +n=<số vector ngẫu nhiên> +timeout=<ns>
+// tb_rv32_lsu_align - self-checking testbench for rv32_lsu_align.
+// The reference model works on a byte array (no lane shift or replication as in the RTL):
+//   request : misaligned if and only if addr % size != 0. When aligned, the byte
+//             enables cover exactly bytes [addr, addr+size) and each enabled lane
+//             carries byte (lane - addr) of rs2. Disabled lanes are ignored.
+//   response: bytes [addr, addr+size) of the bus word, sign- or zero-extended.
+// Every size x offset with corner data (sign bit 0 and 1 in each byte),
+// then random data.
+// Plusargs: +seed=<n> +n=<random vectors> +timeout=<ns>
 `include "rv32_defs.vh"
 
 module tb_rv32_lsu_align;
@@ -58,7 +58,7 @@ module tb_rv32_lsu_align;
         end
     endtask
 
-    // Phía yêu cầu cho (kích thước, offset, dữ liệu)
+    // Request side for (size, offset, data)
     task check_req(input [1:0] t_size, input [1:0] t_off, input [31:0] t_data);
         integer n, b;
         reg     exp_mis;
@@ -68,7 +68,7 @@ module tb_rv32_lsu_align;
             #1;
             checks = checks + 1;
             if (t_size == 2'b11) begin
-                // Không bao giờ được phát (decoder báo illegal), không được bật làn nào
+                // Never issued (the decoder flags illegal), no lane may be enabled
                 if (req_be !== 4'b0000 || req_misaligned !== 1'b0)
                     fail_msg("req size 11", {27'b0, req_misaligned, req_be}, 32'h0);
             end else begin
@@ -90,7 +90,7 @@ module tb_rv32_lsu_align;
         end
     endtask
 
-    // Phía phản hồi cho (funct3, offset, word trên bus), chỉ truy cập thẳng hàng
+    // Response side for (funct3, offset, bus word), aligned accesses only
     task check_rsp(input [2:0] t_f3, input [1:0] t_off, input [31:0] t_word);
         integer n, b;
         reg [31:0] exp;
@@ -111,7 +111,7 @@ module tb_rv32_lsu_align;
         end
     endtask
 
-    // Các funct3 của load mà decoder chấp nhận
+    // Load funct3 values the decoder accepts
     function [2:0] ld_f3(input integer k);
         case (k)
             0: ld_f3 = `RV_F3_LB;
@@ -138,7 +138,7 @@ module tb_rv32_lsu_align;
         edge_data[4] = 32'h8000807F;
         edge_data[5] = 32'h01FF80FE;
 
-        // Quét đủ kích thước x offset với dữ liệu biên
+        // Sweep every size x offset with corner data
         for (i = 0; i < 6; i = i + 1)
             for (sz = 0; sz < 4; sz = sz + 1)
                 for (off = 0; off < 4; off = off + 1)
@@ -150,7 +150,7 @@ module tb_rv32_lsu_align;
                     if (off % size_bytes(ld_f3(f)) == 0)
                         check_rsp(ld_f3(f), off, edge_data[i]);
 
-        // Ngẫu nhiên
+        // Random
         for (i = 0; i < n_rand; i = i + 1) begin
             check_req($random(seed), $random(seed), $random(seed));
             f   = $unsigned($random(seed)) % 5;

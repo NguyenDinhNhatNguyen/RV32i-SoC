@@ -1,15 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
-// boot_rom - boot ROM 1 KB (256 word) bằng logic tổng hợp, ở 0x0001_0000 (RTL-08). Chủ: Phát.
-// Reset vector của rv32_core (RESET_PC mặc định). Chỉ cổng lệnh đọc được.
-// Đọc đồng bộ giống SRAM: q có ở chu kỳ sau en, để imem_port trả lệnh cùng timing.
-// Nội dung nằm ở boot_rom_init.vh (bản base chỉ nhảy về IMEM).
+// boot_rom - 1 KB (256-word) boot ROM in synthesized logic at 0x0001_0000 (RTL-08). Owner: Phat.
+// rv32_core reset vector (default RESET_PC). Only the fetch port can read it.
+// Synchronous read like the SRAM: q arrives the cycle after en, so imem_port returns
+// instructions with the same timing.
+// The contents live in boot_rom_init.vh (the base version only jumps to IMEM).
 
 module boot_rom (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        en,
-    input  wire [7:0]  addr,            // địa chỉ word
+    input  wire [7:0]  addr,            // Word address
     output reg  [31:0] q
 );
 

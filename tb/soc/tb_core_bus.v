@@ -1,33 +1,33 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_core_bus - rv32_core chạy trên bus và bộ nhớ thật của SoC (RTL-03, RTL-08):
-// sys_bus, imem_port (IMEM 4 macro + boot ROM), sram_wrap (DMEM 4 macro),
-// apb_bridge với UART giả trong tb (khe 1) và accel_apb (khe 7).
-// Chưa phải soc_top (RTL-09): chưa có bộ đồng bộ reset, Timer, GPIO, bộ gom ngắt.
+// tb_core_bus - rv32_core on the real SoC bus and memories (RTL-03, RTL-08):
+// sys_bus, imem_port (IMEM 4 macros + boot ROM), sram_wrap (DMEM 4 macros),
+// apb_bridge with a fake UART in the tb (slot 1) and accel_apb (slot 7).
+// Not soc_top yet (RTL-09): no reset synchronizer, Timer, GPIO or interrupt controller.
 //
-// Core khởi động ở RESET_PC mặc định 0x0001_0000, boot ROM nhảy về IMEM.
-// Ảnh bộ nhớ (elf2hex.py, 16 KB mỗi vùng) nạp thẳng vào mô hình sram_2k_macro
-// bằng tham chiếu phân cấp. Kết luận giống tb_core:
-//   - ghi vào tohost: 1 = PASS, giá trị lẻ khác = FAIL, mã lỗi = giá trị >> 1
-//   - trap khi mtvec vẫn bằng 0: FAIL
-//   - quá thời gian: FAIL
-// UART giả: ghi word vào offset 0 của khe UART thì in ký tự ở byte thấp.
-// Có 1 chu kỳ wait state (PREADY = 0) để thử đường APB có wait state.
+// The core boots at the default RESET_PC 0x0001_0000, and the boot ROM jumps to IMEM.
+// Memory images (elf2hex.py, 16 KB per region) load straight into the sram_2k_macro model
+// by hierarchical reference. Result rules, as in tb_core:
+//   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1
+//   - A trap while mtvec is still 0: FAIL
+//   - Timeout: FAIL
+// Fake UART: a word write to offset 0 of the UART slot prints the low byte as a character.
+// It has 1 wait state cycle (PREADY = 0) to exercise the APB path with wait states.
 //
-// Plusarg: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<tên> +timeout=<chu kỳ>
+// Plusargs: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<name> +timeout=<cycles>
 `include "soc_map.vh"
 
 module tb_core_bus;
 
     parameter ENABLE_M         = 1;
     parameter ENABLE_WFI_SLEEP = 1;
-    localparam BANK_W          = 2;        // 16 KB mỗi vùng, khớp core_tb_map.vh và link.ld
+    localparam BANK_W          = 2;        // 16 KB per region, matches core_tb_map.vh and link.ld
     localparam WORDS           = 1024 << BANK_W;
 
     reg clk   = 1'b0;
     reg rst_n = 1'b1;
     always #5 clk = ~clk;
-    initial #1 rst_n = 1'b0;    // cạnh xuống để reset bất đồng bộ tác dụng trước cạnh clock đầu tiên
+    initial #1 rst_n = 1'b0;    // Async reset acts before the first clock edge
 
     // ---------------------------------------------------------- core
     wire        if_req, if_gnt, if_err;
@@ -193,7 +193,7 @@ module tb_core_bus;
         .irq     (accel_irq)
     );
 
-    // UART giả: 1 chu kỳ wait state, đọc ra 0
+    // Fake UART: 1 wait state cycle, reads return 0
     reg uart_wait_q = 1'b0;
     always @(posedge clk)
         uart_wait_q <= psel[`SOC_APB_UART] & ~penable;
@@ -214,7 +214,7 @@ module tb_core_bus;
             $fflush;
         end
 
-    // ---------------------------------------------------------- nạp bộ nhớ
+    // ---------------------------------------------------------- memory load
     reg [31:0] img_i [0:WORDS-1];
     reg [31:0] img_d [0:WORDS-1];
     reg [8*512-1:0] file;
@@ -229,7 +229,7 @@ module tb_core_bus;
         if ($value$plusargs("dmem=%s", file)) $readmemh(file, img_d);
     end
 
-    // Mô hình macro tự xoá về 0 ở thời điểm 0, nên chép sau đó
+    // The macro model clears itself at time 0, so copy after that
     genvar gb;
     generate
         for (gb = 0; gb < (1 << BANK_W); gb = gb + 1) begin : g_load
@@ -244,7 +244,7 @@ module tb_core_bus;
         end
     endgenerate
 
-    // ---------------------------------------------------------- kết thúc
+    // ---------------------------------------------------------- end of test
     integer     cycle   = 0;
     integer     instret = 0;
     integer     timeout = 200000;
@@ -259,7 +259,7 @@ module tb_core_bus;
             if (!done) begin
                 done = 1'b1;
                 if (pass)
-                    $display("PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, IMEM data %0d, APB %0d, ghi byte/half %0d)",
+                    $display("PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, IMEM data %0d, APB %0d, byte/half writes %0d)",
                              test_name, cycle, instret, (instret > 0) ? (1.0 * cycle / instret) : 0.0,
                              n_imem_data, n_apb, n_part);
                 else
@@ -288,7 +288,7 @@ module tb_core_bus;
             if (d_req_valid && d_req_ready && d_we && d_be != 4'hF) n_part = n_part + 1;
             if (d_req_valid && d_req_ready && d_we && d_addr == tohost) begin
                 if (n_boot == 0)
-                    end_test(1'b0, "khong chay qua boot ROM");
+                    end_test(1'b0, "did not get past the boot ROM");
                 else if (d_wdata == 32'd1)
                     end_test(1'b1, "");
                 else begin
@@ -304,7 +304,7 @@ module tb_core_bus;
         if ($value$plusargs("tohost=%h", tohost)) ;
         if ($value$plusargs("test=%s", test_name)) ;
         if (tohost == 32'hFFFF_FFFF)
-            $display("WARNING: khong co +tohost=, test chi ket thuc bang timeout");
+            $display("WARNING: no +tohost=, the test can only end by timeout");
         repeat (5) @(posedge clk);
         @(negedge clk) rst_n = 1'b1;
     end

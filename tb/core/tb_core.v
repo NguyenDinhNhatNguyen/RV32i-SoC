@@ -1,36 +1,36 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_core - rv32_core chạy riêng với IMEM/DMEM (sram_1rw_model) và một bus
-// dữ liệu hành vi. Tự kết luận (docs/spec/core.md mục 10.2):
-//   - ghi vào tohost: 1 = PASS, giá trị lẻ khác = FAIL, mã lỗi = giá trị >> 1
-//   - trap khi mtvec vẫn bằng 0 (giá trị reset, chương trình chưa cài trình
-//     xử lý trap): FAIL. Test có trình xử lý thì trap là hợp lệ.
-//   - sai giao thức bus, X trên bus hoặc rd, core làm việc khi đang ngủ,
-//     quá thời gian: FAIL
-// Giải mã bus dữ liệu: IMEM (dùng chung với cổng lệnh, dữ liệu được ưu tiên
-// giống imem_port), DMEM, UART DATA (in ký tự ngay), khối điều khiển của tb
-// (CORE_TB_CTRL_BASE), còn lại trả err.
+// tb_core - rv32_core alone with IMEM/DMEM (sram_1rw_model) and a behavioral data
+// bus. It decides the result itself (docs/spec/core.md section 10.2):
+//   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1
+//   - A trap while mtvec is still 0 (reset value, the program installed no trap
+//     handler): FAIL. With a handler installed, traps are legal.
+//   - Bus protocol violations, X on the bus or on rd, core activity while asleep,
+//     timeout: FAIL
+// Data bus decode: IMEM (shared with the fetch port, data has priority as in
+// imem_port), DMEM, UART DATA (characters printed at once), the tb control block
+// (CORE_TB_CTRL_BASE), and err for everything else.
 //
-// Khối điều khiển của tb (chỉ có trong tb_core, offset theo byte):
-//   0x0 IRQ   ghi: bit 3/7/11 = mức irq_software/timer/external mong muốn,
-//             bit 31:16 = số chu kỳ chờ trước khi áp dụng. Đọc: mức hiện tại.
-//   0x4 SLEEP đọc: tổng số chu kỳ core_sleep_o = 1 từ lúc reset.
-//   0x8 CFG   đọc: bit 0 = ENABLE_M, bit 1 = ENABLE_WFI_SLEEP.
-// mtime_i tăng 1 mỗi chu kỳ.
+// tb control block (tb_core only, byte offsets):
+//   0x0 IRQ   write: bits 3/7/11 = wanted level of irq_software/timer/external,
+//             bits 31:16 = cycles to wait before applying. Read: current level.
+//   0x4 SLEEP read: total cycles with core_sleep_o = 1 since reset.
+//   0x8 CFG   read: bit 0 = ENABLE_M, bit 1 = ENABLE_WFI_SLEEP.
+// mtime_i counts up by 1 every cycle.
 //
-// Plusarg:
-//   +imem=<hex> +dmem=<hex>   ảnh bộ nhớ (sram_1rw_model đọc)
-//   +tohost=<hex>             địa chỉ tohost (elf2hex.py in ra)
-//   +test=<tên>               tên in ở dòng PASS/FAIL
-//   +timeout=<chu kỳ>         mặc định 200000
-//   +seed=<n>                 seed ngẫu nhiên cho việc chèn stall
-//   +if_stall=<pct>           % chu kỳ cổng lệnh không được cấp quyền
-//   +d_stall=<pct>            % chu kỳ d_req_ready = 0 (wait state)
-//   +rsp_delay=<max>          phản hồi trễ thêm ngẫu nhiên 0..max chu kỳ
-//   +strict_timing            kiểm tra đúng số bubble (chỉ khi không stall)
-//   +trace                    in vết gần định dạng commit log của Spike
-//   +signature=<file>         khi PASS, ghi vùng [+sig_begin, +sig_end) (hex) ra file,
-//                             mỗi dòng một word, theo định dạng signature của riscv-arch-test
+// Plusargs:
+//   +imem=<hex> +dmem=<hex>   Memory images (read by sram_1rw_model)
+//   +tohost=<hex>             tohost address (printed by elf2hex.py)
+//   +test=<name>              Name printed on the PASS/FAIL line
+//   +timeout=<cycles>         Default 200000
+//   +seed=<n>                 Random seed for stall injection
+//   +if_stall=<pct>           % of cycles the fetch port gets no grant
+//   +d_stall=<pct>            % of cycles with d_req_ready = 0 (wait state)
+//   +rsp_delay=<max>          Extra random response delay of 0..max cycles
+//   +strict_timing            Check the exact bubble count (only without stalls)
+//   +trace                    Print a trace close to the Spike commit log format
+//   +signature=<file>         On PASS, write [+sig_begin, +sig_end) (hex) to a file,
+//                             one word per line, in the riscv-arch-test signature format
 `include "core_tb_map.vh"
 `include "rv32_defs.vh"
 
@@ -48,7 +48,7 @@ module tb_core;
     localparam [31:0] UART_DATA_ADDR = `CORE_TB_UART_DATA;
     localparam [31:0] CTRL_BASE      = `CORE_TB_CTRL_BASE;
 
-    // Nguồn phản hồi của yêu cầu dữ liệu đang chờ
+    // Response source of the pending data request
     localparam [2:0] SRC_IMEM = 3'd0, SRC_DMEM = 3'd1, SRC_UART = 3'd2, SRC_ERR = 3'd3,
                      SRC_CTRL = 3'd4;
 
@@ -96,8 +96,8 @@ module tb_core;
         .core_sleep_o  (core_sleep)
     );
 
-    // ------------------------------------------------------- cấu hình
-    integer     sleep_cycles  = 0;      // số chu kỳ core_sleep_o = 1
+    // ------------------------------------------------------- configuration
+    integer     sleep_cycles  = 0;      // Cycles with core_sleep_o = 1
     integer     seed          = 1;
     integer     seed0;
     integer     timeout       = 200000;
@@ -109,7 +109,7 @@ module tb_core;
     reg  [31:0] tohost        = 32'hFFFF_FFFF;
     reg  [8*64-1:0] test_name = "core";
 
-    // Quyết định stall ngẫu nhiên, rút lại ở mỗi cạnh xuống
+    // Random stall decisions, drawn again on every falling edge
     reg     if_stall_now  = 1'b0;
     reg     d_stall_now   = 1'b0;
     integer rsp_delay_now = 0;
@@ -120,7 +120,7 @@ module tb_core;
         rsp_delay_now <= (rsp_delay_max > 0) ? ($unsigned($random(seed)) % (rsp_delay_max + 1)) : 0;
     end
 
-    // ------------------------------------------------------- giải mã địa chỉ
+    // ------------------------------------------------------- address decode
     wire if_hit_imem = (if_addr - `CORE_TB_IMEM_BASE) < IMEM_SIZE;
     wire d_hit_imem  = (d_addr - `CORE_TB_IMEM_BASE) < IMEM_SIZE;
     wire d_hit_dmem  = (d_addr >= `CORE_TB_DMEM_BASE) && (d_addr < `CORE_TB_DMEM_BASE + DMEM_SIZE);
@@ -135,11 +135,11 @@ module tb_core;
     wire d_acc      = d_req_valid & d_req_ready;
     wire d_acc_imem = d_acc & d_hit_imem;
 
-    // IMEM dùng chung như imem_port: yêu cầu dữ liệu vào IMEM chặn lấy lệnh
+    // IMEM is shared as in imem_port: a data request to IMEM blocks the fetch
     assign if_gnt   = ~(d_req_valid & d_hit_imem) & ~if_stall_now;
     wire   if_acc   = if_req & if_gnt;
 
-    // ---------------------------------------------------------- bộ nhớ
+    // ---------------------------------------------------------- memories
     wire [31:0] imem_q, dmem_q;
 
     sram_1rw_model #(
@@ -168,7 +168,7 @@ module tb_core;
         .rdata_o (dmem_q)
     );
 
-    // ------------------------------------------------------- phản hồi lấy lệnh
+    // ------------------------------------------------------- fetch response
     reg if_err_q = 1'b0;
     always @(posedge clk)
         if_err_q <= if_acc & ~if_hit_imem;
@@ -176,11 +176,11 @@ module tb_core;
     assign if_err   = if_err_q;
     assign if_rdata = if_err_q ? 32'h0 : imem_q;
 
-    // ------------------------------------------------------- khối điều khiển
+    // ------------------------------------------------------- control block
     reg         irq_arm_q    = 1'b0;
     reg  [15:0] irq_cnt_q    = 16'd0;
     reg  [2:0]  irq_next_q   = 3'b000;   // {ext, timer, sw}
-    reg  [31:0] ctrl_rdata_q = 32'h0;    // dữ liệu đọc, chốt khi nhận yêu cầu
+    reg  [31:0] ctrl_rdata_q = 32'h0;    // Read data, latched when the request is accepted
 
     wire [31:0] irq_now = {20'h0, irq_ext, 3'b000, irq_tim, 3'b000, irq_sw, 3'b000};
 
@@ -211,9 +211,9 @@ module tb_core;
         end
     end
 
-    // ------------------------------------------------------- phản hồi dữ liệu
-    // Ngõ ra bộ nhớ chỉ đúng ở chu kỳ ngay sau khi nhận, nên được chép vào
-    // pend_buf_q khi phản hồi bị trễ.
+    // ------------------------------------------------------- data response
+    // The memory output is valid only in the cycle right after acceptance, so it is
+    // copied into pend_buf_q when the response is delayed.
     reg         pend_q       = 1'b0;
     reg         pend_first_q = 1'b0;
     reg         pend_we_q    = 1'b0;
@@ -250,12 +250,12 @@ module tb_core;
         end
     end
 
-    // ------------------------------------------------------- kết thúc test
+    // ------------------------------------------------------- end of test
     integer cycle   = 0;
     integer instret = 0;
     reg     done    = 1'b0;
 
-    // Signature cho riscv-arch-test, đọc thẳng từ mô hình bộ nhớ
+    // Signature for riscv-arch-test, read straight from the memory model
     reg  [8*512-1:0] sig_file;
     reg  [31:0]      sig_begin = 32'h0, sig_end = 32'h0;
     reg              sig_en    = 1'b0;
@@ -299,7 +299,7 @@ module tb_core;
         end
     endtask
 
-    // Ký tự UART, giá trị tohost
+    // UART characters, tohost value
     reg        tohost_seen = 1'b0;
     reg [31:0] tohost_val  = 32'h0;
 
@@ -316,7 +316,7 @@ module tb_core;
         end
     end
 
-    // ------------------------------------------------------- kiểm tra bus
+    // ------------------------------------------------------- bus checks
     reg         req_wait_q = 1'b0;
     reg  [31:0] req_addr_q, req_wdata_q;
     reg         req_we_q;
@@ -330,14 +330,14 @@ module tb_core;
             if (d_req_valid && ((^{d_addr, d_we, d_be}) === 1'bx ||
                                 (d_we && (^d_wdata) === 1'bx)))
                 end_test(1'b0, "X on data request");
-            // Luật 1: yêu cầu giữ nguyên trong wait state
+            // Rule 1: the request is held during a wait state
             if (req_wait_q && (!d_req_valid || d_addr !== req_addr_q || d_we !== req_we_q ||
                                d_be !== req_be_q || d_wdata !== req_wdata_q))
                 end_test(1'b0, "request changed/dropped while d_req_ready = 0");
-            // Luật 3: tối đa một yêu cầu đang chờ
+            // Rule 3: at most one request pending
             if (d_acc && pend_q && !d_rsp_valid)
                 end_test(1'b0, "new request while a response is pending");
-            // Khi ngủ: không lấy lệnh, không truy cập dữ liệu, WB trống
+            // While asleep: no fetch, no data access, WB empty
             if (core_sleep && (if_req || d_req_valid || dut.wb_valid_q))
                 end_test(1'b0, "core active while core_sleep_o = 1");
         end
@@ -348,21 +348,21 @@ module tb_core;
         req_wdata_q <= d_wdata;
     end
 
-    // ------------------------------------------------------- theo dõi WB
+    // ------------------------------------------------------- WB monitor
     integer    prev_cycle     = 0;
     reg        have_prev      = 1'b0;
     reg        prev_imem_data = 1'b0;
     reg        prev_taken     = 1'b0;
     reg        prev_wb_redir  = 1'b0;
     integer    prev_sleep     = 0;
-    reg        redirect_q     = 1'b0;   // lệnh đang ở WB đã chuyển hướng PC khi ở EX
+    reg        redirect_q     = 1'b0;   // The instruction in WB redirected the PC while in EX
     integer    gap, allowed;
 
     wire [4:0] wb_opcode_hi = dut.wb_instr_q[6:2];
     wire       wb_is_md     = (dut.wb_instr_q[6:0] == `RV_OPC_OP) &&
                               (dut.wb_instr_q[31:25] == `RV_F7_MULDIV) && (ENABLE_M != 0);
 
-    // Lệnh nhảy rời EX với ex_redirect = 1 và luôn hoàn thành ở chu kỳ sau
+    // A jump leaves EX with ex_redirect = 1 and always retires the next cycle
     always @(posedge clk)
         redirect_q <= dut.ex_redirect;
 
@@ -379,8 +379,8 @@ module tb_core;
                              dut.wb_instr_q, dut.wb_trap_tval);
                     end_test(1'b0, msg);
                 end
-                // Lệnh nhận trap không được truy cập bus (trừ khi chính truy
-                // cập đó bị lỗi bus), kể cả lệnh bị ngắt ở EX.
+                // A trapped instruction must not access the bus (unless that access itself
+                // got the bus error), including an instruction interrupted in EX.
                 if (dut.wb_trap && dut.wb_mem_q && !d_rsp_err) begin
                     $sformat(msg, "trapped instr at pc %08h accessed the bus", dut.wb_pc_q);
                     end_test(1'b0, msg);
@@ -411,13 +411,13 @@ module tb_core;
                         $display("core   0: 3 0x%08h (0x%08h)", dut.wb_pc_q, dut.wb_instr_q);
                 end
 
-                // Số bubble giữa hai lệnh rời WB: đúng 1 sau lệnh nhảy
-                // thật (lệnh sai đường bị huỷ, kể cả khi đích là pc+4), 1 sau
-                // truy cập dữ liệu vào IMEM (cổng lệnh không được cấp quyền),
-                // 2 sau chuyển hướng từ WB (trap, MRET, FENCE.I, WFI), cộng số
-                // chu kỳ ngủ. Lệnh RV32M tự dừng EX trước khi tới WB: 1 chu kỳ
-                // với MUL*, 33 với DIV/REM (mục 4.9), không xét lệnh M bị ngắt
-                // giữa chừng. Còn lại bằng 0, nghĩa là không có stall load-use.
+                // Bubbles between two instructions leaving WB: exactly 1 after a taken jump
+                // (the wrong-path instruction is killed, even when the target is pc+4), 1 after
+                // a data access to IMEM (the fetch port gets no grant),
+                // 2 after a redirect from WB (trap, MRET, FENCE.I, WFI), plus the sleep
+                // cycles. RV32M instructions stall EX before reaching WB: 1 cycle
+                // for MUL*, 33 for DIV/REM (section 4.9), M instructions interrupted midway
+                // are not checked. Otherwise 0, meaning there is no load-use stall.
                 if (strict_timing && have_prev && !(wb_is_md && dut.wb_trap)) begin
                     gap     = cycle - prev_cycle - 1;
                     allowed = (prev_taken ? 1 : 0) + (prev_imem_data ? 1 : 0) +
@@ -432,7 +432,7 @@ module tb_core;
                 have_prev      <= 1'b1;
                 prev_cycle     <= cycle;
                 prev_taken     <= redirect_q;
-                // Chuyển hướng từ WB suy ra từ mã lệnh, không lấy từ core
+                // Redirects from WB are derived from the instruction bits, not taken from the core
                 prev_wb_redir  <= dut.wb_trap || dut.wb_instr_q == `RV_INSTR_MRET ||
                                   (dut.wb_instr_q[6:0] == `RV_OPC_MISC_MEM &&
                                    dut.wb_instr_q[14:12] == `RV_F3_FENCE_I) ||
@@ -440,7 +440,7 @@ module tb_core;
                 prev_sleep     <= sleep_cycles;
                 prev_imem_data <= dut.wb_mem_q && ((dut.wb_result_q - `CORE_TB_IMEM_BASE) < IMEM_SIZE);
 
-                // Test kết thúc khi lệnh ghi vào tohost hoàn thành
+                // The test ends when the store to tohost retires
                 if (dut.wb_mem_q && !dut.wb_trap && wb_opcode_hi == 5'b01000 &&
                     dut.wb_result_q == tohost) begin
                     if (tohost_val == 32'd1)
@@ -454,7 +454,7 @@ module tb_core;
         end
     end
 
-    // ------------------------------------------------------- khởi động
+    // ------------------------------------------------------- startup
     initial begin
         if ($value$plusargs("seed=%d", seed)) ;
         seed0 = seed;

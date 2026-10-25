@@ -1,40 +1,41 @@
 `timescale 1ns/1ps
 `default_nettype none
-// soc_top - SoC RV32I (RTL-09): bộ đồng bộ reset, core, bus, bộ nhớ, ngoại vi, accelerator.
-// Đặc tả: docs/spec/soc_spec.md. Bus và bộ nhớ: docs/bus_mem.md. Sơ đồ nối: docs/soc_top.md.
+// soc_top - RV32I SoC (RTL-09): reset synchronizer, core, bus, memories, peripherals, accelerator.
+// Spec: docs/spec/soc_spec.md. Bus and memories: docs/bus_mem.md. Wiring: docs/soc_top.md.
 //
-//   rv32_core ── cổng lệnh ──────────────► imem_port (IMEM + boot ROM)
-//       └─ cổng dữ liệu ─► sys_bus ─┬─► imem_port (cổng dữ liệu)
-//                                   ├─► sram_wrap (DMEM)
-//                                   └─► apb_bridge ─┬─ khe 0 timer_apb
-//                                                   ├─ khe 1 uart_apb
-//                                                   ├─ khe 2 gpio_apb
-//                                                   └─ khe 7 accel_apb
+//   rv32_core ── instruction port ───────► imem_port (IMEM + boot ROM)
+//       └─ data port ─► sys_bus ─┬─► imem_port (data port)
+//                                ├─► sram_wrap (DMEM)
+//                                └─► apb_bridge ─┬─ slot 0 timer_apb
+//                                                ├─ slot 1 uart_apb
+//                                                ├─ slot 2 gpio_apb
+//                                                └─ slot 7 accel_apb
 //
-// Một miền clock. Reset ngoài rst_n qua reset_sync, mọi khối dùng rst_n_sync.
+// One clock domain. The external reset rst_n goes through reset_sync, and every block
+// uses rst_n_sync.
 //
-// Ngắt: irq_timer và irq_software từ timer_apb (mtime >= mtimecmp, MSIP).
-// irq_external chờ bộ gom ngắt IRQC (RTL-11, khe 6), tạm nối 0. irq của
-// UART và accelerator đã kéo tới đây để nối vào IRQC.
+// Interrupts: irq_timer and irq_software come from timer_apb (mtime >= mtimecmp, MSIP).
+// irq_external waits for the IRQC interrupt controller (RTL-11, slot 6) and is tied to 0 for now.
+// The UART and accelerator irq lines are already routed here to connect to IRQC.
 //
-// Khe APB chưa có RTL: SPI (3), I2C (4), PWM (5), IRQC (6), DMA (8). Bit APB_EN = 0
-// nên apb_bridge trả err cho mọi truy cập vào đó.
-// Thêm khối mới: nối PSEL/PRDATA/PREADY/PSLVERR của khe và bật bit trong APB_EN.
+// APB slots without RTL yet: SPI (3), I2C (4), PWM (5), IRQC (6), DMA (8). Their APB_EN bit
+// is 0, so apb_bridge returns err for every access to them.
+// To add a block: connect the slot's PSEL/PRDATA/PREADY/PSLVERR and set its APB_EN bit.
 `include "soc_map.vh"
 
 module soc_top #(
-    parameter ENABLE_M         = 1,     // RV32M đã pass rv32um (RTL-12)
+    parameter ENABLE_M         = 1,     // RV32M passes rv32um (RTL-12)
     parameter ENABLE_WFI_SLEEP = 1,
-    parameter GPIO_W           = 32     // gpio_apb chỉ lint sạch với W = 32
+    parameter GPIO_W           = 32     // gpio_apb is lint clean only with W = 32
 ) (
     input  wire              clk,
-    input  wire              rst_n,     // reset ngoài, bất đồng bộ, tích cực thấp
+    input  wire              rst_n,     // External reset, asynchronous, active low
 
     input  wire [GPIO_W-1:0] gpio_i,
     output wire [GPIO_W-1:0] gpio_o,
-    output wire [GPIO_W-1:0] gpio_oe,   // 1 = chân là ngõ ra, pad nối ở mức chip
+    output wire [GPIO_W-1:0] gpio_oe,   // 1 = the pin is an output, pads are added at chip level
 
-    input  wire              uart_rx,   // UART 8N1, mặc định 115200 baud ở 50 MHz
+    input  wire              uart_rx,   // UART 8N1, 115200 baud at 50 MHz by default
     output wire              uart_tx
 );
 
@@ -62,7 +63,7 @@ module soc_top #(
     wire        d_rsp_valid, d_rsp_err;
     wire [31:0] d_rsp_rdata;
     wire        irq_timer, irq_software;
-    wire        irq_external = 1'b0;    // chờ IRQC (RTL-11)
+    wire        irq_external = 1'b0;    // Waits for IRQC (RTL-11)
     wire [63:0] mtime;
     wire        core_sleep;
 
@@ -137,7 +138,7 @@ module soc_top #(
         .apb_rsp_err    (apb_e)
     );
 
-    // Bộ nhớ
+    // Memories
     imem_port #(.BANK_W(`SOC_IMEM_BANK_W)) u_imem (
         .clk       (clk),
         .rst_n     (rst_n_sync),
@@ -170,13 +171,13 @@ module soc_top #(
         .req_wdata (s_wdata),
         .rsp_valid (dmem_rv),
         .rsp_rdata (dmem_rd),
-        .f_req     (1'b0),              // DMEM không có cổng lấy lệnh
+        .f_req     (1'b0),              // DMEM has no fetch port
         .f_gnt     (unused_dmem_f_gnt),
         .f_addr    ({(10 + `SOC_DMEM_BANK_W){1'b0}}),
         .f_rdata   (unused_dmem_f_rdata)
     );
 
-    // Cầu APB
+    // APB bridge
     wire [NS-1:0]    psel;
     wire             penable, pwrite;
     wire [11:0]      paddr;
@@ -206,7 +207,7 @@ module soc_top #(
         .pslverr   (pslverr)
     );
 
-    // Khe 0: Timer kiểu CLINT (RTL-04)
+    // Slot 0: CLINT-style timer (RTL-04)
     timer_apb u_timer (
         .PCLK         (clk),
         .PRESETn      (rst_n_sync),
@@ -259,7 +260,7 @@ module soc_top #(
         .gpio_oe (gpio_oe)
     );
 
-    // Khe 7: accelerator Lab 2 qua lớp vỏ APB (RTL-05)
+    // Slot 7: Lab 2 accelerator behind its APB shell (RTL-05)
     wire accel_irq;
 
     accel_apb u_accel (
@@ -276,7 +277,7 @@ module soc_top #(
         .irq     (accel_irq)
     );
 
-    // Khe chưa có RTL: không bao giờ được chọn (APB_EN = 0), nối giá trị rảnh
+    // Slots without RTL: never selected (APB_EN = 0), tied to idle values
     assign prdata [`SOC_APB_SPI*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_SPI]           = 1'b1;
     assign pslverr[`SOC_APB_SPI]           = 1'b0;
@@ -293,8 +294,8 @@ module soc_top #(
     assign pready [`SOC_APB_DMA]           = 1'b1;
     assign pslverr[`SOC_APB_DMA]           = 1'b0;
 
-    // Chưa dùng: PSEL của khe trống, irq của UART và accelerator chờ IRQC,
-    // core_sleep (IMEM đã tắt nhờ if_req = 0 khi ngủ)
+    // Unused: PSEL of empty slots, UART and accelerator irq waiting for IRQC,
+    // core_sleep (IMEM is already off because if_req = 0 while asleep)
     wire unused_ok = &{1'b0, psel[`SOC_APB_SPI], psel[`SOC_APB_I2C],
                        psel[`SOC_APB_PWM], psel[`SOC_APB_IRQC], psel[`SOC_APB_DMA],
                        uart_irq, accel_irq, core_sleep};

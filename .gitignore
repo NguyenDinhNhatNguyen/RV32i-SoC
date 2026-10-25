@@ -1,4 +1,5 @@
-# Thư viện công nghệ và IP có license: không bao giờ commit
+# Licensed technology files and IP (GPDK45, SRAM macro, Cadence). Never commit them,
+# the repo is public. Scripts point to them on the school server through config.tcl.
 *.lib
 *.lef
 *.gds
@@ -6,35 +7,56 @@
 *.oas
 *.db
 *.ldb
+*.cdb
+*.cdl
+*.spi
+*.qrc
+*.tch
+*.capTbl
 gpdk*/
 GPDK*/
-*.cdb
+PDK*/
+license*.dat
+*.lic
 
-# Thư mục chạy tool
+# Course material (slides, lab PDFs, project brief)
+*.pdf
+*.ppt
+*.pptx
+*.doc
+*.docx
+
+# Tool run folders. Copy only the final reports into appendix/<step>/.
 syn/run*/
+syn/out*/
 pnr/run*/
+pnr/out*/
 lec/run*/
 sta/run*/
 power/run*/
-# Kết quả flow (netlist, SPEF, SDF): chỉ copy báo cáo vào appendix/ để commit
-syn/out*/
-pnr/out*/
+gls/run*/
+
+# Cadence work files and flow outputs
 xcelium.d/
 INCA_libs/
 waves.shm/
 *.shm/
 fv/
 .cadence/
+*.enc
+*.enc.dat/
+*.dat/
+*.spef
+*.sdf
+*.vg
 *.history
 *.key
 *.cmd*
-genus.log*
-innovus.log*
-innovus.cmd*
-tempus.log*
-lec.log*
+*.log*
+!appendix/**/*.log
+*.rpt.old
 
-# Mô phỏng
+# Simulation
 *.vcd
 *.fst
 *.vvp
@@ -47,10 +69,16 @@ tb/**/out/
 fw/**/*.o
 fw/**/*.elf
 fw/**/*.bin
+fw/**/*.map
 
-# Hệ điều hành / editor
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS and editors
 .DS_Store
+Thumbs.db
 *.swp
 *~
-__pycache__/
-docs/spec/*.pdf
+.idea/

@@ -1,5 +1,5 @@
-# Platform của rv32_core trên tb_core. mtime nối vào core qua mtime_i,
-# bộ test I/M/Zifencei/privilege không dùng tới mtime, mtimecmp.
+# rv32_core platform on tb_core. mtime goes into the core through mtime_i,
+# the I/M/Zifencei/privilege tests do not use mtime or mtimecmp.
 mtime:
   implemented: false
 mtimecmp:

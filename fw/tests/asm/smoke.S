@@ -1,14 +1,14 @@
-// smoke.S - mọi lệnh RV32I (trừ SYSTEM / FENCE.I mà P3 chưa thực thi) với
-// toán hạng biên, giá trị kỳ vọng tính sẵn.
-// Test 2..516: ALU thanh ghi/immediate, dịch, LUI, nhánh (nhảy / không nhảy,
-// biên có dấu và không dấu), load (mọi kích thước, mở rộng dấu/0, offset âm),
-// store (kiểm tra làn trên cả word).
-// Test 600..: x0, AUIPC, địa chỉ trả về và đích JAL/JALR, FENCE, truy cập dữ
-// liệu vào IMEM, vòng lặp nhánh lùi.
+// smoke.S - every RV32I instruction (except SYSTEM / FENCE.I, which P3 did not execute) with
+// corner operands and precomputed expected values.
+// Tests 2..516: register/immediate ALU, shifts, LUI, branches (taken / not taken,
+// signed and unsigned corners), loads (every size, sign/zero extension, negative offset),
+// stores (lanes checked across the whole word).
+// Tests 600..: x0, AUIPC, JAL/JALR return addresses and targets, FENCE, data access
+// to IMEM, a backward branch loop.
 #include "test_macros.h"
 
 TEST_CODE_BEGIN
-    nop                         // word đầu = 0x00000013, đọc lại ở test 640
+    nop                         // First word = 0x00000013, read back in test 640
 
     TEST_RR(2, add, 0x00000000, 0x00000000, 0x00000000)
     TEST_RR(3, add, 0x00000002, 0x00000001, 0x00000001)
@@ -526,7 +526,7 @@ TEST_CODE_BEGIN
     TEST_ST(515, sh, 0xdeadbeef, 0x9abcde5a, 2, sdat, 0xde5abeef)
     TEST_ST(516, sw, 0xdeadbeef, 0x9abcde5a, 0, sdat, 0x9abcde5a)
 
-    // ---- x0 luôn bằng 0 -------------------------------------------
+    // ---- x0 is always 0 -------------------------------------------
     li   TESTNUM, 600
     li   x1, 0x55
     addi x0, x1, 1
@@ -539,12 +539,12 @@ TEST_CODE_BEGIN
     bnez x0, fail
     li   TESTNUM, 602
     lui  x0, 0x12345
-    jal  x0, 1f                 // địa chỉ trả về ghi vào x0 bị bỏ
+    jal  x0, 1f                 // The return address written to x0 is dropped
 1:  bnez x0, fail
 
     // ---- AUIPC ---------------------------------------------------------------
     li   TESTNUM, 610
-    jal  x8, 1f                 // x8 = địa chỉ lệnh auipc bên dưới
+    jal  x8, 1f                 // x8 = address of the auipc below
 1:  auipc x14, 0
     bne  x14, x8, fail
     li   TESTNUM, 611
@@ -566,7 +566,7 @@ TEST_CODE_BEGIN
     jal  x1, 3f
 2:  j    fail
 3:  bne  x1, x7, fail
-    li   TESTNUM, 621           // JAL nhảy lùi
+    li   TESTNUM, 621           // JAL jumps backward
     j    5f
 4:  j    6f
 5:  jal  x1, 4b
@@ -581,20 +581,20 @@ TEST_CODE_BEGIN
 2:  j    fail
 3:  la   x7, 2b
     bne  x1, x7, fail
-    li   TESTNUM, 631           // offset dương
+    li   TESTNUM, 631           // Positive offset
     la   x2, 3f - 8
     jalr x1, 8(x2)
     j    fail
-3:  li   TESTNUM, 632           // offset âm
+3:  li   TESTNUM, 632           // Negative offset
     la   x2, 3f + 12
     jalr x1, -12(x2)
     j    fail
-3:  li   TESTNUM, 633           // bit 0 của đích bị xoá
+3:  li   TESTNUM, 633           // Bit 0 of the target is cleared
     la   x2, 3f
     addi x2, x2, 1
     jalr x1, 0(x2)
     j    fail
-3:  li   TESTNUM, 634           // rd == rs1: đích dùng giá trị cũ
+3:  li   TESTNUM, 634           // rd == rs1: the target uses the old value
     la   x2, 3f
     jalr x2, 0(x2)
 2:  j    fail
@@ -606,7 +606,7 @@ TEST_CODE_BEGIN
     j    fail
 3:
 
-    // ---- FENCE là NOP --------------------------------------------------------
+    // ---- FENCE is a NOP --------------------------------------------------------
     li   TESTNUM, 636
     li   x14, 7
     fence
@@ -615,7 +615,7 @@ TEST_CODE_BEGIN
     li   x7, 8
     bne  x14, x7, fail
 
-    // ---- Truy cập dữ liệu vào IMEM (cổng dùng chung) -------------------------------------
+    // ---- Data access to IMEM (shared port) -----------------------------------------------
     li   TESTNUM, 640
     la   x1, _start
     lw   x14, 0(x1)
@@ -638,7 +638,7 @@ TEST_CODE_BEGIN
     li   x7, 0x77a5f00d
     bne  x14, x7, fail
 
-    // ---- Vòng lặp nhánh lùi: tổng 1..10 -------------------------------------
+    // ---- Backward branch loop: sum of 1..10 -------------------------------------
     li   TESTNUM, 650
     li   x14, 0
     li   x1, 10
@@ -651,7 +651,7 @@ TEST_CODE_BEGIN
     TEST_PASS
     TEST_FAIL
 
-    // Không bao giờ thực thi: dữ liệu do test 642 ghi qua bus
+    // Never executed: data written over the bus by test 642
     .align 2
 imem_scratch:
     .word 0

@@ -137,8 +137,8 @@ make lint-accel && make sim-accel && make sim-accel-apb
 **Đạt khi:** lint không in dòng `%Warning` nào, và có hai dòng
 
 ```text
-PASS: 40 phep nhan ma tran 4x4 khop mo hinh vang
-PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
+PASS: 40 matrix multiplies 4x4 match the golden model
+PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct
 ```
 
 Chụp màn hình gửi vào kênh nhóm.

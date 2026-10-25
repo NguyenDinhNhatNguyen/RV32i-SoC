@@ -42,7 +42,7 @@ static void put_num(uint32_t v, unsigned base, int neg, int width, char pad, int
         bench_putchar(buf[--n]);
 }
 
-// Hỗ trợ %d %i %u %x %X %c %s %%, cờ '-' '0', độ rộng, tiền tố l (long = 32 bit).
+// Supports %d %i %u %x %X %c %s %%, flags '-' '0', width, and the l prefix (long = 32 bits).
 int bench_vprintf(const char *fmt, va_list ap)
 {
     for (; *fmt; fmt++) {
@@ -108,7 +108,7 @@ void bench_stop(bench_stats_t *s)
 
 void bench_print_ratio(uint32_t a, uint32_t b)
 {
-    // a * 1000 có thể tràn 32 bit, tính phần nguyên và phần lẻ riêng
+    // a * 1000 can overflow 32 bits, so compute the integer and fractional parts separately
     uint32_t q = a / b, r = a % b;
     uint32_t frac = (uint32_t)(((uint64_t)r * 1000 + b / 2) / b);
     if (frac == 1000) {
@@ -125,8 +125,8 @@ void bench_report(const char *name, const bench_stats_t *s)
     bench_printf("\n");
 }
 
-// Hàm gcc có thể sinh lời gọi (memcpy/memset cho gán struct, mảng) và hàm chuỗi
-// mà Dhrystone dùng.
+// Functions gcc may call (memcpy/memset for struct and array assignment) and the string
+// functions Dhrystone uses.
 void *memcpy(void *dst, const void *src, size_t n)
 {
     uint8_t *d = dst;

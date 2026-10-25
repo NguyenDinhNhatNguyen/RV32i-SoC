@@ -1,4 +1,4 @@
-# Điểm vào chung. Các target Cadence chỉ chạy trên server trường.
+# Common entry point. The Cadence targets run only on the school server.
 IVERILOG ?= iverilog
 VVP      ?= vvp
 
@@ -8,26 +8,26 @@ ACCEL_TB  = tb/unit/tb_accel_wrapper.v
 .PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel gls-accel pnr-accel check-server clean
 
 help:
-	@echo "make sim-accel     - mô phỏng wrapper accelerator (Icarus, chạy ở nhà)"
-	@echo "make sim-accel-apb - mô phỏng accelerator qua giao diện APB3"
-	@echo "make wave-accel    - mô phỏng và ghi sóng tb/unit/out/accel.vcd (xem bằng GTKWave)"
-	@echo "make lint-accel    - lint wrapper bằng Verilator nếu có"
-	@echo "make check-server  - kiểm tra thư viện/tool trên server trường"
-	@echo "make synth-accel   - Genus tổng hợp accelerator (server), CG=0 để chạy baseline"
-	@echo "make lec-accel     - Conformal so RTL với netlist sau make synth-accel (server)"
-	@echo "make gls-accel     - Xcelium mô phỏng netlist sau tổng hợp bằng testbench 40 phép nhân (server)"
-	@echo "make pnr-accel     - Innovus chạy thử accelerator (server)"
-	@echo "make lint-core     - lint core RV32I bằng Verilator, 0 warning"
-	@echo "make unit-core     - unit test các khối của core (ALU, regfile, decoder, imm_gen, lsu_align)"
-	@echo "make fw-core       - test assembly trên tb_core (T=tên để chạy một bài)"
-	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) trên tb_core (T=rv32ui-p-add)"
-	@echo "make bench-core    - Dhrystone và CoreMark trên tb_core (ENABLE_M=0 và 1), in CPI (T=coremark)"
-	@echo "make arch-core-dut - riscv-arch-test chỉ chạy phía core, ghi signature (T=add-01)"
-	@echo "make arch-core     - riscv-arch-test qua RISCOF, so với Spike (cần riscof, spike)"
-	@echo "make synth-core-yosys - Yosys tổng hợp thử rv32_core, chỉ xem xu hướng"
-	@echo "make synth-compare-yosys - như trên, thêm PicoRV32 (ref/picorv32) để so sánh"
-	@echo "make sta-core-nangate - Yosys + OpenSTA với thư viện mở Nangate45, đường găng ns và F_max (xu hướng)"
-	@echo "make clean-core    - xoá kết quả mô phỏng của core"
+	@echo "make sim-accel     - simulate the accelerator wrapper (Icarus, at home)"
+	@echo "make sim-accel-apb - simulate the accelerator through APB3"
+	@echo "make wave-accel    - simulate and dump tb/unit/out/accel.vcd (view in GTKWave)"
+	@echo "make lint-accel    - lint the wrapper with Verilator"
+	@echo "make check-server  - check libraries and tools on the school server"
+	@echo "make synth-accel   - Genus synthesis of the accelerator (server), CG=0 for the baseline"
+	@echo "make lec-accel     - Conformal compares RTL with the netlist after make synth-accel (server)"
+	@echo "make gls-accel     - Xcelium gate-level sim of the netlist with the 40-multiply testbench (server)"
+	@echo "make pnr-accel     - Innovus trial run on the accelerator (server)"
+	@echo "make lint-core     - lint the RV32I core with Verilator, 0 warnings"
+	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
+	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
+	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
+	@echo "make bench-core    - Dhrystone and CoreMark on tb_core (ENABLE_M=0 and 1), prints CPI (T=coremark)"
+	@echo "make arch-core-dut - riscv-arch-test on the core side only, writes signatures (T=add-01)"
+	@echo "make arch-core     - riscv-arch-test through RISCOF, compared with Spike (needs riscof, spike)"
+	@echo "make synth-core-yosys - trial Yosys synthesis of rv32_core, trends only"
+	@echo "make synth-compare-yosys - as above, plus PicoRV32 (ref/picorv32) for comparison"
+	@echo "make sta-core-nangate - Yosys + OpenSTA with the open Nangate45 library, critical path ns and F_max (trends)"
+	@echo "make clean-core    - delete core simulation results"
 
 sim-accel:
 	@mkdir -p tb/unit/out
@@ -54,20 +54,21 @@ check-server:
 synth-accel:
 	rm -f syn/out_accel/accel_wrapper_netlist.v
 	cd syn && mkdir -p run_accel && cd run_accel && rm -f genus.log* genus.cmd* && genus -batch -files ../scripts/synth_accel.tcl -log genus.log
-	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: Genus khong tao duoc netlist, xem syn/run_accel/genus.log"; exit 1; }
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "ERROR: Genus produced no netlist, see syn/run_accel/genus.log"; exit 1; }
 
-# < /dev/null để Conformal tự thoát nếu dofile dừng giữa chừng.
+# < /dev/null so Conformal exits if the dofile stops midway.
 lec-accel:
-	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: chua co netlist, chay make synth-accel truoc"; exit 1; }
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "ERROR: no netlist yet, run make synth-accel first"; exit 1; }
 	mkdir -p syn/out_accel/reports
 	lec -nogui -dofile lec/accel_rtl2gate.do < /dev/null > syn/out_accel/lec.txt 2>&1 || true
 	@grep -E 'Compare Results|Non-equivalent|Equivalent|Abort|// Error' syn/out_accel/lec.txt | tail -12
 
-# Mô phỏng mức cổng, không delay (-nospecify): kiểm chức năng netlist, bù cho điểm LEC bị Abort.
-# Thư viện cell .v đọc từ PDK trên server, không copy về máy cá nhân.
+# Gate-level simulation without delays (-nospecify): checks netlist function and backs up
+# LEC points that abort.
+# The cell .v library is read from the PDK on the server and never copied to personal machines.
 GLS_LIB ?= $(or $(PDK_DIR),$(HOME)/PDK_GPDK45)/lib/slow_vdd1v0_basiccells.v
 gls-accel:
-	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "LOI: chua co netlist, chay make synth-accel truoc"; exit 1; }
+	@test -f syn/out_accel/accel_wrapper_netlist.v || { echo "ERROR: no netlist yet, run make synth-accel first"; exit 1; }
 	mkdir -p syn/out_accel/gls
 	cd syn/out_accel/gls && xrun -64bit -define GLS -timescale 1ns/1ps -nospecify -notimingchecks \
 	  $(CURDIR)/tb/unit/tb_accel_wrapper.v ../accel_wrapper_netlist.v $(GLS_LIB) -l xrun.log > /dev/null 2>&1 || true
@@ -76,19 +77,19 @@ gls-accel:
 pnr-accel:
 	rm -f pnr/out_accel/accel_wrapper_pnr.v
 	cd pnr && mkdir -p run_accel && cd run_accel && rm -f innovus.log* innovus.cmd* && innovus -batch -files ../scripts/run_all.tcl -log innovus.log
-	@test -f pnr/out_accel/accel_wrapper_pnr.v || { echo "LOI: Innovus dung giua chung, xem pnr/run_accel/innovus.log"; exit 1; }
+	@test -f pnr/out_accel/accel_wrapper_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_accel/innovus.log"; exit 1; }
 
 clean:
 	rm -rf tb/unit/out syn/run* pnr/run*
 
 # ---------------------------------------------------------------------------
-# Core RV32I (Nhân). Đặc tả: docs/spec/core.md, quyết định: docs/core_decisions.md
-# Chạy ở nhà (Icarus, Verilator, riscv gcc). Kết quả ở tb/unit/out/core và tb/core/out (bị ignore).
-#   make lint-core                 Verilator -Wall từng module trong rtl/core, 0 warning
-#   make unit-core                 mọi tb/unit/tb_rv32_*.v (TB=tb_rv32_alu để chạy một bài)
-#   make fw-core                   test assembly fw/tests/asm trên tb_core (T=hazard để chạy một bài)
-#   make unit-core PLUSARGS="+seed=7 +n=1000"     thêm plusarg cho mô phỏng
-#   make fw-core T=hazard PLUSARGS=+trace         in vết từng lệnh
+# RV32I core (Nhan). Spec: docs/spec/core.md, decisions: docs/core_decisions.md
+# Runs at home (Icarus, Verilator, riscv gcc). Results in tb/unit/out/core and tb/core/out (ignored).
+#   make lint-core                 Verilator -Wall on each module in rtl/core, 0 warnings
+#   make unit-core                 every tb/unit/tb_rv32_*.v (TB=tb_rv32_alu runs one)
+#   make fw-core                   fw/tests/asm assembly tests on tb_core (T=hazard runs one)
+#   make unit-core PLUSARGS="+seed=7 +n=1000"     adds simulation plusargs
+#   make fw-core T=hazard PLUSARGS=+trace         prints a per-instruction trace
 # ---------------------------------------------------------------------------
 VERILATOR ?= verilator
 PYTHON    ?= python3
@@ -104,12 +105,13 @@ CORE_MODELS   := tb/models/sram_1rw_model.v
 CORE_IVFLAGS  := -g2012 -Wall $(addprefix -I,$(CORE_INC))
 CORE_VLFLAGS  := --lint-only -Wall -Irtl/core -y rtl/core
 
-# Recipe của core dùng cú pháp bash và pipefail. Chỉ đặt cho target core để không đổi target có sẵn.
+# Core recipes use bash syntax and pipefail. Set only for core targets so existing targets
+# do not change.
 lint-core unit-core: SHELL := /bin/bash
 lint-core unit-core: .SHELLFLAGS := -o pipefail -c
 
-# Bộ tham số cho từng module / testbench: mỗi lần chạy cách nhau dấu cách,
-# trong một lần chạy là danh sách NAME=VALUE cách nhau dấu phẩy. Không khai báo thì dùng mặc định.
+# Parameter sets per module / testbench: runs are separated by spaces,
+# and within a run NAME=VALUE pairs are separated by commas. Undeclared means defaults.
 CORE_LINT_CFG_rv32_decoder    := ENABLE_M=0 ENABLE_M=1
 CORE_LINT_CFG_rv32_core       := ENABLE_M=0,ENABLE_WFI_SLEEP=0 ENABLE_M=0,ENABLE_WFI_SLEEP=1 \
                                  ENABLE_M=1,ENABLE_WFI_SLEEP=0 ENABLE_M=1,ENABLE_WFI_SLEEP=1
@@ -118,7 +120,7 @@ CORE_UNIT_CFG_tb_rv32_decoder := ENABLE_M=0 ENABLE_M=1
 CORE_UNIT_CFG_tb_rv32_csr     := ENABLE_M=0 ENABLE_M=1
 core_cfgs = $(or $(CORE_LINT_CFG_$(1)),$(CORE_UNIT_CFG_$(1)),default)
 
-# Lint từng module làm top riêng, rv32_core kéo theo cả phân cấp qua -y.
+# Lint each module as its own top, rv32_core pulls in the whole hierarchy through -y.
 CORE_LINT_RUNS := $(foreach m,$(basename $(notdir $(CORE_RTL))),$(foreach c,$(call core_cfgs,$(m)),$(m)@$(c)))
 
 CORE_UNIT_TBS  := $(basename $(notdir $(wildcard tb/unit/tb_rv32_*.v)))
@@ -142,7 +144,7 @@ lint-core:
 	done; \
 	if [ $$fail = 0 ]; then echo "LINT-CORE PASS"; else echo "LINT-CORE FAIL"; exit 1; fi
 
-# Testbench đạt khi log có dòng bắt đầu bằng PASS và không có dòng FAIL.
+# A testbench passes when the log has a line starting with PASS and no FAIL line.
 unit-core:
 	@mkdir -p $(CORE_UNIT_OUT); pass=0; fail=0; \
 	for run in $(CORE_UNIT_RUNS); do \
@@ -163,18 +165,18 @@ unit-core:
 	done; \
 	echo "UNIT-CORE: $$pass passed, $$fail failed"; [ $$fail = 0 ]
 
-# Tự dò tiền tố toolchain (đổi bằng: make fw-core RV_PREFIX=...)
+# Auto-detect the toolchain prefix (override: make fw-core RV_PREFIX=...)
 RV_PREFIX ?= $(firstword $(foreach p,riscv64-unknown-elf riscv-none-elf riscv32-unknown-elf,\
                $(if $(shell command -v $(p)-gcc 2>/dev/null),$(p))))
 CORE_RV_LDFLAGS := -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld
 CORE_RV_ASFLAGS := -march=rv32i_zicsr_zifencei $(CORE_RV_LDFLAGS) -Ifw/tests/asm
 
-# Cấu hình tb_core: M<ENABLE_M>W<ENABLE_WFI_SLEEP>
+# tb_core configuration: M<ENABLE_M>W<ENABLE_WFI_SLEEP>
 core_cfg_m = $(word 1,$(subst W, ,$(subst M,,$(1))))
 core_cfg_w = $(word 2,$(subst W, ,$(subst M,,$(1))))
 
-# Chế độ chạy: đúng timing pipeline khi không stall, rồi 3 bộ stall bus ngẫu nhiên
-# (cổng lệnh không được cấp quyền, wait state, phản hồi trễ) với seed cố định.
+# Run modes: exact pipeline timing without stalls, then 3 random bus stall sets
+# (fetch port without grant, wait states, delayed responses) with fixed seeds.
 CORE_MODES := nominal stall1 stall2 stall3
 CORE_PLUS_nominal := +strict_timing
 CORE_PLUS_stall1  := +seed=1 +if_stall=25 +d_stall=30 +rsp_delay=3
@@ -192,10 +194,10 @@ CORE_FW_RUNS  := $(foreach c,$(CORE_FW_CFGS),$(foreach t,$(CORE_FW_TESTS),$(fore
 .PRECIOUS: $(CORE_FW_OUT)/%.elf
 $(CORE_FW_OUT)/%.elf: fw/tests/asm/%.S fw/tests/asm/test_macros.h fw/common/link.ld
 	@mkdir -p $(@D)
-	@test -n "$(RV_PREFIX)" || { echo "LOI: khong tim thay riscv gcc"; exit 1; }
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
 	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
 
-# elf2hex in ra "tohost=<hex>", giữ lại làm plusarg khi chạy
+# elf2hex prints "tohost=<hex>", kept as a plusarg for the run
 $(CORE_OUT)/%.tohost: $(CORE_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
 	@$(PYTHON) scripts/elf2hex.py $< --imem $(CORE_OUT)/$*.imem.hex --dmem $(CORE_OUT)/$*.dmem.hex > $@
 
@@ -204,8 +206,8 @@ $(CORE_OUT)/tb_core_%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_RTL) 
 	$(IVERILOG) $(CORE_IVFLAGS) -s tb_core -Ptb_core.ENABLE_M=$(call core_cfg_m,$*) \
 	  -Ptb_core.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -o $@ $(CORE_RTL) $(CORE_MODELS) tb/core/tb_core.v
 
-# Chạy danh sách "<thư mục>/<test>@<cấu hình>@<chế độ>" song song (CORE_JOBS tiến trình)
-# bằng scripts/core_run.sh. Kết quả từng lần chạy ghi vào $(CORE_OUT)/<nhãn>.summary.
+# Run the "<dir>/<test>@<config>@<mode>" list in parallel (CORE_JOBS processes)
+# with scripts/core_run.sh. Each run result goes to $(CORE_OUT)/<label>.summary.
 CORE_JOBS ?= $(shell nproc 2>/dev/null || echo 4)
 export CORE_PLUS_nominal CORE_PLUS_stall1 CORE_PLUS_stall2 CORE_PLUS_stall3 PLUSARGS VVP
 define core_run
@@ -221,10 +223,10 @@ fw-core: $(foreach c,$(CORE_FW_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) $(foreach t,$
 	$(call core_run,fw-core,$(addprefix $(CORE_FW_OUT)/,$(CORE_FW_RUNS)))
 
 # ---------------------------------------------------------------------------
-# riscv-tests (submodule fw/riscv-tests, env p) trên tb_core, docs/spec/core.md mục 10.3.
-# Test bị loại có lý do trong docs/riscv-tests-status.md.
-#   make isa-core                  mọi test với ENABLE_M=0 và 1
-#   make isa-core T=rv32ui-p-add   chạy một test
+# riscv-tests (submodule fw/riscv-tests, env p) on tb_core, docs/spec/core.md section 10.3.
+# Excluded tests and the reasons are in docs/riscv-tests-status.md.
+#   make isa-core                  every test with ENABLE_M=0 and 1
+#   make isa-core T=rv32ui-p-add   runs one test
 # ---------------------------------------------------------------------------
 CORE_ISA_DIR  := fw/riscv-tests/isa
 CORE_ISA_ENV  := fw/riscv-tests/env/p
@@ -238,7 +240,7 @@ ifneq ($(T),)
 CORE_ISA_BASE := $(filter $(T),$(CORE_ISA_BASE))
 CORE_ISA_M    := $(filter $(T),$(CORE_ISA_M))
 endif
-# Test RV32M chỉ chạy với ENABLE_M=1
+# RV32M tests run only with ENABLE_M=1
 core_isa_tests = $(CORE_ISA_BASE) $(if $(filter 1,$(call core_cfg_m,$(1))),$(CORE_ISA_M))
 CORE_ISA_RUNS := $(foreach c,$(CORE_ISA_CFGS),$(foreach t,$(call core_isa_tests,$(c)),$(foreach md,$(CORE_MODES),$(t)@$(c)@$(md))))
 
@@ -263,7 +265,7 @@ fw-core: .SHELLFLAGS := -o pipefail -c
 
 isa-core: $(foreach c,$(CORE_ISA_CFGS),$(CORE_OUT)/tb_core_$(c).vvp) \
           $(foreach t,$(CORE_ISA_BASE) $(CORE_ISA_M),$(CORE_ISA_OUT)/$(t).tohost)
-	@test -f $(CORE_ISA_ENV)/riscv_test.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive fw/riscv-tests"; exit 1; }
+	@test -f $(CORE_ISA_ENV)/riscv_test.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive fw/riscv-tests"; exit 1; }
 	$(call core_run,isa-core,$(addprefix $(CORE_ISA_OUT)/,$(CORE_ISA_RUNS)))
 
 .PHONY: isa-core
@@ -272,13 +274,13 @@ clean-core:
 	rm -rf $(CORE_OUT) $(CORE_UNIT_OUT)
 
 # ---------------------------------------------------------------------------
-# Benchmark trên tb_core: Dhrystone (riscv-tests) và CoreMark (submodule fw/coremark).
-# Bản rv32i chạy với ENABLE_M=0, bản rv32im với ENABLE_M=1. Không chèn stall, có
-# +strict_timing. CPI đo trong vùng đo của benchmark (mcycle/minstret), dòng
-# "BENCH ..." trong log. Kết quả: docs/bench_core.md.
-#   make bench-core                         cả 4 lần chạy
-#   make bench-core T=coremark              một benchmark
-#   make bench-core CM_ITER=10              số vòng CoreMark (mặc định 3)
+# Benchmarks on tb_core: Dhrystone (riscv-tests) and CoreMark (submodule fw/coremark).
+# The rv32i build runs with ENABLE_M=0, the rv32im build with ENABLE_M=1. No injected stalls,
+# with +strict_timing. CPI is measured over the benchmark region (mcycle/minstret), the
+# "BENCH ..." line in the log. Results: docs/bench_core.md.
+#   make bench-core                         all 4 runs
+#   make bench-core T=coremark              one benchmark
+#   make bench-core CM_ITER=10              CoreMark iterations (default 3)
 # ---------------------------------------------------------------------------
 CM_ITER         ?= 3
 CORE_BENCH_OUT  := $(CORE_OUT)/bench
@@ -286,7 +288,7 @@ CORE_BENCH_LIST := dhrystone coremark
 ifneq ($(T),)
 CORE_BENCH_LIST := $(filter $(T),$(CORE_BENCH_LIST))
 endif
-# <tên>_<march>@<cấu hình tb_core>@bench
+# <name>_<march>@<tb_core config>@bench
 CORE_BENCH_RUNS := $(foreach b,$(CORE_BENCH_LIST),$(b)_rv32i@M0W1@bench $(b)_rv32im@M1W1@bench)
 CORE_PLUS_bench := +strict_timing +timeout=50000000
 export CORE_PLUS_bench
@@ -301,17 +303,17 @@ BENCH_DHRY_C  := fw/bench/dhrystone/dhry_wrap.c $(BENCH_DHRY)/dhrystone.c
 BENCH_CM_SRC  := $(addprefix fw/coremark/,core_list_join.c core_main.c core_matrix.c core_state.c core_util.c) \
                  fw/bench/coremark/core_portme.c
 bench_march    = -march=$(1)_zicsr
-# Kích thước vùng nhớ đọc từ tb/core/core_tb_map.vh
+# Memory region sizes come from tb/core/core_tb_map.vh
 core_map       = $(shell awk '/CORE_TB_$(1) /{print $$3}' tb/core/core_tb_map.vh)
 
 .PRECIOUS: $(CORE_BENCH_OUT)/dhrystone_%.elf $(CORE_BENCH_OUT)/coremark_%.elf
 
-# Mã gốc Dhrystone viết kiểu K&R nên tắt cảnh báo (-w). dhrystone_main.c
-# đổi main thành dhry_main, dhry_wrap.c gọi nó rồi tự kiểm kết quả.
+# The original Dhrystone code is K&R style, so warnings are off (-w). dhrystone_main.c
+# renames main to dhry_main, and dhry_wrap.c calls it and checks the results.
 $(CORE_BENCH_OUT)/dhrystone_%.elf: $(BENCH_COMMON) $(BENCH_DHRY_C) $(BENCH_DHRY)/dhrystone_main.c \
                                    $(wildcard fw/bench/dhrystone/*.h) fw/bench/common/bench.h fw/common/link.ld
 	@mkdir -p $(@D)
-	@test -f $(BENCH_DHRY)/dhrystone.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	@test -f $(BENCH_DHRY)/dhrystone.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
 	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
 	  -Dmain=dhry_main -c -o $(@D)/dhrystone_main_$*.o $(BENCH_DHRY)/dhrystone_main.c
 	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
@@ -320,25 +322,25 @@ $(CORE_BENCH_OUT)/dhrystone_%.elf: $(BENCH_COMMON) $(BENCH_DHRY_C) $(BENCH_DHRY)
 $(CORE_BENCH_OUT)/coremark_%.elf: $(BENCH_COMMON) $(BENCH_CM_SRC) fw/bench/coremark/core_portme.h \
                                   fw/bench/common/bench.h fw/common/link.ld FORCE_CM_ITER
 	@mkdir -p $(@D)
-	@test -f fw/coremark/coremark.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	@test -f fw/coremark/coremark.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
 	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/coremark -Ifw/coremark \
 	  -DITERATIONS=$(CM_ITER) -DPERFORMANCE_RUN=1 '-DFLAGS_STR="$(BENCH_OPT)"' \
 	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(BENCH_CM_SRC) -lgcc
 
-# CM_ITER không nằm trong tên file nên luôn dịch lại CoreMark
+# CM_ITER is not part of the file name, so CoreMark is always rebuilt
 .PHONY: FORCE_CM_ITER bench-core
 FORCE_CM_ITER:
 
 bench-core: SHELL := /bin/bash
 bench-core: .SHELLFLAGS := -o pipefail -c
 
-# CoreMark tự kiểm CRC. Lỗi "phải chạy ít nhất 10 giây" là bình thường khi mô phỏng
-# nên không tính, mọi dòng ERROR khác làm lần chạy FAIL.
+# CoreMark checks its own CRC. The "must run at least 10 seconds" error is expected in simulation
+# and is not counted. Any other ERROR line fails the run.
 bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
             $(foreach r,$(CORE_BENCH_RUNS),$(CORE_BENCH_OUT)/$(firstword $(subst @, ,$(r))).tohost)
 	@for r in $(CORE_BENCH_RUNS); do \
 	  t=$${r%%@*}; e=$(CORE_BENCH_OUT)/$$t.elf; \
-	  printf '  %-18s .text %6d B (IMEM %d B), DMEM dùng %6d B (%d B)\n' $$t \
+	  printf '  %-18s .text %6d B (IMEM %d B), DMEM used %6d B (%d B)\n' $$t \
 	    $$($(RV_PREFIX)-size -A $$e | awk '$$1==".text"{print $$2}') $(call core_map,IMEM_SIZE) \
 	    $$($(RV_PREFIX)-size -A $$e | awk '$$1~/^\.(rodata|data|tohost|bss)$$/{s+=$$2} END{print s}') \
 	    $(call core_map,DMEM_SIZE); \
@@ -350,27 +352,27 @@ bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
 	  case $$t in coremark*) \
 	    if ! grep -q 'performance run parameters' $$log || \
 	       grep 'ERROR' $$log | grep -vq 'at least 10 secs'; then \
-	      echo "  [FAIL] $$t: CoreMark khong tu kiem duoc ket qua"; fail=1; fi;; \
+	      echo "  [FAIL] $$t: CoreMark could not verify its result"; fail=1; fi;; \
 	  esac; \
 	done; [ $$fail = 0 ]
 
 # ---------------------------------------------------------------------------
-# riscv-arch-test (submodule fw/riscv-arch-test, tag 3.10.0) qua RISCOF, mô hình
-# tham chiếu là Spike. Hướng dẫn, lệnh cài: docs/riscof.md.
-#   make arch-core          RISCOF so signature của core với Spike (cần riscof, spike)
-#   make arch-core-dut      chỉ chạy phía core: dịch, chạy, ghi signature, không so
-#                           (dùng khi chưa cài RISCOF/Spike, T=add-01 để chạy một bài)
-# tb_core cho arch-test dịch với IMEM 2 MB vì jal-01 dài khoảng 1,7 MB, đặt ở
-# 0x8000_0000 (RESET_PC theo IMEM) cho trùng địa chỉ nạp với Spike.
+# riscv-arch-test (submodule fw/riscv-arch-test, tag 3.10.0) through RISCOF, with Spike
+# as the reference model. Guide and install commands: docs/riscof.md.
+#   make arch-core          RISCOF compares core signatures with Spike (needs riscof, spike)
+#   make arch-core-dut      core side only: compile, run, write signatures, no compare
+#                           (use when RISCOF/Spike are not installed, T=add-01 runs one)
+# tb_core for arch-test is compiled with a 2 MB IMEM because jal-01 is about 1.7 MB, placed at
+# 0x8000_0000 (RESET_PC follows IMEM) to match the Spike load address.
 # ---------------------------------------------------------------------------
 ARCH_IMEM_BASE := 80000000
 ARCH_IMEM_SIZE := 2097152
 ARCH_SUITE     := fw/riscv-arch-test/riscv-test-suite
 ARCH_OUT       := tb/riscof/out
 ARCH_CFGS      := M0W1 M1W1
-# Bộ test RISCOF sẽ chọn cho core (RV32I/IM, Zicsr, Zifencei, không C, không
-# hỗ trợ truy cập lệch): I, M, Zifencei, privilege (ecall, ebreak, 13 test misalign).
-# pmp32 bị loại vì core chỉ có M-mode, không có PMP (xem docs/riscof.md).
+# Test suites RISCOF picks for the core (RV32I/IM, Zicsr, Zifencei, no C, no
+# misaligned access support): I, M, Zifencei, privilege (ecall, ebreak, 13 misalign tests).
+# pmp32 is excluded because the core has only M-mode and no PMP (see docs/riscof.md).
 ARCH_BASE      := $(wildcard $(ARCH_SUITE)/rv32i_m/I/src/*.S) $(wildcard $(ARCH_SUITE)/rv32i_m/Zifencei/src/*.S)
 ARCH_PRIV      := $(wildcard $(ARCH_SUITE)/rv32i_m/privilege/src/*.S)
 ARCH_M         := $(wildcard $(ARCH_SUITE)/rv32i_m/M/src/*.S)
@@ -380,7 +382,7 @@ ARCH_BASE      := $(call arch_pick,$(ARCH_BASE))
 ARCH_PRIV      := $(call arch_pick,$(ARCH_PRIV))
 ARCH_M         := $(call arch_pick,$(ARCH_M))
 endif
-# <cấu hình>@<file .S>@<macro,...>, test M chỉ chạy với ENABLE_M=1
+# <config>@<.S file>@<macro,...>, M tests run only with ENABLE_M=1
 arch_runs = $(foreach f,$(ARCH_BASE),$(1)@$(f)@TEST_CASE_1=True) \
             $(foreach f,$(ARCH_PRIV),$(1)@$(f)@TEST_CASE_1=True,rvtest_mtrap_routine=True) \
             $(if $(filter M1%,$(1)),$(foreach f,$(ARCH_M),$(1)@$(f)@TEST_CASE_1=True))
@@ -395,7 +397,7 @@ $(CORE_OUT)/tb_core_arch_%.vvp: tb/core/tb_core.v tb/core/core_tb_map.vh $(CORE_
 arch-core-dut: SHELL := /bin/bash
 arch-core-dut: .SHELLFLAGS := -o pipefail -c
 arch-core-dut: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
-	@test -f $(ARCH_SUITE)/env/arch_test.h || { echo "LOI: chua co submodule, chay: git submodule update --init --recursive"; exit 1; }
+	@test -f $(ARCH_SUITE)/env/arch_test.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
 	@mkdir -p $(ARCH_OUT)
 	@printf '%s\n' $(foreach c,$(ARCH_CFGS),$(call arch_runs,$(c))) | \
 	  xargs -P $(CORE_JOBS) -I{} bash -c 'r={}; c=$${r%%@*}; x=$${r#*@}; f=$${x%%@*}; m=$${x#*@}; \
@@ -403,15 +405,16 @@ arch-core-dut: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	    $(CURDIR)/$(ARCH_OUT)/dut/$$c/$$(basename $$f .S) $${m//,/ }' > $(ARCH_OUT)/dut.summary || true
 	@sort $(ARCH_OUT)/dut.summary; \
 	pass=$$(grep -c '^  PASS' $(ARCH_OUT)/dut.summary); fail=$$(grep -c '^  \[FAIL\]' $(ARCH_OUT)/dut.summary); \
-	echo "arch-core-dut: $$pass passed, $$fail failed (chi chay phia core, chua so voi Spike)"; [ $$fail = 0 ]
+	echo "arch-core-dut: $$pass passed, $$fail failed (core side only, not compared with Spike)"; [ $$fail = 0 ]
 
-# RISCOF chọn test theo ISA yaml của từng cấu hình, chạy core và Spike rồi so signature.
-# Bộ 3.10.0 chọn cả pmp32 chỉ theo regex RV32I.*Zicsr (không có điều kiện nào về PMP
-# để ISA yaml loại được), nên lọc bỏ khỏi testlist trước khi chạy. testlist xoá và tạo lại work-dir, run --testfile dùng tiếp
-# work-dir đó (cần file ISA đã kiểm trong đó). Báo cáo HTML ở tb/riscof/out/<cấu hình>/report.html.
+# RISCOF picks tests from the ISA yaml of each config, runs the core and Spike, then compares signatures.
+# Suite 3.10.0 also picks pmp32 from the RV32I.*Zicsr regex alone (with no PMP condition
+# that the ISA yaml could exclude), so it is filtered out of the testlist first. testlist deletes and
+# recreates work-dir, and run --testfile reuses
+# that work-dir (it needs the checked ISA files there). HTML report in tb/riscof/out/<config>/report.html.
 arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
-	@command -v riscof > /dev/null || { echo "LOI: chua co riscof, xem lenh cai trong docs/riscof.md"; exit 1; }
-	@command -v spike > /dev/null || { echo "LOI: chua co spike, xem lenh cai trong docs/riscof.md"; exit 1; }
+	@command -v riscof > /dev/null || { echo "ERROR: riscof not found, see the install commands in docs/riscof.md"; exit 1; }
+	@command -v spike > /dev/null || { echo "ERROR: spike not found, see the install commands in docs/riscof.md"; exit 1; }
 	@for c in $(ARCH_CFGS); do \
 	  echo "== RISCOF $$c =="; \
 	  (cd tb/riscof && riscof testlist --config config_$$c.ini --suite $(CURDIR)/$(ARCH_SUITE) \
@@ -421,7 +424,7 @@ arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	     --env $(CURDIR)/$(ARCH_SUITE)/env --work-dir $(CURDIR)/$(ARCH_OUT)/$$c --no-browser \
 	     --testfile $(CURDIR)/$(ARCH_OUT)/$$c.testlist.yaml) || exit 1; \
 	done
-	@# riscof run trả 0 kể cả khi có test Failed, nên đếm lại trong report.html
+	@# riscof run returns 0 even with Failed tests, so count again in report.html
 	@bad=0; for c in $(ARCH_CFGS); do \
 	  r=$(ARCH_OUT)/$$c/report.html; \
 	  p=$$(grep -c 'col-result">Passed<' $$r); f=$$(grep -c 'col-result">Failed<' $$r); \
@@ -429,15 +432,15 @@ arch-core: $(foreach c,$(ARCH_CFGS),$(CORE_OUT)/tb_core_arch_$(c).vvp)
 	done; [ $$bad = 0 ]
 
 # ---------------------------------------------------------------------------
-# Tổng hợp thử bằng Yosys (flow nhà), chỉ xem xu hướng diện tích và độ sâu logic.
-# Không dùng thư viện GPDK45. Số chính thức lấy từ Genus ở trường.
-#   make synth-core-yosys          rv32_core với ENABLE_M=0 và 1
-# Kết quả: syn/run_yosys/<nhãn>/{stat.txt,stat_cmos.txt,ltp.txt}, tóm tắt in ra màn hình.
+# Trial synthesis with Yosys (home flow), only for area and logic depth trends.
+# No GPDK45 library. Official numbers come from Genus at school.
+#   make synth-core-yosys          rv32_core with ENABLE_M=0 and 1
+# Results: syn/run_yosys/<label>/{stat.txt,stat_cmos.txt,ltp.txt}, summary on screen.
 # ---------------------------------------------------------------------------
 YOSYS ?= yosys
 YS_RUN := syn/run_yosys
 
-# $(1) nhãn, $(2) top, $(3) file nguồn, $(4) include, $(5) tham số
+# $(1) label, $(2) top, $(3) source files, $(4) include, $(5) parameters
 define yosys_run
 	@mkdir -p $(YS_RUN)/$(1)
 	@YS_TOP=$(2) YS_SRCS="$(3)" YS_INC="$(4)" YS_PARAMS="$(5)" YS_OUT=$(YS_RUN)/$(1) \
@@ -450,32 +453,32 @@ synth-core-yosys:
 	$(call yosys_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
 	$(call yosys_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
 
-# PicoRV32 (submodule ref/picorv32, không sửa) qua cùng flow, để so sánh sơ bộ
-# với rv32_core. Bảng kết quả: docs/yosys_compare.md.
-#   make synth-ref-yosys           3 cấu hình PicoRV32
-#   make synth-compare-yosys       rv32_core và PicoRV32
+# PicoRV32 (submodule ref/picorv32, unmodified) through the same flow for a first comparison
+# with rv32_core. Result table: docs/yosys_compare.md.
+#   make synth-ref-yosys           3 PicoRV32 configurations
+#   make synth-compare-yosys       rv32_core and PicoRV32
 PICO_SRC := ref/picorv32/picorv32.v
 PICO_CFG_I  := BARREL_SHIFTER=1 ENABLE_IRQ=1
 PICO_CFG_IM := BARREL_SHIFTER=1 ENABLE_IRQ=1 ENABLE_FAST_MUL=1 ENABLE_DIV=1
 
 .PHONY: synth-ref-yosys synth-compare-yosys
 synth-ref-yosys:
-	@test -f $(PICO_SRC) || { echo "LOI: chua co submodule, chay: git submodule update --init ref/picorv32"; exit 1; }
+	@test -f $(PICO_SRC) || { echo "ERROR: submodule missing, run: git submodule update --init ref/picorv32"; exit 1; }
 	$(call yosys_run,picorv32_default,picorv32,$(PICO_SRC),,)
 	$(call yosys_run,picorv32_I,picorv32,$(PICO_SRC),,$(PICO_CFG_I))
 	$(call yosys_run,picorv32_IM,picorv32,$(PICO_SRC),,$(PICO_CFG_IM))
 
 synth-compare-yosys: synth-core-yosys synth-ref-yosys
 
-# Timing ước lượng ở nhà: Yosys map sang thư viện mở Nangate45, OpenSTA tính
-# đường găng (ns) và F_max. Chỉ xem xu hướng, không phải số GPDK45.
-# Bảng kết quả: docs/timing_core.md.
-#   make sta-core-nangate          rv32_core với ENABLE_M=0 và 1
-# Kết quả: syn/run_yosys/<nhãn>_ng/{stat.txt,sta.txt,path_reg2reg.txt,...}
+# Home timing estimate: Yosys maps to the open Nangate45 library and OpenSTA computes
+# the critical path (ns) and F_max. Trends only, not GPDK45 numbers.
+# Result table: docs/timing_core.md.
+#   make sta-core-nangate          rv32_core with ENABLE_M=0 and 1
+# Results: syn/run_yosys/<label>_ng/{stat.txt,sta.txt,path_reg2reg.txt,...}
 STA ?= sta
 NG_LIB := syn/run_yosys/lib/NangateOpenCellLibrary_typical.lib
 
-# $(1) nhãn, $(2) top, $(3) file nguồn, $(4) include, $(5) tham số
+# $(1) label, $(2) top, $(3) source files, $(4) include, $(5) parameters
 define nangate_run
 	@mkdir -p $(YS_RUN)/$(1)_ng
 	@YS_TOP=$(2) YS_SRCS="$(3)" YS_INC="$(4)" YS_PARAMS="$(5)" YS_OUT=$(YS_RUN)/$(1)_ng YS_LIB=$(NG_LIB) \
@@ -488,20 +491,20 @@ endef
 
 .PHONY: sta-core-nangate
 sta-core-nangate:
-	@command -v $(STA) > /dev/null || { echo "LOI: khong thay OpenSTA ($(STA)), xem docs/timing_core.md"; exit 1; }
+	@command -v $(STA) > /dev/null || { echo "ERROR: OpenSTA ($(STA)) not found, see docs/timing_core.md"; exit 1; }
 	@bash scripts/get_nangate45.sh > /dev/null
 	$(call nangate_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
 	$(call nangate_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
 
 # ---------------------------------------------------------------------------
-# Bus và bộ nhớ (Phát): RTL-03 rtl/bus, RTL-08 rtl/mem. Tài liệu: docs/bus_mem.md
-# Chạy ở nhà (Icarus, Verilator). Kết quả ở tb/unit/out/bus và tb/soc/out (bị ignore).
-#   make lint-bus                  Verilator -Wall từng module trong rtl/bus, rtl/mem, 0 warning
-#   make unit-bus                  tb_sys_bus, tb_apb_bridge, tb_sram_wrap, tb_imem_port (TB=tb_sys_bus để chạy một bài)
-#   make fw-bus                    core chạy test assembly và riscv-tests trên sys_bus + SRAM macro (T=smoke)
+# Bus and memories (Phat): RTL-03 rtl/bus, RTL-08 rtl/mem. Docs: docs/bus_mem.md
+# Runs at home (Icarus, Verilator). Results in tb/unit/out/bus and tb/soc/out (ignored).
+#   make lint-bus                  Verilator -Wall on each module in rtl/bus, rtl/mem, 0 warnings
+#   make unit-bus                  tb_sys_bus, tb_apb_bridge, tb_sram_wrap, tb_imem_port (TB=tb_sys_bus runs one)
+#   make fw-bus                    the core runs assembly tests and riscv-tests on sys_bus + SRAM macros (T=smoke)
 #   make unit-bus PLUSARGS="+seed=7"
 # ---------------------------------------------------------------------------
-# soc_top cần cả core, ngoại vi và accelerator nên lint và chạy ở phần SoC, không ở đây
+# soc_top needs the core, peripherals and accelerator, so it is linted and run in the SoC part
 BUS_RTL     := $(filter-out rtl/bus/soc_top.v,$(wildcard rtl/bus/*.v)) $(wildcard rtl/mem/*.v)
 BUS_MODELS  := tb/models/sram_2k_macro.v
 BUS_ACCEL   := $(ACCEL_RTL) rtl/accel/accel_apb.v
@@ -513,7 +516,7 @@ BUS_VLFLAGS := --lint-only -Wall -Irtl/bus -Irtl/mem -y rtl/bus -y rtl/mem -y tb
 lint-bus unit-bus fw-bus: SHELL := /bin/bash
 lint-bus unit-bus fw-bus: .SHELLFLAGS := -o pipefail -c
 
-# Bộ tham số, cùng quy ước với phần core: các lần chạy cách nhau dấu cách, NAME=VALUE cách nhau dấu phẩy
+# Parameter sets, same convention as the core part: runs separated by spaces, NAME=VALUE by commas
 BUS_LINT_CFG_sys_bus    := N_MASTER=1 N_MASTER=2 N_MASTER=4
 BUS_LINT_CFG_sram_array := BANK_W=0 BANK_W=2
 BUS_LINT_CFG_sram_wrap  := BANK_W=0 BANK_W=2
@@ -545,7 +548,7 @@ lint-bus:
 	done; \
 	if [ $$fail = 0 ]; then echo "LINT-BUS PASS"; else echo "LINT-BUS FAIL"; exit 1; fi
 
-# Testbench đạt khi log có dòng bắt đầu bằng PASS và không có dòng FAIL.
+# A testbench passes when the log has a line starting with PASS and no FAIL line.
 unit-bus:
 	@mkdir -p $(BUS_OUT); pass=0; fail=0; \
 	for run in $(BUS_UNIT_RUNS); do \
@@ -566,9 +569,9 @@ unit-bus:
 	done; \
 	echo "UNIT-BUS: $$pass passed, $$fail failed"; [ $$fail = 0 ]
 
-# Core trên bus thật: test assembly không dùng khối điều khiển riêng của tb_core
-# (irq, trap, wfi, muldiv cần nó), test riêng của bus ở fw/tests/bus và riscv-tests
-# như isa-core. Dùng lại rule elf2hex của core.
+# Core on the real bus: assembly tests that do not use the tb_core control block
+# (irq, trap, wfi, muldiv need it), the bus tests in fw/tests/bus, and riscv-tests
+# as in isa-core. Reuses the core elf2hex rule.
 BUS_FW_TESTS  := smoke hazard
 BUS_OWN_TESTS := $(basename $(notdir $(wildcard fw/tests/bus/*.S)))
 BUS_OWN_OUT   := $(BUS_SOC_OUT)/fw
@@ -584,7 +587,7 @@ bus_tests = $(addprefix $(CORE_FW_OUT)/,$(BUS_FW_TESTS)) \
 .PRECIOUS: $(BUS_OWN_OUT)/%.elf
 $(BUS_OWN_OUT)/%.elf: fw/tests/bus/%.S fw/tests/asm/test_macros.h fw/common/link.ld
 	@mkdir -p $(@D)
-	@test -n "$(RV_PREFIX)" || { echo "LOI: khong tim thay riscv gcc"; exit 1; }
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
 	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
 
 $(BUS_OWN_OUT)/%.tohost: $(BUS_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
@@ -612,10 +615,10 @@ clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
 
 # ---------------------------------------------------------------------------
-# SoC (Phát): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v. Tài liệu: docs/soc_top.md
-# Chạy ở nhà (Icarus, Verilator). Kết quả ở tb/soc/out/soc (bị ignore).
-#   make lint-soc                  Verilator -Wall soc_top (4 cấu hình ENABLE_M x ENABLE_WFI_SLEEP), 0 warning
-#   make fw-soc                    soc_top chạy smoke, hazard, soc.S, bus.S và riscv-tests (T=soc để chạy một bài)
+# SoC (Phat): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v. Docs: docs/soc_top.md
+# Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
+#   make lint-soc                  Verilator -Wall on soc_top (4 configs ENABLE_M x ENABLE_WFI_SLEEP), 0 warnings
+#   make fw-soc                    soc_top runs smoke, hazard, soc.S, bus.S and riscv-tests (T=soc runs one)
 # ---------------------------------------------------------------------------
 SOC_RTL     := $(CORE_RTL) $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v) $(wildcard rtl/periph/*.v) $(BUS_ACCEL)
 SOC_OUT     := tb/soc/out/soc
@@ -640,8 +643,8 @@ lint-soc:
 	done; \
 	if [ $$fail = 0 ]; then echo "LINT-SOC PASS"; else echo "LINT-SOC FAIL"; exit 1; fi
 
-# Test assembly không dùng khối điều khiển riêng của tb_core, test riêng của SoC ở
-# fw/tests/soc, bus.S (dùng lại rule của phần bus) và riscv-tests.
+# Assembly tests that do not use the tb_core control block, the SoC tests in
+# fw/tests/soc, bus.S (reuses the bus rule) and riscv-tests.
 SOC_FW_TESTS  := smoke hazard
 SOC_OWN_TESTS := $(basename $(notdir $(wildcard fw/tests/soc/*.S)))
 SOC_OWN_OUT   := $(SOC_OUT)/fw
@@ -659,7 +662,7 @@ SOC_FW_RUNS   := $(foreach c,$(SOC_FW_CFGS),$(foreach t,$(call soc_tests,$(c)),$
 .PRECIOUS: $(SOC_OWN_OUT)/%.elf
 $(SOC_OWN_OUT)/%.elf: fw/tests/soc/%.S fw/tests/asm/test_macros.h fw/common/link.ld
 	@mkdir -p $(@D)
-	@test -n "$(RV_PREFIX)" || { echo "LOI: khong tim thay riscv gcc"; exit 1; }
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
 	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
 
 $(SOC_OWN_OUT)/%.tohost: $(SOC_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh

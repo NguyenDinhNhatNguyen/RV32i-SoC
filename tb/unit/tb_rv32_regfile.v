@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_regfile - testbench tự kiểm tra cho rv32_regfile.
-// Kiểm tra: mọi thanh ghi bằng 0 sau reset, x0 bỏ qua lệnh ghi, giá trị ghi
-// chỉ thấy sau cạnh clock (không bypass), đọc ghi ngẫu nhiên so với mô hình
-// mảng, reset bất đồng bộ giữa chu kỳ.
-// Plusarg: +seed=<n> +n=<số chu kỳ ngẫu nhiên> +timeout=<ns>
+// tb_rv32_regfile - self-checking testbench for rv32_regfile.
+// Checks: every register is 0 after reset, x0 ignores writes, a written value
+// shows only after the clock edge (no bypass), random reads and writes against an array
+// model, asynchronous reset in the middle of a cycle.
+// Plusargs: +seed=<n> +n=<random cycles> +timeout=<ns>
 
 module tb_rv32_regfile;
 
@@ -67,8 +67,8 @@ module tb_rv32_regfile;
         end
     endtask
 
-    // Một chu kỳ clock: đặt ngõ vào sau cạnh xuống, kiểm tra giá trị đọc ngay
-    // trước cạnh lên, rồi cập nhật mô hình ở cạnh lên.
+    // One clock cycle: set inputs after the falling edge, check reads just
+    // before the rising edge, then update the model on the rising edge.
     task cycle(input t_we, input [4:0] t_rd, input [31:0] t_data,
                input [4:0] t_rs1, input [4:0] t_rs2);
         begin
@@ -76,7 +76,7 @@ module tb_rv32_regfile;
             we = t_we; rd_addr = t_rd; rd_data = t_data;
             rs1_addr = t_rs1; rs2_addr = t_rs2;
             #4;
-            // Vẫn đọc ra giá trị cũ kể cả khi rd == rs (không bypass)
+            // Still reads the old value even when rd == rs (no bypass)
             check_port(rs1_addr, rs1_data, "rs1");
             check_port(rs2_addr, rs2_data, "rs2");
             @(posedge clk);
@@ -92,33 +92,33 @@ module tb_rv32_regfile;
 
         clear_model;
         #12 rst_n = 1'b1;
-        check_all;                                    // giá trị sau reset
+        check_all;                                    // Values after reset
 
-        // x0 luôn bằng 0
+        // x0 is always 0
         cycle(1'b1, 5'd0, 32'hDEAD_BEEF, 5'd0, 5'd0);
         cycle(1'b0, 5'd0, 32'h0, 5'd0, 5'd0);
 
-        // Ghi mỗi thanh ghi một mẫu khác nhau rồi đọc lại
+        // Write a different pattern to each register, then read it back
         for (i = 1; i < 32; i = i + 1)
             cycle(1'b1, i, {i[7:0], ~i[7:0], i[7:0], 8'hA5}, i - 1, i);
         check_all;
 
-        // we = 0 thì không được ghi
+        // With we = 0 nothing is written
         for (i = 1; i < 32; i = i + 1)
             cycle(1'b0, i, 32'hFFFF_FFFF, i, 5'd0);
         check_all;
 
-        // Ghi liên tiếp vào cùng thanh ghi, đọc trong cùng chu kỳ
+        // Back-to-back writes to the same register, read in the same cycle
         cycle(1'b1, 5'd7, 32'h1111_1111, 5'd7, 5'd7);
         cycle(1'b1, 5'd7, 32'h2222_2222, 5'd7, 5'd7);
         cycle(1'b0, 5'd7, 32'h0, 5'd7, 5'd7);
 
-        // Đọc ghi ngẫu nhiên
+        // Random reads and writes
         for (i = 0; i < n_rand; i = i + 1)
             cycle($random(seed), $random(seed), $random(seed), $random(seed), $random(seed));
         check_all;
 
-        // Reset bất đồng bộ giữa chu kỳ
+        // Asynchronous reset in the middle of a cycle
         @(negedge clk);
         #2 rst_n = 1'b0;
         #0.5;

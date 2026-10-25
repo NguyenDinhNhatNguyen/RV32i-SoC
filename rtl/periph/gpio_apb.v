@@ -1,9 +1,9 @@
 // gpio_apb.v - GPIO APB3 slave (RTL-04), W <= 32
-// Base: 0x2000_2000 (cua so 4 KB). Chi truy cap word, dia chi khac -> PSLVERR.
-//   0x00 DATA_OUT  RW  gia tri xuat ra chan, reset 0
-//   0x04 DATA_IN   RO  gia tri chan (qua dong bo 2 flop); ghi -> PSLVERR
+// Base: 0x2000_2000 (4 KB window). Word access only, other addresses -> PSLVERR.
+//   0x00 DATA_OUT  RW  Value driven on the pins, reset 0
+//   0x04 DATA_IN   RO  Pin values (through a 2-flop synchronizer), a write -> PSLVERR
 //   0x08 DIR       RW  1 = output, 0 = input, reset 0
-// Khong dung tri-state ben trong: gpio_o / gpio_oe / gpio_i tach rieng, noi pad o top.
+// No internal tri-state: gpio_o / gpio_oe / gpio_i are separate, pads are added at top level.
 `timescale 1ns/1ps
 module gpio_apb #(
     parameter W = 32

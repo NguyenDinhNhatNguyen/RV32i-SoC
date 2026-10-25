@@ -11,18 +11,18 @@ module accelerator_top (
     input  wire               rst_n,
     input  wire               start,
     input  wire               clear,
-    input  wire [3:0]         row_sel,      // Đọc kết quả hàng nào ra bus
-    // Đầu vào ma trận A (4 dòng, mỗi chu kỳ nạp 1 giá trị 8-bit)
+    input  wire [3:0]         row_sel,      // Which result row to read out
+    // Matrix A inputs (4 rows, one 8-bit value per cycle each)
     input  wire signed [7:0]  a_row0,
     input  wire signed [7:0]  a_row1,
     input  wire signed [7:0]  a_row2,
     input  wire signed [7:0]  a_row3,
-    // Đầu vào ma trận B (4 cột, mỗi chu kỳ nạp 1 giá trị 8-bit)
+    // Matrix B inputs (4 columns, one 8-bit value per cycle each)
     input  wire signed [7:0]  b_col0,
     input  wire signed [7:0]  b_col1,
     input  wire signed [7:0]  b_col2,
     input  wire signed [7:0]  b_col3,
-    // Kết quả đầu ra (4 giá trị 20-bit của hàng được chọn)
+    // Outputs (four 20-bit values of the selected row)
     output reg  signed [19:0] res_out0,
     output reg  signed [19:0] res_out1,
     output reg  signed [19:0] res_out2,
@@ -31,16 +31,16 @@ module accelerator_top (
     output reg                done
 );
 
-    // Dây nối ma trận A ngang (4 hàng, 5 điểm nối)
+    // Horizontal A wires (4 rows, 5 taps)
     wire signed [7:0] a_wire [0:3][0:4];
-    // Dây nối ma trận B dọc (5 điểm nối, 4 cột)
+    // Vertical B wires (5 taps, 4 columns)
     wire signed [7:0] b_wire [0:4][0:3];
-    // Tín hiệu valid theo từng PE
+    // Valid signal per PE
     wire v_wire [0:3][0:4];
-    // Ma trận tích lũy C (4x4 PE)
+    // Accumulated C matrix (4x4 PE)
     wire signed [19:0] c_matrix [0:3][0:3];
 
-    // Nạp dữ liệu vào biên trái (A) và biên trên (B)
+    // Feed data at the left edge (A) and the top edge (B)
     assign a_wire[0][0] = a_row0;
     assign a_wire[1][0] = a_row1;
     assign a_wire[2][0] = a_row2;
@@ -56,7 +56,7 @@ module accelerator_top (
     assign v_wire[2][0] = busy;
     assign v_wire[3][0] = busy;
 
-    // Khởi tạo mảng 4x4 Processing Elements (16 PEs)
+    // Instantiate the 4x4 array of processing elements (16 PEs)
     genvar i, j;
     generate
         for (i = 0; i < 4; i = i + 1) begin: ROW
@@ -64,7 +64,7 @@ module accelerator_top (
                 pe u_pe (
                     .clk       (clk),
                     .rst_n     (rst_n),
-                    .en        (busy),     // RTL-05: mảng chỉ chạy khi busy
+                    .en        (busy),     // RTL-05: the array runs only while busy
                     .clr_acc   (clear),
                     .valid_in  (v_wire[i][j]),
                     .a_in      (a_wire[i][j]),
@@ -78,7 +78,7 @@ module accelerator_top (
         end
     endgenerate
 
-    // FSM Điều khiển tính toán và đếm chu kỳ hoàn tất
+    // Control FSM: run the computation and count cycles until done
     reg [3:0] step_cnt;
 
     always @(posedge clk or negedge rst_n) begin
@@ -92,7 +92,7 @@ module accelerator_top (
                 done     <= 1'b0;
                 step_cnt <= 4'd1;
             end else if (busy) begin
-                if (step_cnt == 4'd10) begin // Đủ độ trễ pipeline 4x4
+                if (step_cnt == 4'd10) begin // Full latency of the 4x4 pipeline
                     busy     <= 1'b0;
                     done     <= 1'b1;
                     step_cnt <= 4'd0;
@@ -103,7 +103,7 @@ module accelerator_top (
         end
     end
 
-    // Đọc kết quả tích lũy theo hàng (Row Selection) ra cổng ngoài
+    // Read accumulated results row by row (row selection) to the outputs
     always @(*) begin
         case (row_sel)
             4'b0001: begin

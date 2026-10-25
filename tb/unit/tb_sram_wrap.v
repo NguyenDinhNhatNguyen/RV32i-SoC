@@ -1,13 +1,13 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_sram_wrap - kiểm tra sram_wrap (RTL-08) với mô hình sram_2k_macro.
-//   - Đọc/ghi ngẫu nhiên word, half, byte, so với bộ nhớ tham chiếu.
-//   - Ghi đủ word và đọc: req_ready = 1, rsp_valid đúng chu kỳ sau.
-//     Ghi byte/half: đúng 1 chu kỳ wait state rồi mới được nhận.
-//   - Yêu cầu mới ngay trong chu kỳ có phản hồi (luật 3), xen chu kỳ rảnh ngẫu nhiên.
-//   - Cổng đọc ưu tiên thấp: f_gnt = ~req_valid, dữ liệu đúng ở chu kỳ sau.
-//   - Địa chỉ trải đủ các macro, dồn vào vài word để đọc ngay sau ghi.
-// Plusarg: +seed=<n> +n=<số yêu cầu bus> +timeout=<chu kỳ>
+// tb_sram_wrap - tests sram_wrap (RTL-08) with the sram_2k_macro model.
+//   - Random word, half and byte reads and writes, compared with a reference memory.
+//   - Full-word writes and reads: req_ready = 1, rsp_valid exactly one cycle later.
+//     Byte/half writes: exactly 1 wait state cycle before acceptance.
+//   - A new request in the response cycle (rule 3), with random idle cycles in between.
+//   - Low-priority read port: f_gnt = ~req_valid, correct data one cycle later.
+//   - Addresses cover every macro and cluster on a few words so reads follow writes.
+// Plusargs: +seed=<n> +n=<bus requests> +timeout=<cycles>
 
 module tb_sram_wrap;
 
@@ -49,7 +49,7 @@ module tb_sram_wrap;
         .f_rdata   (f_rdata)
     );
 
-    // ---------------------------------------------------------- tham chiếu
+    // ---------------------------------------------------------- reference
     reg [31:0] ref_mem [0:WORDS-1];
     integer i;
     initial for (i = 0; i < WORDS; i = i + 1) ref_mem[i] = 32'h0;
@@ -75,7 +75,7 @@ module tb_sram_wrap;
         end
     endfunction
 
-    // Địa chỉ word: 70% rơi vào 8 word "nóng" trải ở mọi macro
+    // Word address: 70% land on 8 "hot" words spread over every macro
     function [AW-1:0] pick_addr(input integer r);
         reg [AW-1:0] hot;
         begin
@@ -87,45 +87,45 @@ module tb_sram_wrap;
         end
     endfunction
 
-    // ---------------------------------------------------------- kiểm tra ở cạnh lên
-    reg         exp_q      = 1'b0;      // chu kỳ này phải có rsp_valid
+    // ---------------------------------------------------------- checks on the rising edge
+    reg         exp_q      = 1'b0;      // rsp_valid is required this cycle
     reg         exp_rd_q   = 1'b0;
     reg  [31:0] exp_data_q = 32'h0;
     reg         f_exp_q    = 1'b0;
     reg  [31:0] f_exp_data_q = 32'h0;
-    reg         part_wait_q = 1'b0;     // chu kỳ trước là wait state của ghi một phần
+    reg         part_wait_q = 1'b0;     // Last cycle was the wait state of a partial write
 
     wire part = req_we & (req_be != 4'hF);
 
     always @(posedge clk) begin
         if (rst_n) begin
             cycle = cycle + 1;
-            // Phản hồi
+            // Response
             if (rsp_valid !== exp_q)
-                fail("rsp_valid sai chu ky");
+                fail("rsp_valid in the wrong cycle");
             if (exp_q && exp_rd_q && rsp_rdata !== exp_data_q) begin
-                $display("      doc ra %h, mong doi %h", rsp_rdata, exp_data_q);
-                fail("du lieu doc sai");
+                $display("      read %h, expected %h", rsp_rdata, exp_data_q);
+                fail("wrong read data");
             end
             if (exp_q && !exp_rd_q && rsp_rdata !== 32'h0)
-                fail("rsp_rdata cua lenh ghi khac 0");
+                fail("rsp_rdata of a write is not 0");
             if (f_exp_q && f_rdata !== f_exp_data_q) begin
                 $display("      f_rdata %h, mong doi %h", f_rdata, f_exp_data_q);
-                fail("lay lenh doc sai");
+                fail("wrong fetch read");
             end
             // Ready
             if (f_gnt !== ~req_valid)
                 fail("f_gnt khac ~req_valid");
             if (req_valid) begin
                 if (!part && req_ready !== 1'b1)
-                    fail("doc/ghi du word phai ready = 1");
+                    fail("full-word read/write must have ready = 1");
                 if (part && req_ready !== part_wait_q)
-                    fail("ghi mot phan phai co dung 1 chu ky wait state");
+                    fail("a partial write must have exactly 1 wait state cycle");
             end
             if (req_valid && req_ready && exp_q)
                 n_back2back = n_back2back + 1;
 
-            // Mô hình tham chiếu cập nhật khi nhận
+            // The reference model updates on acceptance
             exp_q    <= req_valid & req_ready;
             exp_rd_q <= ~req_we;
             if (req_valid && req_ready) begin
@@ -147,8 +147,9 @@ module tb_sram_wrap;
         end
     end
 
-    // ---------------------------------------------------------- master ở cạnh xuống
-    // req_ready đã chốt ở cạnh lên để master ở cạnh xuống biết yêu cầu đã được nhận chưa
+    // ---------------------------------------------------------- master on the falling edge
+    // req_ready is latched on the rising edge, so the master on the falling edge knows whether
+    // the request was taken
     reg req_ready_q = 1'b0;
     always @(posedge clk) req_ready_q <= req_ready;
 
@@ -156,8 +157,8 @@ module tb_sram_wrap;
     integer r;
     always @(negedge clk) begin
         if (rst_n) begin
-            // Giữ nguyên yêu cầu khi chưa được nhận (luật 1). req_ready ở
-            // cạnh xuống là giá trị của chu kỳ vừa qua.
+            // Hold the request until it is accepted (rule 1). req_ready on the
+            // falling edge is the value of the cycle that just ended.
             if (!(req_valid && !req_ready_q)) begin
                 if (issued < n_req && ($unsigned($random(seed)) % 4) != 0) begin
                     r         = $random(seed);
@@ -200,9 +201,9 @@ module tb_sram_wrap;
         repeat (3) @(posedge clk);
         if (cycle >= timeout) fail("qua thoi gian");
         if (n_wr_part == 0 || n_wr_full == 0 || n_rd == 0 || n_fetch == 0 || n_back2back == 0)
-            fail("thieu loai giao dich");
+            fail("missing transaction type");
         if (errors == 0)
-            $display("PASS: tb_sram_wrap BANK_W=%0d: %0d yeu cau (%0d doc, %0d ghi word, %0d ghi byte/half), %0d lay lenh, %0d yeu cau lien tiep (seed %0d)",
+            $display("PASS: tb_sram_wrap BANK_W=%0d: %0d requests (%0d reads, %0d word writes, %0d byte/half writes), %0d fetches, %0d back-to-back requests (seed %0d)",
                      BANK_W, n_acc, n_rd, n_wr_full, n_wr_part, n_fetch, n_back2back, seed0);
         else
             $display("FAIL: tb_sram_wrap BANK_W=%0d: %0d loi (seed %0d)", BANK_W, errors, seed0);

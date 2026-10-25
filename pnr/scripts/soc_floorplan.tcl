@@ -1,32 +1,32 @@
-# soc_floorplan.tcl - floorplan, đặt SRAM macro, pin plan, power plan cho soc_top (PD-02).
-# Source sau init_design và globalNetConnect, trước placement (PD-03 sẽ gọi từ script chạy SoC).
-# Số liệu và lý do chọn: docs/pd02_floorplan.md. CHƯA CHẠY TRÊN SERVER: kiểm lần đầu ở PD-03.
+# soc_floorplan.tcl - floorplan, SRAM macro placement, pin plan and power plan for soc_top (PD-02).
+# Source after init_design and globalNetConnect, before placement (PD-03 will call it from the SoC script).
+# Numbers and reasoning: docs/pd02_floorplan.md. NOT RUN ON THE SERVER YET: first check in PD-03.
 #
-# Bố trí: 4 macro IMEM xếp một hàng sát cạnh trên, 4 macro DMEM sát cạnh dưới, logic ở dải giữa.
-# Chân tín hiệu ở cạnh trái và phải (cạnh trên, dưới đã có macro).
-# Cần có sẵn: try_cmd (như run_all.tcl), các biến của config.tcl (PWR_NET, GND_NET, CORE_SITE).
+# Layout: 4 IMEM macros in one row at the top edge, 4 DMEM macros at the bottom edge, logic in the middle band.
+# Signal pins on the left and right edges (the top and bottom edges hold macros).
+# Needs: try_cmd (as in run_all.tcl) and the config.tcl variables (PWR_NET, GND_NET, CORE_SITE).
 
-# ---- Tham số -------------------------------------------------------------------------
-set CORE_W     391.0      ;# µm, estimate_die.py với diện tích an toàn 51 714 µm², mật độ 70%
+# ---- Parameters ----------------------------------------------------------------------
+set CORE_W     391.0      ;# um, estimate_die.py with the safe area 51 714 um2 at 70% density
 set CORE_H     392.0
-set IO_GAP     15.0       ;# core tới biên die, chỗ cho power ring
+set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
 set HALO       5.0
-set MAC_GAP    [expr {2*$HALO}]   ;# khe giữa 2 macro cạnh nhau = 2 halo
-# Hướng đặt: chân của macro phải quay vào dải logic ở giữa. Chọn lại theo cạnh có chân
-# trong output của scripts/macro_info.sh. Hàng dưới R0, hàng trên lật trục X (MX).
+set MAC_GAP    [expr {2*$HALO}]   ;# Gap between 2 neighbouring macros = 2 halos
+# Orientation: macro pins must face the logic band in the middle. Pick again from the pin edge
+# in the scripts/macro_info.sh output. Bottom row R0, top row mirrored on X (MX).
 set IMEM_ORIENT MX
 set DMEM_ORIENT R0
-# Lớp kim loại của ring quanh macro: chọn theo lớp chân VDD/VSS của macro (macro_info.sh mục 2)
+# Metal layers of the ring around each macro: pick from the macro VDD/VSS pin layers (macro_info.sh section 2)
 set BLK_RING_H Metal6
 set BLK_RING_V Metal5
 
-# ---- Floorplan theo kích thước core cố định -------------------------------------------
+# ---- Floorplan with a fixed core size ------------------------------------------------
 floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP
 
-# ---- Đặt macro ------------------------------------------------------------------------
-# Tìm macro theo tên cell, tách IMEM và DMEM theo tên instance (u_imem, u_dmem trong soc_top)
+# ---- Macro placement -----------------------------------------------------------------
+# Find macros by cell name, split IMEM and DMEM by instance name (u_imem, u_dmem in soc_top)
 set macros [lsort [dbGet [dbGet -p2 top.insts.cell.name sram_2k_macro].name]]
 set imem {}
 set dmem {}
@@ -49,19 +49,19 @@ place_row $dmem [expr {$cy0 + $HALO}]           $DMEM_ORIENT
 place_row $imem [expr {$cy1 - $HALO - $MAC_H}]  $IMEM_ORIENT
 
 foreach m $macros { try_cmd {addHaloToBlock $HALO $HALO $HALO $HALO $m} }
-try_cmd {cutRow}            ;# bỏ hàng cell chuẩn nằm dưới macro và halo
+try_cmd {cutRow}            ;# Remove standard cell rows under the macros and halos
 
 # ---- Pin plan -------------------------------------------------------------------------
-# Trái (edge 0): clock, reset, UART, GPIO vào. Phải (edge 2): GPIO ra và output enable.
+# Left (edge 0): clock, reset, UART, GPIO inputs. Right (edge 2): GPIO outputs and output enables.
 editPin -pin {clk rst_n uart_rx uart_tx gpio_i*} -edge 0 -spreadType CENTER -spacing 4 -layer 3
 editPin -pin {gpio_o* gpio_oe*}                  -edge 2 -spreadType CENTER -spacing 4 -layer 3
 
 # ---- Power plan -----------------------------------------------------------------------
-# Ring lõi và stripe như run_all.tcl (đã chạy được trên Innovus 21.1 ngày 21/10)
+# Core ring and stripes as in run_all.tcl (ran on Innovus 21.1 on 21/10)
 addRing -nets [list $PWR_NET $GND_NET] -type core_rings -follow core \
         -layer {top Metal8 bottom Metal8 left Metal7 right Metal7} \
         -width 2.0 -spacing 1.0 -offset 1.5
-# Ring quanh từng macro, rồi nối chân nguồn của macro
+# A ring around each macro, then connect the macro power pins
 try_cmd {addRing -nets [list $PWR_NET $GND_NET] -type block_rings -around each_block \
          -layer [list top $BLK_RING_H bottom $BLK_RING_H left $BLK_RING_V right $BLK_RING_V] \
          -width 1.0 -spacing 0.5 -offset 1.0}

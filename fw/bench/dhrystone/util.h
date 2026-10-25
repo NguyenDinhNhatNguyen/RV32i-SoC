@@ -1,6 +1,6 @@
-// util.h - thay util.h của riscv-tests/benchmarks/common khi dịch Dhrystone
-// cho tb_core. dhrystone_main.c chỉ cần read_csr và setStats.
-// Đặt thư mục này trước trong -I để file gốc không bị dùng.
+// util.h - replaces util.h of riscv-tests/benchmarks/common when compiling Dhrystone
+// for tb_core. dhrystone_main.c only needs read_csr and setStats.
+// Put this directory first in -I so the original file is not used.
 #ifndef BENCH_DHRY_UTIL_H
 #define BENCH_DHRY_UTIL_H
 

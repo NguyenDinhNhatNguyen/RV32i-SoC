@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// Testbench tu kiem tra cho gpio_apb. Cuoi cung in "PASS: ..." neu moi kiem tra dung.
+// Self-checking testbench for gpio_apb. Prints "PASS: ..." at the end if every check passes.
 module tb_gpio_apb;
     reg         PCLK = 1'b0;
     reg         PRESETn = 1'b0;
@@ -22,7 +22,7 @@ module tb_gpio_apb;
         .gpio_i(gpio_i), .gpio_o(gpio_o), .gpio_oe(gpio_oe)
     );
 
-    localparam HALF = 10;      // nua chu ky (ns): 50 MHz
+    localparam HALF = 10;      // Half period (ns): 50 MHz
     always #HALF PCLK = ~PCLK;
 
     localparam DATA_OUT = 12'h000, DATA_IN = 12'h004, DIR = 12'h008;
@@ -94,7 +94,7 @@ module tb_gpio_apb;
         apb_read(DATA_OUT); check(rd == 32'd0 && !err_seen, "reset: DATA_OUT = 0");
         apb_read(DIR);      check(rd == 32'd0 && !err_seen, "reset: DIR = 0");
 
-        // ---- 2. DATA_OUT ghi/doc ----
+        // ---- 2. DATA_OUT write/read ----
         apb_write(DATA_OUT, 32'hA5A51234);
         check(!err_seen, "write DATA_OUT: no PSLVERR");
         check(gpio_o == 32'hA5A51234, "gpio_o follows DATA_OUT");
@@ -102,14 +102,14 @@ module tb_gpio_apb;
         apb_write(DATA_OUT, 32'h5A5ACDEF);
         check(gpio_o == 32'h5A5ACDEF, "gpio_o updates on 2nd write");
 
-        // ---- 3. DIR ghi/doc, gpio_oe ----
+        // ---- 3. DIR write/read, gpio_oe ----
         apb_write(DIR, 32'hFFFF0000);
         check(gpio_oe == 32'hFFFF0000, "gpio_oe follows DIR");
         apb_read(DIR); check(rd == 32'hFFFF0000, "DIR readback");
         apb_write(DIR, 32'h0000000F);
         check(gpio_oe == 32'h0000000F, "gpio_oe updates on 2nd write");
 
-        // ---- 4. DATA_IN doc chan ngoai (qua dong bo 2 flop) ----
+        // ---- 4. DATA_IN reads the external pins (through the 2-flop synchronizer) ----
         gpio_i = 32'h12345678;
         wait_clks(4);
         apb_read(DATA_IN);
@@ -118,12 +118,12 @@ module tb_gpio_apb;
         wait_clks(4);
         apb_read(DATA_IN);
         check(rd == 32'hCAFEF00D, "DATA_IN tracks gpio_i");
-        // DATA_IN doc duoc bat ke DIR
+        // DATA_IN is readable regardless of DIR
         apb_write(DIR, 32'hFFFFFFFF);
         apb_read(DATA_IN);
         check(rd == 32'hCAFEF00D, "DATA_IN independent of DIR");
 
-        // ---- 5. Ghi vao DATA_IN (chi doc) -> PSLVERR, khong doi gi ----
+        // ---- 5. Write to DATA_IN (read only) -> PSLVERR, nothing changes ----
         apb_write(DATA_OUT, 32'h0F0F0F0F);
         apb_write(DATA_IN, 32'hFFFFFFFF);
         check(err_seen == 1'b1, "write DATA_IN -> PSLVERR");
@@ -132,7 +132,7 @@ module tb_gpio_apb;
         apb_read(DATA_IN);
         check(rd == 32'hCAFEF00D, "DATA_IN unchanged after write");
 
-        // ---- 6. Dia chi sai -> PSLVERR ----
+        // ---- 6. Bad address -> PSLVERR ----
         apb_write(12'h00C, 32'h1);
         check(err_seen == 1'b1, "write offset 0xC -> PSLVERR");
         apb_read(12'h00C);
@@ -142,11 +142,11 @@ module tb_gpio_apb;
         apb_read(DATA_OUT);
         check(rd == 32'h0F0F0F0F && !err_seen, "state unchanged after bad access");
 
-        // ---- 7. Reset giua chung ----
+        // ---- 7. Reset in the middle ----
         PRESETn = 0; wait_clks(2); PRESETn = 1; wait_clks(2);
         check(gpio_o == 32'd0 && gpio_oe == 32'd0, "async reset clears regs");
 
-        // ---- 8. Ngau nhien: doi chieu mo hinh trong tb ----
+        // ---- 8. Random: compare with the model inside the tb ----
         seed = 32'h0BADCAFE;
         apb_write(DATA_OUT, 32'd0); m_out = 32'd0;
         apb_write(DIR, 32'd0);      m_dir = 32'd0;
@@ -180,11 +180,11 @@ module tb_gpio_apb;
         apb_read(DIR);      check(rd == m_dir, "rnd end: DIR");
         check(gpio_o == m_out && gpio_oe == m_dir, "rnd end: pins");
 
-        // ---- Ket qua ----
+        // ---- Result ----
         if (errors == 0)
-            $display("PASS: gpio_apb - DATA_OUT, DATA_IN, DIR, PSLVERR, 400 lenh ngau nhien dung");
+            $display("PASS: gpio_apb - DATA_OUT, DATA_IN, DIR, PSLVERR, 400 random commands correct");
         else
-            $display("FAIL: gpio_apb - %0d loi", errors);
+            $display("FAIL: gpio_apb - %0d errors", errors);
         $finish;
     end
 endmodule

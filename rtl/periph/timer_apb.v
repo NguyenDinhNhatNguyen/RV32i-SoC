@@ -1,19 +1,19 @@
-// timer_apb.v - Timer kieu CLINT rut gon, APB3 slave (RTL-04)
-// Base: 0x2000_0000 (cua so 4 KB). Chi truy cap word, dia chi khac -> PSLVERR.
+// timer_apb.v - simplified CLINT-style timer, APB3 slave (RTL-04)
+// Base: 0x2000_0000 (4 KB window). Word access only, other addresses -> PSLVERR.
 //   0x00 MTIME_LO     RW  reset 0
 //   0x04 MTIME_HI     RW  reset 0
 //   0x08 MTIMECMP_LO  RW  reset 0xFFFFFFFF
 //   0x0C MTIMECMP_HI  RW  reset 0xFFFFFFFF
 //   0x10 MSIP         RW  bit0 -> irq_software, reset 0
-// irq_timer = (mtime >= mtimecmp), muc, da dang ky 1 flop (tre 1 chu ky).
-// Ghi mtimecmp 64 bit: ghi HI=0xFFFFFFFF, roi LO, roi HI de tranh ngat gia.
-// Doc mtime 64 bit: doc HI, LO, HI roi so sanh HI de tranh carry chen giua.
+// irq_timer = (mtime >= mtimecmp), level, registered by 1 flop (1 cycle late).
+// Writing the 64-bit mtimecmp: write HI=0xFFFFFFFF, then LO, then HI to avoid a false interrupt.
+// Reading the 64-bit mtime: read HI, LO, HI, then compare HI to catch a carry in between.
 //
-// Toi uu (khong doi chuc nang quan sat duoc tu firmware):
-//  - mtime tach 2 nua 32 bit. Nua cao chi cap nhat khi (ghi) hoac (nua thap tran):
-//    ~32 flop co enable -> cong cu clock gating tu suy ra; bo cong 64 bit thanh 2 bo 32 bit,
-//    duong tinh toan ngan hon.
-//  - Moi thanh ghi chi ghi viet theo dang "if (enable) reg <= ..." de clock gating phu duoc.
+// Optimizations (no change in behavior visible to firmware):
+//  - mtime is split into two 32-bit halves. The high half updates only on (write) or
+//    (low half wrap): ~32 flops with an enable, so the tool infers clock gating, and the
+//    64-bit adder becomes two 32-bit adders with a shorter path.
+//  - Every register is written as "if (enable) reg <= ..." so clock gating covers it.
 `timescale 1ns/1ps
 module timer_apb (
     input  wire        PCLK,
@@ -28,7 +28,7 @@ module timer_apb (
     output wire        PSLVERR,
     output reg         irq_timer,
     output wire        irq_software,
-    output wire [63:0] mtime_o        // cho mtime_i cua core (CSR time, RTL-09)
+    output wire [63:0] mtime_o        // To the core mtime_i (CSR time, RTL-09)
 );
     reg [31:0] mtime_lo;
     reg [31:0] mtime_hi;
@@ -47,7 +47,8 @@ module timer_apb (
     wire wr_cmp_hi   = wr_ok && (widx == 10'd3);
     wire wr_msip     = wr_ok && (widx == 10'd4);
 
-    // nua thap dem lien tuc; nua cao chi tang khi nua thap tran (khong bi ghi de)
+    // The low half counts all the time. The high half increments only when the low half
+    // wraps (and is not being written).
     wire lo_wrap = (&mtime_lo) & ~wr_mtime_lo;
 
     assign PREADY       = 1'b1;

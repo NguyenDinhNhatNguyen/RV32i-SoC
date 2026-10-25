@@ -1,20 +1,20 @@
-// irq.S - ngắt (docs/spec/core.md mục 4.8).
-// Kiểm tra: mip phản ánh cổng ngắt, MIE và từng bit mie chặn ngắt, thứ tự
-// ưu tiên MEI > MSI > MTI, mcause bit 31, ngắt chính xác (chạy một đoạn
-// tính toán có load/store/nhánh/gọi hàm với ngắt rơi vào mọi vị trí, kết
-// quả không đổi và ngắt được nhận đúng một lần), và không nhận ngắt ở lệnh
-// sau lệnh tắt MIE / mie.
+// irq.S - interrupts (docs/spec/core.md section 4.8).
+// Checks: mip follows the interrupt pins, MIE and each mie bit block interrupts, priority
+// MEI > MSI > MTI, mcause bit 31, precise interrupts (run a compute block with
+// loads/stores/branches/calls with the interrupt landing at every position, the result
+// does not change and the interrupt is taken exactly once), and no interrupt is taken on
+// the instruction after the one that clears MIE / mie.
 //
-// Trình xử lý chỉ dùng t3-t6, s10, s11: ghi mcause vào irq_log[s10], tăng
-// s10, mepc -> s11, rồi hạ đường ngắt của nguồn vừa nhận qua khối điều khiển
-// của tb. Ngoại lệ đồng bộ (mcause bit 31 = 0) là lỗi.
+// The handler uses only t3-t6, s10, s11: it writes mcause to irq_log[s10], increments
+// s10, copies mepc -> s11, then lowers the line of the source just taken through the tb
+// control block. A synchronous exception (mcause bit 31 = 0) is an error.
 #include "test_macros.h"
 
 #define MCAUSE_MSI 0x80000003
 #define MCAUSE_MTI 0x80000007
 #define MCAUSE_MEI 0x8000000b
 
-// Đặt mức ngắt (delay 0) rồi đọc lại để chờ mức mới có hiệu lực
+// Set the interrupt level (delay 0), then read it back to wait until the new level applies
 #define SET_IRQ(val)                \
     li   t0, TB_CTRL;               \
     li   t1, val;                   \
@@ -27,7 +27,7 @@ TEST_CODE_BEGIN
     csrw mtvec, t0
     li   s10, 0
 
-    // ---- mip theo cổng, MIE = 0 chặn mọi ngắt ---------------------------------
+    // ---- mip follows the pins, MIE = 0 blocks every interrupt ---------------------
     li   t0, 0x888
     csrw mie, t0
     SET_IRQ(TB_IRQ_MSI | TB_IRQ_MTI | TB_IRQ_MEI)
@@ -38,7 +38,7 @@ TEST_CODE_BEGIN
     nop
     CHECK(3, s10, 0)
 
-    // ---- Bit mie chặn từng nguồn ----------------------------------------------------
+    // ---- mie bits block each source ----------------------------------------------------
     csrw mie, zero
     csrsi mstatus, 8
     nop
@@ -47,7 +47,7 @@ TEST_CODE_BEGIN
     CHECK(4, s10, 0)
     csrci mstatus, 8
 
-    // ---- Ưu tiên MEI > MSI > MTI (cả ba đang chờ) -------------------------------
+    // ---- Priority MEI > MSI > MTI (all three pending) -------------------------------
     li   t0, 0x888
     csrw mie, t0
     csrsi mstatus, 8
@@ -64,12 +64,12 @@ TEST_CODE_BEGIN
     CHECK(8, a0, MCAUSE_MTI)
     csrr a0, mip
     CHECK(9, a0, 0)
-    csrr a0, mstatus                // MRET trả MIE = 1, rồi csrci xoá
+    csrr a0, mstatus                // MRET returns MIE = 1, then csrci clears it
     CHECK(10, a0, 0x1880)
 
-    // ---- Từng nguồn riêng với đúng bit mie ------------------------------------------
+    // ---- Each source alone with its own mie bit ---------------------------------------
     li   s10, 0
-    li   t0, 0x80                   // chỉ MTIE: MSI và MEI đang chờ không gây ngắt
+    li   t0, 0x80                   // MTIE only: pending MSI and MEI cause no interrupt
     csrw mie, t0
     SET_IRQ(TB_IRQ_MSI | TB_IRQ_MEI)
     csrsi mstatus, 8
@@ -86,7 +86,7 @@ TEST_CODE_BEGIN
     csrci mstatus, 8
     SET_IRQ(0)
 
-    // ---- Bật MIE khi ngắt đang chờ: nhận trong vòng 2 lệnh --------------------------
+    // ---- Set MIE while an interrupt is pending: taken within 2 instructions -------
     li   s10, 0
     li   t0, 0x8                    // MSIE
     csrw mie, t0
@@ -99,10 +99,10 @@ TEST_CODE_BEGIN
     la   t0, 2b
     addi t0, t0, 4
     li   TESTNUM, 15
-    bltu t0, s11, fail              // mepc <= nhãn 2 + 4
+    bltu t0, s11, fail              // mepc <= label 2 + 4
     csrci mstatus, 8
 
-    // ---- Ngắt chính xác: ngắt rơi vào mọi vị trí của đoạn tính toán -------------
+    // ---- Precise interrupts: the interrupt lands at every position of the compute block ----
     li   t0, 0x80
     csrw mie, t0
     li   s0, 0                      // delay
@@ -114,7 +114,7 @@ precise_loop:
     slli t1, s0, 16
     ori  t1, t1, TB_IRQ_MTI
     sw   t1, TB_IRQ(t0)
-    // out[i] = arr[0] + ... + arr[i], arr = 1..8 (gọi hàm cho phép cộng)
+    // out[i] = arr[0] + ... + arr[i], arr = 1..8 (calls a function for the add)
     li   a0, 0
     la   a1, arr
     li   a2, 8
@@ -124,12 +124,12 @@ precise_loop:
     addi a1, a1, 4
     addi a2, a2, -1
     bnez a2, 1b
-2:  beqz s10, 2b                    // ngắt rơi sau đoạn tính toán thì chờ ở đây
+2:  beqz s10, 2b                    // If the interrupt lands after the compute block, wait here
     csrci mstatus, 8
     CHECK(21, s10, 1)
     CHECK(22, a0, 36)
     la   a1, arr
-    li   a0, 0                      // tổng của out[] = 1+3+6+...+36 = 120
+    li   a0, 0                      // Sum of out[] = 1+3+6+...+36 = 120
     li   a2, 8
 3:  lw   a3, 32(a1)
     sw   zero, 32(a1)
@@ -142,9 +142,9 @@ precise_loop:
     li   t0, 90
     bltu s0, t0, precise_loop
 
-    // ---- Không nhận ngắt ở lệnh sau lệnh tắt MIE --------------------------------
-    // Quét thời điểm đường ngắt lên quanh lúc csrci mstatus tới WB. Nếu ngắt
-    // được nhận thì mepc phải <= địa chỉ csrci.
+    // ---- No interrupt on the instruction after clearing MIE -----------------------
+    // Sweep the time the interrupt line rises around when csrci mstatus reaches WB. If the
+    // interrupt is taken, mepc must be <= the csrci address.
     li   s0, 0
 block_mstatus:
     li   TESTNUM, 30
@@ -172,7 +172,7 @@ block_mstatus:
     li   t0, 12
     bltu s0, t0, block_mstatus
 
-    // Tương tự với lệnh xoá mie
+    // Same for the instruction that clears mie
     li   s0, 0
 block_mie:
     li   TESTNUM, 31
@@ -217,7 +217,7 @@ irq_handler:
     sw   t3, 0(t4)
     addi s10, s10, 1
     bgez t3, fail
-    andi t3, t3, 31                 // hạ đường ngắt (1 << mã ngắt)
+    andi t3, t3, 31                 // Lower the interrupt line (1 << interrupt code)
     li   t5, 1
     sll  t5, t5, t3
     not  t5, t5

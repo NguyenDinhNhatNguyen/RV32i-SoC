@@ -1,8 +1,8 @@
-/* link.ld - bố cục bộ nhớ cho chương trình chạy từ IMEM (docs/spec/core.md mục 10.1).
- * .text ở IMEM từ 0x0000_0000. .rodata, .data, .bss, .tohost và stack ở DMEM.
- * Địa chỉ nạp = địa chỉ chạy: testbench (hoặc bootloader P8) nạp thẳng IMEM
- * và DMEM, lúc khởi động không chép gì.
- * Kích thước phải khớp CORE_TB_IMEM_SIZE / CORE_TB_DMEM_SIZE trong
+/* link.ld - memory layout for programs running from IMEM (docs/spec/core.md section 10.1).
+ * .text in IMEM from 0x0000_0000. .rodata, .data, .bss, .tohost and the stack in DMEM.
+ * Load address = run address: the testbench (or the P8 bootloader) loads IMEM
+ * and DMEM directly, and nothing is copied at startup.
+ * Sizes must match CORE_TB_IMEM_SIZE / CORE_TB_DMEM_SIZE in
  * tb/core/core_tb_map.vh.
  */
 OUTPUT_ARCH("riscv")
@@ -17,7 +17,7 @@ MEMORY
 SECTIONS
 {
     .text : {
-        *(.text.init)               /* _start phải đứng đầu */
+        *(.text.init)               /* _start must come first */
         *(.text .text.*)
     } > IMEM
 

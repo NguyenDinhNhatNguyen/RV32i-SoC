@@ -1,7 +1,7 @@
-# riscof_spike_ref.py - plugin RISCOF dùng Spike làm mô hình tham chiếu.
-# Dựa trên riscof-plugins/rv32/spike_simple của riscv-arch-test, khác ở chỗ
-# tiền tố gcc đổi được (khoá prefix, mặc định riscv64-unknown-elf) và dùng lại
-# env (model_test.h, link.ld) của spike_simple trong submodule.
+# riscof_spike_ref.py - RISCOF plugin that uses Spike as the reference model.
+# Based on riscof-plugins/rv32/spike_simple from riscv-arch-test, except that the
+# gcc prefix can change (prefix key, default riscv64-unknown-elf) and it reuses the
+# spike_simple env (model_test.h, link.ld) from the submodule.
 import os
 import logging
 
@@ -38,7 +38,7 @@ class spike_ref(pluginTemplate):
                             " -I " + archtest_env + " {1} -o {2} {3}")
 
     def build(self, isa_yaml, platform_yaml):
-        # ISA của Spike theo ISA yaml của DUT
+        # Spike ISA from the DUT ISA yaml
         ispec = utils.load_yaml(isa_yaml)["hart0"]
         self.isa = "rv32i"
         if "M" in ispec["ISA"]:

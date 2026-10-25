@@ -1,10 +1,11 @@
 `timescale 1ns/1ps
-// Testbench tu kiem tra cho uart_apb (+ uart_fifo). In "PASS: ..." neu moi kiem tra dung.
-// Ghi chu: bit tren duong truyen = 16 * DIV chu ky clk. DIV mac dinh 27 -> 8640 ns/bit.
-// Phan lon bai dung DIV = 2 (640 ns/bit) cho nhanh; 2 bai dung baud mac dinh de kiem tra thoi gian that.
+// Self-checking testbench for uart_apb (+ uart_fifo). Prints "PASS: ..." if every check passes.
+// Note: one bit on the line = 16 * DIV clk cycles. The default DIV 27 -> 8640 ns/bit.
+// Most tests use DIV = 2 (640 ns/bit) to run fast. 2 tests use the default baud to check
+// real timing.
 module tb_uart_apb;
     localparam HALF = 10;                 // 50 MHz
-    localparam DEPTH = 8;                 // phai khop FIFO_AW = 3
+    localparam DEPTH = 8;                 // Must match FIFO_AW = 3
 
     reg         PCLK = 1'b0;
     reg         PRESETn = 1'b0;
@@ -83,7 +84,7 @@ module tb_uart_apb;
         end
     endtask
 
-    // gui 1 khung vao chan RX voi do rong bit bitns (ns); stop_val = 0 de tao loi khung
+    // Send 1 frame into the RX pin with bit width bitns (ns), stop_val = 0 makes a framing error
     task rx_send;
         input [7:0]   d;
         input integer bitns;
@@ -97,7 +98,7 @@ module tb_uart_apb;
         end
     endtask
 
-    // doc STATUS va kiem tra theo mask: (STATUS & mask) == val
+    // Read STATUS and check it with a mask: (STATUS & mask) == val
     task status_is;
         input [31:0] mask;
         input [31:0] val;
@@ -108,7 +109,7 @@ module tb_uart_apb;
         end
     endtask
 
-    // doc 1 byte tu RX FIFO va so sanh
+    // Read 1 byte from the RX FIFO and compare
     task rx_expect;
         input [7:0] exp;
         input [8*48-1:0] tag;
@@ -119,7 +120,7 @@ module tb_uart_apb;
     endtask
 
     // ------------------------------------------------------------------ monitor TX
-    // Giai ma duong uart_txd doc lap voi DUT, theo do rong bit mon_bit (ns)
+    // Decode the uart_txd line independently of the DUT, with bit width mon_bit (ns)
     integer mon_bit = 8640;
     reg [7:0] txq [0:255];
     integer tx_cnt = 0;
@@ -129,13 +130,13 @@ module tb_uart_apb;
 
     always @(negedge uart_txd) begin : MON
         #(mon_bit/2);
-        if (uart_txd !== 1'b0) tx_bad = tx_bad + 1;      // start bit ngan / nhieu
+        if (uart_txd !== 1'b0) tx_bad = tx_bad + 1;      // Short start bit / noise
         for (mi = 0; mi < 8; mi = mi + 1) begin
             #(mon_bit);
             mb[mi] = uart_txd;
         end
         #(mon_bit);
-        if (uart_txd !== 1'b1) tx_bad = tx_bad + 1;      // stop bit sai
+        if (uart_txd !== 1'b1) tx_bad = tx_bad + 1;      // Bad stop bit
         txq[tx_cnt] = mb;
         tx_cnt = tx_cnt + 1;
     end
@@ -158,7 +159,7 @@ module tb_uart_apb;
         end
     endtask
 
-    task wait_rx_data;                      // cho den khi RXNE (toi da ~ 200 us)
+    task wait_rx_data;                      // Wait for RXNE (at most ~ 200 us)
         integer pw;
         begin
             pw = 0;
@@ -194,7 +195,7 @@ module tb_uart_apb;
         apb_read(A_STATUS); check(rd === S_TXE && !err_seen,  "reset: STATUS = TXE only");
         apb_read(A_DATA);   check(rd === 32'd0 && !err_seen,  "reset: DATA read empty = 0, no error");
 
-        // ---- 2. TX 1 byte o baud mac dinh: thoi gian that ----
+        // ---- 2. TX 1 byte at the default baud: real timing ----
         mon_reset(8640);                                    // 16 * 27 * 20 ns
         apb_write(A_DATA, 32'h55);
         check(!err_seen, "TX: write DATA no PSLVERR");
@@ -209,11 +210,11 @@ module tb_uart_apb;
         #(3*8640);
         status_is(S_TXE | S_TXB | S_TXF, S_TXE, "TX: idle again after frame");
 
-        // ---- 3. Doi sang DIV = 2 (nhanh). Ghi/doc BAUDDIV ----
+        // ---- 3. Switch to DIV = 2 (fast). BAUDDIV write/read ----
         apb_write(A_BAUD, 32'd2);
         apb_read(A_BAUD); check(rd === 32'd2, "BAUDDIV readback");
 
-        // ---- 4. TX FIFO day, tran, bo byte thu 9, gui dung thu tu ----
+        // ---- 4. TX FIFO full, overflow, 9th byte dropped, sent in order ----
         mon_reset(640);
         apb_write(A_CTRL, 32'h2);                           // TXEN=0, RXEN=1
         for (i = 0; i < DEPTH; i = i + 1) begin
@@ -222,11 +223,11 @@ module tb_uart_apb;
         end
         status_is(S_TXF | S_TXE, S_TXF, "TXFIFO: full after 8 writes, TX disabled");
         status_is(S_TXOVF, 32'd0, "TXFIFO: no overflow yet");
-        apb_write(A_DATA, 32'hEE);                          // thu 9: bi bo
+        apb_write(A_DATA, 32'hEE);                          // 9th: dropped
         status_is(S_TXOVF, S_TXOVF, "TXFIFO: 9th write sets TXOVF");
         apb_write(A_STATUS, S_TXOVF);
         status_is(S_TXOVF, 32'd0, "TXFIFO: TXOVF cleared by W1C");
-        apb_write(A_CTRL, 32'h3);                           // bat TX
+        apb_write(A_CTRL, 32'h3);                           // Enable TX
         wait_tx(DEPTH, 200000);
         #(4*640);
         check(tx_cnt == DEPTH, "TXFIFO: exactly 8 frames (9th dropped)");
@@ -234,7 +235,7 @@ module tb_uart_apb;
             check(txq[i] === expq[i], "TXFIFO: bytes in order");
         check(tx_bad == 0, "TXFIFO: all frames well formed");
 
-        // ---- 5. RX: nhieu byte, thu tu, co STATUS ----
+        // ---- 5. RX: several bytes, order, STATUS flags ----
         for (i = 0; i < 5; i = i + 1) begin
             expq[i] = 8'hA0 + i * 8'h07;
             rx_send(expq[i], 640, 1'b1);
@@ -244,7 +245,7 @@ module tb_uart_apb;
         for (i = 0; i < 5; i = i + 1) rx_expect(expq[i], "RX: bytes in order");
         status_is(S_RXNE, 32'd0, "RX: empty after reading all");
 
-        // ---- 6. RX FIFO day -> overrun, byte thu 9 bi bo ----
+        // ---- 6. RX FIFO full -> overrun, 9th byte dropped ----
         for (i = 0; i < DEPTH + 1; i = i + 1) begin
             expq[i] = 8'h30 + i;
             rx_send(expq[i], 640, 1'b1);
@@ -256,7 +257,7 @@ module tb_uart_apb;
         apb_write(A_STATUS, S_OVR);
         status_is(S_OVR, 32'd0, "RX: overrun cleared by W1C");
 
-        // ---- 7. Loi khung (stop = 0): khong day byte, co FE, hoi phuc ----
+        // ---- 7. Framing error (stop = 0): no byte pushed, FE set, recovers ----
         rx_send(8'h3C, 640, 1'b0);
         #(2*640);
         status_is(S_FE | S_RXNE, S_FE, "FE: flag set, byte discarded");
@@ -266,32 +267,32 @@ module tb_uart_apb;
         apb_write(A_STATUS, S_FE);
         status_is(S_FE, 32'd0, "FE: cleared by W1C");
 
-        // ---- 8. Break (giu thap lau): chi bao FE, khong sinh byte, hoi phuc ----
+        // ---- 8. Break (held low for long): FE only, no byte, recovers ----
         rxd_drv = 1'b0; #(25*640); rxd_drv = 1'b1; #(3*640);
         status_is(S_FE | S_RXNE, S_FE, "BREAK: FE only, no phantom byte");
         apb_write(A_STATUS, S_FE);
         rx_send(8'h5A, 640, 1'b1); #(2*640);
         rx_expect(8'h5A, "BREAK: byte after break received");
 
-        // ---- 9. Nhieu ngan tren start bit bi bo qua ----
+        // ---- 9. A short glitch on the start bit is ignored ----
         rxd_drv = 1'b0; #150; rxd_drv = 1'b1; #(3*640);
         status_is(S_FE | S_RXNE, 32'd0, "GLITCH: short start pulse ignored");
         rx_send(8'h81, 640, 1'b1); #(2*640);
         rx_expect(8'h81, "GLITCH: next byte ok");
 
-        // ---- 10. Dung sai toc do +-3% ----
+        // ---- 10. Baud tolerance +-3% ----
         rx_send(8'h96, 659, 1'b1); #(2*640);
         rx_expect(8'h96, "TOL: +3% bit time received");
         rx_send(8'h69, 621, 1'b1); #(2*640);
         rx_expect(8'h69, "TOL: -3% bit time received");
 
-        // ---- 11. Tat RX: khong nhan ----
+        // ---- 11. RX disabled: nothing received ----
         apb_write(A_CTRL, 32'h1);                           // RXEN = 0
         rx_send(8'h77, 640, 1'b1); #(2*640);
         status_is(S_RXNE, 32'd0, "RXEN=0: byte ignored");
         apb_write(A_CTRL, 32'h3);
 
-        // ---- 12. Ngat ----
+        // ---- 12. Interrupts ----
         apb_write(A_CTRL, 32'h2 | 32'h8);                   // RXEN + RXIE
         wait_clks(3); check(irq === 1'b0, "IRQ: RXIE, no data -> low");
         rx_send(8'h12, 640, 1'b1); #(2*640);
@@ -307,16 +308,16 @@ module tb_uart_apb;
         check(irq === 1'b0, "IRQ: ERRIE low after W1C");
 
         mon_reset(640);
-        apb_write(A_CTRL, 32'h2 | 32'h4);                   // TX tat, TXIE bat
+        apb_write(A_CTRL, 32'h2 | 32'h4);                   // TX off, TXIE on
         wait_clks(3); check(irq === 1'b1, "IRQ: TXIE, FIFO empty -> high");
         apb_write(A_DATA, 32'h42); wait_clks(3);
         check(irq === 1'b0, "IRQ: TXIE low when FIFO has data");
-        apb_write(A_CTRL, 32'h3);                           // bat TX, tat TXIE
+        apb_write(A_CTRL, 32'h3);                           // TX on, TXIE off
         wait_tx(1, 50000);
         check(txq[0] === 8'h42, "IRQ: queued byte sent after TXEN");
         #(3*640);
 
-        // ---- 13. BAUDDIV = 0 hoat dong nhu 1 ----
+        // ---- 13. BAUDDIV = 0 works as 1 ----
         apb_write(A_BAUD, 32'd0);
         apb_read(A_BAUD); check(rd === 32'd0, "BAUDDIV=0 readback");
         mon_reset(320);                                     // 16 clk/bit
@@ -328,7 +329,7 @@ module tb_uart_apb;
         rx_expect(8'hD2, "BAUDDIV=0: RX also works");
         apb_write(A_BAUD, 32'd2);
 
-        // ---- 14. Loopback TX -> RX, byte le (ngau nhien), roi burst 8 byte ----
+        // ---- 14. Loopback TX -> RX, single (random) bytes, then an 8-byte burst ----
         loop = 1'b1;
         mon_reset(640);
         for (i = 0; i < 16; i = i + 1) begin
@@ -349,18 +350,18 @@ module tb_uart_apb;
         check(tx_bad == 0, "LOOP: every TX frame well formed");
         loop = 1'b0;
 
-        // ---- 15. Loopback o baud mac dinh (115200) ----
+        // ---- 15. Loopback at the default baud (115200) ----
         apb_write(A_BAUD, 32'd27);
         mon_reset(8640);
         loop = 1'b1;
         apb_write(A_DATA, 32'hA7);
-        wait_clks(12000);                                   // ~ 240 us > 1 khung (86.4 us)
+        wait_clks(12000);                                   // ~ 240 us > 1 frame (86.4 us)
         wait_rx_data;
         rx_expect(8'hA7, "LOOP@115200: byte round trip");
         check(tx_bad == 0, "LOOP@115200: frame well formed");
         loop = 1'b0;
 
-        // ---- 16. Truy cap sai ----
+        // ---- 16. Bad accesses ----
         apb_write(12'h010, 32'h1);  check(err_seen, "bad addr 0x10 write -> PSLVERR");
         apb_read(12'h010);          check(err_seen && rd === 32'd0, "bad addr 0x10 read -> PSLVERR, 0");
         apb_write(12'h002, 32'h1);  check(err_seen, "misaligned write -> PSLVERR");
@@ -368,11 +369,11 @@ module tb_uart_apb;
         apb_write(A_STATUS, 32'h1F); check(!err_seen, "write STATUS RO bits: ignored, no error");
         apb_read(A_STATUS); check((rd & S_TXE) != 0, "STATUS RO bits unchanged");
 
-        // ---- Ket qua ----
+        // ---- Result ----
         if (errors == 0)
-            $display("PASS: uart_apb - TX/RX 8N1, baud, FIFO, loi, ngat, loopback dung");
+            $display("PASS: uart_apb - TX/RX 8N1, baud, FIFO, errors, interrupts, loopback correct");
         else
-            $display("FAIL: uart_apb - %0d loi", errors);
+            $display("FAIL: uart_apb - %0d errors", errors);
         $finish;
     end
 endmodule

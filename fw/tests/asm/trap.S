@@ -1,14 +1,14 @@
-// trap.S - CSR và ngoại lệ (docs/spec/core.md mục 4.7, 4.8).
-// Kiểm tra giá trị reset và mặt nạ đọc/ghi của từng CSR, CSR không tồn tại
-// và ghi CSR chỉ đọc, mọi loại ngoại lệ đồng bộ (mcause, mepc, mtval, rd
-// không bị ghi, bộ nhớ không đổi), mstatus khi trap và MRET, bộ đếm mcycle,
-// minstret (lệnh bị trap không tính), time.
+// trap.S - CSRs and exceptions (docs/spec/core.md sections 4.7, 4.8).
+// Checks the reset value and read/write mask of each CSR, unknown CSRs
+// and writes to read-only CSRs, every kind of synchronous exception (mcause, mepc, mtval, rd
+// not written, memory unchanged), mstatus on trap and MRET, the mcycle and
+// minstret counters (trapped instructions do not count), and time.
 //
-// Trình xử lý trap ghi lại mcause -> s2, mepc -> s3, mtval -> s4,
-// mstatus -> s7, tăng s5, rồi quay về địa chỉ trong s6.
+// The trap handler records mcause -> s2, mepc -> s3, mtval -> s4,
+// mstatus -> s7, increments s5, then returns to the address in s6.
 #include "test_macros.h"
 
-// Lệnh trong `...` (đặt ở nhãn 2) phải trap với mcause = cause, mtval = tval.
+// The instruction in `...` (placed at label 2) must trap with mcause = cause, mtval = tval.
 #define EXPECT_TRAP(n, cause, tval, ...) \
     li   TESTNUM, n;             \
     li   s5, 0;                  \
@@ -24,7 +24,7 @@
     li   x7, tval;               \
     bne  s4, x7, fail
 
-// Như EXPECT_TRAP nhưng mtval phải bằng PC của lệnh trap (ebreak)
+// Like EXPECT_TRAP, but mtval must equal the PC of the trapping instruction (ebreak)
 #define EXPECT_TRAP_PC(n, cause, ...) \
     li   TESTNUM, n;             \
     li   s5, 0;                  \
@@ -39,14 +39,14 @@
     bne  s3, x7, fail;           \
     bne  s4, x7, fail
 
-// Lệnh csr bằng mã máy cố định (để kiểm tra mtval = mã lệnh)
-#define CSRRS_A0_7C0      0x7c002573      // csrrs a0, 0x7c0, x0  (CSR không tồn tại)
-#define CSRRW_X0_CYCLE_A0 0xc0051073      // csrrw x0, cycle, a0  (ghi CSR chỉ đọc)
+// CSR instructions as fixed machine code (to check mtval = instruction bits)
+#define CSRRS_A0_7C0      0x7c002573      // csrrs a0, 0x7c0, x0  (CSR does not exist)
+#define CSRRW_X0_CYCLE_A0 0xc0051073      // csrrw x0, cycle, a0  (write to a read-only CSR)
 #define CSRRSI_A0_MVID_1  0xf110e573      // csrrsi a0, mvendorid, 1
-#define ILLEGAL_WORD      0x12345677      // opcode 1110111 không hỗ trợ
+#define ILLEGAL_WORD      0x12345677      // Opcode 1110111 is not supported
 
 TEST_CODE_BEGIN
-    // ---- Giá trị sau reset ------------------------------------------------
+    // ---- Values after reset ------------------------------------------------
     csrr a0, mtvec
     CHECK(2, a0, 0)
     csrr a0, mstatus
@@ -64,7 +64,7 @@ TEST_CODE_BEGIN
     csrr a0, mimpid
     CHECK(9, a0, 0)
 
-    // misa = 0x40000100, thêm bit M khi ENABLE_M
+    // misa = 0x40000100, plus the M bit with ENABLE_M
     li   t0, TB_CTRL
     lw   t1, TB_CFG(t0)
     andi t1, t1, 1
@@ -74,17 +74,17 @@ TEST_CODE_BEGIN
     csrr a0, misa
     li   TESTNUM, 10
     bne  a0, t2, fail
-    li   a1, -1                     // ghi misa bị bỏ qua
+    li   a1, -1                     // Writes to misa are ignored
     csrw misa, a1
     csrr a0, misa
     li   TESTNUM, 11
     bne  a0, t2, fail
 
-    // ---- Mặt nạ đọc/ghi -----------------------------------------------------
+    // ---- Read/write masks -----------------------------------------------------
     li   a1, -1
     csrw mstatus, a1
     csrr a0, mstatus
-    CHECK(12, a0, 0x1888)           // chỉ MIE, MPIE ghi được
+    CHECK(12, a0, 0x1888)           // Only MIE and MPIE are writable
     csrw mstatus, zero
     csrr a0, mstatus
     CHECK(13, a0, 0x1800)
@@ -92,13 +92,13 @@ TEST_CODE_BEGIN
     csrr a0, mie
     CHECK(14, a0, 0x888)
     csrw mie, zero
-    csrw mip, a1                    // mip chỉ đọc theo cổng ngắt
+    csrw mip, a1                    // mip is read only and follows the interrupt pins
     csrr a0, mip
     CHECK(15, a0, 0)
     li   a1, 0x12345677
     csrw mtvec, a1
     csrr a0, mtvec
-    CHECK(16, a0, 0x12345674)       // chế độ direct, bit 1:0 = 0
+    CHECK(16, a0, 0x12345674)       // Direct mode, bits 1:0 = 0
     csrw mepc, a1
     csrr a0, mepc
     CHECK(17, a0, 0x12345674)
@@ -112,7 +112,7 @@ TEST_CODE_BEGIN
     csrw mcause, a1
     csrr a0, mcause
     CHECK(20, a0, 0x8000000b)
-    csrrwi a0, mscratch, 0x15       // CSRRWI trả giá trị cũ
+    csrrwi a0, mscratch, 0x15       // CSRRWI returns the old value
     CHECK(21, a0, 0x12345677)
     csrrsi a0, mscratch, 0x0a
     CHECK(22, a0, 0x15)
@@ -121,33 +121,33 @@ TEST_CODE_BEGIN
     csrr a0, mscratch
     CHECK(24, a0, 0x1a)
     li   a1, 0xf0
-    csrrs a0, mscratch, a1          // forward giá trị CSR sang lệnh kế
+    csrrs a0, mscratch, a1          // Forward the CSR value to the next instruction
     addi a0, a0, 1
     CHECK(25, a0, 0x1b)
     csrr a0, mscratch
     CHECK(26, a0, 0xfa)
 
-    // ---- Cài trình xử lý trap -------------------------------------------------
+    // ---- Install the trap handler -------------------------------------------------
     la   t0, handler
     csrw mtvec, t0
 
-    // ---- Ngoại lệ đồng bộ -------------------------------------------------------
+    // ---- Synchronous exceptions -------------------------------------------------------
     EXPECT_TRAP(30, 11, 0, ecall)
-    EXPECT_TRAP_PC(31, 3, ebreak)   // mtval = PC của ebreak (D-035)
+    EXPECT_TRAP_PC(31, 3, ebreak)   // mtval = PC of the ebreak (D-035)
     EXPECT_TRAP(32, 2, ILLEGAL_WORD, .word ILLEGAL_WORD)
     EXPECT_TRAP(33, 2, 0, .word 0)
 
-    li   a0, 0x55                   // rd không bị ghi khi CSR sai
+    li   a0, 0x55                   // rd is not written on a bad CSR
     EXPECT_TRAP(34, 2, CSRRS_A0_7C0, .word CSRRS_A0_7C0)
     CHECK(35, a0, 0x55)
     EXPECT_TRAP(36, 2, CSRRW_X0_CYCLE_A0, .word CSRRW_X0_CYCLE_A0)
     EXPECT_TRAP(37, 2, CSRRSI_A0_MVID_1, .word CSRRSI_A0_MVID_1)
     CHECK(38, a0, 0x55)
-    csrrsi a0, mvendorid, 0         // đọc CSR chỉ đọc (không ghi) là hợp lệ
+    csrrsi a0, mvendorid, 0         // Reading a read-only CSR (no write) is legal
     CHECK(39, a0, 0)
     csrrs x0, cycle, x0
 
-    // Load/store lệch địa chỉ: mtval = địa chỉ, rd và bộ nhớ không đổi
+    // Misaligned load/store: mtval = address, rd and memory unchanged
     la   s1, tdat
     li   a0, 0x66
     EXPECT_TRAP(40, 4, 0x10000002, lw a0, 2(s1))
@@ -160,17 +160,17 @@ TEST_CODE_BEGIN
     lw   a1, 4(s1)
     CHECK(46, a1, 0x55667788)
 
-    // Lỗi bus: địa chỉ không ánh xạ
+    // Bus error: unmapped address
     li   s1, 0x40000000
     EXPECT_TRAP(47, 5, 0x40000004, lw a0, 4(s1))
     CHECK(48, a0, 0x66)
     EXPECT_TRAP(49, 7, 0x40000008, sb a0, 8(s1))
 
-    // Nhảy lệch: mepc = lệnh nhảy, mtval = đích, rd không bị ghi
+    // Misaligned jump: mepc = the jump, mtval = the target, rd is not written
     li   a0, 0x77
     EXPECT_TRAP(50, 0, 2, jalr a0, 2(zero))
     CHECK(51, a0, 0x77)
-    // Lỗi lấy lệnh: mepc = mtval = địa chỉ lỗi, lệnh nhảy vẫn ghi rd
+    // Fetch error: mepc = mtval = the bad address, the jump still writes rd
     li   TESTNUM, 52
     li   s5, 0
     la   s6, 1f
@@ -187,8 +187,8 @@ TEST_CODE_BEGIN
     li   TESTNUM, 56
     bne  a0, a1, fail
 
-    // ---- mstatus khi trap và MRET ------------------------------------------------
-    csrsi mstatus, 8                // MIE = 1 (không có ngắt nào đang chờ)
+    // ---- mstatus on trap and MRET ------------------------------------------------
+    csrsi mstatus, 8                // MIE = 1 (no interrupt pending)
     EXPECT_TRAP(60, 11, 0, ecall)
     CHECK(61, s7, 0x1880)           // trong handler: MIE = 0, MPIE = 1
     csrr a0, mstatus
@@ -199,7 +199,7 @@ TEST_CODE_BEGIN
     csrr a0, mstatus
     CHECK(65, a0, 0x1880)
 
-    csrw mstatus, zero              // MRET trực tiếp
+    csrw mstatus, zero              // Direct MRET
     la   t0, 1f
     csrw mepc, t0
     li   TESTNUM, 66
@@ -225,7 +225,7 @@ TEST_CODE_BEGIN
     csrr a1, instreth
     li   TESTNUM, 72
     bne  a0, a1, fail
-    // Lệnh bị trap không tính: handler ngắn chỉ có 2 lệnh
+    // Trapped instructions do not count: a short handler with only 2 instructions
     la   t0, short_handler
     csrw mtvec, t0
     la   s6, 1f
@@ -246,17 +246,17 @@ TEST_CODE_BEGIN
     sub  a0, a1, a0
     li   TESTNUM, 80
     li   x7, 4
-    bltu a0, x7, fail               // ít nhất 1 chu kỳ mỗi lệnh
+    bltu a0, x7, fail               // At least 1 cycle per instruction
     csrr a0, mcycle
     csrr a1, cycle
     li   TESTNUM, 81
     bgeu a0, a1, fail
-    csrwi mcycle, 0                 // ghi mcycle thay cho lần tăng
+    csrwi mcycle, 0                 // Writing mcycle replaces the increment
     csrr a0, mcycle
     li   TESTNUM, 82
     li   x7, 20
     bgeu a0, x7, fail
-    li   a1, 5                      // nhớ từ nửa thấp sang nửa cao
+    li   a1, 5                      // Carry from the low half into the high half
     csrw mcycleh, a1
     li   a1, -8
     csrw mcycle, a1
@@ -272,7 +272,7 @@ TEST_CODE_BEGIN
     CHECK(83, a0, 6)
     csrr a1, cycleh
     CHECK(84, a1, 6)
-    li   a1, 7                      // minstreth ghi được
+    li   a1, 7                      // minstreth is writable
     csrw minstreth, a1
     csrr a0, minstreth
     CHECK(85, a0, 7)
@@ -280,7 +280,7 @@ TEST_CODE_BEGIN
     csrr a0, time
     csrr a1, time
     li   TESTNUM, 86
-    bgeu a0, a1, fail               // mtime_i tăng mỗi chu kỳ trong tb
+    bgeu a0, a1, fail               // mtime_i increments every cycle in the tb
     csrr a0, timeh
     CHECK(87, a0, 0)
 

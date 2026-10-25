@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Gom số PPA từ report Genus và Innovus thành bảng Markdown.
+"""Collect PPA numbers from Genus and Innovus reports into a Markdown table.
 
-Định dạng report theo các file trong appendix/synth_accel và appendix/pnr_accel.
+Report formats follow the files in appendix/synth_accel and appendix/pnr_accel.
+The table text stays in Vietnamese because it goes straight into the report.
 
-  --genus NHÃN=THƯ_MỤC     thư mục có qor.rpt, area.rpt, power.rpt (gates.rpt nếu có),
-                           lặp lại được, ví dụ cg0=appendix/synth_accel/cg0/synthesis
-  --innovus NHÃN=THƯ_MỤC   thư mục report Innovus (area.rpt, power.rpt,
+  --genus LABEL=DIR        folder with qor.rpt, area.rpt, power.rpt (and gates.rpt if present),
+                           can repeat, for example cg0=appendix/synth_accel/cg0/synthesis
+  --innovus LABEL=DIR      Innovus report folder (area.rpt, power.rpt,
                            postroute_setup/, postroute_hold/, summary/)
-  --lib FILE               liberty GPDK45 (.lib hoặc .lib.gz) để lấy diện tích NAND2X1
-  --cpi X                  CPI để tính EPI. Bỏ trống thì cột EPI ghi "-"
-  --freq MHZ               tần số chạy. Mặc định lấy từ chu kỳ clock trong qor.rpt
+  --lib FILE               GPDK45 liberty (.lib or .lib.gz) to read the NAND2X1 area
+  --cpi X                  CPI used for EPI. When empty the EPI column shows "-"
+  --freq MHZ               Operating frequency. Default comes from the clock period in qor.rpt
 
-GE = diện tích / diện tích NAND2X1. Diện tích NAND2X1 lấy theo thứ tự: --lib,
-gates.rpt của Genus (diện tích / số instance NAND2X1), "Gate area" trong area.rpt
-của Innovus. Năng lượng mỗi chu kỳ = P / f, EPI = P × CPI / f.
+GE = area / NAND2X1 area. The NAND2X1 area is taken in this order: --lib,
+Genus gates.rpt (area / NAND2X1 instance count), "Gate area" in the Innovus
+area.rpt. Energy per cycle = P / f, EPI = P x CPI / f.
 
-Cách dùng: ppa_table.py --genus cg1=... --innovus pnr=... [--cpi 1.2] > bảng.md
+Usage: ppa_table.py --genus cg1=... --innovus pnr=... [--cpi 1.2] > table.md
 """
 import argparse
 import glob
@@ -63,7 +64,7 @@ def parse_genus(d):
     if qor:
         t = read_text(qor)
         r["module"] = find(r"^\s*Module:\s+(\S+)", t, str)
-        r["period_ns"] = find(r"^clk\s+([0-9.]+)\s*$", t) / 1000.0  # Genus báo ps
+        r["period_ns"] = find(r"^clk\s+([0-9.]+)\s*$", t) / 1000.0  # Genus reports ps
         slack = find(r"^clk\s+(-?[0-9.]+)\s+-?[0-9.]+\s+\d+", t)
         r["slack_ns"] = slack / 1000.0 if slack is not None else None
         r["cells"] = find(r"Leaf Instance Count\s+(\d+)", t, int)
@@ -76,7 +77,7 @@ def parse_genus(d):
     if pwr:
         t = read_text(pwr)
         tot = find(r"^\s*Subtotal\s+\S+\s+\S+\s+\S+\s+(\S+)", t)
-        r["power_mw"] = tot * 1e3 if tot is not None else None  # Genus báo W
+        r["power_mw"] = tot * 1e3 if tot is not None else None  # Genus reports W
         clk = find(r"^\s*clock\s+\S+\s+\S+\s+\S+\s+(\S+)", t)
         r["clk_power_mw"] = clk * 1e3 if clk is not None else None
     gates = first_file(d, "gates.rpt")
@@ -101,7 +102,7 @@ def parse_innovus(d):
     pwr = first_file(d, "power.rpt")
     if pwr:
         t = read_text(pwr)
-        r["power_mw"] = find(r"^Total Power:\s+([0-9.eE+-]+)", t)  # Innovus báo mW
+        r["power_mw"] = find(r"^Total Power:\s+([0-9.eE+-]+)", t)  # Innovus reports mW
         r["clk_power_mw"] = find(r"^Clock \(Combinational\)\s+\S+\s+\S+\s+\S+\s+(\S+)", t)
     for mode, key in (("setup", "slack_ns"), ("hold", "hold_ns")):
         f = first_file(d, "postroute_%s/*postRoute*.summary*" % mode)
@@ -118,7 +119,7 @@ def parse_innovus(d):
 def fmt(v, nd=2):
     if v is None:
         return "-"
-    # Kiểu viết trong docs/: cách nghìn bằng dấu cách, thập phân bằng dấu phẩy
+    # Number style used in docs/: space as thousands separator, comma as decimal mark
     if isinstance(v, int):
         return f"{v:,}".replace(",", " ")
     return f"{v:,.{nd}f}".replace(",", " ").replace(".", ",")
@@ -126,20 +127,20 @@ def fmt(v, nd=2):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--genus", action="append", default=[], metavar="NHÃN=THƯ_MỤC")
-    ap.add_argument("--innovus", action="append", default=[], metavar="NHÃN=THƯ_MỤC")
+    ap.add_argument("--genus", action="append", default=[], metavar="LABEL=DIR")
+    ap.add_argument("--innovus", action="append", default=[], metavar="LABEL=DIR")
     ap.add_argument("--lib")
     ap.add_argument("--cpi", type=float)
     ap.add_argument("--freq", type=float, help="MHz")
     a = ap.parse_args()
     if not a.genus and not a.innovus:
-        ap.error("cần ít nhất một --genus hoặc --innovus")
+        ap.error("need at least one --genus or --innovus")
 
     runs = []
     for spec, parse in [(s, parse_genus) for s in a.genus] + [(s, parse_innovus) for s in a.innovus]:
         label, _, d = spec.partition("=")
         if not os.path.isdir(d):
-            sys.exit(f"không có thư mục {d}")
+            sys.exit(f"folder not found: {d}")
         r = parse(d)
         r["label"] = label
         runs.append(r)
@@ -153,7 +154,7 @@ def main():
     period = next((r["period_ns"] for r in runs if r.get("period_ns")), None)
     freq = a.freq or (1000.0 / period if period else None)
     if period is None and freq:
-        period = 1000.0 / freq  # chỉ có report Innovus thì lấy chu kỳ từ --freq
+        period = 1000.0 / freq  # With only Innovus reports, the period comes from --freq
 
     print("| Bước | Công cụ | Module | Cell | Flop | ICG | Diện tích (µm²) | GE (kGE) | Mật độ (%) "
           "| Slack setup (ns) | Slack hold (ns) | F_max (MHz) | P (mW) | P clock (mW) "
@@ -165,7 +166,7 @@ def main():
         if period and r.get("slack_ns") is not None:
             fmax = 1000.0 / (period - r["slack_ns"])
         p = r.get("power_mw")
-        epc = p / freq * 1e3 if p is not None and freq else None  # mW / MHz = nJ, đổi ra pJ
+        epc = p / freq * 1e3 if p is not None and freq else None  # mW / MHz = nJ, converted to pJ
         epi = epc * a.cpi if epc is not None and a.cpi else None
         print(f"| {r['label']} | {r['tool']} | {r.get('module') or '-'} | {fmt(r.get('cells'))} "
               f"| {fmt(r.get('seq'))} | {fmt(r.get('icg'))} | {fmt(r.get('area'), 1)} | {fmt(ge, 2)} | {fmt(r.get('density'), 1)} "

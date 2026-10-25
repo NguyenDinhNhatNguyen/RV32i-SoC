@@ -40,7 +40,7 @@ CORE_TICKS get_time(void)
     return stats.cycles;
 }
 
-// Giả định 1 MHz: số giây = số chu kỳ / 10^6
+// Assume 1 MHz: seconds = cycles / 10^6
 secs_ret time_in_secs(CORE_TICKS ticks)
 {
     return ticks / 1000000u;
@@ -66,7 +66,7 @@ void portable_init(core_portable *p, int *argc, char *argv[])
     p->portable_id = 1;
 }
 
-// CoreMark/MHz = số vòng * 10^6 / số chu kỳ
+// CoreMark/MHz = iterations * 10^6 / cycles
 void portable_fini(core_portable *p)
 {
     p->portable_id = 0;

@@ -1,7 +1,7 @@
-// crt0.S - khởi động cho benchmark C chạy trên tb_core (fw/common/link.ld).
-// Đặt sp, gp, xoá .bss, gọi main. Kết thúc bằng ghi tohost:
-// main trả 0 thì ghi 1 (PASS), khác 0 thì ghi (mã << 1) | 1 (FAIL).
-// Không cài mtvec: trap bất ngờ làm tb_core báo FAIL ngay.
+// crt0.S - startup for C benchmarks running on tb_core (fw/common/link.ld).
+// Sets sp and gp, clears .bss, calls main. Ends by writing tohost:
+// 1 (PASS) when main returns 0, otherwise (code << 1) | 1 (FAIL).
+// mtvec is not installed, so an unexpected trap makes tb_core report FAIL at once.
     .section .text.init, "ax"
     .globl _start
 _start:

@@ -1,13 +1,15 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_imem_port - kiểm tra imem_port (RTL-08): cổng lệnh dùng chung IMEM với bus dữ liệu.
-//   - Lấy lệnh ngẫu nhiên ở IMEM, boot ROM và địa chỉ không có bộ nhớ, đồng thời
-//     bus đọc/ghi IMEM (word, half, byte) ngẫu nhiên.
-//   - if_gnt = 0 khi lấy lệnh ở IMEM mà bus đang dùng IMEM, = 1 với boot ROM và địa chỉ lỗi.
-//   - Chu kỳ sau mỗi lần lấy lệnh được nhận: lệnh đúng bộ nhớ tham chiếu (IMEM
-//     có các lần ghi qua bus), boot ROM word 0 = jalr x0, 0(x0), địa chỉ lỗi thì if_err = 1.
-//   - Phản hồi bus đúng chu kỳ và đúng dữ liệu.
-// Plusarg: +seed=<n> +n=<số lần lấy lệnh> +timeout=<chu kỳ>
+// tb_imem_port - tests imem_port (RTL-08): the fetch port shares IMEM with the data bus.
+//   - Random fetches from IMEM, the boot ROM and addresses with no memory, while the
+//     bus reads and writes IMEM (word, half, byte) at random.
+//   - if_gnt = 0 when fetching from IMEM while the bus uses IMEM, 1 for the boot ROM and
+//     error addresses.
+//   - The cycle after each accepted fetch: the instruction matches the reference memory (IMEM
+//     including bus writes), boot ROM word 0 = jalr x0, 0(x0), and error addresses give
+//     if_err = 1.
+//   - Bus responses arrive in the right cycle with the right data.
+// Plusargs: +seed=<n> +n=<fetches> +timeout=<cycles>
 `include "soc_map.vh"
 
 module tb_imem_port;
@@ -81,7 +83,7 @@ module tb_imem_port;
     wire hit_boot = (if_addr >= BOOT) && (if_addr < BOOT + `SOC_BOOT_SIZE);
     wire part     = req_we & (req_be != 4'hF);
 
-    // ---------------------------------------------------------- kiểm tra ở cạnh lên
+    // ---------------------------------------------------------- checks on the rising edge
     reg         f_exp_q = 1'b0, f_exp_err_q = 1'b0;
     reg  [31:0] f_exp_q_data = 32'h0;
     reg         b_exp_q = 1'b0, b_exp_rd_q = 1'b0;
@@ -92,23 +94,23 @@ module tb_imem_port;
             cycle = cycle + 1;
             if (f_exp_q) begin
                 if (if_err !== f_exp_err_q)
-                    fail("if_err sai");
+                    fail("wrong if_err");
                 if (if_rdata !== f_exp_q_data) begin
-                    $display("      lenh %h, mong doi %h", if_rdata, f_exp_q_data);
-                    fail("lenh sai");
+                    $display("      instruction %h, expected %h", if_rdata, f_exp_q_data);
+                    fail("wrong instruction");
                 end
             end else if (if_err !== 1'b0)
-                fail("if_err = 1 khi khong lay lenh");
+                fail("if_err = 1 without a fetch");
             if (rsp_valid !== b_exp_q)
-                fail("rsp_valid sai chu ky");
+                fail("rsp_valid in the wrong cycle");
             if (b_exp_q && b_exp_rd_q && rsp_rdata !== b_exp_data_q)
-                fail("bus doc IMEM sai");
+                fail("wrong bus read of IMEM");
             if (if_gnt !== ((hit_imem && req_valid) ? 1'b0 : 1'b1))
-                fail("if_gnt sai");
+                fail("wrong if_gnt");
             if (if_req && hit_imem && req_valid)
                 n_blocked = n_blocked + 1;
 
-            // Bus nhận trước, nên lệnh lấy sau lần ghi thấy giá trị mới
+            // The bus is accepted first, so a fetch after a write sees the new value
             b_exp_q    <= req_valid & req_ready;
             b_exp_rd_q <= ~req_we;
             if (req_valid && req_ready) begin
@@ -130,7 +132,7 @@ module tb_imem_port;
         end
     end
 
-    // ---------------------------------------------------------- kích thích ở cạnh xuống
+    // ---------------------------------------------------------- stimulus on the falling edge
     reg req_ready_q = 1'b0;
     always @(posedge clk) req_ready_q <= req_ready;
 
@@ -141,7 +143,7 @@ module tb_imem_port;
     always @(negedge clk) begin
         if (rst_n) begin
             if (fetch_ok_q) fetched = fetched + 1;
-            // Lấy lệnh: 60% IMEM (8 word nóng hoặc ngẫu nhiên), 25% boot ROM, 15% địa chỉ lỗi
+            // Fetch: 60% IMEM (8 hot words or random), 25% boot ROM, 15% error addresses
             if_req = (fetched < n_fetch) && (($unsigned($random(seed)) % 5) != 0);
             case ($unsigned($random(seed)) % 20)
                 0, 1, 2, 3, 4, 5:
@@ -157,9 +159,9 @@ module tb_imem_port;
                 18:
                     if_addr = BOOT + `SOC_BOOT_SIZE;            // ngay sau boot ROM
                 default:
-                    if_addr = {$random(seed)} | 32'h2000_0000;  // vùng ngoại vi
+                    if_addr = {$random(seed)} | 32'h2000_0000;  // Peripheral region
             endcase
-            // Bus dữ liệu vào IMEM, giữ yêu cầu khi chưa được nhận
+            // Data bus into IMEM, hold the request until accepted
             if (!(req_valid && !req_ready_q)) begin
                 if (($unsigned($random(seed)) % 3) == 0) begin
                     req_valid = 1'b1;
@@ -191,9 +193,9 @@ module tb_imem_port;
         repeat (3) @(posedge clk);
         if (cycle >= timeout) fail("qua thoi gian");
         if (n_imem == 0 || n_rom == 0 || n_err == 0 || n_blocked == 0 || n_bus == 0)
-            fail("thieu loai giao dich");
+            fail("missing transaction type");
         if (errors == 0)
-            $display("PASS: tb_imem_port BANK_W=%0d: lay lenh %0d IMEM, %0d boot ROM, %0d dia chi loi, %0d lan bi bus chan, %0d yeu cau bus (seed %0d)",
+            $display("PASS: tb_imem_port BANK_W=%0d: fetched %0d IMEM, %0d boot ROM, %0d error addresses, %0d blocked by the bus, %0d bus requests (seed %0d)",
                      BANK_W, n_imem, n_rom, n_err, n_blocked, n_bus, seed0);
         else
             $display("FAIL: tb_imem_port BANK_W=%0d: %0d loi (seed %0d)", BANK_W, errors, seed0);

@@ -1,5 +1,5 @@
-[*] GTKWave save file: tín hiệu chính của accel_wrapper
-[*] Mở: gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
+[*] GTKWave save file: main accel_wrapper signals
+[*] Open: gtkwave tb/unit/out/accel.vcd tb/unit/accel.gtkw &
 [timestart] 0
 [size] 1400 760
 [sst_width] 220

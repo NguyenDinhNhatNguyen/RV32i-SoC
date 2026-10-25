@@ -1,9 +1,11 @@
 `timescale 1ns/1ps
 // accel_apb.v
-// Bộ chuyển APB3 slave -> giao diện valid/ready của accel_wrapper.
-// Dùng khi ngoại vi trong SoC nối qua cầu APB3 (đề xuất trong doc kế hoạch).
-// APB3 chỉ truy cập word: mọi lệnh ghi dùng đủ 4 byte.
-// PSLVERR = 1 khi truy cập vùng không định nghĩa trong 4 KB của accelerator (offset >= 0x400, thanh ghi 0x00C-0x0FC, hoặc ghi vào C_BUF), để core bẫy access fault thay vì đọc ra 0.
+// Bridge from an APB3 slave to the valid/ready interface of accel_wrapper.
+// Used when SoC peripherals sit behind an APB3 bridge (as proposed in the plan doc).
+// APB3 is word access only, so every write uses all 4 bytes.
+// PSLVERR = 1 for an undefined address inside the accelerator's 4 KB (offset >= 0x400,
+// registers 0x00C-0x0FC) or a write to C_BUF, so the core traps with an access fault
+// instead of reading 0.
 
 module accel_apb #(
     parameter N      = 4,
@@ -30,9 +32,9 @@ module accel_apb #(
                         (region == 4'h0 && widx > 6'd2) ||
                         (region == 4'h3 && pwrite);
 
-    // Chỉ chuyển giao dịch ở pha access và hợp lệ xuống wrapper
+    // Pass only valid transfers in the access phase down to the wrapper
     wire access = psel & penable;
-    wire unused_s_ready;                 // APB trả PREADY = 1 nên không cần s_ready
+    wire unused_s_ready;                 // APB returns PREADY = 1, so s_ready is not needed
 
     accel_wrapper #(.N(N), .DW(DW), .AW(AW), .SIGNED(SIGNED)) u_wrap (
         .clk     (pclk),
@@ -47,7 +49,7 @@ module accel_apb #(
         .irq     (irq)
     );
 
-    assign pready  = 1'b1;              // wrapper luôn trả lời trong 1 chu kỳ
+    assign pready  = 1'b1;              // The wrapper always answers in one cycle
     assign pslverr = access & bad;
 
 endmodule

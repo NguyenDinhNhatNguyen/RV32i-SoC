@@ -1,25 +1,25 @@
 `timescale 1ns/1ps
 `default_nettype none
-// sram_wrap - slave valid/ready cho mảng SRAM macro (RTL-08).
-// Dùng làm DMEM, và là phần lõi của imem_port. Giao thức: docs/spec/core.md mục 5.1.
+// sram_wrap - valid/ready slave for an SRAM macro array (RTL-08).
+// Used as DMEM and as the core of imem_port. Protocol: docs/spec/core.md section 5.1.
 //
-// Đọc và ghi đủ word (be = 4'b1111): req_ready = 1, rsp_valid ở chu kỳ ngay sau.
-// Ghi byte/half (SB, SH): macro không có chân ghi theo byte nên đọc, sửa, ghi
-// (spec SoC mục 7.3). Chu kỳ 1 đọc word cũ với req_ready = 0 (wait state), chu
-// kỳ 2 ghép byte mới theo be và ghi, req_ready = 1. Master giữ nguyên yêu cầu
-// trong wait state (luật 1) nên chu kỳ 2 vẫn có đủ addr, be, wdata.
+// Full-word reads and writes (be = 4'b1111): req_ready = 1, rsp_valid the very next cycle.
+// Byte/half writes (SB, SH): the macro has no byte write pins, so read-modify-write
+// (SoC spec section 7.3). Cycle 1 reads the old word with req_ready = 0 (wait state),
+// cycle 2 merges the new bytes by be and writes, req_ready = 1. The master keeps its
+// request in the wait state (rule 1), so addr, be and wdata are still there in cycle 2.
 //
-// rsp_rdata = Q của macro ở chu kỳ phản hồi của lệnh đọc, bằng 0 với lệnh ghi
-// (Q của macro sau chu kỳ ghi không xác định). Không có err: sys_bus đã chặn
-// địa chỉ ngoài vùng.
+// rsp_rdata = the macro Q in the response cycle of a read, and 0 for a write
+// (the macro Q after a write cycle is undefined). There is no err because sys_bus already
+// blocks out-of-range addresses.
 //
-// Cổng f_*: cổng đọc ưu tiên thấp cho lấy lệnh (imem_port). Bus luôn thắng:
-// f_gnt = 0 trong mọi chu kỳ có req_valid, kể cả wait state của đọc-sửa-ghi.
-// DMEM nối f_req = 0, Genus tự bỏ phần logic này.
+// f_* port: a low-priority read port for instruction fetch (imem_port). The bus always
+// wins: f_gnt = 0 in every cycle with req_valid, including read-modify-write wait states.
+// DMEM ties f_req = 0, and Genus removes this logic.
 
 module sram_wrap #(
-    parameter BANK_W = 2,               // số macro = 2^BANK_W, mỗi macro 4 KB
-    parameter AW     = 10 + BANK_W      // độ rộng địa chỉ word, không đặt lại
+    parameter BANK_W = 2,               // Macro count = 2^BANK_W, 4 KB each
+    parameter AW     = 10 + BANK_W      // Word address width, do not override
 ) (
     input  wire          clk,
     input  wire          rst_n,
@@ -27,29 +27,29 @@ module sram_wrap #(
     // Slave valid/ready
     input  wire          req_valid,
     output wire          req_ready,
-    input  wire [31:0]   req_addr,      // dùng addr[AW+1:2]
+    input  wire [31:0]   req_addr,      // Uses addr[AW+1:2]
     input  wire          req_we,
     input  wire [3:0]    req_be,
     input  wire [31:0]   req_wdata,
     output reg           rsp_valid,
     output wire [31:0]   rsp_rdata,
 
-    // Cổng đọc ưu tiên thấp
+    // Low-priority read port
     input  wire          f_req,
     output wire          f_gnt,
-    input  wire [AW-1:0] f_addr,        // địa chỉ word
-    output wire [31:0]   f_rdata        // chu kỳ sau f_req && f_gnt
+    input  wire [AW-1:0] f_addr,        // Word address
+    output wire [31:0]   f_rdata        // The cycle after f_req && f_gnt
 );
 
-    reg  rmw_q;         // chu kỳ trước đã đọc word cũ cho lệnh ghi một phần
-    reg  rd_q;          // chu kỳ trước nhận một lệnh đọc
+    reg  rmw_q;         // Last cycle read the old word for a partial write
+    reg  rd_q;          // Last cycle accepted a read
 
     wire part = req_we & (req_be != 4'hF);
     assign req_ready = ~part | rmw_q;
     wire acc = req_valid & req_ready;
 
-    // Mảng macro. Có req_valid thì bus dùng macro: ghi khi lệnh ghi được nhận,
-    // còn lại là đọc (lệnh đọc, hoặc chu kỳ đọc của đọc-sửa-ghi).
+    // Macro array. With req_valid the bus owns the macros: write when a write is accepted,
+    // otherwise read (a read, or the read cycle of a read-modify-write).
     wire [31:0] q;
     wire [31:0] merged;
 
@@ -71,7 +71,7 @@ module sram_wrap #(
     assign f_gnt   = ~req_valid;
     assign f_rdata = q;
 
-    // Phản hồi
+    // Response
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             rmw_q     <= 1'b0;
@@ -86,7 +86,8 @@ module sram_wrap #(
 
     assign rsp_rdata = {32{rd_q}} & q;
 
-    // Bit địa chỉ ngoài mảng do sys_bus giải mã, bit 1:0 không dùng (truy cập theo word và be)
+    // Address bits outside the array are decoded by sys_bus, bits 1:0 are unused
+    // (word access and be)
     wire unused_addr = &{1'b0, req_addr[31:AW+2], req_addr[1:0]};
 
 endmodule

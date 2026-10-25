@@ -1,38 +1,38 @@
 `timescale 1ns/1ps
 `default_nettype none
-// sys_bus - interconnect valid/ready của SoC (RTL-03).
-// Giao thức: docs/spec/core.md mục 5.1. Bản đồ địa chỉ: rtl/bus/soc_map.vh.
-// Timing diagram: docs/timing_bus.md. Lý do thiết kế: docs/bus_mem.md.
+// sys_bus - SoC valid/ready interconnect (RTL-03).
+// Protocol: docs/spec/core.md section 5.1. Address map: rtl/bus/soc_map.vh.
+// Timing diagrams: docs/timing_bus.md. Design notes: docs/bus_mem.md.
 //
-// Master: N_MASTER cổng (1 là cổng dữ liệu của core, 2 khi có DMA), trọng tài
-// round-robin. Slave: cổng dữ liệu của IMEM (imem_port), DMEM (sram_wrap),
-// cầu APB (vùng 0x2, 0x3, 0x4, apb_bridge) và slave lỗi bên trong.
+// Masters: N_MASTER ports (1 is the core data port, 2 with DMA), round-robin
+// arbitration. Slaves: the IMEM data port (imem_port), DMEM (sram_wrap), the APB
+// bridge (regions 0x2, 0x3, 0x4, apb_bridge) and an internal error slave.
 //
-// Cả bus chỉ có tối đa 1 yêu cầu đang chờ phản hồi. Yêu cầu mới được nhận khi
-// không có gì chờ, hoặc ngay trong chu kỳ có phản hồi của yêu cầu trước (luật 3).
-// Với 1 master, cách này không thêm chu kỳ nào so với nối thẳng master vào
-// slave: load liên tiếp vào SRAM vẫn được 1 lệnh mỗi chu kỳ.
+// The whole bus has at most 1 request waiting for a response. A new request is accepted
+// when nothing is waiting, or in the same cycle the previous response arrives (rule 3).
+// With 1 master this adds no cycle compared with wiring the master straight to the
+// slave, so back-to-back loads from SRAM still run at 1 per cycle.
 //
-// Yêu cầu đã hiện ra ở slave mà slave chưa nhận (ready = 0) thì quyền được giữ
-// cho master đó đến khi được nhận, để slave luôn thấy yêu cầu giữ nguyên (luật 1).
+// Once a request is visible at a slave that has not accepted it (ready = 0), the grant
+// stays with that master until acceptance, so the slave always sees a stable request (rule 1).
 //
-// Slave lỗi: địa chỉ không ánh xạ (ngoài kích thước IMEM/DMEM, bus dữ liệu đọc
-// boot ROM, vùng khác 0x0-0x4) được nhận ngay, chu kỳ sau có rsp_valid với
-// err = 1, rdata = 0. Khe APB trống hoặc tính năng đang tắt do apb_bridge trả err.
+// Error slave: unmapped addresses (beyond the IMEM/DMEM size, data bus reads of the
+// boot ROM, regions other than 0x0-0x4) are accepted at once, and the next cycle has
+// rsp_valid with err = 1, rdata = 0. Empty APB slots or disabled features get err from apb_bridge.
 //
-// Đường tổ hợp: m_req_ready phụ thuộc m_req_valid và rsp_valid của slave (từ
-// flop ở slave). Không có đường từ ready của slave ngược về valid (luật 5).
+// Combinational paths: m_req_ready depends on m_req_valid and the slave's rsp_valid (from
+// a slave flop). There is no path from a slave's ready back to valid (rule 5).
 `include "soc_map.vh"
 
 module sys_bus #(
-    parameter N_MASTER    = 1,                  // 1, 2 hoặc 4
-    parameter IMEM_BANK_W = `SOC_IMEM_BANK_W,   // phải bằng BANK_W của imem_port
-    parameter DMEM_BANK_W = `SOC_DMEM_BANK_W    // phải bằng BANK_W của sram_wrap DMEM
+    parameter N_MASTER    = 1,                  // 1, 2 or 4
+    parameter IMEM_BANK_W = `SOC_IMEM_BANK_W,   // Must equal BANK_W of imem_port
+    parameter DMEM_BANK_W = `SOC_DMEM_BANK_W    // Must equal BANK_W of the DMEM sram_wrap
 ) (
     input  wire                   clk,
     input  wire                   rst_n,
 
-    // Master, gộp phẳng: master i ở lát [i] hoặc [i*32 +: 32]
+    // Masters, flattened: master i is slice [i] or [i*32 +: 32]
     input  wire [N_MASTER-1:0]    m_req_valid,
     output wire [N_MASTER-1:0]    m_req_ready,
     input  wire [N_MASTER*32-1:0] m_addr,
@@ -40,16 +40,16 @@ module sys_bus #(
     input  wire [N_MASTER*4-1:0]  m_be,
     input  wire [N_MASTER*32-1:0] m_wdata,
     output wire [N_MASTER-1:0]    m_rsp_valid,
-    output wire [31:0]            m_rsp_rdata,  // chung, chỉ có nghĩa với master có rsp_valid
-    output wire [N_MASTER-1:0]    m_rsp_err,    // riêng từng master, bằng 0 khi không có rsp_valid
+    output wire [31:0]            m_rsp_rdata,  // Shared, valid only for the master with rsp_valid
+    output wire [N_MASTER-1:0]    m_rsp_err,    // Per master, 0 without rsp_valid
 
-    // Kênh yêu cầu chung cho mọi slave, mỗi slave có valid riêng
+    // Request channel shared by every slave, each slave has its own valid
     output wire [31:0]            s_addr,
     output wire                   s_we,
     output wire [3:0]             s_be,
     output wire [31:0]            s_wdata,
 
-    // Cổng dữ liệu IMEM (imem_port)
+    // IMEM data port (imem_port)
     output wire                   imem_req_valid,
     input  wire                   imem_req_ready,
     input  wire                   imem_rsp_valid,
@@ -61,7 +61,7 @@ module sys_bus #(
     input  wire                   dmem_rsp_valid,
     input  wire [31:0]            dmem_rsp_rdata,
 
-    // Cầu APB (apb_bridge)
+    // APB bridge (apb_bridge)
     output wire                   apb_req_valid,
     input  wire                   apb_req_ready,
     input  wire                   apb_rsp_valid,
@@ -69,7 +69,7 @@ module sys_bus #(
     input  wire                   apb_rsp_err
 );
 
-    localparam MW = (N_MASTER > 2) ? 2 : 1;     // độ rộng chỉ số master
+    localparam MW = (N_MASTER > 2) ? 2 : 1;     // Master index width
     localparam [MW-1:0] ONE = 1;
 
     localparam [31:0] IMEM_SIZE = 32'd4096 << IMEM_BANK_W;
@@ -80,15 +80,15 @@ module sys_bus #(
                      S_APB  = 2'd2,
                      S_ERR  = 2'd3;
 
-    reg           pend_q;       // có yêu cầu đã nhận, chưa có phản hồi
-    reg  [1:0]    pend_slv_q;   // slave sẽ trả phản hồi đó
-    reg  [MW-1:0] pend_mst_q;   // master nhận phản hồi đó
-    reg           hold_q;       // chu kỳ trước yêu cầu hiện ra ở slave mà chưa được nhận
+    reg           pend_q;       // A request was accepted and has no response yet
+    reg  [1:0]    pend_slv_q;   // Slave that will return that response
+    reg  [MW-1:0] pend_mst_q;   // Master that receives that response
+    reg           hold_q;       // Last cycle a request was visible at a slave but not accepted
     reg  [MW-1:0] hold_mst_q;
-    reg  [MW-1:0] rr_q;         // master được nhận gần nhất
+    reg  [MW-1:0] rr_q;         // Most recently accepted master
 
-    // Trọng tài round-robin: duyệt rr_q, rr_q-1, ... , rr_q+1. Master hợp lệ
-    // duyệt sau cùng thắng, nên ưu tiên cao nhất là rr_q+1, thấp nhất là rr_q.
+    // Round-robin arbiter: scan rr_q, rr_q-1, ... , rr_q+1. The last valid master scanned
+    // wins, so rr_q+1 has the highest priority and rr_q the lowest.
     reg  [MW-1:0] rr_pick;
     reg  [MW-1:0] cand;
     integer       k;
@@ -103,7 +103,7 @@ module sys_bus #(
         end
     end
 
-    wire [MW-1:0] g       = hold_q ? hold_mst_q : rr_pick;   // master được chọn
+    wire [MW-1:0] g       = hold_q ? hold_mst_q : rr_pick;   // Selected master
     wire          g_valid = m_req_valid[g];
 
     assign s_addr  = m_addr [g*32 +: 32];
@@ -111,8 +111,8 @@ module sys_bus #(
     assign s_be    = m_be   [g*4 +: 4];
     assign s_wdata = m_wdata[g*32 +: 32];
 
-    // Giải mã địa chỉ: addr[31:28] chọn vùng. Vùng 0x0 chỉ có IMEM ở bus dữ
-    // liệu (boot ROM ở 0x0001_0000 nằm ngoài IMEM_SIZE nên vào slave lỗi).
+    // Address decode: addr[31:28] selects the region. Region 0x0 holds only IMEM on the
+    // data bus (the boot ROM at 0x0001_0000 is beyond IMEM_SIZE, so it goes to the error slave).
     reg [1:0] slv;
     always @(*) begin
         case (s_addr[31:28])
@@ -125,7 +125,7 @@ module sys_bus #(
         endcase
     end
 
-    // Phản hồi của yêu cầu đang chờ, slave lỗi trả lời ở chu kỳ ngay sau
+    // Response to the waiting request, the error slave answers in the very next cycle
     reg rsp_src_valid;
     always @(*) begin
         case (pend_slv_q)
@@ -143,9 +143,9 @@ module sys_bus #(
                          (pend_slv_q == S_DMEM) ? dmem_rsp_rdata :
                          (pend_slv_q == S_APB)  ? apb_rsp_rdata  : 32'h0;
 
-    // Yêu cầu tới slave
-    wire can_acc = ~pend_q | rsp_fire;          // luật 3
-    wire vis     = g_valid & can_acc;           // yêu cầu hiện ra ở slave
+    // Request to the slave
+    wire can_acc = ~pend_q | rsp_fire;          // Rule 3
+    wire vis     = g_valid & can_acc;           // The request is visible at the slave
 
     assign imem_req_valid = vis & (slv == S_IMEM);
     assign dmem_req_valid = vis & (slv == S_DMEM);
@@ -161,9 +161,9 @@ module sys_bus #(
         endcase
     end
 
-    wire acc = vis & slv_ready;                 // yêu cầu được nhận chu kỳ này
+    wire acc = vis & slv_ready;                 // The request is accepted this cycle
 
-    // Giải mã one-hot chỉ số master cho ready và rsp_valid
+    // One-hot decode of the master index for ready and rsp_valid
     reg [N_MASTER-1:0] g_oh;
     reg [N_MASTER-1:0] p_oh;
     integer j;
@@ -178,7 +178,7 @@ module sys_bus #(
     assign m_rsp_valid = {N_MASTER{rsp_fire}} & p_oh;
     assign m_rsp_err   = {N_MASTER{rsp_fire & rsp_err}} & p_oh;
 
-    // Trạng thái
+    // State
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pend_q     <= 1'b0;

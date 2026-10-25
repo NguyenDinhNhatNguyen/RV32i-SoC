@@ -1,34 +1,34 @@
 `timescale 1ns/1ps
 `default_nettype none
-// imem_port - IMEM (mảng SRAM macro) dùng chung cho cổng lệnh của core và bus
-// dữ liệu, kèm boot ROM (RTL-08).
+// imem_port - IMEM (SRAM macro array) shared by the core fetch port and the data bus,
+// plus the boot ROM (RTL-08).
 //
-// Cổng lệnh (docs/spec/core.md mục 4.3, 4.10): địa chỉ được nhận khi
-// if_req && if_gnt, lệnh và lỗi có ở chu kỳ sau.
-//   IMEM      0x0000_0000, 4 KB << BANK_W   if_gnt = 0 khi bus đang dùng IMEM
-//   Boot ROM  0x0001_0000, 1 KB             if_gnt = 1 luôn (không chung với bus)
-//   còn lại                                 if_gnt = 1, chu kỳ sau if_err = 1
+// Fetch port (docs/spec/core.md sections 4.3, 4.10): the address is accepted when
+// if_req && if_gnt, instruction and error arrive one cycle later.
+//   IMEM      0x0000_0000, 4 KB << BANK_W   if_gnt = 0 while the bus uses IMEM
+//   Boot ROM  0x0001_0000, 1 KB             if_gnt = 1 always (not shared with the bus)
+//   other                                   if_gnt = 1, if_err = 1 one cycle later
 //
-// Cổng dữ liệu (slave của sys_bus): đọc/ghi IMEM để nạp chương trình và cho
-// FENCE.I. Bus được ưu tiên, IF mất 1 chu kỳ mỗi lần bus dùng IMEM (2 chu kỳ
-// với ghi byte/half vì đọc-sửa-ghi). Giống mô hình IMEM trong tb_core.
+// Data port (sys_bus slave): reads and writes IMEM to load programs and for FENCE.I.
+// The bus has priority, so IF loses 1 cycle each time the bus uses IMEM (2 cycles
+// for byte/half writes because of read-modify-write). Same as the IMEM model in tb_core.
 `include "soc_map.vh"
 
 module imem_port #(
-    parameter BANK_W = `SOC_IMEM_BANK_W,    // phải bằng IMEM_BANK_W của sys_bus
-    parameter AW     = 10 + BANK_W          // độ rộng địa chỉ word, không đặt lại
+    parameter BANK_W = `SOC_IMEM_BANK_W,    // Must equal IMEM_BANK_W of sys_bus
+    parameter AW     = 10 + BANK_W          // Word address width, do not override
 ) (
     input  wire        clk,
     input  wire        rst_n,
 
-    // Cổng lệnh của core
+    // Core fetch port
     input  wire        if_req,
     input  wire [31:0] if_addr,
     output wire        if_gnt,
     output wire [31:0] if_rdata,
     output wire        if_err,
 
-    // Cổng dữ liệu (sys_bus)
+    // Data port (sys_bus)
     input  wire        req_valid,
     output wire        req_ready,
     input  wire [31:0] req_addr,
@@ -41,7 +41,7 @@ module imem_port #(
 
     localparam [31:0] BOOT_BASE = `SOC_BOOT_BASE;
 
-    // Giải mã địa chỉ lấy lệnh
+    // Fetch address decode
     wire f_imem = (if_addr[31:AW+2] == {(30-AW){1'b0}});
     wire f_boot = (if_addr[31:10] == BOOT_BASE[31:10]);
 
@@ -77,7 +77,7 @@ module imem_port #(
         .q     (rom_q)
     );
 
-    // Nguồn của lệnh ở chu kỳ sau
+    // Source of the instruction in the next cycle
     reg rom_sel_q;
     reg err_q;
 
@@ -95,7 +95,7 @@ module imem_port #(
     assign if_rdata = rom_sel_q ? rom_q :
                       err_q     ? 32'h0 : sram_q;
 
-    // Bit 1:0 của địa chỉ lệnh: core đã bẫy nhảy lệch
+    // Fetch address bits 1:0: the core already traps on misaligned jumps
     wire unused_if = &{1'b0, if_addr[1:0]};
 
 endmodule

@@ -1,8 +1,8 @@
-// lcu_kogge_stone.v - techmap cho $lcu (bộ tính carry của $alu) theo kiểu Kogge-Stone,
-// chỉ dùng trong flow nhà (synth_nangate.tcl). Yosys 0.33 mặc định map $lcu thành
-// chuỗi ripple, trễ tăng tuyến tính theo số bit, trong khi Genus dùng bộ cộng nhanh.
-// Tên module bắt đầu bằng _80_ để techmap chọn trước _90_lcu của +/techmap.v.
-// CO[i] = G[i] | P[i] & CO[i-1], với CO[-1] = CI.
+// lcu_kogge_stone.v - techmap for $lcu (the carry unit of $alu) as Kogge-Stone,
+// used only in the home flow (synth_nangate.tcl). By default Yosys 0.33 maps $lcu to a
+// ripple chain whose delay grows linearly with width, while Genus uses fast adders.
+// The module name starts with _80_ so techmap picks it before _90_lcu of +/techmap.v.
+// CO[i] = G[i] | P[i] & CO[i-1], with CO[-1] = CI.
 (* techmap_celltype = "$lcu" *)
 module _80_lcu_kogge_stone (P, G, CI, CO);
     parameter WIDTH = 2;
@@ -20,8 +20,8 @@ module _80_lcu_kogge_stone (P, G, CI, CO);
         p = P;
         g = G;
         g[0] = g[0] | (p[0] & CI);
-        // Mỗi tầng gộp nhóm cách 2^i bit. j giảm dần nên g[j - 2^i] còn là
-        // giá trị của tầng trước.
+        // Each level merges groups 2^i bits apart. j counts down, so g[j - 2^i] still holds
+        // the previous level's value.
         for (i = 0; (1 << i) < WIDTH; i = i + 1) begin
             for (j = WIDTH - 1; j >= (1 << i); j = j - 1) begin
                 g[j] = g[j] | (p[j] & g[j - (1 << i)]);

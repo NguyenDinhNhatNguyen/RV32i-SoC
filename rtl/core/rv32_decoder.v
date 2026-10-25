@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 `default_nettype none
-// rv32_decoder - giải mã lệnh RV32I + Zicsr + Zifencei (+ M).
-// Thuần tổ hợp. Mọi tổ hợp funct3/funct7 dành riêng đều báo illegal. Khi
-// illegal_o=1 mọi ngõ ra có tác dụng phụ bị ép về 0, nên core chỉ cần xét
-// illegal_o.
-// Việc kiểm tra địa chỉ CSR có tồn tại hay chỉ đọc nằm ở rv32_csr, không ở đây.
+// rv32_decoder - decodes RV32I + Zicsr + Zifencei (+ M).
+// Purely combinational. Every reserved funct3/funct7 combination is illegal. When
+// illegal_o=1 every output with a side effect is forced to 0, so the core only has
+// to look at illegal_o.
+// Checking whether a CSR address exists or is read-only lives in rv32_csr, not here.
 `include "rv32_defs.vh"
 
 module rv32_decoder #(
@@ -12,35 +12,35 @@ module rv32_decoder #(
 ) (
     input  wire [31:0] instr_i,
 
-    // Trường thanh ghi
+    // Register fields
     output wire [4:0]  rs1_addr_o,
     output wire [4:0]  rs2_addr_o,
     output wire [4:0]  rd_addr_o,
-    output wire [2:0]  funct3_o,     // điều kiện nhánh / kích thước+dấu bộ nhớ / phép CSR / phép M
+    output wire [2:0]  funct3_o,     // Branch condition / memory size+sign / CSR op / M op
     output wire [11:0] csr_addr_o,
 
     output reg         illegal_o,
-    output reg         rd_we_o,      // ghi rd, đã bằng 0 khi rd = x0
+    output reg         rd_we_o,      // Write rd, already 0 when rd = x0
     output reg  [2:0]  imm_type_o,   // RV_IMM_*
     output reg  [3:0]  alu_op_o,     // RV_ALU_*
     output reg  [1:0]  alu_a_sel_o,  // RV_ALU_A_*
     output reg         alu_b_sel_o,  // RV_ALU_B_*
     output reg  [1:0]  wb_sel_o,     // RV_WB_*
 
-    output reg         branch_o,     // nhánh có điều kiện, đích = kết quả ALU
-    output reg         jal_o,        // đích = kết quả ALU (pc + imm)
-    output reg         jalr_o,       // đích = kết quả ALU (rs1 + imm), core xoá bit 0
+    output reg         branch_o,     // Conditional branch, target = ALU result
+    output reg         jal_o,        // Target = ALU result (pc + imm)
+    output reg         jalr_o,       // Target = ALU result (rs1 + imm), core clears bit 0
     output reg         load_o,
     output reg         store_o,
-    output reg         md_o,         // lệnh RV32M (chỉ khi ENABLE_M)
+    output reg         md_o,         // RV32M instruction (only with ENABLE_M)
 
     output reg         csr_o,        // CSRRW/S/C[I]
-    output reg         csr_we_o,     // lệnh CSR có ghi CSR thật
+    output reg         csr_we_o,     // The CSR instruction really writes a CSR
     output reg         ecall_o,
     output reg         ebreak_o,
     output reg         mret_o,
     output reg         wfi_o,
-    output reg         fence_i_o     // FENCE là NOP nên không có cờ
+    output reg         fence_i_o     // FENCE is a NOP, so it has no flag
 );
 
     wire [6:0] opcode = instr_i[6:0];
@@ -54,15 +54,15 @@ module rv32_decoder #(
     assign csr_addr_o = instr_i[31:20];
 
     wire rd_nz  = (instr_i[11:7] != 5'd0);
-    wire rs1_nz = (instr_i[19:15] != 5'd0);   // cũng là uimm != 0 với CSR*I
+    wire rs1_nz = (instr_i[19:15] != 5'd0);   // Also uimm != 0 for CSR*I
     wire m_en   = (ENABLE_M != 0);
 
-    // Giải mã thô trước khi chặn theo illegal
+    // Raw decode before masking by illegal
     reg       ill;
     reg       wr_rd;
 
     always @(*) begin
-        // Mặc định: một lệnh ADD vô hại, không bật gì
+        // Default: a harmless ADD, nothing enabled
         ill         = 1'b0;
         wr_rd       = 1'b0;
         imm_type_o  = `RV_IMM_I;
@@ -137,8 +137,8 @@ module rv32_decoder #(
 
             `RV_OPC_OP_IMM: begin
                 wr_rd       = 1'b1;
-                // Chỉ lệnh dịch dùng instr[30] làm bit alt. Với lệnh khác
-                // đây là bit immediate (ADDI không được thành SUB).
+                // Only shifts use instr[30] as the alt bit. For other instructions
+                // it is an immediate bit (ADDI must not become SUB).
                 alu_op_o    = {(funct3 == `RV_F3_SRL_SRA) & instr_i[30], funct3};
                 if (funct3 == `RV_F3_SLL)
                     ill = (funct7 != `RV_F7_BASE);
@@ -161,8 +161,8 @@ module rv32_decoder #(
             end
 
             `RV_OPC_MISC_MEM: begin
-                // Bỏ qua trường rs1/rd/imm để tương thích về sau
-                // (đặc tả Unprivileged, mục FENCE và FENCE.I).
+                // Ignore the rs1/rd/imm fields for forward compatibility
+                // (Unprivileged spec, FENCE and FENCE.I sections).
                 if (funct3 == `RV_F3_FENCE_I)
                     fence_i_o = 1'b1;
                 else
@@ -171,7 +171,7 @@ module rv32_decoder #(
 
             `RV_OPC_SYSTEM: begin
                 if (funct3 == `RV_F3_PRIV) begin
-                    // Lệnh privileged phải khớp nguyên word (rs1 = rd = 0)
+                    // Privileged instructions must match the whole word (rs1 = rd = 0)
                     case (instr_i)
                         `RV_INSTR_ECALL:  ecall_o  = 1'b1;
                         `RV_INSTR_EBREAK: ebreak_o = 1'b1;
@@ -186,7 +186,7 @@ module rv32_decoder #(
                     csr_o      = 1'b1;
                     imm_type_o = `RV_IMM_Z;
                     wb_sel_o   = `RV_WB_CSR;
-                    // CSRRW[I] luôn ghi, CSRRS/C[I] chỉ ghi khi rs1/uimm != 0
+                    // CSRRW[I] always writes, CSRRS/C[I] write only when rs1/uimm != 0
                     csr_we_o   = (funct3[1:0] == `RV_CSR_RW) || rs1_nz;
                 end
             end
@@ -194,7 +194,7 @@ module rv32_decoder #(
             default: ill = 1'b1;
         endcase
 
-        // Không hỗ trợ lệnh nén 16 bit
+        // Compressed 16-bit instructions are not supported
         if (instr_i[1:0] != 2'b11)
             ill = 1'b1;
 

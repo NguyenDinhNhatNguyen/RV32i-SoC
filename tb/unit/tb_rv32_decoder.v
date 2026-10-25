@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_decoder - testbench tự kiểm tra cho rv32_decoder.
-// Mô hình tham chiếu: bảng MASK/MATCH của mọi lệnh được hỗ trợ (giá trị lấy
-// từ riscv-opcodes) kèm tín hiệu điều khiển kỳ vọng theo tên lệnh. Word nào
-// không khớp mục nào trong bảng phải là illegal.
-// Kích thích: mọi lệnh với trường tự do ngẫu nhiên (thêm biến thể rd=x0 và
-// rs1=x0), mã illegal viết tay, word ngẫu nhiên có opcode hợp lệ, word ngẫu
-// nhiên hoàn toàn. Coverage: mọi mục trong bảng phải được chạm tới.
-// Tham số ENABLE_M: chạy với 0 (mã lệnh M là illegal) và 1.
-// Plusarg: +seed=<n> +n=<số word ngẫu nhiên> +timeout=<ns>
+// tb_rv32_decoder - self-checking testbench for rv32_decoder.
+// Reference model: the MASK/MATCH table of every supported instruction (values from
+// riscv-opcodes) with the expected control signals by instruction name. A word that
+// matches no table entry must be illegal.
+// Stimulus: every instruction with random free fields (plus rd=x0 and rs1=x0
+// variants), hand-written illegal encodings, random words with a valid opcode, and fully
+// random words. Coverage: every table entry must be hit.
+// Parameter ENABLE_M: runs with 0 (M encodings are illegal) and 1.
+// Plusargs: +seed=<n> +n=<random words> +timeout=<ns>
 `include "rv32_defs.vh"
 
 module tb_rv32_decoder;
@@ -42,7 +42,7 @@ module tb_rv32_decoder;
     );
 
     // ------------------------------------------------------------------
-    // Bảng lệnh
+    // Instruction table
     // ------------------------------------------------------------------
     localparam C_LUI = 0, C_AUIPC = 1, C_JAL = 2, C_JALR = 3, C_BRANCH = 4,
                C_LOAD = 5, C_STORE = 6, C_OPIMM = 7, C_OP = 8, C_MD = 9,
@@ -133,7 +133,7 @@ module tb_rv32_decoder;
     endtask
 
     // ------------------------------------------------------------------
-    // Kiểm tra
+    // Checks
     // ------------------------------------------------------------------
     integer errors = 0;
     integer checks = 0;
@@ -159,7 +159,7 @@ module tb_rv32_decoder;
         integer k, id, cl;
         reg e_ill, e_rdwe, e_br, e_jal, e_jalr, e_ld, e_st, e_md;
         reg e_csr, e_csrwe, e_ecall, e_ebreak, e_mret, e_wfi, e_fencei;
-        reg c_imm, c_alu;              // cờ có quan tâm
+        reg c_imm, c_alu;              // Flags that matter
         reg [2:0] e_imm;
         reg [3:0] e_alu;
         reg [1:0] e_a, e_wb;
@@ -256,7 +256,7 @@ module tb_rv32_decoder;
     endtask
 
     // ------------------------------------------------------------------
-    // Kích thích
+    // Stimulus
     // ------------------------------------------------------------------
     reg [6:0] opcodes [0:10];
     integer i, k;
@@ -273,7 +273,7 @@ module tb_rv32_decoder;
         opcodes[4] = 7'h63; opcodes[5] = 7'h03; opcodes[6] = 7'h23; opcodes[7] = 7'h13;
         opcodes[8] = 7'h33; opcodes[9] = 7'h0F; opcodes[10] = 7'h73;
 
-        // 1. Mọi lệnh, trường tự do ngẫu nhiên, thêm rd = x0 và rs1 = x0
+        // 1. Every instruction, random free fields, plus rd = x0 and rs1 = x0
         for (k = 0; k < n_instr; k = k + 1)
             for (i = 0; i < 300; i = i + 1) begin
                 r = $random(seed);
@@ -283,49 +283,49 @@ module tb_rv32_decoder;
                 check(w);
             end
 
-        // 2. Mã illegal và mã gần đúng viết tay
-        check(32'h0000_0000);              // toàn 0
-        check(32'hFFFF_FFFF);              // toàn 1
-        check(32'h0000_0001);              // lệnh nén
+        // 2. Hand-written illegal and near-miss encodings
+        check(32'h0000_0000);              // All zeros
+        check(32'hFFFF_FFFF);              // All ones
+        check(32'h0000_0001);              // Compressed instruction
         check(32'h0000_4501);              // c.li
-        check(32'h0200_1013);              // slli có shamt[5] = 1 (chỉ RV64)
-        check(32'h0200_5013);              // srli có shamt[5] = 1
-        check(32'h6000_5013);              // srai có funct7 sai
-        check(32'h4000_1013);              // slli có funct7 = 0100000
-        check(32'h4000_1033);              // sll có funct7 = 0100000
-        check(32'h4000_7033);              // and có funct7 = 0100000
-        check(32'h8000_0033);              // add có funct7 = 1000000
+        check(32'h0200_1013);              // slli with shamt[5] = 1 (RV64 only)
+        check(32'h0200_5013);              // srli with shamt[5] = 1
+        check(32'h6000_5013);              // srai with a wrong funct7
+        check(32'h4000_1013);              // slli with funct7 = 0100000
+        check(32'h4000_1033);              // sll with funct7 = 0100000
+        check(32'h4000_7033);              // and with funct7 = 0100000
+        check(32'h8000_0033);              // add with funct7 = 1000000
         check(32'h0000_2063);              // branch funct3 = 010
         check(32'h0000_3063);              // branch funct3 = 011
         check(32'h0000_3003);              // ld (RV64)
         check(32'h0000_6003);              // lwu (RV64)
         check(32'h0000_7003);
         check(32'h0000_3023);              // sd (RV64)
-        check(32'h0000_1067);              // jalr có funct3 = 001
+        check(32'h0000_1067);              // jalr with funct3 = 001
         check(32'h0000_200F);              // misc-mem funct3 = 010
-        check(32'h0000_00F3);              // ecall có rd != 0
-        check(32'h0000_8073);              // ecall có rs1 != 0
+        check(32'h0000_00F3);              // ecall with rd != 0
+        check(32'h0000_8073);              // ecall with rs1 != 0
         check(32'h0020_0073);              // uret
         check(32'h1020_0073);              // sret
         check(32'h7B20_0073);              // dret
         check(32'h1200_0073);              // sfence.vma
-        check(32'h3020_00F3);              // mret có rd != 0
+        check(32'h3020_00F3);              // mret with rd != 0
         check(32'h0000_4073);              // SYSTEM funct3 = 100
         check(32'h0000_001B);              // OP-IMM-32 (RV64)
         check(32'h0000_003B);              // OP-32 (RV64)
         check(32'h0000_0007);              // FLW
         check(32'h0000_002F);              // AMO
-        check(32'h0FF0_000F);              // fence iorw, iorw  (hợp lệ)
-        check(32'h8330_000F);              // fence.tso         (hợp lệ)
-        check(32'h0000_100F);              // fence.i           (hợp lệ)
-        check(32'h0000_0013);              // nop               (hợp lệ)
-        check(32'h3000_2073);              // csrr x0, mstatus  (hợp lệ, rd = x0)
+        check(32'h0FF0_000F);              // fence iorw, iorw  (legal)
+        check(32'h8330_000F);              // fence.tso         (legal)
+        check(32'h0000_100F);              // fence.i           (legal)
+        check(32'h0000_0013);              // nop               (legal)
+        check(32'h3000_2073);              // csrr x0, mstatus  (legal, rd = x0)
 
-        // 3. Word ngẫu nhiên có opcode chính hợp lệ
+        // 3. Random words with a valid main opcode
         for (i = 0; i < n_rand; i = i + 1) begin
             r = $random(seed);
             w = {r[31:7], opcodes[{$random(seed)} % 11]};
-            // Thiên funct7 về các giá trị đã định nghĩa để có lệnh R-type hợp lệ
+            // Bias funct7 to defined values to get legal R-type instructions
             case (r[2:0])
                 3'd0: w[31:25] = 7'b0000000;
                 3'd1: w[31:25] = 7'b0100000;
@@ -335,11 +335,11 @@ module tb_rv32_decoder;
             check(w);
         end
 
-        // 4. Word ngẫu nhiên hoàn toàn
+        // 4. Fully random words
         for (i = 0; i < n_rand; i = i + 1)
             check($random(seed));
 
-        // Coverage: mọi mục trong bảng đều đã gặp
+        // Coverage: every table entry was hit
         for (k = 0; k < n_instr; k = k + 1)
             if (t_hits[k] == 0) begin
                 errors = errors + 1;

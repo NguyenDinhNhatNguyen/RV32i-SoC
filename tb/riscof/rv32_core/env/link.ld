@@ -1,8 +1,9 @@
-/* link.ld - riscv-arch-test trên tb_core. Mọi section ở IMEM như fw/common/link_isa.ld:
- * test Zifencei ghi lệnh vào vùng dữ liệu rồi nhảy tới đó, mà core chỉ lấy lệnh từ IMEM.
- * IMEM bắt đầu ở 0x8000_0000 (tb_core_arch_*.vvp dịch với CORE_TB_IMEM_BASE này),
- * trùng địa chỉ nạp của Spike, vì signature của một số test (misalign-jal-01) phụ
- * thuộc địa chỉ. Kích thước IMEM do tb_core quyết định (CORE_TB_IMEM_SIZE).
+/* link.ld - riscv-arch-test on tb_core. Every section is in IMEM, as in fw/common/link_isa.ld:
+ * the Zifencei tests write instructions into the data region and jump there, but the core
+ * fetches only from IMEM.
+ * IMEM starts at 0x8000_0000 (tb_core_arch_*.vvp is compiled with this CORE_TB_IMEM_BASE),
+ * the same load address as Spike, because the signature of some tests (misalign-jal-01)
+ * depends on addresses. The IMEM size is set by tb_core (CORE_TB_IMEM_SIZE).
  */
 OUTPUT_ARCH("riscv")
 ENTRY(rvtest_entry_point)

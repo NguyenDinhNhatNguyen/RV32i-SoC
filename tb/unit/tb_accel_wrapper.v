@@ -1,5 +1,5 @@
-// tb_accel_wrapper.v - kiểm tra wrapper accelerator qua bus MMIO.
-// Chạy: make sim-accel. In "PASS" khi mọi phép nhân khớp mô hình vàng.
+// tb_accel_wrapper.v - tests the accelerator wrapper through the MMIO bus.
+// Run: make sim-accel. Prints "PASS" when every multiply matches the golden model.
 `timescale 1ns/1ps
 module tb_accel_wrapper;
     localparam N = 4;
@@ -18,7 +18,7 @@ module tb_accel_wrapper;
     always #10 clk = ~clk;   // 50 MHz
 
 `ifdef GLS
-    accel_wrapper dut (          // netlist sau tổng hợp không còn parameter (make gls-accel)
+    accel_wrapper dut (          // The synthesized netlist has no parameters (make gls-accel)
 `else
     accel_wrapper #(.N(N)) dut (
 `endif
@@ -34,7 +34,7 @@ module tb_accel_wrapper;
         @(negedge clk);
         s_valid = 1'b1; s_we = 1'b1; s_addr = a; s_wdata = d; s_wstrb = strb;
         @(posedge clk); #1;
-        if (!s_ready) begin $display("ERROR: ready thap khi ghi"); errors = errors + 1; end
+        if (!s_ready) begin $display("ERROR: ready low on write"); errors = errors + 1; end
         s_valid = 1'b0; s_we = 1'b0; s_wstrb = 4'd0;
     end
     endtask
@@ -70,7 +70,7 @@ module tb_accel_wrapper;
         end
 
         for (t = 0; t < NTEST; t = t + 1) begin
-            // tạo dữ liệu: 2 lần đầu là trường hợp biên
+            // Make data: the first 2 runs are corner cases
             for (i = 0; i < N*N; i = i + 1) begin
                 if (t == 0)      begin A[i] = -8'sd128; B[i] = -8'sd128; end
                 else if (t == 1) begin A[i] =  8'sd127; B[i] = -8'sd128; end
@@ -83,20 +83,20 @@ module tb_accel_wrapper;
                         G[i*N+j] = G[i*N+j] + A[i*N+k] * B[k*N+j];
                 end
 
-            // nạp A, B: 4 byte mỗi lần ghi
+            // Load A and B, 4 bytes per write
             for (w = 0; w < N*N/4; w = w + 1) begin
                 bus_write(12'h100 + 4*w, {A[4*w+3], A[4*w+2], A[4*w+1], A[4*w]}, 4'hF);
                 bus_write(12'h200 + 4*w, {B[4*w+3], B[4*w+2], B[4*w+1], B[4*w]}, 4'hF);
             end
-            // kiểm tra đọc lại bộ đệm
+            // Read the buffers back
             bus_read(12'h104, rd);
             if (rd !== {A[7], A[6], A[5], A[4]}) begin
-                $display("ERROR: doc lai A_BUF sai %h", rd); errors = errors + 1;
+                $display("ERROR: A_BUF read back wrong %h", rd); errors = errors + 1;
             end
 
-            // START, bật ngắt
+            // START with the interrupt enabled
             bus_write(12'h000, 32'h3, 4'h1);
-            // ghi vào A khi đang bận phải bị bỏ qua
+            // A write to A while busy must be ignored
             bus_write(12'h100, 32'hDEADBEEF, 4'hF);
             cycles = 0;
             rd = 32'h1;
@@ -105,7 +105,7 @@ module tb_accel_wrapper;
                 cycles = cycles + 1;
                 if (cycles > 100) begin $display("ERROR: timeout"); $finish; end
             end
-            if (!irq) begin $display("ERROR: irq khong len khi DONE"); errors = errors + 1; end
+            if (!irq) begin $display("ERROR: irq not raised on DONE"); errors = errors + 1; end
             if (rd[0]) begin $display("ERROR: van BUSY khi DONE"); errors = errors + 1; end
 
             for (i = 0; i < N*N; i = i + 1) begin
@@ -118,15 +118,15 @@ module tb_accel_wrapper;
             end
             bus_read(12'h100, rd);
             if (rd === 32'hDEADBEEF) begin
-                $display("ERROR: A_BUF bi ghi de khi BUSY"); errors = errors + 1;
+                $display("ERROR: A_BUF overwritten while BUSY"); errors = errors + 1;
             end
 
-            // xoá DONE (W1C), irq phải xuống
+            // Clear DONE (W1C), irq must drop
             bus_write(12'h004, 32'h2, 4'h1);
-            #1 if (irq) begin $display("ERROR: irq chua xuong sau W1C"); errors = errors + 1; end
+            #1 if (irq) begin $display("ERROR: irq still high after W1C"); errors = errors + 1; end
         end
 
-        if (errors == 0) $display("PASS: %0d phep nhan ma tran %0dx%0d khop mo hinh vang", NTEST, N, N);
+        if (errors == 0) $display("PASS: %0d matrix multiplies %0dx%0d match the golden model", NTEST, N, N);
         else             $display("FAIL: %0d loi", errors);
         $finish;
     end

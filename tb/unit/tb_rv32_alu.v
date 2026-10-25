@@ -1,9 +1,10 @@
 `timescale 1ns/1ps
 `default_nettype none
-// tb_rv32_alu - testbench tự kiểm tra cho rv32_alu.
-// Mô hình tham chiếu viết khác RTL (toán tử so sánh có dấu, SRA bằng mặt nạ),
-// vector biên có kết quả viết tay, rồi toán hạng ngẫu nhiên thiên về giá trị biên.
-// Plusarg: +seed=<n> +n=<số vector ngẫu nhiên mỗi phép> +timeout=<ns>
+// tb_rv32_alu - self-checking testbench for rv32_alu.
+// The reference model is written differently from the RTL (signed compare operators,
+// SRA with a mask). Corner vectors have hand-written results, then random operands lean to
+// corner values.
+// Plusargs: +seed=<n> +n=<random vectors per op> +timeout=<ns>
 `include "rv32_defs.vh"
 
 module tb_rv32_alu;
@@ -87,7 +88,7 @@ module tb_rv32_alu;
         corners[8]  = 32'h0000_0020; corners[9]  = 32'hAAAA_AAAA;
         corners[10] = 32'h5555_5555; corners[11] = 32'hFFFF_FFE0;
 
-        // Vector biên, giá trị kỳ vọng viết tay
+        // Corner vectors with hand-written expected values
         apply(`RV_ALU_ADD,  32'h7FFF_FFFF, 32'h0000_0001, 32'h8000_0000);
         apply(`RV_ALU_ADD,  32'hFFFF_FFFF, 32'h0000_0001, 32'h0000_0000);
         apply(`RV_ALU_SUB,  32'h0000_0000, 32'h0000_0001, 32'hFFFF_FFFF);
@@ -102,7 +103,7 @@ module tb_rv32_alu;
         apply(`RV_ALU_SLTU, 32'h8000_0000, 32'h7FFF_FFFF, 32'h0000_0000);
         apply(`RV_ALU_SLTU, 32'h1234_5678, 32'h1234_5678, 32'h0000_0000);
         apply(`RV_ALU_SLL,  32'h0000_0001, 32'h0000_001F, 32'h8000_0000);
-        apply(`RV_ALU_SLL,  32'h0000_0001, 32'h0000_0020, 32'h0000_0001); // chỉ dùng b[4:0]
+        apply(`RV_ALU_SLL,  32'h0000_0001, 32'h0000_0020, 32'h0000_0001); // Only b[4:0] is used
         apply(`RV_ALU_SRL,  32'h8000_0000, 32'h0000_001F, 32'h0000_0001);
         apply(`RV_ALU_SRL,  32'h8000_0000, 32'hFFFF_FFE0, 32'h8000_0000);
         apply(`RV_ALU_SRA,  32'h8000_0000, 32'h0000_001F, 32'hFFFF_FFFF);
@@ -113,7 +114,7 @@ module tb_rv32_alu;
         apply(`RV_ALU_OR,   32'hAAAA_0000, 32'h0000_5555, 32'hAAAA_5555);
         apply(`RV_ALU_AND,  32'hAAAA_FFFF, 32'hFFFF_5555, 32'hAAAA_5555);
 
-        // Quét đủ số bit dịch trên các toán hạng biên
+        // Sweep every shift amount on the corner operands
         for (k = 0; k < 12; k = k + 1)
             for (i = 0; i < 64; i = i + 1) begin
                 apply(`RV_ALU_SLL, corners[k], i, ref_alu(`RV_ALU_SLL, corners[k], i));
@@ -121,13 +122,13 @@ module tb_rv32_alu;
                 apply(`RV_ALU_SRA, corners[k], i, ref_alu(`RV_ALU_SRA, corners[k], i));
             end
 
-        // Mọi cặp toán hạng biên cho từng phép
+        // Every pair of corner operands for each op
         for (k = 0; k < 10; k = k + 1)
             for (i = 0; i < 144; i = i + 1)
                 apply(ops[k], corners[i / 12], corners[i % 12],
                       ref_alu(ops[k], corners[i / 12], corners[i % 12]));
 
-        // Ngẫu nhiên
+        // Random
         for (k = 0; k < 10; k = k + 1)
             for (i = 0; i < n_rand; i = i + 1) begin : rnd
                 reg [31:0] ra, rb;

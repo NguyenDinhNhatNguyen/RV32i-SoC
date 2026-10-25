@@ -1,31 +1,36 @@
 `timescale 1ns/1ps
 // accel_wrapper.v
-// Wrapper MMIO cho accelerator nhân ma trận (systolic array Lab 2).
-// Chủ: Nguyên. Vùng địa chỉ trong SoC: 0x3000_0000, 4 KB.
+// MMIO wrapper for the matrix multiply accelerator (Lab 2 systolic array).
+// Owner: Nguyen. SoC address region: 0x3000_0000, 4 KB.
 //
-// Lý do có wrapper: CPU chỉ ghi được 4 byte mỗi lệnh store, trong khi mảng N x N cần N byte A + N byte B mỗi chu kỳ theo đúng thứ tự skew. Wrapper nhận ma trận vào bộ đệm trước, rồi tự phát chuỗi skew cho lõi trong 3N-2 chu kỳ liên tiếp.
+// Why a wrapper: the CPU writes only 4 bytes per store, while an N x N array needs
+// N bytes of A and N bytes of B every cycle in skewed order. The wrapper first loads
+// both matrices into buffers, then drives the skewed sequence into the core for
+// 3N-2 consecutive cycles.
 //
-// Bus: valid/ready theo spec chung của SoC. Wrapper luôn sẵn sàng (ready = valid), dữ liệu đọc hợp lệ trong chính chu kỳ ready.
+// Bus: valid/ready as in the common SoC spec. The wrapper is always ready
+// (ready = valid) and read data is valid in the same ready cycle.
 //
-// Bản đồ thanh ghi (offset trong vùng 4 KB):
-//   0x000 CTRL    W: bit0 START (chỉ nhận khi rảnh), bit1 IRQ_EN.  R: bit1 IRQ_EN
-//   0x004 STATUS  R: bit0 BUSY, bit1 DONE.  W: ghi 1 vào bit1 để xoá DONE
-//   0x008 INFO    R: {N, DW, AW, LAT} mỗi trường 8 bit, từ bit cao xuống
-//   0x100 A_BUF   A[i][k] ở byte i*N+k (little-endian trong word), N*N byte
-//   0x200 B_BUF   B[k][j] ở byte k*N+j
-//   0x300 C_BUF   C[i][j] ở word i*N+j (chỉ đọc)
-// Ghi vào A/B/CTRL khi đang BUSY bị bỏ qua.
-// irq = DONE & IRQ_EN, nối vào bộ gom ngắt của SoC.
+// Register map (offset inside the 4 KB region):
+//   0x000 CTRL    W: bit0 START (taken only when idle), bit1 IRQ_EN.  R: bit1 IRQ_EN
+//   0x004 STATUS  R: bit0 BUSY, bit1 DONE.  W: write 1 to bit1 to clear DONE
+//   0x008 INFO    R: {N, DW, AW, LAT}, 8 bits each, from the MSB down
+//   0x100 A_BUF   A[i][k] at byte i*N+k (little-endian within a word), N*N bytes
+//   0x200 B_BUF   B[k][j] at byte k*N+j
+//   0x300 C_BUF   C[i][j] at word i*N+j (read only)
+// Writes to A, B or CTRL while BUSY are ignored.
+// The irq output is DONE & IRQ_EN and goes to the SoC interrupt controller.
 //
-// Giới hạn tham số: lõi Lab 2 (accelerator_top) cố định N = 4, DW = 8, AW = 20, có dấu. Giữ nguyên các tham số mặc định.
-// C_BUF trả về giá trị tích luỹ mở rộng dấu lên 32 bit.
+// Parameter limits: the Lab 2 core (accelerator_top) is fixed at N = 4, DW = 8, AW = 20,
+// signed. Keep the default parameters.
+// C_BUF returns the accumulated value sign-extended to 32 bits.
 
 module accel_wrapper #(
     parameter N      = 4,
     parameter DW     = 8,
     parameter AW     = 20,
     parameter SIGNED = 1,
-    parameter LAT    = 3*N - 2      // 10 chu kỳ, khớp bộ đếm step_cnt == 10 của accelerator_top
+    parameter LAT    = 3*N - 2      // 10 cycles, matches step_cnt == 10 in accelerator_top
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -33,24 +38,24 @@ module accel_wrapper #(
     input  wire        s_valid,
     input  wire        s_we,
     /* verilator lint_off UNUSEDSIGNAL */
-    input  wire [11:0] s_addr,           // bit [1:0] bỏ qua: chỉ truy cập theo word
+    input  wire [11:0] s_addr,           // Bits [1:0] are ignored, word access only
     /* verilator lint_on UNUSEDSIGNAL */
     input  wire [31:0] s_wdata,
     input  wire [3:0]  s_wstrb,
     output wire        s_ready,
     output reg  [31:0] s_rdata,
-    // ngắt
+    // Interrupt
     output wire        irq
 );
 
-    localparam NB = N*N;                 // số byte mỗi ma trận
-    localparam CW = 6;                   // đủ đếm tới LAT-1 với N <= 8
+    localparam NB = N*N;                 // Bytes per matrix
+    localparam CW = 6;                   // Enough to count to LAT-1 for N <= 8
 
     localparam [1:0] S_IDLE = 2'd0,
                      S_CLR  = 2'd1,
                      S_RUN  = 2'd2;
 
-    // Trạng thái
+    // State
     reg  [1:0]    state;
     reg  [CW-1:0] cnt;
     reg           done;
@@ -60,7 +65,7 @@ module accel_wrapper #(
     reg  [NB*DW-1:0] abuf;
     reg  [NB*DW-1:0] bbuf;
 
-    // Giải mã bus
+    // Bus decode
     wire        acc_w   = s_valid & s_we;
     wire [3:0]  region  = s_addr[11:8];
     wire [5:0]  widx    = s_addr[7:2];
@@ -110,7 +115,7 @@ module accel_wrapper #(
 
     assign irq = done & irq_en;
 
-    // Bộ đệm A/B
+    // A/B buffers
     integer b;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -127,14 +132,14 @@ module accel_wrapper #(
     end
 
     // Sinh skew
-    // Chu kỳ t = cnt: hàng i nhận A[i][t-i], cột j nhận B[t-j][j] (0 nếu ngoài khoảng)
+    // Cycle t = cnt: row i gets A[i][t-i], column j gets B[t-j][j] (0 when out of range)
     reg [N*DW-1:0] a_feed;
     reg [N*DW-1:0] b_feed;
     integer i;
-    integer t;                           // cnt mở rộng lên 32 bit cho phép so sánh/cộng với i
+    integer t;                           // Holds cnt widened to 32 bits to compare and add with i
     always @* begin
         t = {{(32-CW){1'b0}}, cnt};
-        i = 0;                           // gán mặc định để Yosys không suy ra latch cho biến vòng lặp
+        i = 0;                           // Default avoids a Yosys latch on the loop variable
         a_feed = {N*DW{1'b0}};
         b_feed = {N*DW{1'b0}};
         if (state == S_RUN) begin
@@ -147,14 +152,16 @@ module accel_wrapper #(
         end
     end
 
-    // Lõi Lab 2 (accelerator_top + pe)
-    // start và clear cùng ở chu kỳ CLR: clear xoá mảng, busy của lõi lên đúng chu kỳ RUN đầu tiên
-    // và kéo dài LAT chu kỳ, trùng với lúc wrapper phát chuỗi skew.
-    // Lõi chỉ đưa ra một hàng kết quả, chọn bằng row_sel one-hot theo địa chỉ C_BUF (hàng = widx[3:2]).
+    // Lab 2 core (accelerator_top + pe)
+    // Both start and clear pulse in the CLR cycle. The clear pulse empties the array, and the
+    // core's busy rises exactly on the first RUN cycle and lasts LAT cycles, while the wrapper
+    // drives the skewed sequence.
+    // The core outputs one result row at a time, selected by the one-hot row_sel taken from
+    // the C_BUF address (row = widx[3:2]).
     wire [3:0]    row_sel = 4'b0001 << widx[3:2];
     wire [AW-1:0] res0, res1, res2, res3;
     /* verilator lint_off UNUSEDSIGNAL */
-    wire          core_busy, core_done;   // wrapper tự đếm LAT chu kỳ nên không cần
+    wire          core_busy, core_done;   // Not needed, the wrapper counts LAT cycles itself
     /* verilator lint_on UNUSEDSIGNAL */
 
     accelerator_top u_core (
@@ -182,11 +189,11 @@ module accel_wrapper #(
     wire [4*AW-1:0] c_row = {res3, res2, res1, res0};
     wire [AW-1:0]   c_sel = c_row[widx[1:0]*AW +: AW];
 
-    // Đọc bus
+    // Bus read
     integer r;
     always @* begin
         s_rdata = 32'd0;
-        r       = 0;        // gán mặc định để Yosys không suy ra latch cho biến vòng lặp
+        r       = 0;        // Default avoids a Yosys latch on the loop variable
         if (sel_reg) begin
             case (widx)
                 6'd0: s_rdata = {30'd0, irq_en, 1'b0};

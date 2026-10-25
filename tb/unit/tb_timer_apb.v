@@ -1,6 +1,6 @@
 
 `timescale 1ns/1ps
-// Testbench tu kiem tra cho timer_apb. Cuoi cung in "PASS: ..." neu moi kiem tra dung.
+// Self-checking testbench for timer_apb. Prints "PASS: ..." at the end if every check passes.
 module tb_timer_apb;
     reg         PCLK = 1'b0;
     reg         PRESETn = 1'b0;
@@ -22,7 +22,7 @@ module tb_timer_apb;
         .irq_timer(irq_timer), .irq_software(irq_software)
     );
 
-    localparam HALF = 10;      // nua chu ky (ns): 50 MHz
+    localparam HALF = 10;      // Half period (ns): 50 MHz
     always #HALF PCLK = ~PCLK;
 
     localparam MTIME_LO = 12'h000, MTIME_HI = 12'h004,
@@ -101,7 +101,7 @@ module tb_timer_apb;
         apb_read(MSIP);    check(rd == 32'd0 && !err_seen,        "reset: msip = 0");
         apb_read(MTIME_HI);check(rd == 32'd0,                     "reset: mtime_hi = 0");
 
-        // ---- 2. mtime tang moi chu ky ----
+        // ---- 2. mtime increments every cycle ----
         apb_write(MTIME_HI, 32'd0);
         apb_write(MTIME_LO, 32'd0);
         check(!err_seen, "write mtime: no PSLVERR");
@@ -111,7 +111,7 @@ module tb_timer_apb;
         check(r2 > r1,           "mtime increases");
         check((r2 - r1) >= 10 && (r2 - r1) <= 14, "mtime step ~ elapsed clks");
 
-        // ---- 3. Ngat khi mtime >= mtimecmp ----
+        // ---- 3. Interrupt when mtime >= mtimecmp ----
         apb_write(CMP_HI, 32'hFFFFFFFF);
         apb_write(MTIME_HI, 32'd0);
         apb_write(MTIME_LO, 32'd0);
@@ -124,12 +124,12 @@ module tb_timer_apb;
         apb_read(MTIME_LO);
         check(rd >= 100 && rd < 130, "irq rises at mtime ~ cmp");
 
-        // ---- 4. Xoa ngat bang cach tang mtimecmp ----
+        // ---- 4. Clear the interrupt by raising mtimecmp ----
         apb_write(CMP_LO, 32'hFFFFFFFF);          // cmp = 0x0_FFFFFFFF
         wait_clks(3);
         check(irq_timer == 1'b0, "irq clears after raising cmp");
 
-        // ---- 5. Tran qua 32 bit sang mtime_hi ----
+        // ---- 5. Carry past 32 bits into mtime_hi ----
         apb_write(CMP_HI, 32'hFFFFFFFF);
         apb_write(MTIME_HI, 32'd0);
         apb_write(MTIME_LO, 32'hFFFFFFF0);
@@ -139,7 +139,7 @@ module tb_timer_apb;
         apb_read(MTIME_LO);
         check(rd < 32'd100, "carry: mtime_lo small after wrap");
 
-        // ---- 6. So sanh dung 64 bit (word cao) ----
+        // ---- 6. Full 64-bit compare (high word) ----
         apb_write(CMP_HI, 32'hFFFFFFFF);
         apb_write(CMP_LO, 32'd0);
         apb_write(CMP_HI, 32'd1);                 // cmp = {1, 0}
@@ -161,7 +161,7 @@ module tb_timer_apb;
         apb_write(MSIP, 32'hFFFFFFFE);            // bit0 = 0
         check(irq_software == 1'b0, "msip=0 (only bit0 used)");
 
-        // ---- 8. Truy cap sai -> PSLVERR, khong doi trang thai ----
+        // ---- 8. Bad access -> PSLVERR, state unchanged ----
         apb_write(MSIP, 32'd1);
         apb_write(12'h014, 32'hDEADBEEF);
         check(err_seen == 1'b1, "write offset 0x14 -> PSLVERR");
@@ -174,16 +174,16 @@ module tb_timer_apb;
         apb_read(CMP_HI);
         check(rd == 32'hFFFFFFFF, "mtimecmp_hi unchanged after bad access");
 
-        // ---- 9. Ghi mtime_lo dung luc nua thap = FFFFFFFF: ghi thang, khong carry ----
+        // ---- 9. Write mtime_lo right when the low half = FFFFFFFF: direct write, no carry ----
         apb_write(MTIME_HI, 32'd5);
-        apb_write(MTIME_LO, 32'hFFFFFFFD);   // 3 chu ky/lan ghi: den lan ghi sau lo = FFFFFFFF
-        apb_write(MTIME_LO, 32'h00000010);        // luc nay mtime_lo dang la FFFFFFFF
+        apb_write(MTIME_LO, 32'hFFFFFFFD);   // 3 cycles per write: lo = FFFFFFFF by the next write
+        apb_write(MTIME_LO, 32'h00000010);        // mtime_lo is FFFFFFFF at this point
         apb_read(MTIME_HI);
         check(rd == 32'd5, "write lo at wrap: no carry into hi");
         apb_read(MTIME_LO);
         check(rd >= 32'h10 && rd < 32'h30, "write lo at wrap: lo takes new value");
 
-        // ---- 10. Ngau nhien: mtimecmp/msip + truy cap sai, doi chieu mo hinh trong tb ----
+        // ---- 10. Random: mtimecmp/msip + bad accesses, compared with the model inside the tb ----
         seed = 32'h5EED1234;
         apb_write(CMP_HI, 32'hFFFFFFFF); m_cmp_hi = 32'hFFFFFFFF;
         apb_write(CMP_LO, 32'hFFFFFFFF); m_cmp_lo = 32'hFFFFFFFF;
@@ -218,11 +218,11 @@ module tb_timer_apb;
         apb_read(CMP_HI); check(rd == m_cmp_hi, "rnd end: cmp_hi");
         apb_read(MSIP);   check(rd == {31'd0, m_msip}, "rnd end: msip");
 
-        // ---- Ket qua ----
+        // ---- Result ----
         if (errors == 0)
-            $display("PASS: timer_apb - mtime, mtimecmp, irq_timer, MSIP, PSLVERR, 400 lenh ngau nhien dung");
+            $display("PASS: timer_apb - mtime, mtimecmp, irq_timer, MSIP, PSLVERR, 400 random commands correct");
         else
-            $display("FAIL: timer_apb - %0d loi", errors);
+            $display("FAIL: timer_apb - %0d errors", errors);
         $finish;
     end
 endmodule
