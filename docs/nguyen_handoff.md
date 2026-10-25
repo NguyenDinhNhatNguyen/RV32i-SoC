@@ -30,7 +30,7 @@ Thứ tự buổi tới:
 
 - Genus đọc RTL ở chế độ Verilog-2001: không khai báo `localparam` trong `generate`.
 - `lp_insert_clock_gating` phải đặt trước `elaborate`. Lệnh `remove_assigns` đã bỏ, dùng thuộc tính cùng tên.
-- Dofile LEC do Genus sinh cần license Conformal_Ultra. Dùng `lec/accel_rtl2gate.do` (mẫu Lab 1) với `set flatten model -gated_clock` và `set compare effort high`.
+- Trường có license **Conformal_Asic** (log LEC: `Check out Conformal_Asic 24.1 license`). Dofile LEC do Genus sinh đòi Conformal_Ultra nên không chạy được, dùng `lec/accel_rtl2gate.do` (mẫu Lab 1) với `set flatten model -gated_clock` và `set compare effort high`.
 - Thư viện fast tên `fast_vdd1v0_basicCells.lib` (C hoa). File `qrc/gpdk045.tch` của Lab không đọc được.
 - `BUFX2` của gsclib045 là cell cao gấp đôi, phải cấm ở cả Genus và Innovus.
 - Innovus 21.1 đổi tên nhiều tuỳ chọn (`setPlaceMode -place_...`, `add_ndr`, `verifyGeometry` không có `-type`).
