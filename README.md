@@ -4,80 +4,80 @@
 
 - Kế hoạch & phân công: <https://docs.google.com/document/d/1RTnc3nwBibMsJxE9xoW7YXAB-516pJ7H3GNWsbQHur8/edit>
 - Theo dõi tiến độ: <https://docs.google.com/spreadsheets/d/1xDhI0274hMBTG_rTxtYcNM3uWLCWMau0yEdtHtpaCv0/edit>
-- Repo: <https://github.com/NguyenDinhNhatNguyen/RV32i-SoC>
+
+## Kiến trúc
+
+```text
+rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
+    └─ dữ liệu ─► sys_bus ─┬─► DMEM (4 macro)
+                           └─► cầu APB ─┬─ Timer, UART, GPIO
+                                        └─ Accelerator 4x4 (Lab 2)
+```
+
+Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
+
+## Trạng thái (25/10)
+
+| Phần | Kết quả |
+| --- | --- |
+| Lõi RV32IM | riscv-tests 472/472, test assembly 96/96 |
+| Bus, SoC | fw-bus 124/124, fw-soc 126/126 |
+| Accelerator | Mô phỏng PASS, flow Cadence chạy trọn 21/10 (cần chạy lại với lõi Lab 2) |
+| SoC qua Cadence | Chưa chạy (PD-03) |
+
+## Bắt đầu nhanh
+
+```sh
+git clone --recursive https://github.com/NguyenDinhNhatNguyen/RV32i-SoC.git rv32i-soc
+# Clone rồi mà thiếu submodule: git submodule update --init --recursive
+```
+
+Cài môi trường theo [docs/setup_home.md](docs/setup_home.md), rồi chạy:
+
+```sh
+scripts/eda.sh check                                             # accelerator, 2 dòng PASS
+scripts/eda.sh run "make lint-core unit-core fw-core isa-core"   # lõi
+scripts/eda.sh run "make lint-bus unit-bus fw-bus lint-soc fw-soc"  # bus và SoC
+scripts/eda.sh run "make help"                                   # danh sách target
+```
+
+Cách làm việc với Git và quy trình commit: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Cấu trúc thư mục
 
 | Thư mục | Nội dung | Chủ |
 | --- | --- | --- |
-| `rtl/core` | Lõi RV32I | Nhân |
-| `rtl/bus`, `rtl/mem` | Interconnect, wrapper SRAM, soc_top | Phát |
-| `rtl/periph` | Timer, UART, GPIO (sau này SPI, PWM, I2C) | Phúc |
-| `rtl/accel` | Lõi Lab 2 và wrapper accelerator | Nguyên |
-| `tb/unit`, `tb/core`, `tb/soc` | Testbench khối, lõi và mức SoC | Hiếu (+ chủ khối) |
-| `fw` | Firmware, linker script, crt0, benchmark | Hiếu |
-| `syn` | Script Genus, SDC, Yosys thử ở nhà | Phát |
-| `pnr` | Script Innovus | Nguyên |
-| `lec`, `sta`, `power` | Conformal, Tempus, Voltus | Phúc, Phát, Hiếu/Nguyên |
-| `scripts` | Script tiện ích (container, chạy test, kiểm tra server) | Cả nhóm |
-| `docs` | Spec, hướng dẫn, ghi chú thiết kế. Mục lục ở `docs/README.md` | Cả nhóm |
-| `ref` | Thiết kế tham chiếu (PicoRV32) | Nhân |
-| `appendix/<bước>/` | Log, report chính thức đưa vào phụ lục | Cả nhóm |
+| [`rtl/core`](rtl/core) | Lõi RV32I | Nhân |
+| [`rtl/bus`](rtl/bus), [`rtl/mem`](rtl/mem) | Interconnect, wrapper SRAM, soc_top | Phát |
+| [`rtl/periph`](rtl/periph) | Timer, UART, GPIO (sau này SPI, PWM, I2C) | Phúc |
+| [`rtl/accel`](rtl/accel) | Lõi Lab 2 và wrapper accelerator | Nguyên |
+| [`tb`](tb) | Testbench khối, lõi và mức SoC | Hiếu (+ chủ khối) |
+| [`fw`](fw) | Firmware, linker script, crt0, benchmark | Hiếu |
+| [`syn`](syn) | Script Genus, SDC, Yosys thử ở nhà | Phát |
+| [`pnr`](pnr) | Script Innovus | Nguyên |
+| [`lec`](lec), [`sta`](sta), [`power`](power) | Conformal, Tempus, Voltus | Phúc, Phát, Hiếu/Nguyên |
+| [`scripts`](scripts) | Script tiện ích (container, chạy test, kiểm tra server) | Cả nhóm |
+| [`docs`](docs) | Spec, hướng dẫn, ghi chú thiết kế | Cả nhóm |
+| [`ref`](ref) | Thiết kế tham chiếu (PicoRV32) | Nhân |
+| [`appendix`](appendix) | Log, report chính thức đưa vào phụ lục | Cả nhóm |
 
 Mỗi thư mục có `README.md` riêng ghi nội dung và lệnh chạy.
 
 ## Quy ước
 
-- RTL viết Verilog-2001, đồng bộ, không latch, không gated clock bằng tay, reset bất đồng bộ assert / đồng bộ deassert.
+- RTL viết Verilog-2005 (Genus đọc ở chế độ 2001, nên không khai báo `localparam` trong `generate`), đồng bộ, không latch, không gated clock bằng tay, reset bất đồng bộ assert / đồng bộ deassert.
 - Mỗi tính năng mở rộng có parameter bật/tắt (`ENABLE_M`, `ENABLE_DMA`, `ENABLE_SPI`...).
-- Được đẩy thẳng lên `main`, làm đúng các bước ở mục "Git hằng ngày". Việc lớn (core, bus, soc_top) nên làm trên nhánh riêng `feat/<tên>-<việc>` rồi mở pull request để người khác xem trước.
-- **Không commit thư viện GPDK45, file LIB/LEF/GDS của SRAM macro hay bất kỳ file nào của Cadence.** Script chỉ trỏ tới đường dẫn trên server qua biến môi trường (xem `pnr/scripts/config.tcl`).
-- Log/report chính thức copy vào `appendix/<bước>/`. Thư mục chạy tool (`syn/run`, `pnr/run`...) bị bỏ qua bởi `.gitignore`.
-
-## Git hằng ngày
-
-Cài một lần trên mỗi máy, kể cả trên server:
-
-```sh
-git config --global pull.rebase true        # pull không tạo commit "Merge branch" thừa
-git config --global rebase.autoStash true   # pull được cả khi đang sửa dở
-```
-
-Mỗi lần làm việc:
-
-```sh
-git pull                    # 1. lấy bản mới trước khi sửa
-# ... sửa code ...
-git status --short          # 2. chỉ thấy file mình định sửa, không có .lib .lef .gds .spef .sdf
-scripts/eda.sh check        # 3. nếu sửa RTL hoặc testbench (ở trường: make sim-accel ...)
-git add <tên file>          # 4. add từng file, không dùng "git add ."
-git commit -m "Add ..."     # 5. tiếng Anh, câu mệnh lệnh
-git pull                    # 6. lấy thay đổi của người khác, commit của mình nằm trên cùng
-git push                    # 7. đẩy lên
-```
-
-Khi gặp sự cố:
-
-| Tình huống | Làm gì |
-| --- | --- |
-| `git push` báo `rejected` hoặc `fetch first` | Có người vừa đẩy trước. Chạy `git pull` rồi `git push` lại |
-| `git pull` báo `CONFLICT` | Mở file bị xung đột, sửa phần giữa `<<<<<<<` và `>>>>>>>`, rồi `git add <file>` và `git rebase --continue`. Rối quá thì `git rebase --abort` để quay về như trước khi pull |
-| Lỡ `git add` nhầm file | `git restore --staged <file>` |
-| Commit nhầm, chưa push | `git reset --soft HEAD~1` (bỏ commit, giữ nguyên thay đổi) |
-| Commit nhầm, đã push | `git revert <mã commit>` rồi `git push`. Không xoá lịch sử của người khác |
-| Muốn bỏ hết thay đổi chưa commit của một file | `git restore <file>` (mất luôn, không lấy lại được) |
-
-Không bao giờ dùng `git push --force` lên `main`: lệnh này xoá commit của người khác trên GitHub.
+- Comment trong code và output test viết tiếng Anh. Tài liệu trong `docs/` viết tiếng Việt.
+- **Không commit thư viện GPDK45, file LIB/LEF/GDS của SRAM macro hay bất kỳ file nào của Cadence.** Script chỉ trỏ tới đường dẫn trên server (xem [`pnr/scripts/config.tcl`](pnr/scripts/config.tcl)).
+- Log/report chính thức copy vào `appendix/<bước>/`. Thư mục chạy tool (`syn/run*`, `pnr/run*`...) bị bỏ qua bởi `.gitignore`.
 
 ## Làm việc nhà ↔ trường
 
-Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nhà dùng môi trường mã nguồn mở theo `docs/setup_home.md` (bật container và chạy test bằng `scripts/eda.sh`). Lần đầu lên trường chạy `scripts/check_server.sh` để ghi lại đường dẫn thư viện, SRAM macro và phiên bản tool.
-
-Chạy flow Cadence ở trường: `docs/flow_notes.md`. Mục lục mọi tài liệu: `docs/README.md`.
+Trường không mở VPN, nên Cadence chỉ chạy khi lên trường. Ở nhà dùng môi trường mã nguồn mở theo [docs/setup_home.md](docs/setup_home.md) (bật container và chạy test bằng `scripts/eda.sh`). Chạy flow Cadence ở trường theo [docs/flow_notes.md](docs/flow_notes.md).
 
 ## Tự kiểm tra ở nhà
 
-Cài môi trường một lần theo `docs/setup_home.md`. Mỗi lần kiểm tra, gõ trong cửa sổ Ubuntu (WSL) hoặc terminal VS Code:
+Cài môi trường một lần theo [docs/setup_home.md](docs/setup_home.md). Mỗi lần kiểm tra, gõ trong cửa sổ Ubuntu (WSL) hoặc terminal VS Code:
 
 ### 1. Vào repo, lấy bản mới
 
@@ -115,6 +115,8 @@ scripts/eda.sh check
 PASS: 40 matrix multiplies 4x4 match the golden model
 PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct
 ```
+
+Sửa lõi, bus hoặc SoC thì chạy thêm hai lệnh ở mục "Bắt đầu nhanh". Mỗi target in dòng tổng kết dạng `... passed, 0 failed` hoặc `PASS`.
 
 ### 4. Tổng hợp thử bằng Yosys
 

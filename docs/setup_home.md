@@ -84,7 +84,7 @@ docker pull hpretl/iic-osic-tools:2026.10
 
 Lệnh cuối tải khoảng 4 GB, chờ tới khi in `Status: Downloaded newer image ...`. Nếu chạy lại mà thấy `fatal: destination path ... already exists` thì nghĩa là đã clone rồi, bỏ qua.
 
-Hai dòng `pull.rebase` và `rebase.autoStash` để `git pull` không tạo commit thừa và chạy được cả khi đang sửa dở. Các bước pull, commit, push hằng ngày ở README mục "Git hằng ngày".
+Hai dòng `pull.rebase` và `rebase.autoStash` để `git pull` không tạo commit thừa và chạy được cả khi đang sửa dở. Các bước pull, commit, push hằng ngày ở `CONTRIBUTING.md`.
 
 ## 3. Bật môi trường (mỗi lần làm việc)
 
