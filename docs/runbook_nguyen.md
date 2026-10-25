@@ -14,10 +14,10 @@ Mục tiêu: biết chắc server có gì trước khi cả nhóm viết script:
 Xong khi: có file `appendix/server_check/server_check_<ngày>.txt` gửi cho Phát và điền đường dẫn `PDK_DIR` vào nhóm.
 Rủi ro lớn nhất: không có SRAM macro trong GPDK45. Khi đó phải báo nhóm ngay để chuyển sang phương án dự phòng trong doc (memory compiler của trường, hoặc macro do nhóm tự làm).
 
-### HT-04 Môi trường ở nhà (80%)
+### HT-04 Môi trường ở nhà (Xong 25/10)
 
 Mục tiêu: cả nhóm mô phỏng và tổng hợp thử được ở nhà mà không cần Cadence. Hướng dẫn trong `docs/setup_home.md` (WSL2 + Docker IIC-OSIC-TOOLS tag `2026.10` + VS Code). Lệnh `scripts/eda.sh` bật container, chạy test và mở sóng. Đã kiểm chứng trên máy Nguyên.
-Xong khi: một máy Windows khác (không phải máy Nguyên) làm đúng theo hướng dẫn và chạy `scripts/eda.sh check` ra 2 dòng PASS.
+Xong khi: một máy Windows khác (không phải máy Nguyên) làm đúng theo hướng dẫn và chạy `scripts/eda.sh check` ra 2 dòng PASS. Đạt ngày 25/10: Hiếu cài và chạy được trên máy của mình.
 
 ### RTL-05 Wrapper accelerator (Xong 25/10)
 
