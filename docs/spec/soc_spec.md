@@ -1,8 +1,8 @@
 # Đặc tả SoC (SP-01)
 
-Bản nháp ngày 21/10 để cả nhóm chốt. Phần lõi chi tiết nằm ở `docs/spec/core.md` (nhánh `feat/nhan-core` của Nhân), tài liệu này chỉ ghi những gì các khối phải thống nhất với nhau: clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt và giao diện accelerator.
+Chốt ngày 25/10. Phần lõi chi tiết nằm ở `docs/spec/core.md`, tài liệu này chỉ ghi những gì các khối phải thống nhất với nhau: clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt và giao diện accelerator.
 
-Mục 7 là các điểm còn mâu thuẫn giữa Doc kế hoạch, spec lõi và kết quả kiểm tra server. Mỗi điểm có đề xuất. Cả nhóm trả lời trong nhóm chat hoặc sửa thẳng file này, chốt xong thì đổi trạng thái thành "Đã chốt".
+Mục 7 ghi 5 điểm từng mâu thuẫn giữa Doc kế hoạch, spec lõi và kết quả kiểm tra server, cùng quyết định đã chốt. Cả 5 điểm đã được làm đúng như vậy trong RTL và đối chiếu với đề bài (FinalProject, 16/10): đề không quy định điểm nào trong số này.
 
 ## 1. Clock và reset
 
@@ -81,13 +81,13 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 - `irq` của accelerator vào bộ gom ngắt (mục 5).
 - Firmware dùng `fw/accel.h`.
 
-## 7. Các điểm cần chốt
+## 7. Các quyết định đã chốt (25/10)
 
 ### 7.1 Reset vector
 
 - Doc kế hoạch: 0x0000_0000 (đầu IMEM).
 - `rv32_core`: mặc định `RESET_PC = 0x0001_0000` (boot ROM).
-- **Đề xuất:** giữ 0x0001_0000 như lõi. RTL-08 đã có boot ROM nhỏ để nạp IMEM. Trong mô phỏng, tham số `RESET_PC` đặt lại 0x0000_0000 để chạy thẳng chương trình nạp bằng `$readmemh`.
+- **Chốt:** giữ 0x0001_0000 như lõi (`SOC_BOOT_BASE` trong `rtl/bus/soc_map.vh`). RTL-08 đã có boot ROM nhỏ để nạp IMEM. Trong mô phỏng, tham số `RESET_PC` đặt lại 0x0000_0000 để chạy thẳng chương trình nạp bằng `$readmemh`.
 
 ### 7.2 Dung lượng IMEM và DMEM
 
@@ -101,31 +101,31 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 | B | 8 KB | 8 KB | 4 | 0,032 mm² | Dhrystone, có thể CoreMark bản thu gọn |
 | C | 16 KB | 16 KB | 8 | 0,064 mm² | CoreMark, khớp testbench hiện tại |
 
-- **Đề xuất:** C. Khớp testbench của Nhân và đủ cho CoreMark (điểm PPA). Floorplan lớn hơn nhưng PD-02 tính lại được ngay khi có diện tích cell chuẩn. Nếu nhóm muốn layout nhỏ và nhanh xong thì chọn B.
+- **Chốt:** C, 8 macro (`SOC_IMEM_BANK_W = SOC_DMEM_BANK_W = 2`). Khớp testbench và đủ cho CoreMark (điểm PPA). Đề bài chỉ yêu cầu SRAM hard macro, không giới hạn số macro. Die ước lượng ở `docs/pd02_floorplan.md`. Muốn đổi sang A hoặc B chỉ cần sửa `BANK_W` và `SIZE` trong `soc_map.vh`.
 
 ### 7.3 Ghi theo byte (SB, SH)
 
 - Lõi phát `be[3:0]`, macro không có chân ghi theo byte.
-- **Đề xuất:** wrapper SRAM (RTL-08) đọc–sửa–ghi khi `be != 4'b1111`. Chu kỳ 1 đọc word với `req_ready=0`, chu kỳ 2 ghép byte mới và ghi. Store byte/half mất thêm 1 chu kỳ, đúng luật wait state của bus. SW và mọi lệnh đọc vẫn 1 chu kỳ.
+- **Chốt:** wrapper SRAM (RTL-08, `rtl/mem/sram_wrap.v`) đọc–sửa–ghi khi `be != 4'b1111`. Chu kỳ 1 đọc word với `req_ready=0`, chu kỳ 2 ghép byte mới và ghi. Store byte/half mất thêm 1 chu kỳ, đúng luật wait state của bus. SW và mọi lệnh đọc vẫn 1 chu kỳ.
 
 ### 7.4 Địa chỉ không ánh xạ
 
 - Doc kế hoạch: đọc trả 0, ghi bị bỏ qua.
 - `docs/spec/core.md`: slave lỗi trả `err`, lõi gây access fault.
-- **Đề xuất:** trả `err` như spec lõi. Lỗi phần mềm lộ ra ngay thay vì đọc ra 0 âm thầm, và `accel_apb` đã làm vậy với `PSLVERR`.
+- **Chốt:** trả `err` như spec lõi (`sys_bus.v`, slave lỗi `S_ERR`). Lỗi phần mềm lộ ra ngay thay vì đọc ra 0 âm thầm, và `accel_apb` đã làm vậy với `PSLVERR`.
 
 ### 7.5 Đường nối accelerator
 
 - Bus của lõi trả dữ liệu ở chu kỳ sau. `accel_wrapper` trả `s_rdata` ngay trong chu kỳ.
-- **Đề xuất:** nối qua cầu APB bằng `accel_apb` (mục 6). Không cần sửa wrapper, và ngoại vi nào cũng đi cùng một đường.
+- **Chốt:** nối qua cầu APB bằng `accel_apb`, khe APB số 7 trong `soc_top.v` (mục 6). Không cần sửa wrapper, và ngoại vi nào cũng đi cùng một đường.
 
 ## 8. Trạng thái
 
 | Mục | Trạng thái |
 | --- | --- |
-| 1. Clock, reset | Theo Doc kế hoạch |
-| 2. Bus | Theo `docs/spec/core.md` 5.1 |
-| 3. Bản đồ địa chỉ | Chờ 7.1, 7.2 |
-| 4. Bộ nhớ | Thông số đã có từ HT-01, chờ 7.2, 7.3 |
-| 5. Ngắt | Nháp |
-| 6. Accelerator | Chờ 7.5 |
+| 1. Clock, reset | Đã chốt, theo Doc kế hoạch |
+| 2. Bus | Đã chốt, theo `docs/spec/core.md` 5.1 |
+| 3. Bản đồ địa chỉ | Đã chốt |
+| 4. Bộ nhớ | Đã chốt (7.2, 7.3) |
+| 5. Ngắt | Đã chốt (IRQ ctrl, PENDING chỉ đọc, 23/10) |
+| 6. Accelerator | Đã chốt (7.5) |
