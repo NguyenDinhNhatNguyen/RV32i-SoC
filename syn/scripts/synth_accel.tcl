@@ -25,7 +25,7 @@ foreach n $DONT_USE_CELLS { foreach c [get_db lib_cells -if ".base_name == $n"] 
 # Clock gating phải bật trước elaborate, nếu không Genus bỏ qua (POPT-104)
 if {$CG} { set_db lp_insert_clock_gating true }
 
-read_hdl -language v2001 {sa_core_model.v accel_wrapper.v}
+read_hdl -language v2001 {pe.v accelerator_top.v accel_wrapper.v}
 elaborate $TOP
 
 # Số flop tối thiểu cho một clock gate là thuộc tính của design trong Genus 21.1, không phải của root.

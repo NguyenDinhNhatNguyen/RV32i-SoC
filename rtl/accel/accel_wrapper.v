@@ -17,7 +17,7 @@
 // Ghi vào A/B/CTRL khi đang BUSY bị bỏ qua.
 // irq = DONE & IRQ_EN, nối vào bộ gom ngắt của SoC.
 //
-// Giới hạn tham số: DW = 8, AW <= 32 (Lab 2: tích luỹ 20 bit), N <= 8.
+// Giới hạn tham số: lõi Lab 2 (accelerator_top) cố định N = 4, DW = 8, AW = 20, có dấu. Giữ nguyên các tham số mặc định.
 // C_BUF trả về giá trị tích luỹ mở rộng dấu lên 32 bit.
 
 module accel_wrapper #(
@@ -25,7 +25,7 @@ module accel_wrapper #(
     parameter DW     = 8,
     parameter AW     = 20,
     parameter SIGNED = 1,
-    parameter LAT    = 3*N - 2      // số chu kỳ en=1 cần cho lõi và chỉnh theo lõi Lab 2
+    parameter LAT    = 3*N - 2      // 10 chu kỳ, khớp bộ đếm step_cnt == 10 của accelerator_top
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -147,20 +147,40 @@ module accel_wrapper #(
         end
     end
 
-    // Lõi
-    wire [NB*AW-1:0] c_out;
+    // Lõi Lab 2 (accelerator_top + pe)
+    // start và clear cùng ở chu kỳ CLR: clear xoá mảng, busy của lõi lên đúng chu kỳ RUN đầu tiên
+    // và kéo dài LAT chu kỳ, trùng với lúc wrapper phát chuỗi skew.
+    // Lõi chỉ đưa ra một hàng kết quả, chọn bằng row_sel one-hot theo địa chỉ C_BUF (hàng = widx[3:2]).
+    wire [3:0]    row_sel = 4'b0001 << widx[3:2];
+    wire [AW-1:0] res0, res1, res2, res3;
+    /* verilator lint_off UNUSEDSIGNAL */
+    wire          core_busy, core_done;   // wrapper tự đếm LAT chu kỳ nên không cần
+    /* verilator lint_on UNUSEDSIGNAL */
 
-    sa_core_model #(
-        .N(N), .DW(DW), .AW(AW), .SIGNED(SIGNED)
-    ) u_core (
-        .clk   (clk),
-        .rst_n (rst_n),
-        .en    (state == S_RUN),     // Ngoài lúc chạy, mảng giữ nguyên: clock gating
-        .clr   (state == S_CLR),
-        .a_in  (a_feed),
-        .b_in  (b_feed),
-        .c_out (c_out)
+    accelerator_top u_core (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .start    (state == S_CLR),
+        .clear    (state == S_CLR),
+        .row_sel  (row_sel),
+        .a_row0   (a_feed[0*DW +: DW]),
+        .a_row1   (a_feed[1*DW +: DW]),
+        .a_row2   (a_feed[2*DW +: DW]),
+        .a_row3   (a_feed[3*DW +: DW]),
+        .b_col0   (b_feed[0*DW +: DW]),
+        .b_col1   (b_feed[1*DW +: DW]),
+        .b_col2   (b_feed[2*DW +: DW]),
+        .b_col3   (b_feed[3*DW +: DW]),
+        .res_out0 (res0),
+        .res_out1 (res1),
+        .res_out2 (res2),
+        .res_out3 (res3),
+        .busy     (core_busy),
+        .done     (core_done)
     );
+
+    wire [4*AW-1:0] c_row = {res3, res2, res1, res0};
+    wire [AW-1:0]   c_sel = c_row[widx[1:0]*AW +: AW];
 
     // Đọc bus
     integer r;
@@ -181,8 +201,8 @@ module accel_wrapper #(
                                               : bbuf[(widx*4 + r)*DW +: DW];
         end else if (sel_c) begin
             if (widx < NB)
-                s_rdata = SIGNED ? {{(32-AW){c_out[widx*AW + AW-1]}}, c_out[widx*AW +: AW]}
-                                 : {{(32-AW){1'b0}}, c_out[widx*AW +: AW]};
+                s_rdata = SIGNED ? {{(32-AW){c_sel[AW-1]}}, c_sel}
+                                 : {{(32-AW){1'b0}}, c_sel};
         end
     end
 

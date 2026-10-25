@@ -19,18 +19,18 @@ Rủi ro lớn nhất: không có SRAM macro trong GPDK45. Khi đó phải báo 
 Mục tiêu: cả nhóm mô phỏng và tổng hợp thử được ở nhà mà không cần Cadence. Hướng dẫn trong `docs/setup_home.md` (WSL2 + Docker IIC-OSIC-TOOLS tag `2026.10` + VS Code). Lệnh `scripts/eda.sh` bật container, chạy test và mở sóng. Đã kiểm chứng trên máy Nguyên.
 Xong khi: một máy Windows khác (không phải máy Nguyên) làm đúng theo hướng dẫn và chạy `scripts/eda.sh check` ra 2 dòng PASS.
 
-### RTL-05 Wrapper accelerator (70%)
+### RTL-05 Wrapper accelerator (Xong 25/10)
 
 Mục tiêu: biến accelerator của Lab 2 (mảng systolic 4x4, chỉ có chân dữ liệu) thành một ngoại vi mà CPU điều khiển được bằng lệnh `sw/lw`.
 Đã có:
 
 - `rtl/accel/accel_wrapper.v`: thanh ghi CTRL/STATUS/INFO, bộ đệm A, B, C, FSM IDLE -> CLR -> RUN, bộ sinh lệch pha (skew), ngắt `irq` khi xong.
 - `rtl/accel/accel_apb.v`: lớp vỏ APB3 (chỉ truy cập word, `PSLVERR` khi truy cập địa chỉ không định nghĩa hoặc ghi vào C_BUF). Dùng nếu nhóm chấp nhận đề xuất "ngoại vi nối qua cầu APB3" trong doc.
-- `rtl/accel/sa_core_model.v`: lõi giả cùng cấu trúc với Lab 2 để test trước.
+- `rtl/accel/accelerator_top.v`, `rtl/accel/pe.v`: lõi Lab 2 (Hiếu đưa lên 22/10), thêm chân `en` cho PE để Genus gate clock.
 - `fw/accel.h`: hàm C cho firmware.
 - 2 testbench: `tb_accel_wrapper.v` (40 phép nhân ngẫu nhiên + biên), `tb_accel_apb.v` (10 phép nhân qua APB + 4 kiểm tra lỗi).
 
-Còn lại (30%): thay lõi giả bằng `pe.v` + `accelerator_top.v` của Lab 2, chỉnh độ trễ `LAT`, chạy lại test. Chi tiết ở mục 3.
+Đã ghép lõi Lab 2 ngày 25/10 (mục 3). Còn xác nhận tỉ lệ clock gating bằng Genus ở buổi lên trường tới, làm chung với PD-01.
 
 Bản đồ thanh ghi (base `0x3000_0000`):
 
@@ -50,7 +50,7 @@ Quy trình firmware: ghi A, B -> ghi CTRL = 1 (hoặc 3 nếu dùng ngắt) -> c
 Mục tiêu: chạy trọn Genus -> LEC -> Innovus trên một khối nhỏ (accelerator) trước khi có SoC, để khi SoC sẵn sàng chỉ việc đổi tên top. Script viết đúng cú pháp Lab 01-05 nên dễ đối chiếu.
 Xong khi: tất cả tiêu chí trong `docs/flow_notes.md` đạt ở bước tới CTS (WNS >= 0, 0 violation geometry, skew <= 80 ps), báo cáo nằm trong `appendix/`.
 
-### PD-02 Ước lượng die (30%)
+### PD-02 Ước lượng die (70%)
 
 Mục tiêu: chọn kích thước floorplan cho SoC: đủ chỗ cho 2 SRAM macro + cell chuẩn ở mật độ 70%, chừa 15 um cho power ring.
 Cần đầu vào: kích thước SRAM (đã có: 80 x 100 um, từ HT-01) và diện tích cell chuẩn SoC (Genus của Phát, M2). Trước đó có thể chạy với số tạm để biết cỡ.
@@ -78,20 +78,27 @@ GTKWave mở với preset `tb/unit/accel.gtkw` đã chọn sẵn các tín hiệ
 Thử nhanh tổng hợp bằng Yosys (chỉ để xem số cell, không dùng trong report):
 
 ```bash
-scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat"'
+scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat"'
 ```
 
-## 3. Ghép lõi Lab 2 (hoàn thành RTL-05)
+## 3. Ghép lõi Lab 2 (RTL-05, xong 25/10)
 
-1. Copy `pe.v`, `accelerator_top.v` của Lab 2 vào `rtl/accel/lab2/` (code của nhóm, được phép đưa lên repo).
-2. Đọc RTL Lab 2 và trả lời 4 câu hỏi, ghi vào `docs/nguyen_handoff.md`:
-   - Số có dấu hay không dấu? -> tham số `SIGNED`.
-   - Lõi tự lệch pha dữ liệu hay cần cấp sẵn đã lệch? Nếu tự lệch: bỏ bộ skew trong wrapper (đề xuất trong doc: "chỉ thêm bộ sinh lệch pha nếu RTL cần").
-   - Có chân start/busy/done không? Nếu có: nối vào FSM thay cho bộ đếm `cnt`.
-   - Kết quả ra song song hay xả tuần tự? Sau bao nhiêu chu kỳ? -> `LAT` và cách nạp C_BUF.
-3. Thay instance `sa_core_model` trong `accel_wrapper.v` bằng `accelerator_top`, sửa `ACCEL_RTL` trong `Makefile`.
-4. `scripts/eda.sh check` phải ra 2 dòng PASS và lint 0 warning. Nếu sai, chạy `scripts/eda.sh wave` để xem kết quả lệch mấy chu kỳ.
-5. Cập nhật sheet: RTL-05 = Xong, cột Bằng chứng = link commit.
+Trả lời 4 câu hỏi khi đọc `accelerator_top.v` và `pe.v`:
+
+| Câu hỏi | Lõi Lab 2 | Cách wrapper xử lý |
+| --- | --- | --- |
+| Có dấu hay không dấu | Có dấu, 8 bit, tích luỹ 20 bit | `SIGNED=1` |
+| Lõi tự lệch pha dữ liệu không | Không, `a_row*`, `b_col*` vào thẳng biên mảng | Giữ bộ sinh skew của wrapper |
+| Có start/busy/done không | Có. `busy` kéo dài 10 chu kỳ sau `start`, `valid_in = busy` | Pulse `start` cùng `clear` ở trạng thái CLR, `busy` trùng 10 chu kỳ RUN |
+| Kết quả ra thế nào | Đọc một hàng qua `row_sel` one-hot, đủ sau 10 chu kỳ = 3N − 2 | `LAT = 10` giữ nguyên, `row_sel` lấy từ địa chỉ C_BUF |
+
+Sửa lõi Lab 2 (đúng yêu cầu RTL-05 "enable cho a_out/b_out"):
+
+- `pe.v` thêm chân `en`. Thanh ghi truyền và tích luỹ chỉ cập nhật khi `en=1`, `accelerator_top` nối `en = busy`. Yosys đếm 863/864 flop có enable.
+- `clr_acc` xoá cả thanh ghi truyền, vì khi `en=0` chúng giữ giá trị của lần chạy trước.
+- Thêm `` `timescale `` cho khớp các file khác (Verilator báo TIMESCALEMOD).
+
+Kết quả 25/10: `scripts/eda.sh check` 2 PASS, lint 0 warning. Mức SoC: `lint-soc`, `lint-bus` PASS, `unit-bus` 7/7, `fw-soc` 126/126 (bài `soc` nhân ma trận trên accelerator qua APB, so với kết quả tính sẵn).
 
 ## 4. Chạy ở trường (Cadence)
 

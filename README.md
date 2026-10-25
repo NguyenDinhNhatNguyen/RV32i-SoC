@@ -119,7 +119,7 @@ PASS: APB3 - 10 phep nhan va 4 kiem tra PSLVERR dung
 Để xem số cell và cảnh báo latch. Không dùng số liệu này cho report.
 
 ```sh
-scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat" | grep -E "^Warning|cells$"'
+scripts/eda.sh run 'yosys -p "read_verilog rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v; synth -top accel_wrapper; stat" | grep -E "^Warning|cells$"'
 ```
 
 Đạt khi chỉ thấy các dòng `... cells` và không có dòng nào bắt đầu bằng `Warning`. Bỏ phần `| grep ...` để xem toàn bộ log.

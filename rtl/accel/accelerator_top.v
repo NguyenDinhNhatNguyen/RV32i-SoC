@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // ==============================================================================
 // 4x4 Systolic Array Hardware Accelerator Top Module
 // Course: IC Physical Design (RTL to GDSII)
@@ -63,6 +64,7 @@ module accelerator_top (
                 pe u_pe (
                     .clk       (clk),
                     .rst_n     (rst_n),
+                    .en        (busy),     // RTL-05: mảng chỉ chạy khi busy
                     .clr_acc   (clear),
                     .valid_in  (v_wire[i][j]),
                     .a_in      (a_wire[i][j]),

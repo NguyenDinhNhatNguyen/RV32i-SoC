@@ -8,7 +8,7 @@
 set dofile abort off
 
 read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
-read design -golden -verilog rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v
+read design -golden -verilog rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v
 read design -revised -verilog syn/out_accel/accel_wrapper_netlist.v
 set root module accel_wrapper -both
 // Netlist có cell clock gating (latch + AND): mô hình hoá nó thành enable của flop,

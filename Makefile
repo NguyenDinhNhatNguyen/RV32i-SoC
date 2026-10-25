@@ -2,7 +2,7 @@
 IVERILOG ?= iverilog
 VVP      ?= vvp
 
-ACCEL_RTL = rtl/accel/sa_core_model.v rtl/accel/accel_wrapper.v
+ACCEL_RTL = rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v
 ACCEL_TB  = tb/unit/tb_accel_wrapper.v
 
 .PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel gls-accel pnr-accel check-server clean
