@@ -192,5 +192,13 @@
 // Core defaults
 // ---------------------------------------------------------------------------
 `define RV_RESET_PC_DEFAULT        32'h0001_0000   // boot ROM
+// Branch prediction experiment (docs/btb_eval.md). Defaults for rv32_core, so a simulation
+// or synthesis of soc_top can change them with -D without a soc_top parameter.
+`ifndef RV_ENABLE_BTB_DEFAULT
+`define RV_ENABLE_BTB_DEFAULT      0               // 0 none, 1 BTB, 2 static backward taken
+`endif
+`ifndef RV_BTB_ENTRIES_DEFAULT
+`define RV_BTB_ENTRIES_DEFAULT     8
+`endif
 
 `endif // RV32_DEFS_VH

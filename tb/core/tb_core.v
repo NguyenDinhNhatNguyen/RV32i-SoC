@@ -31,6 +31,11 @@
 //   +trace                    Print a trace close to the Spike commit log format
 //   +signature=<file>         On PASS, write [+sig_begin, +sig_end) (hex) to a file,
 //                             one word per line, in the riscv-arch-test signature format
+//
+// At the end the tb prints one "BENCH branch" line: branches and jumps that left EX and how
+// many redirected IF (1 bubble each, a wrong or missing prediction, docs/btb_eval.md).
+// Counted between two "csrr minstret" in WB (the benchmark region of fw/bench), or over the
+// whole run when the program never reads minstret.
 `include "core_tb_map.vh"
 `include "rv32_defs.vh"
 
@@ -452,6 +457,57 @@ module tb_core;
                 end
             end
         end
+    end
+
+    // ------------------------------------------------------- branch statistics
+    // csrr rd, minstret = csrrs rd, 0xB02, x0
+    wire rd_minstret = dut.wb_retire && !dut.wb_trap && dut.wb_instr_q[31:20] == 12'hB02 &&
+                       dut.wb_instr_q[19:15] == 5'd0 && dut.wb_instr_q[14:12] == 3'b010 &&
+                       dut.wb_instr_q[6:0] == `RV_OPC_SYSTEM;
+    reg     br_in_reg = 1'b0;
+    reg     br_seen   = 1'b0;               // A region was counted, keep it
+    integer br_n [0:4];                     // branch, taken branch, jal, jalr, redirect
+    integer br_r [0:4];                     // Counts of the last closed region
+    integer bi;
+
+    initial
+        for (bi = 0; bi < 5; bi = bi + 1) begin
+            br_n[bi] = 0;
+            br_r[bi] = 0;
+        end
+
+    always @(posedge clk) begin
+        if (rst_n) begin
+            if (dut.ex_resolve) begin
+                if (dut.ex_branch) br_n[0] = br_n[0] + 1;
+                if (dut.ex_branch && dut.ex_jump) br_n[1] = br_n[1] + 1;
+                if (dut.ex_jal)    br_n[2] = br_n[2] + 1;
+                if (dut.ex_jalr)   br_n[3] = br_n[3] + 1;
+            end
+            if (dut.ex_redirect) br_n[4] = br_n[4] + 1;
+            if (rd_minstret) begin
+                if (br_in_reg)
+                    for (bi = 0; bi < 5; bi = bi + 1)
+                        br_r[bi] = br_n[bi];
+                br_seen   = br_seen | br_in_reg;
+                br_in_reg = !br_in_reg;
+                for (bi = 0; bi < 5; bi = bi + 1)
+                    br_n[bi] = 0;
+            end
+        end
+    end
+
+    integer br_all;
+    final begin
+        if (!br_seen)
+            for (bi = 0; bi < 5; bi = bi + 1)
+                br_r[bi] = br_n[bi];
+        br_all = br_r[0] + br_r[2] + br_r[3];
+        if (br_all > 0)
+            $display({"BENCH branch%0s: branch %0d (taken %0d), jal %0d, jalr %0d, ",
+                      "redirect %0d, predicted %0.2f%%"},
+                     br_seen ? "" : " (whole run)", br_r[0], br_r[1], br_r[2], br_r[3],
+                     br_r[4], 100.0 * (br_all - br_r[4]) / br_all);
     end
 
     // ------------------------------------------------------- startup

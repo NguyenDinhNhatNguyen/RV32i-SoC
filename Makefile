@@ -93,12 +93,30 @@ clean:
 #   make fw-core                   fw/tests/asm assembly tests on tb_core (T=hazard runs one)
 #   make unit-core PLUSARGS="+seed=7 +n=1000"     adds simulation plusargs
 #   make fw-core T=hazard PLUSARGS=+trace         prints a per-instruction trace
+#   make fw-core BTB=1                            branch prediction experiment, see below
 # ---------------------------------------------------------------------------
 VERILATOR ?= verilator
 PYTHON    ?= python3
 PLUSARGS  ?=
 TB        ?=
 T         ?=
+
+# Branch prediction experiment (docs/btb_eval.md). BTB=1 (BTB with BTB_N entries) or BTB=2
+# (static backward taken) changes the default ENABLE_BTB / BTB_ENTRIES of rv32_core with -D,
+# for every Icarus and Verilator build of this Makefile (tb_core, tb_soc, tb_boot, lint-soc).
+# The .vvp files do not record the mode, so when BTB/BTB_N differ from the last run (kept in
+# tb/core/out/btb.cfg) every .vvp under tb/core/out, tb/soc/out and tb/boot/out is deleted.
+# Do not run two modes at the same time in one checkout.
+BTB   ?= 0
+BTB_N ?= 8
+ifneq ($(BTB)/$(BTB_N),0/8)
+IVERILOG  += -DRV_ENABLE_BTB_DEFAULT=$(BTB) -DRV_BTB_ENTRIES_DEFAULT=$(BTB_N)
+VERILATOR += -DRV_ENABLE_BTB_DEFAULT=$(BTB) -DRV_BTB_ENTRIES_DEFAULT=$(BTB_N)
+endif
+ifneq ($(BTB)/$(BTB_N),$(shell cat tb/core/out/btb.cfg 2>/dev/null || echo 0/8))
+$(shell find tb/core/out tb/soc/out tb/boot/out -name '*.vvp' -delete 2>/dev/null; \
+        mkdir -p tb/core/out; echo '$(BTB)/$(BTB_N)' > tb/core/out/btb.cfg)
+endif
 
 CORE_OUT      := tb/core/out
 CORE_UNIT_OUT := tb/unit/out/core
@@ -117,10 +135,14 @@ lint-core unit-core: .SHELLFLAGS := -o pipefail -c
 # and within a run NAME=VALUE pairs are separated by commas. Undeclared means defaults.
 CORE_LINT_CFG_rv32_decoder    := ENABLE_M=0 ENABLE_M=1
 CORE_LINT_CFG_rv32_core       := ENABLE_M=0,ENABLE_WFI_SLEEP=0 ENABLE_M=0,ENABLE_WFI_SLEEP=1 \
-                                 ENABLE_M=1,ENABLE_WFI_SLEEP=0 ENABLE_M=1,ENABLE_WFI_SLEEP=1
+                                 ENABLE_M=1,ENABLE_WFI_SLEEP=0 ENABLE_M=1,ENABLE_WFI_SLEEP=1 \
+                                 ENABLE_M=0,ENABLE_BTB=1 ENABLE_M=1,ENABLE_BTB=1,BTB_ENTRIES=16 \
+                                 ENABLE_M=0,ENABLE_BTB=2 ENABLE_M=1,ENABLE_BTB=2
+CORE_LINT_CFG_rv32_btb        := ENTRIES=8 ENTRIES=16
 CORE_LINT_CFG_rv32_csr        := ENABLE_M=0 ENABLE_M=1
 CORE_UNIT_CFG_tb_rv32_decoder := ENABLE_M=0 ENABLE_M=1
 CORE_UNIT_CFG_tb_rv32_csr     := ENABLE_M=0 ENABLE_M=1
+CORE_UNIT_CFG_tb_rv32_btb     := ENTRIES=8 ENTRIES=16
 core_cfgs = $(or $(CORE_LINT_CFG_$(1)),$(CORE_UNIT_CFG_$(1)),default)
 
 # Lint each module as its own top, rv32_core pulls in the whole hierarchy through -y.
@@ -674,7 +696,8 @@ synth-compare-yosys: synth-core-yosys synth-ref-yosys
 # Home timing estimate: Yosys maps to the open Nangate45 library and OpenSTA computes
 # the critical path (ns) and F_max. Trends only, not GPDK45 numbers.
 # Result table: docs/timing_core.md.
-#   make sta-core-nangate          rv32_core with ENABLE_M=0 and 1
+#   make sta-core-nangate          rv32_core with ENABLE_M=0 and 1, then the branch prediction
+#                                  variants (docs/btb_eval.md): BTB 8 and 16 entries, static
 # Results: syn/run_yosys/<label>_ng/{stat.txt,sta.txt,path_reg2reg.txt,...}
 STA ?= sta
 NG_LIB := syn/run_yosys/lib/NangateOpenCellLibrary_typical.lib
@@ -697,12 +720,19 @@ define nangate_run
 	@sed 's/^/                 /' $(YS_RUN)/$(1)_ng/sta.txt
 endef
 
+NG_BTB16 := ENABLE_M=1 ENABLE_BTB=1 BTB_ENTRIES=16
+
 .PHONY: sta-core-nangate
 sta-core-nangate:
 	@command -v $(STA) > /dev/null || { echo "ERROR: OpenSTA ($(STA)) not found, see docs/timing_core.md"; exit 1; }
 	@bash scripts/get_nangate45.sh > /dev/null
 	$(call nangate_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
 	$(call nangate_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
+	$(call nangate_run,rv32_core_M0_btb8,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0 ENABLE_BTB=1)
+	$(call nangate_run,rv32_core_M1_btb8,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1 ENABLE_BTB=1)
+	$(call nangate_run,rv32_core_M1_btb16,rv32_core,$(CORE_RTL),rtl/core,$(NG_BTB16))
+	$(call nangate_run,rv32_core_M0_static,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0 ENABLE_BTB=2)
+	$(call nangate_run,rv32_core_M1_static,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1 ENABLE_BTB=2)
 
 # ---------------------------------------------------------------------------
 # Bus and memories (Phat): RTL-03 rtl/bus, RTL-08 rtl/mem. Docs: docs/bus_mem.md

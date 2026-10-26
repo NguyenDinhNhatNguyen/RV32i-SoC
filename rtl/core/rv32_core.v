@@ -16,11 +16,21 @@
 // the flag to WB and traps there. Interrupts are attached to the instruction in EX
 // (section 4.8). RV32M instructions run in rv32_muldiv inside EX (ENABLE_M=1), and
 // EX stalls until the result is ready.
+//
+// Branch prediction (ENABLE_BTB, experiment, docs/btb_eval.md). EX always resolves the
+// branch and redirects IF when the prediction was wrong (1-cycle penalty, as before).
+//   0: none, every taken jump costs 1 cycle (the base design).
+//   1: rv32_btb looked up with if_pc_q in IF. A predicted taken branch or JAL fetches its
+//      target next, with no bubble.
+//   2: static, backward branches and JAL taken. The instruction is only known in EX, so the
+//      target goes combinationally from EX to if_addr_o (long path IMEM -> IMEM).
 `include "rv32_defs.vh"
 
 module rv32_core #(
     parameter        ENABLE_M         = 0,
     parameter        ENABLE_WFI_SLEEP = 1,
+    parameter        ENABLE_BTB       = `RV_ENABLE_BTB_DEFAULT,
+    parameter        BTB_ENTRIES      = `RV_BTB_ENTRIES_DEFAULT,
     parameter [31:0] RESET_PC         = `RV_RESET_PC_DEFAULT
 ) (
     input  wire        clk,
@@ -67,34 +77,44 @@ module rv32_core #(
     // its bus request in the same cycle (section 4.4).
     wire        wb_redirect;
     wire [31:0] wb_target;
+    wire        wb_fence_i;      // FENCE.I retires (also flushes the BTB)
     reg         sleep_q;         // Sleeping in WFI
 
     // =======================================================================
     // IF
     // =======================================================================
     reg  [31:0] if_pc_q;
-    wire        ex_redirect;        // A taken branch or jump leaves EX this cycle
+    wire        ex_redirect;        // EX redirects IF: a jump not predicted, or a wrong prediction
+    wire [31:0] ex_redirect_pc;
     wire [31:0] ex_target;
+
+    // Prediction (ENABLE_BTB): if_addr is the address fetched this cycle (if_pc_q, or the
+    // static target with ENABLE_BTB = 2), if_next the PC that follows it.
+    wire        if_static;          // ENABLE_BTB = 2: EX sends its predicted target to IMEM
+    wire [31:0] if_addr;
+    wire [31:0] if_next;
 
     // Always fetch unless sleeping. sleep_q is a flop, so the IMEM enable pin does not
     // depend combinationally on the bus or on interrupts.
     assign if_req_o     = ~sleep_q;
-    assign if_addr_o    = if_pc_q;
+    assign if_addr_o    = if_addr;
     assign core_sleep_o = sleep_q;
 
     wire if_fire = if_req_o & if_gnt_i;
 
-    // Redirects go into the flop and never combinationally to if_addr_o.
-    // Without a grant, the same address is issued again next cycle.
+    // Redirects go into the flop and never combinationally to if_addr_o (except the
+    // ENABLE_BTB = 2 experiment). Without a grant, the same address is issued again next cycle.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             if_pc_q <= RESET_PC;
         else if (wb_redirect)
             if_pc_q <= wb_target;
         else if (ex_redirect)
-            if_pc_q <= ex_target;
+            if_pc_q <= ex_redirect_pc;
         else if (ex_go & if_fire)
-            if_pc_q <= if_pc_q + 32'd4;
+            if_pc_q <= if_next;
+        else if (ex_go & if_static)
+            if_pc_q <= if_addr;     // The static target got no grant, fetch it next cycle
     end
 
     // =======================================================================
@@ -125,7 +145,7 @@ module rv32_core #(
         if (!rst_n)
             ex_pc_q <= 32'h0;
         else if (ex_go & if_fire)
-            ex_pc_q <= if_pc_q;
+            ex_pc_q <= if_addr;
     end
 
     // The IMEM output is valid for one cycle only (if_pc_q already points to the next
@@ -383,8 +403,72 @@ module rv32_core #(
     // A running M instruction can still be interrupted. It is dropped and rerun after MRET.
     wire ex_bus_wait = d_req_valid_o & ~d_req_ready_i;
 
-    assign ex_wait     = ex_bus_wait | (md_req & ~md_done);
-    assign ex_redirect = ex_go & ex_valid & ex_jump & ~ex_trap & ~wb_redirect;
+    // ---- Branch prediction -------------------------------------------------------
+    // ex_pred: the instruction in EX was predicted taken, so its target is being fetched.
+    // A prediction can only hit a branch or JAL (full tag, static decode), and its target
+    // is always right, so EX only checks the direction:
+    //   predicted taken, not taken (or not a branch/JAL): redirect to pc + 4
+    //   not predicted, taken: redirect to the target (the only case with ENABLE_BTB = 0)
+    wire ex_pred;
+    wire ex_resolve = ex_go & ex_valid & ~ex_trap & ~wb_redirect;
+    wire ex_pred_ok = ex_jal | (ex_branch & ex_br_cond);
+    wire ex_mispred = ex_pred ? ~ex_pred_ok : ex_jump;
+
+    generate
+        if (ENABLE_BTB == 1) begin : g_btb
+            wire        btb_taken;
+            wire [31:0] btb_target;
+            reg         ex_pred_q;
+
+            rv32_btb #(
+                .ENTRIES (BTB_ENTRIES)
+            ) u_btb (
+                .clk           (clk),
+                .rst_n         (rst_n),
+                .if_pc_i       (if_pc_q),
+                .pred_taken_o  (btb_taken),
+                .pred_target_o (btb_target),
+                .upd_i         (ex_resolve & (ex_branch | ex_jal)),
+                .upd_pc_i      (ex_pc_q),
+                .upd_jal_i     (ex_jal),
+                .upd_taken_i   (ex_jump),
+                .upd_target_i  (ex_target),
+                .flush_i       (wb_fence_i)
+            );
+
+            // Follows ex_pc_q
+            always @(posedge clk or negedge rst_n) begin
+                if (!rst_n)
+                    ex_pred_q <= 1'b0;
+                else if (ex_go & if_fire)
+                    ex_pred_q <= btb_taken;
+            end
+
+            assign if_static = 1'b0;
+            assign if_addr   = if_pc_q;
+            assign if_next   = btb_taken ? btb_target : if_pc_q + 32'd4;
+            assign ex_pred   = ex_pred_q;
+        end else if (ENABLE_BTB == 2) begin : g_static
+            // Backward branch (imm sign bit = instr[31]) or JAL. The instruction is valid in
+            // EX, so the IMEM output is never X here. The fetch is wasted when EX stalls.
+            wire [31:0] st_target = ex_pc_q + ex_imm;
+
+            assign if_static = ex_valid & ~ex_ferr & (ex_jal | (ex_branch & ex_instr[31]));
+            assign if_addr   = if_static ? st_target : if_pc_q;
+            assign if_next   = if_addr + 32'd4;
+            assign ex_pred   = if_static;
+        end else begin : g_none
+            assign if_static = 1'b0;
+            assign if_addr   = if_pc_q;
+            assign if_next   = if_pc_q + 32'd4;
+            assign ex_pred   = 1'b0;
+        end
+    endgenerate
+
+    assign ex_wait        = ex_bus_wait | (md_req & ~md_done);
+    assign ex_redirect    = ex_resolve & ex_mispred;
+    assign ex_redirect_pc = (ENABLE_BTB == 0) ? ex_target :
+                            ex_jump ? ex_target : ex_pc_q + 32'd4;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
@@ -515,7 +599,7 @@ module rv32_core #(
     // ---- Serializing instructions in WB ---------------------------------------
     wire wb_ok      = wb_retire & ~wb_trap;
     wire wb_mret    = wb_ok & wb_mret_q;
-    wire wb_fence_i = wb_ok & wb_fence_i_q;
+    assign wb_fence_i = wb_ok & wb_fence_i_q;
     // ENABLE_WFI_SLEEP = 0: WFI is a NOP
     wire wb_wfi     = wb_ok & wb_wfi_q & (ENABLE_WFI_SLEEP != 0);
     wire wb_csr_wr  = wb_ok & wb_csr_q & wb_csr_we_q;
