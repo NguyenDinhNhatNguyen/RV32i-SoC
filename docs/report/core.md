@@ -350,6 +350,80 @@ Bài toán `fw/bench/accel_bench.c`: C = A × B với A, B là ma trận 16 × 1
 
 Giới hạn đo: mô phỏng RTL bằng Icarus, chưa tính trễ thật của macro và dây. CoreMark chỉ chạy 3 vòng nên chưa phải điểm CoreMark chính thức (luật cần ít nhất 10 giây).
 
+## X.8 Khám phá dự đoán nhánh (D-041)
+
+Dự đoán nhánh là một điểm cộng nhóm chọn trong `docs/spec/requirements.md`. Core gốc đoán luôn không nhảy, mỗi lệnh nhảy mất 1 chu kỳ, và đây là phần lớn số bubble ở Dhrystone và CoreMark. Hai phương án được thử qua tham số `ENABLE_BTB` của `rv32_core` (nhánh `feat/nhan-btb`, chưa merge, số liệu ở `docs/btb_eval.md`):
+
+| `ENABLE_BTB` | Phương án | Cách làm |
+| --- | --- | --- |
+| 0 (mặc định) | Không đoán | RTL gốc. Yosys chứng minh tương đương với bản trước khi thêm tham số |
+| 1 | BTB 8 hoặc 16 entry | `rtl/core/rv32_btb.v`. Ánh xạ trực tiếp, tag đầy đủ, đích 30 bit, bộ đếm 2 bit bão hoà. Tra ở IF bằng `if_pc_q`, cập nhật khi nhánh hoặc JAL rời EX. FENCE.I xoá hết entry |
+| 2 | Tĩnh: nhánh lùi và JAL coi là nhảy | Đích `ex_pc_q + imm` đi tổ hợp từ EX ra `if_addr_o` |
+
+Cả ba phương án vẫn quyết định nhánh ở EX. Đoán sai thì chuyển hướng, phạt 1 chu kỳ như cũ. Đoán đúng thì lệnh ở đích đã vào IF, không mất chu kỳ nào. Chỉ đoán nhánh và JAL, vì đích của chúng cố định theo PC, nên EX chỉ so hướng, không so 30 bit đích. JALR không đoán.
+
+Lưu ý về phương án tĩnh: lệnh chỉ biết được khi đã ở EX, đúng chu kỳ EX quyết định nhánh. Nếu đích đi qua flop như mọi chuyển hướng khác thì kết quả giống hệt core gốc. Vì vậy đoán tĩnh ở pipeline này chỉ có lợi khi có đường tổ hợp từ ngõ ra IMEM về địa chỉ IMEM.
+
+### Hiệu năng
+
+![CPI và mức tăng hiệu năng các cấu hình](../figures/bench_configs.svg)
+
+*Hình X.4. CPI và mức tăng DMIPS/MHz, CoreMark/MHz so với base, trên `soc_top`. Hình sinh từ `docs/figures/bench_configs.py`.*
+
+| Benchmark trên `soc_top` | Đo | Base | BTB 8 | BTB 16 | Tĩnh |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Dhrystone rv32i | DMIPS/MHz | 0,800 | 0,856 | 0,858 | 0,884 |
+| Dhrystone rv32im | DMIPS/MHz | 0,800 | 0,857 | 0,865 | 0,884 |
+| CoreMark rv32i | CoreMark/MHz | 1,112 | 1,223 | 1,232 | 1,235 |
+| CoreMark rv32im | CoreMark/MHz | 2,755 | 2,967 | 2,992 | 2,969 |
+| CoreMark rv32im | CPI | 1,158 | 1,076 | 1,067 | 1,075 |
+| CoreMark rv32im | Đoán đúng | 39,8% | 79,8% | 84,1% | 80,1% |
+
+"Đoán đúng" là tỉ lệ lệnh nhánh, JAL, JALR rời EX mà không phải chuyển hướng. Tỉ lệ này bằng nhau trên `tb_core` và `soc_top`, vì dự đoán không phụ thuộc wait state.
+
+- Hai phương án tăng hiệu năng 7 đến 11%. Phần đoán sai còn lại chủ yếu là JALR (lệnh `ret`). Ví dụ Dhrystone rv32i với BTB 8: 24 503 lần chuyển hướng, trong đó 8 001 là JALR.
+- Tĩnh thắng ở Dhrystone vì Dhrystone gọi nhiều hàm. Mọi JAL đều đoán đúng, còn BTB 8 entry bị các lệnh gọi đẩy nhau ra.
+- BTB thắng ở CoreMark rv32im. Nhánh tiến hay nhảy (ví dụ `if` trong vòng lặp) BTB học được, còn đoán tĩnh luôn sai.
+- Từ 8 lên 16 entry chỉ thêm khoảng 1%.
+
+### Diện tích và timing (flow nhà, chỉ xem xu hướng)
+
+`make sta-core-nangate`, Yosys và OpenSTA với Nangate45. Diện tích ở mục tiêu abc `-D 2000`. Chu kỳ flop tới flop lấy khoảng min đến max khi quét `-D` = 1500 đến 3000 ps, vì abc dao động khoảng ±0,3 ns.
+
+| Cấu hình | Diện tích (µm²) | Thêm | Flop tới flop (ns) | `if_rdata_i` → `if_addr_o` (ns) |
+| --- | ---: | ---: | --- | ---: |
+| ENABLE_M=0, base | 16 981 | | 2,46 đến 2,94 | không có |
+| ENABLE_M=0, BTB 8 | 21 557 | +4 576 (+27%) | 2,66 đến 3,32 | không có |
+| ENABLE_M=0, tĩnh | 17 530 | +549 (+3%) | 3,07 đến 3,67 | 1,89 |
+| ENABLE_M=1, base | 28 339 | | 3,24 đến 3,68 | không có |
+| ENABLE_M=1, BTB 8 | 32 652 | +4 313 (+15%) | 3,28 đến 3,67 | không có |
+| ENABLE_M=1, BTB 16 | 37 189 | +8 850 (+31%) | 3,13 đến 3,49 | không có |
+| ENABLE_M=1, tĩnh | 27 985 | khoảng 0 | 3,27 đến 3,73 | 1,89 |
+
+- BTB 8 entry có khoảng 480 flop (8 × (1 + 27 + 30 + 2)). Phần lớn diện tích thêm là flop của tag và đích.
+- BTB không làm chậm rõ đường flop tới flop: ENABLE_M=1 cùng khoảng dao động, ENABLE_M=0 chậm 0 đến 0,4 ns, cỡ vùng nhiễu của abc. `if_addr_o` vẫn ra từ flop (0,14 ns so với 0,12 ns của base).
+- Phương án tĩnh tạo đường mới từ IMEM về IMEM: SRAM clock → Q, cộng 1,9 ns trong core, cộng mux của `imem_port`, rồi tới setup địa chỉ SRAM. Ở 20 ns vẫn đủ, nhưng nó gắn timing của macro SRAM với logic core, nên floorplan và SDC phải tính đường này.
+
+### Trade-off và quyết định
+
+| Tiêu chí | BTB 8 | BTB 16 | Tĩnh |
+| --- | --- | --- | --- |
+| Tăng CoreMark/MHz rv32im (`soc_top`) | +7,7% | +8,6% | +7,8% |
+| Tăng DMIPS/MHz rv32i (`soc_top`) | +7,0% | +7,3% | +10,5% |
+| Diện tích thêm, ENABLE_M=1 | +15% | +31% | khoảng 0 |
+| `if_addr_o` ra từ flop | Có | Có | Không |
+| Phải chạy lại flow trường | Có | Có | Có, thêm ràng buộc đường IMEM → IMEM |
+
+**Quyết định: giữ `ENABLE_BTB=0` cho bản nộp.** Lý do:
+
+- Lợi 7 đến 10% là thật nhưng nhỏ. Yêu cầu bắt buộc là SoC chạy đúng ở 50 MHz qua flow Cadence, và flow trường (Genus, LEC, Innovus) chưa chạy với cấu hình có BTB. Bật thì phải chạy lại cả flow trước hạn nộp.
+- `ENABLE_BTB=0` là bản đã qua toàn bộ kiểm chứng. Tham số mặc định 0 giữ đúng bản đó, đã chứng minh tương đương hình thức (4 512 điểm với ENABLE_M=0, 5 247 điểm với ENABLE_M=1).
+- BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1%. Không đáng.
+- Phương án tĩnh rẻ diện tích và nhanh nhất ở Dhrystone, nhưng phá quy tắc "`if_addr_o` ra thẳng từ flop" (mục 4.3) và làm khó floorplan, SDC. Không dùng.
+- Nếu buổi review quyết bật thì chọn BTB 8 entry. Chỉ cần thêm define `RV_ENABLE_BTB_DEFAULT=1` khi đọc RTL, không sửa `soc_top`. Bước rẻ tiếp theo là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`, vì JALR chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
+
+Dù giữ BTB=0, phần khám phá vẫn có giá trị cho báo cáo: thiết kế đã được hiện thực và kiểm chứng đủ với cả ba chế độ (`tb_rv32_btb` so với mô hình, cấy 3 lỗi đều bị bắt, lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot đều PASS với `BTB=0`, 1 và 2).
+
 ## X.9 Timing, diện tích, công suất
 
 ### Xu hướng ở nhà (Yosys, Nangate45, OpenSTA)
