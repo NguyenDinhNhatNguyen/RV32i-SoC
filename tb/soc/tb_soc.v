@@ -19,12 +19,16 @@
 //   - uart_tx is X, or a UART frame has a bad start/stop bit: FAIL
 //   - Timeout: FAIL
 //
+// ENABLE_DMA = 1 builds soc_top with the DMA (RTL-15). The PASS line then also shows how many
+// words the DMA wrote and how many cycles it was busy.
+//
 // Plusargs: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<name> +timeout=<cycles>
 
 module tb_soc;
 
     parameter ENABLE_M         = 1;
     parameter ENABLE_WFI_SLEEP = 1;
+    parameter ENABLE_DMA       = 0;
     localparam BANK_W          = 2;     // Matches SOC_IMEM_BANK_W, SOC_DMEM_BANK_W and link.ld
     localparam WORDS           = 1024 << BANK_W;
     localparam [31:0] PAD_IN   = 32'hA5C3_0F96;
@@ -40,7 +44,8 @@ module tb_soc;
 
     soc_top #(
         .ENABLE_M         (ENABLE_M),
-        .ENABLE_WFI_SLEEP (ENABLE_WFI_SLEEP)
+        .ENABLE_WFI_SLEEP (ENABLE_WFI_SLEEP),
+        .ENABLE_DMA       (ENABLE_DMA)
     ) dut (
         .clk     (clk),
         .rst_n   (rst_n),
@@ -87,6 +92,8 @@ module tb_soc;
     integer     sleep   = 0;
     integer     n_apb   = 0;
     integer     n_uart  = 0;
+    integer     n_dma_w = 0;            // Words written by the DMA (ENABLE_DMA = 1)
+    integer     n_dma_c = 0;            // Cycles the DMA was busy
     reg         uart_nl = 1'b1;         // Last UART character was a newline (or none yet)
     integer     timeout = 200000;
     reg  [31:0] tohost  = 32'hFFFF_FFFF;
@@ -101,7 +108,13 @@ module tb_soc;
                 done = 1'b1;
                 if (!uart_nl)
                     $display("");           // Keep the result line at the start of a line
-                if (pass)
+                if (pass && ENABLE_DMA != 0)
+                    $display({"PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, ",
+                              "UART %0d byte, DMA %0d words in %0d busy cycles)"},
+                             test_name, cycle, instret,
+                             (instret > 0) ? (1.0 * cycle / instret) : 0.0,
+                             n_apb, sleep, n_uart, n_dma_w, n_dma_c);
+                else if (pass)
                     $display({"PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, ",
                               "UART %0d byte)"},
                              test_name, cycle, instret,
@@ -183,6 +196,20 @@ module tb_soc;
             end
         end
     end
+
+    // ---------------------------------------------------------- DMA statistics
+    generate
+        if (ENABLE_DMA != 0) begin : g_dma_stat
+            always @(posedge clk) begin
+                if (running) begin
+                    if (dut.m_req_valid[1] && dut.m_req_ready[1] && dut.m_we[1])
+                        n_dma_w = n_dma_w + 1;
+                    if (dut.g_dma.u_dma.st != 3'd0)
+                        n_dma_c = n_dma_c + 1;
+                end
+            end
+        end
+    endgenerate
 
     // ---------------------------------------------------------- reset
     task check_rst(input exp, input [8*64-1:0] why);

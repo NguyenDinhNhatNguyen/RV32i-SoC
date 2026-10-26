@@ -85,7 +85,7 @@ Gán bit nguồn ngắt (macro `SOC_IRQ_*` trong `rtl/bus/soc_map.vh`):
 | 1 | Accelerator | `accel_irq` |
 | 2 | GPIO | Chưa có, để 0 |
 | 3 | SPI | Chưa có, để 0 |
-| 4 | DMA | Chưa có, để 0 |
+| 4 | DMA | `dma_irq` khi `ENABLE_DMA = 1`, ngược lại 0 |
 
 Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì nối vào bit tương ứng của `irq_src` trong `soc_top`.
 
@@ -109,3 +109,24 @@ Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì 
 | `uart_tx` | ra | 1 | UART phát |
 
 Tổng 100 chân tín hiệu. Vị trí chân trên die: `pnr/scripts/soc_floorplan.tcl` (cạnh trái và phải).
+
+## 7. DMA (`rtl/bus/dma_apb.v`, 0x4000_0000, RTL-15, Tầng 2)
+
+Chỉ có khi `soc_top` dựng với `ENABLE_DMA = 1`. Khi đó DMA là master thứ 2 của `sys_bus`, chia bus với core qua trọng tài round-robin. Với `ENABLE_DMA = 0` mọi truy cập vào 0x4000_0000 trả `err`.
+
+| Offset | Tên | Truy cập | Reset | Ý nghĩa |
+| --- | --- | --- | --- | --- |
+| 0x00 | SRC | RW | 0 | Địa chỉ byte nguồn. Bit 1:0 luôn đọc 0 |
+| 0x04 | DST | RW | 0 | Địa chỉ byte đích. Bit 1:0 luôn đọc 0 |
+| 0x08 | LEN | RW | 0 | Số word cần chép, 16 bit |
+| 0x0C | CTRL | W | — | bit0 START (chỉ nhận khi rảnh), bit1 IRQ_EN |
+| 0x0C | CTRL | R | 0 | bit1 IRQ_EN |
+| 0x10 | STATUS | R | 0 | bit0 BUSY, bit1 DONE, bit2 ERR |
+| 0x10 | STATUS | W | — | Ghi 1 vào bit1 hoặc bit2 để xoá |
+
+- Chép theo word (`be = 4'b1111`), cả nguồn và đích tăng 4 sau mỗi word, chép tiến từng word.
+- Ghi SRC, DST, LEN, CTRL khi BUSY bị bỏ qua. SRC, DST, LEN giữ giá trị đã ghi, địa chỉ đang chạy nằm bên trong.
+- START xoá DONE và ERR. `LEN = 0` thì DONE bật ngay, không có giao dịch bus.
+- Lỗi bus khi đọc hoặc ghi dừng DMA với ERR = 1 và DONE = 1. Các word trước lỗi đã được chép.
+- `irq = DONE & IRQ_EN`, qua 1 flop, vào IRQC bit 4. Phần mềm xoá bằng cách ghi 1 vào bit DONE của STATUS.
+- Quy trình: ghi SRC, DST, LEN, ghi CTRL = 1 (hoặc 3 nếu dùng ngắt), chờ DONE hoặc ngắt, đọc ERR, ghi STATUS = 2 để xoá DONE.

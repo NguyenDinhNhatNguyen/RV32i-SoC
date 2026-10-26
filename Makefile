@@ -534,7 +534,7 @@ BUS_UNIT_CFG_tb_imem_port  := BANK_W=0 BANK_W=2
 bus_cfgs = $(or $(BUS_LINT_CFG_$(1)),$(BUS_UNIT_CFG_$(1)),default)
 
 BUS_LINT_RUNS := $(foreach f,$(BUS_RTL),$(foreach c,$(call bus_cfgs,$(basename $(notdir $(f)))),$(f)@$(c)))
-BUS_UNIT_TBS  := tb_sys_bus tb_apb_bridge tb_sram_wrap tb_imem_port
+BUS_UNIT_TBS  := tb_sys_bus tb_apb_bridge tb_sram_wrap tb_imem_port tb_dma_apb
 BUS_UNIT_RUNS := $(foreach t,$(BUS_UNIT_TBS),$(foreach c,$(call bus_cfgs,$(t)),$(t)@$(c)))
 ifneq ($(TB),)
 BUS_UNIT_RUNS := $(filter $(TB)@%,$(BUS_UNIT_RUNS))
@@ -622,16 +622,19 @@ clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
 
 # ---------------------------------------------------------------------------
-# SoC (Phat): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v. Docs: docs/soc_top.md
-# Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
-#   make lint-soc                  Verilator -Wall on soc_top (4 configs ENABLE_M x ENABLE_WFI_SLEEP), 0 warnings
-#   make fw-soc                    soc_top runs smoke, hazard, soc.S, bus.S and riscv-tests (T=soc runs one)
+# SoC (Phat): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v, RTL-15 rtl/bus/dma_apb.v.
+# Docs: docs/soc_top.md. Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
+#   make lint-soc                  Verilator -Wall on soc_top (ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA),
+#                                  0 warnings
+#   make fw-soc                    soc_top runs smoke, hazard, soc.S, bus.S, dma.S and riscv-tests
+#                                  (T=soc runs one). M1W1 is built with ENABLE_DMA=1, M0W0 without
 # ---------------------------------------------------------------------------
 SOC_RTL     := $(CORE_RTL) $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v) $(wildcard rtl/periph/*.v) $(BUS_ACCEL)
 SOC_OUT     := tb/soc/out/soc
 SOC_VLFLAGS := --lint-only -Wall -Irtl/bus -Irtl/mem -Irtl/core \
                -y rtl/bus -y rtl/mem -y rtl/core -y rtl/periph -y rtl/accel -y tb/models
 SOC_LINT_CFGS := M0W0 M0W1 M1W0 M1W1
+SOC_LINT_DMA  := 0 1
 
 lint-soc fw-soc: SHELL := /bin/bash
 lint-soc fw-soc: .SHELLFLAGS := -o pipefail -c
@@ -640,28 +643,34 @@ lint-soc fw-soc: .SHELLFLAGS := -o pipefail -c
 
 lint-soc:
 	@fail=0; \
-	for c in $(SOC_LINT_CFGS); do \
+	for c in $(SOC_LINT_CFGS); do for d in $(SOC_LINT_DMA); do \
 	  m=$${c:1:1}; w=$${c:3:1}; \
-	  if $(VERILATOR) $(SOC_VLFLAGS) --top-module soc_top -GENABLE_M=$$m -GENABLE_WFI_SLEEP=$$w rtl/bus/soc_top.v; then \
-	    echo "  [ OK ] lint soc_top ($$c)"; \
+	  if $(VERILATOR) $(SOC_VLFLAGS) --top-module soc_top -GENABLE_M=$$m -GENABLE_WFI_SLEEP=$$w \
+	       -GENABLE_DMA=$$d rtl/bus/soc_top.v; then \
+	    echo "  [ OK ] lint soc_top ($$c, ENABLE_DMA=$$d)"; \
 	  else \
-	    echo "  [FAIL] lint soc_top ($$c)"; fail=1; \
+	    echo "  [FAIL] lint soc_top ($$c, ENABLE_DMA=$$d)"; fail=1; \
 	  fi; \
-	done; \
+	done; done; \
 	if [ $$fail = 0 ]; then echo "LINT-SOC PASS"; else echo "LINT-SOC FAIL"; exit 1; fi
 
 # Assembly tests that do not use the tb_core control block, the SoC tests in
 # fw/tests/soc, bus.S (reuses the bus rule) and riscv-tests.
 SOC_FW_TESTS  := smoke hazard
-SOC_OWN_TESTS := $(basename $(notdir $(wildcard fw/tests/soc/*.S)))
+SOC_DMA_TESTS := dma
+SOC_OWN_TESTS := $(filter-out $(SOC_DMA_TESTS),$(basename $(notdir $(wildcard fw/tests/soc/*.S))))
 SOC_OWN_OUT   := $(SOC_OUT)/fw
 ifneq ($(T),)
 SOC_FW_TESTS  := $(filter $(T),$(SOC_FW_TESTS))
 SOC_OWN_TESTS := $(filter $(T),$(SOC_OWN_TESTS))
+SOC_DMA_TESTS := $(filter $(T),$(SOC_DMA_TESTS))
 endif
 SOC_FW_CFGS   := M0W0 M1W1
+SOC_DMA_CFGS  := M1W1                # Configs built with ENABLE_DMA=1, dma.S runs only there
+soc_cfg_d = $(if $(filter $(1),$(SOC_DMA_CFGS)),1,0)
 soc_tests = $(addprefix $(CORE_FW_OUT)/,$(SOC_FW_TESTS)) \
             $(addprefix $(SOC_OWN_OUT)/,$(SOC_OWN_TESTS)) \
+            $(if $(filter 1,$(call soc_cfg_d,$(1))),$(addprefix $(SOC_OWN_OUT)/,$(SOC_DMA_TESTS))) \
             $(addprefix $(BUS_OWN_OUT)/,$(BUS_OWN_TESTS)) \
             $(addprefix $(CORE_ISA_OUT)/,$(call core_isa_tests,$(1)))
 SOC_FW_RUNS   := $(foreach c,$(SOC_FW_CFGS),$(foreach t,$(call soc_tests,$(c)),$(t)@$(c)))
@@ -678,11 +687,12 @@ $(SOC_OWN_OUT)/%.tohost: $(SOC_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb
 $(SOC_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v $(SOC_RTL) $(BUS_MODELS) rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
 	@mkdir -p $(@D)
 	$(IVERILOG) $(BUS_IVFLAGS) -Irtl/core -s tb_soc -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) \
-	  -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -o $@ $(SOC_RTL) $(BUS_MODELS) tb/soc/tb_soc.v
+	  -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -Ptb_soc.ENABLE_DMA=$(call soc_cfg_d,$*) \
+	  -o $@ $(SOC_RTL) $(BUS_MODELS) tb/soc/tb_soc.v
 
 fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
         $(foreach t,$(SOC_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost) \
-        $(foreach t,$(SOC_OWN_TESTS),$(SOC_OWN_OUT)/$(t).tohost) \
+        $(foreach t,$(SOC_OWN_TESTS) $(SOC_DMA_TESTS),$(SOC_OWN_OUT)/$(t).tohost) \
         $(foreach t,$(BUS_OWN_TESTS),$(BUS_OWN_OUT)/$(t).tohost) \
         $(foreach t,$(CORE_ISA_BASE) $(CORE_ISA_M),$(CORE_ISA_OUT)/$(t).tohost)
 	@printf '%s\n' $(SOC_FW_RUNS) | xargs -P $(CORE_JOBS) -n 1 bash scripts/soc_run.sh $(SOC_OUT) \

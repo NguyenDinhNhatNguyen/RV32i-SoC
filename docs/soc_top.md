@@ -1,4 +1,4 @@
-# soc_top và bộ đồng bộ reset (RTL-09)
+# soc_top, bộ đồng bộ reset và DMA (RTL-09, RTL-15)
 
 Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ ở `docs/bus_mem.md`.
 
@@ -8,8 +8,11 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 | --- | --- |
 | `rtl/bus/soc_top.v` | Top của SoC: core, bus, bộ nhớ, Timer, UART, GPIO, IRQC, accelerator |
 | `rtl/bus/reset_sync.v` | Bộ đồng bộ reset 2 flop |
+| `rtl/bus/dma_apb.v` | DMA chép word (RTL-15), cổng cấu hình APB ở khe 8 và cổng master 1 của `sys_bus` |
+| `tb/unit/tb_dma_apb.v` | Unit test DMA, chạy trong `make unit-bus` |
 | `tb/soc/tb_soc.v` | Testbench mức SoC, chỉ nối chân của chip |
 | `fw/tests/soc/soc.S` | Test Timer, ngắt, WFI, UART, GPIO, accelerator, IRQC, truy cập sai |
+| `fw/tests/soc/dma.S` | Test DMA trong SoC (chỉ chạy với `ENABLE_DMA = 1`) |
 | `scripts/soc_run.sh` | Chạy một bài trên `tb_soc`, gọi từ `make fw-soc` |
 
 ## 2. Chân của chip
@@ -35,7 +38,9 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
                                                  ├─ khe 1 uart_apb ─── uart_rx/tx, irq ─► IRQC bit 0
                                                  ├─ khe 2 gpio_apb ─── gpio_i/o/oe
                                                  ├─ khe 6 irqc_apb ─── irq ─► irq_external của core
-                                                 └─ khe 7 accel_apb ── irq ─► IRQC bit 1
+                                                 ├─ khe 7 accel_apb ── irq ─► IRQC bit 1
+                                                 └─ khe 8 dma_apb ──── irq ─► IRQC bit 4 (ENABLE_DMA = 1)
+ dma_apb ── cổng master ─► sys_bus master 1 (ENABLE_DMA = 1, trọng tài round-robin)
 ```
 
 ## 4. Các điểm thiết kế
@@ -53,7 +58,7 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 | --- | --- |
 | `irq_timer_i` | `timer_apb.irq_timer` (mtime ≥ mtimecmp) |
 | `irq_software_i` | `timer_apb.irq_software` (MSIP) |
-| `irq_external_i` | `irqc_apb.irq`. IRQC gom `irq` của UART (bit 0) và accelerator (bit 1), bit 2..4 (GPIO, SPI, DMA) tạm nối 0 |
+| `irq_external_i` | `irqc_apb.irq`. IRQC gom `irq` của UART (bit 0), accelerator (bit 1) và DMA (bit 4, khi `ENABLE_DMA = 1`). Bit 2, 3 (GPIO, SPI) tạm nối 0 |
 | `mtime_i` | `timer_apb.mtime_o`, để CSR `time`, `timeh` đọc đúng mtime |
 
 ### 4.3 Khe APB
@@ -66,7 +71,7 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 | 3, 4, 5 | SPI, I2C, PWM | Chưa có RTL (Tầng 1, 2) |
 | 6 | IRQC | Đã nối (RTL-11) |
 | 7 | Accelerator | Đã nối qua `accel_apb` |
-| 8 | DMA | Chưa có RTL (Tầng 2) |
+| 8 | DMA | Đã nối khi `ENABLE_DMA = 1` (RTL-15). Với `ENABLE_DMA = 0` khe trả err |
 
 Khe chưa có RTL có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB.
 
@@ -83,11 +88,20 @@ Thêm một khối mới vào `soc_top`, ví dụ SPI (làm giống cách đã n
 | --- | --- | --- |
 | `ENABLE_M` | 1 | RV32M (đã pass rv32um, RTL-12) |
 | `ENABLE_WFI_SLEEP` | 1 | WFI cho core ngủ thật |
+| `ENABLE_DMA` | 0 | DMA và master thứ 2 của `sys_bus` (RTL-15, Tầng 2). Để 0 cho tới khi review 8/11 mở Tầng 2 |
 | `GPIO_W` | 32 | Số chân GPIO. `gpio_apb` chỉ lint sạch với 32 |
 
 Kích thước IMEM, DMEM lấy từ `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong `rtl/bus/soc_map.vh`.
 
-### 4.5 Sửa file của người khác
+### 4.5 DMA (RTL-15)
+
+- Thanh ghi ở `docs/spec/periph.md` mục 7. DMA chép `LEN` word từ `SRC` sang `DST`, địa chỉ tăng 4 sau mỗi word, chép tiến từng word nên chồng vùng vẫn có kết quả xác định.
+- Mỗi word là một lệnh đọc rồi một lệnh ghi trên `sys_bus`, đủ 4 byte (`be = 4'b1111`). Vì vậy DMA chép được giữa DMEM, IMEM (qua cổng dữ liệu) và vùng APB truy cập theo word như bộ đệm accelerator.
+- Lệnh kế tiếp được phát ngay trong chu kỳ có phản hồi (luật 3), nên khi chỉ có DMA dùng bus thì mỗi word mất 2 chu kỳ (`tb_dma_apb` kiểm con số này).
+- Core và DMA chia bus qua trọng tài round-robin của `sys_bus`. Cả bus chỉ có 1 yêu cầu chờ phản hồi, nên khi CPU đọc `STATUS` liên tục để chờ thì DMA chậm lại. Trong `dma.S`, chép 64 word DMEM sang DMEM mất 268 chu kỳ khi CPU đọc `STATUS` để chờ, còn vòng lặp `lw`/`sw` của CPU mất 448 chu kỳ. Chờ bằng ngắt (IRQC bit 4) thay cho đọc `STATUS` thì DMA chạy gần 2 chu kỳ mỗi word.
+- Lỗi bus (địa chỉ không ánh xạ, `PSLVERR`) dừng DMA với `ERR = 1` và `DONE = 1`.
+
+### 4.6 Sửa file của người khác
 
 | File | Sửa | Lý do |
 | --- | --- | --- |
@@ -100,18 +114,19 @@ IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-
 ## 5. Kiểm chứng ở nhà
 
 ```sh
-scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 4 cấu hình ENABLE_M x ENABLE_WFI_SLEEP
-scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, riscv-tests trên soc_top
+scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 8 cấu hình ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA
+scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, riscv-tests trên soc_top
 ```
 
-Kết quả ngày 26/10 (sau khi nối IRQC):
+Kết quả ngày 26/10 (sau khi thêm DMA). `fw-soc` dựng M0W0 với `ENABLE_DMA = 0` và M1W1 với `ENABLE_DMA = 1`, nên cả hai cách đều được chạy:
 
 | Lệnh | Kết quả |
 | --- | --- |
-| `make lint-soc` | 0 warning ở cả 4 cấu hình |
-| `make fw-soc` | 126/126 PASS: `smoke`, `hazard`, `soc` (thêm test IRQC), `bus`, rv32ui, rv32mi (M0W0 và M1W1), rv32um (M1W1) |
-| Yosys `synth -top soc_top` | Không cảnh báo, không latch, đủ 8 macro |
-| Test cũ | `fw-bus` 124/124, `unit-bus` 7/7, `tb_timer_apb`, `tb_gpio_apb`, `tb_uart_apb`, `eda.sh check`, `lint-core`, `unit-core`, `fw-core`, `isa-core` vẫn PASS |
+| `make lint-soc` | 0 warning ở cả 8 cấu hình |
+| `make fw-soc` | 127/127 PASS: `smoke`, `hazard`, `soc`, `bus`, rv32ui, rv32mi (M0W0 và M1W1), rv32um và `dma` (M1W1) |
+| `make unit-bus` | 8/8 PASS, gồm `tb_dma_apb` (thử thêm seed 2, 3, 7) |
+| Yosys `synth -top soc_top` | Không cảnh báo, không latch, đủ 8 macro, cả `ENABLE_DMA = 0` và `1` |
+| Test cũ | `fw-bus` 124/124, `tb_timer_apb`, `tb_gpio_apb`, `tb_uart_apb`, `tb_irqc_apb`, `eda.sh check`, `lint-core`, `unit-core`, `fw-core`, `isa-core` vẫn PASS |
 
 `tb_soc` kiểm bộ đồng bộ reset trước khi chạy chương trình: nhả reset giữa chu kỳ thì `rst_n_sync` lên 1 đúng ở cạnh thứ hai, kéo reset xuống giữa chu kỳ thì `rst_n_sync` xuống 0 ngay.
 
@@ -128,10 +143,17 @@ Kết quả ngày 26/10 (sau khi nối IRQC):
 - IRQC: giá trị reset, `ENABLE` chỉ giữ 5 bit, `PENDING` thấy nguồn accelerator kể cả khi `ENABLE` tắt và không có ngắt, bật `ENABLE` thì có ngắt ngoài (`mcause = 0x8000000B`). Ngắt ngoài từ UART khi nhận byte (`RXIE`), handler đọc `DATA` để xoá. Mỗi lần chỉ vào handler đúng 1 lần.
 - `sb` vào UART, ghi `PENDING` của IRQC, offset lạ của Timer, UART, IRQC thành access fault.
 
+`dma.S` kiểm: giá trị reset, `LEN = 0`, chép DMEM sang DMEM so với vòng lặp CPU (in số chu kỳ ra UART), DMEM sang bộ đệm A/B của accelerator rồi kết quả C_BUF về DMEM, DMA ghi vào IMEM, CPU đọc ghi DMEM trong lúc DMA chạy, ghi `SRC` khi bận bị bỏ qua, ngắt DMA qua IRQC, lỗi bus và offset lạ.
+
+`tb_dma_apb` kiểm DMA riêng với mô hình slave có wait state và trễ ngẫu nhiên: 200 lần chép ngẫu nhiên (có chồng vùng), luật bus 1, 3 ở cổng master, lỗi bus khi đọc và khi ghi, `LEN = 0`, ghi khi bận, ghi 1 để xoá, `irq`, 2 chu kỳ mỗi word.
+
+Đã cấy thử 15 lỗi vào DMA và phần nối DMA (phát yêu cầu khi chưa có ready, phát yêu cầu khi còn chờ phản hồi, sai số word, không tăng địa chỉ, bỏ qua lỗi đọc, cho ghi khi bận, START không xoá ERR, `LEN = 0` vẫn chạy, `irq` bỏ qua `IRQ_EN`, `be` thiếu byte, không giữ `wdata`, ghi 1 để xoá sai bit, tắt khe DMA, hở ngắt DMA, hở `err` của master DMA). Bắt được cả 15.
+
 Đã cấy thử 22 lỗi vào bản sao `soc_top`, `reset_sync` và `irqc_apb`: mtime nối 0, hở `irq_timer`, hở `irq_software`, tắt khe GPIO, hở `gpio_i`, Timer nhận nhầm PSEL của GPIO, tắt khe accelerator, tắt khe UART, hở `uart_rx`, hở `uart_tx`, UART nhận nhầm PSEL của GPIO, reset chỉ 1 flop, reset assert đồng bộ, core dùng reset chưa đồng bộ, tắt khe IRQC, hở `irq_external`, hở bit accelerator, hở bit UART, đổi chỗ bit UART và accelerator, IRQC bỏ qua `ENABLE`, cho ghi `PENDING`, `ENABLE` reset về 1. `tb_soc` bắt được cả 22.
 
 ## 6. Còn lại
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
+- Bật `ENABLE_DMA` mặc định hay không: nhóm quyết ở review 8/11 (Tầng 2).
 - STA-01 (Phát): SDC cho `soc_top` theo mục 4.1.
 - Trên server: Genus cho `soc_top` (cần `sram_2k_macro.lib`), GLS với `sram_2k_macro.v` thật.

@@ -66,7 +66,7 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 
 - Lõi có 3 ngõ vào mức: `irq_software_i`, `irq_timer_i`, `irq_external_i` (`docs/spec/core.md` mục 4.10).
 - `irq_timer_i` lấy từ Timer (mtime ≥ mtimecmp).
-- `irq_external_i` là OR của các nguồn ngoại vi qua bộ gom ngắt rút gọn (RTL-11): UART, accelerator (`irq` của wrapper), sau này GPIO, SPI và DMA. Gán bit ở `docs/spec/periph.md` mục 4.
+- `irq_external_i` là OR của các nguồn ngoại vi qua bộ gom ngắt rút gọn (RTL-11): UART, accelerator (`irq` của wrapper), DMA (khi `ENABLE_DMA = 1`), sau này GPIO và SPI. Gán bit ở `docs/spec/periph.md` mục 4.
 - Thanh ghi của bộ gom ngắt:
   - `PENDING` (0x00) chỉ đọc. Mỗi bit phản ánh trực tiếp mức của một nguồn ngắt.
   - `ENABLE` (0x04) đọc ghi.

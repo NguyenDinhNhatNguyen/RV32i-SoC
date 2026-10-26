@@ -24,7 +24,7 @@ Chủ: Phát. Giao thức bus theo `docs/spec/core.md` mục 5.1. Bản đồ đ
  rv32_core ─────────────────────────────► imem_port ── 4 macro IMEM + boot ROM
      │ cổng dữ liệu (d_*)                     ▲
      ▼                                        │ imem_req
-  sys_bus (master 0, chừa master 1 cho DMA) ──┤
+  sys_bus (master 0, master 1 là DMA khi ENABLE_DMA = 1) ──┤
      │                                        │ dmem_req
      │                                        ▼
      │                                    sram_wrap ── 4 macro DMEM
@@ -50,7 +50,7 @@ Chủ: Phát. Giao thức bus theo `docs/spec/core.md` mục 5.1. Bản đồ đ
 | --- | --- | --- |
 | 0x2000_0000 + n × 0x1000, n = 0..6 | n | Timer, UART, GPIO, SPI, I2C, PWM, IRQC |
 | 0x3000_0000 .. 0x3000_0FFF | 7 | Accelerator (`accel_apb`) |
-| 0x4000_0000 .. 0x4000_0FFF | 8 | DMA (Tầng 2) |
+| 0x4000_0000 .. 0x4000_0FFF | 8 | DMA (`dma_apb`, Tầng 2, khi `ENABLE_DMA = 1`) |
 
 PADDR là 12 bit offset trong khe, khớp `accel_apb`, `timer_apb`, `gpio_apb`.
 

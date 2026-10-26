@@ -10,16 +10,22 @@
 //                                                ├─ slot 1 uart_apb
 //                                                ├─ slot 2 gpio_apb
 //                                                ├─ slot 6 irqc_apb
-//                                                └─ slot 7 accel_apb
+//                                                ├─ slot 7 accel_apb
+//                                                └─ slot 8 dma_apb (ENABLE_DMA = 1)
+//   dma_apb ── master port 1 of sys_bus (ENABLE_DMA = 1)
 //
 // One clock domain. The external reset rst_n goes through reset_sync, and every block
 // uses rst_n_sync.
 //
 // Interrupts: irq_timer and irq_software come from timer_apb (mtime >= mtimecmp, MSIP).
 // irq_external comes from the IRQC interrupt controller (RTL-11, slot 6), which gathers the
-// UART and accelerator irq lines (bit map SOC_IRQ_* in soc_map.vh).
+// UART, accelerator and DMA irq lines (bit map SOC_IRQ_* in soc_map.vh).
 //
-// APB slots without RTL yet: SPI (3), I2C (4), PWM (5), DMA (8). Their APB_EN bit
+// ENABLE_DMA = 1 (RTL-15, tier 2) adds the DMA: sys_bus gets a second master with round-robin
+// arbitration, the DMA config registers sit in APB slot 8 and its irq goes to IRQC bit 4.
+// With ENABLE_DMA = 0 the bus has one master and slot 8 returns err.
+//
+// APB slots without RTL yet: SPI (3), I2C (4), PWM (5). Their APB_EN bit
 // is 0, so apb_bridge returns err for every access to them.
 // To add a block: connect the slot's PSEL/PRDATA/PREADY/PSLVERR and set its APB_EN bit.
 `include "soc_map.vh"
@@ -27,6 +33,7 @@
 module soc_top #(
     parameter ENABLE_M         = 1,     // RV32M passes rv32um (RTL-12)
     parameter ENABLE_WFI_SLEEP = 1,
+    parameter ENABLE_DMA       = 0,     // Tier 2, opened only after the 8/11 review
     parameter GPIO_W           = 32     // gpio_apb is lint clean only with W = 32
 ) (
     input  wire              clk,
@@ -45,7 +52,9 @@ module soc_top #(
                                  (9'b1 << `SOC_APB_UART)  |
                                  (9'b1 << `SOC_APB_GPIO)  |
                                  (9'b1 << `SOC_APB_IRQC)  |
-                                 (9'b1 << `SOC_APB_ACCEL);
+                                 (9'b1 << `SOC_APB_ACCEL) |
+                                 ((ENABLE_DMA != 0) ? (9'b1 << `SOC_APB_DMA) : 9'b0);
+    localparam NM = (ENABLE_DMA != 0) ? 2 : 1;     // sys_bus masters: 0 core, 1 DMA
 
     // Reset
     wire rst_n_sync;
@@ -96,6 +105,22 @@ module soc_top #(
         .core_sleep_o   (core_sleep)
     );
 
+    // Bus masters, flattened: master 0 is the core data port, master 1 the DMA
+    wire [NM-1:0]    m_req_valid, m_req_ready, m_we, m_rsp_valid, m_rsp_err;
+    wire [NM*32-1:0] m_addr, m_wdata;
+    wire [NM*4-1:0]  m_be;
+    wire [31:0]      m_rsp_rdata;
+
+    assign m_req_valid[0]  = d_req_valid;
+    assign m_addr[31:0]    = d_addr;
+    assign m_we[0]         = d_we;
+    assign m_be[3:0]       = d_be;
+    assign m_wdata[31:0]   = d_wdata;
+    assign d_req_ready     = m_req_ready[0];
+    assign d_rsp_valid     = m_rsp_valid[0];
+    assign d_rsp_rdata     = m_rsp_rdata;
+    assign d_rsp_err       = m_rsp_err[0];
+
     // Bus
     wire [31:0] s_addr, s_wdata;
     wire        s_we;
@@ -106,21 +131,21 @@ module soc_top #(
     wire [31:0] imem_rd, dmem_rd, apb_rd;
 
     sys_bus #(
-        .N_MASTER    (1),
+        .N_MASTER    (NM),
         .IMEM_BANK_W (`SOC_IMEM_BANK_W),
         .DMEM_BANK_W (`SOC_DMEM_BANK_W)
     ) u_bus (
         .clk            (clk),
         .rst_n          (rst_n_sync),
-        .m_req_valid    (d_req_valid),
-        .m_req_ready    (d_req_ready),
-        .m_addr         (d_addr),
-        .m_we           (d_we),
-        .m_be           (d_be),
-        .m_wdata        (d_wdata),
-        .m_rsp_valid    (d_rsp_valid),
-        .m_rsp_rdata    (d_rsp_rdata),
-        .m_rsp_err      (d_rsp_err),
+        .m_req_valid    (m_req_valid),
+        .m_req_ready    (m_req_ready),
+        .m_addr         (m_addr),
+        .m_we           (m_we),
+        .m_be           (m_be),
+        .m_wdata        (m_wdata),
+        .m_rsp_valid    (m_rsp_valid),
+        .m_rsp_rdata    (m_rsp_rdata),
+        .m_rsp_err      (m_rsp_err),
         .s_addr         (s_addr),
         .s_we           (s_we),
         .s_be           (s_be),
@@ -286,7 +311,6 @@ module soc_top #(
     assign irq_src[`SOC_IRQ_ACCEL] = accel_irq;
     assign irq_src[`SOC_IRQ_GPIO]  = 1'b0;
     assign irq_src[`SOC_IRQ_SPI]   = 1'b0;
-    assign irq_src[`SOC_IRQ_DMA]   = 1'b0;
 
     irqc_apb #(.N(`SOC_IRQ_N)) u_irqc (
         .PCLK    (clk),
@@ -303,6 +327,45 @@ module soc_top #(
         .irq     (irq_external)
     );
 
+    // Slot 8 and master port 1: DMA (RTL-15), only with ENABLE_DMA = 1
+    generate
+        if (ENABLE_DMA != 0) begin : g_dma
+            wire dma_irq;
+
+            dma_apb u_dma (
+                .PCLK        (clk),
+                .PRESETn     (rst_n_sync),
+                .PSEL        (psel[`SOC_APB_DMA]),
+                .PENABLE     (penable),
+                .PWRITE      (pwrite),
+                .PADDR       (paddr),
+                .PWDATA      (pwdata),
+                .PRDATA      (prdata[`SOC_APB_DMA*32 +: 32]),
+                .PREADY      (pready[`SOC_APB_DMA]),
+                .PSLVERR     (pslverr[`SOC_APB_DMA]),
+                .m_req_valid (m_req_valid[1]),
+                .m_req_ready (m_req_ready[1]),
+                .m_addr      (m_addr[63:32]),
+                .m_we        (m_we[1]),
+                .m_be        (m_be[7:4]),
+                .m_wdata     (m_wdata[63:32]),
+                .m_rsp_valid (m_rsp_valid[1]),
+                .m_rsp_rdata (m_rsp_rdata),
+                .m_rsp_err   (m_rsp_err[1]),
+                .irq         (dma_irq)
+            );
+
+            assign irq_src[`SOC_IRQ_DMA] = dma_irq;
+        end else begin : g_no_dma
+            // Never selected (APB_EN = 0), tied to idle values
+            assign prdata [`SOC_APB_DMA*32 +: 32] = 32'h0;
+            assign pready [`SOC_APB_DMA]          = 1'b1;
+            assign pslverr[`SOC_APB_DMA]          = 1'b0;
+            assign irq_src[`SOC_IRQ_DMA]          = 1'b0;
+            wire unused_dma = psel[`SOC_APB_DMA];
+        end
+    endgenerate
+
     // Slots without RTL: never selected (APB_EN = 0), tied to idle values
     assign prdata [`SOC_APB_SPI*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_SPI]           = 1'b1;
@@ -313,14 +376,11 @@ module soc_top #(
     assign prdata [`SOC_APB_PWM*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_PWM]           = 1'b1;
     assign pslverr[`SOC_APB_PWM]           = 1'b0;
-    assign prdata [`SOC_APB_DMA*32 +: 32]  = 32'h0;
-    assign pready [`SOC_APB_DMA]           = 1'b1;
-    assign pslverr[`SOC_APB_DMA]           = 1'b0;
 
     // Unused: PSEL of empty slots, core_sleep (IMEM is already off because if_req = 0
     // while asleep)
     wire unused_ok = &{1'b0, psel[`SOC_APB_SPI], psel[`SOC_APB_I2C],
-                       psel[`SOC_APB_PWM], psel[`SOC_APB_DMA], core_sleep};
+                       psel[`SOC_APB_PWM], core_sleep};
 
 endmodule
 

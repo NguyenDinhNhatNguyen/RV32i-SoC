@@ -8,7 +8,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | --- | --- |
 | `spec/requirements.md` | Yêu cầu đề bài và nơi đáp ứng |
 | `spec/soc_spec.md` | Clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt, các quyết định đã chốt |
-| `spec/periph.md` | Thanh ghi Timer, UART, GPIO, IRQC, boot ROM, chân ngoài của `soc_top` |
+| `spec/periph.md` | Thanh ghi Timer, UART, GPIO, IRQC, DMA, boot ROM, chân ngoài của `soc_top` |
 | `spec/accel.md` | Accelerator nhân ma trận: thanh ghi, firmware, ghép lõi Lab 2 |
 | `spec/core.md` | Lõi RV32I: pipeline, CSR, ngắt, giao diện bus |
 
@@ -25,7 +25,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | --- | --- |
 | `core_decisions.md` | Nhật ký quyết định thiết kế lõi |
 | `bus_mem.md` | Bus hệ thống, wrapper SRAM, boot ROM |
-| `soc_top.md` | Nối dây `soc_top` và bộ đồng bộ reset |
+| `soc_top.md` | Nối dây `soc_top`, bộ đồng bộ reset, DMA |
 | `timing_bus.md` | Timing diagram bus |
 | `macro_notes.md` | SRAM macro qua từng bước flow |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
