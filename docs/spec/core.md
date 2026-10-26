@@ -49,6 +49,8 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 1. Từ WB: trap, MRET, FENCE.I → huỷ lệnh ở EX (kể cả yêu cầu bus của nó trong cùng chu kỳ), PC ← đích.
 2. Từ EX: branch/JAL/JALR nhảy → huỷ lệnh đang lấy. Mặc định đoán không nhảy.
 
+Thử nghiệm dự đoán nhánh (`ENABLE_BTB`, mặc định 0, chi tiết ở `docs/btb_eval.md`): `ENABLE_BTB=1` thêm BTB `rv32_btb` tra ở IF, `ENABLE_BTB=2` đoán tĩnh nhánh lùi nhảy. EX vẫn quyết định nhánh và chỉ chuyển hướng khi đoán sai (lại PC+4 hoặc tới đích), phạt 1 chu kỳ như cũ. Với `ENABLE_BTB=0` logic giống hệt bản trước (đã chứng minh bằng Yosys).
+
 ### 4.5 Hazard và forwarding
 
 - Forward WB → EX cho mọi kết quả ghi rd, gồm kết quả ALU, giá trị CSR đọc và dữ liệu load lấy thẳng từ ngõ ra bus sau khi căn chỉnh. Vì vậy không có stall load-use.
@@ -111,7 +113,7 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 | irq_software_i, irq_timer_i, irq_external_i | in | Nguồn ngắt mức (thêm ở P4) |
 | mtime_i[63:0] | in | Cho CSR time/timeh (thêm ở P4) |
 | core_sleep_o | out | Core đang ngủ do WFI, cho SoC tắt enable IMEM, dùng trong báo cáo power (thêm ở P4) |
-| Tham số: ENABLE_M, ENABLE_WFI_SLEEP, RESET_PC (mặc định 0x0001_0000, boot ROM) | | |
+| Tham số: ENABLE_M, ENABLE_WFI_SLEEP, ENABLE_BTB (mặc định 0), BTB_ENTRIES (mặc định 8), RESET_PC (mặc định 0x0001_0000, boot ROM) | | |
 
 ### 4.11 WFI ngủ (`ENABLE_WFI_SLEEP=1`)
 
@@ -175,11 +177,13 @@ Target của core trong repo này có tiền tố riêng, chạy ở nhà:
 
 | Target | Việc |
 | --- | --- |
-| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` với 4 tổ hợp ENABLE_M × ENABLE_WFI_SLEEP, `rv32_decoder` và `rv32_csr` với ENABLE_M=0 và 1), 0 warning (waiver duy nhất là `unused_ok` của regfile, có comment lý do) |
+| `lint-core` | `verilator --lint-only -Wall` cho từng module trong `rtl/core` (`rv32_core` với 4 tổ hợp ENABLE_M × ENABLE_WFI_SLEEP và 4 cấu hình ENABLE_BTB, `rv32_btb` với 8 và 16 entry, `rv32_decoder` và `rv32_csr` với ENABLE_M=0 và 1), 0 warning (waiver duy nhất là `unused_ok` của regfile, có comment lý do) |
 | `unit-core` | Mọi `tb/unit/tb_rv32_*.v`, `TB=<tên>` để chạy một bài, `PLUSARGS="+seed=7 +n=1000"` để đổi seed |
 | `fw-core` | Biên dịch `fw/tests/asm/*.S` và chạy trên `tb/core/tb_core.v` với 4 cấu hình `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`, mỗi bài 4 chế độ (đúng timing không stall và 3 bộ stall bus ngẫu nhiên). `T=<tên>` để chạy một bài, `PLUSARGS=+trace` để in vết |
 | `isa-core` | riscv-tests rv32ui, rv32mi (và rv32um khi ENABLE_M=1) với cấu hình M0W0 và M1W1, 4 chế độ. `T=rv32ui-p-add` để chạy một bài. Test bị loại nằm trong `CORE_ISA_SKIP` |
 | `clean-core` | Xoá `tb/core/out` và `tb/unit/out/core` |
+
+Thêm `BTB=1` (hoặc `BTB=2`, `BTB_N=16`) vào lệnh make để chạy mọi mô phỏng và lint với chế độ dự đoán nhánh đó (`docs/btb_eval.md` mục 6).
 
 `fw-core` và `isa-core` chạy song song `CORE_JOBS` tiến trình (mặc định bằng số nhân CPU) qua `scripts/core_run.sh`, tổng kết ghi ở `tb/core/out/<target>.summary`. Bảng kết quả riscv-tests: `python3 scripts/isa_status.py`.
 

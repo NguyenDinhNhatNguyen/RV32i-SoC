@@ -326,6 +326,20 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Cho entry nằm trong DMEM: core chỉ lấy lệnh từ IMEM và boot ROM.
 - **Kiểm tra:** ROM 143 / 256 word. `make sim-boot` 7 test PASS, thêm `celf` (C, 4 segment) và 4 kiểu NAK mới trong `badaddr`.
 
+### D-041. Dự đoán nhánh là tham số thử nghiệm, mặc định tắt
+
+- **Bối cảnh:** mỗi lệnh nhảy mất 1 chu kỳ. Cần số liệu cho buổi review 8/11 để quyết có thêm dự đoán nhánh không. Số liệu đầy đủ ở `docs/btb_eval.md`.
+- **Lựa chọn:**
+  - Tham số `ENABLE_BTB` của `rv32_core`: 0 không đoán (mặc định), 1 BTB (`rv32_btb`, `BTB_ENTRIES` mặc định 8), 2 đoán tĩnh nhánh lùi nhảy. Mặc định lấy từ macro trong `rv32_defs.vh` để bật được cho `soc_top` bằng `-D`, không sửa `soc_top`.
+  - EX vẫn quyết định nhánh và chỉ chuyển hướng khi đoán sai, phạt 1 chu kỳ như cũ. Chỉ đoán nhánh và JAL. BTB dùng tag đầy đủ và bị xoá khi FENCE.I, nên EX chỉ so hướng, không so đích.
+  - BTB tra ở IF bằng `if_pc_q`, nên `if_addr_o` vẫn ra từ flop.
+- **Lý do:** tham số mặc định 0 giữ nguyên bản đã kiểm chứng (Yosys chứng minh tương đương với RTL cũ). Đo thật cả hai phương án thay vì chọn theo cảm tính. Kết quả: lợi 7 đến 11 %, BTB 8 entry thêm khoảng 4 400 µm² (Nangate45).
+- **Đã loại:**
+  - Đoán tĩnh qua flop: lệnh chỉ biết ở EX, cùng chu kỳ EX quyết định nhánh, nên không lợi chu kỳ nào. Bản tĩnh có lợi (`ENABLE_BTB=2`) phải đưa đích tổ hợp ra `if_addr_o`, tạo đường IMEM → IMEM. Giữ lại chỉ để so sánh.
+  - Tag rút gọn để giảm diện tích: hai PC cùng tag rút gọn sẽ trúng nhầm, EX phải so cả đích 30 bit và kiểm loại lệnh, thêm logic trên đường găng.
+  - Đoán JALR, RAS: để sau nếu nhóm bật dự đoán.
+- **Kiểm tra:** `tb_rv32_btb` so với mô hình (8 và 16 entry, cấy lỗi thì FAIL). Toàn bộ lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot PASS với `BTB=0`, 1 và 2. Bảng ở `docs/btb_eval.md` mục 7.
+
 ---
 
 ## Tài liệu
