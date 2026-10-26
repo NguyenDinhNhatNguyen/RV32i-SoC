@@ -37,6 +37,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `riscv-tests-status.md` | Kết quả riscv-tests và test assembly của lõi |
 | `riscof.md` | riscv-arch-test qua RISCOF |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
+| `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |
 | `timing_core.md` | Timing ước lượng của lõi (Nangate45, flow nhà) |
 | `yosys_compare.md` | Tổng hợp thử bằng Yosys, so với PicoRV32 |
 

@@ -24,6 +24,8 @@ Log ở `tb/core/out/bench_soc/<tên>.<cấu hình>.log`. Dòng `BENCH` là kế
 
 ## Kết quả CPI (26/10/2026)
 
+`make bench-soc` và `make bench-core` in nhãn `<chương trình> on <cấu hình>` trên mỗi dòng kết quả, ví dụ `[dhrystone_rv32im on M1W1]`.
+
 | Benchmark | Cấu hình | Chu kỳ, `tb_core` (không wait state) | Chu kỳ, `soc_top` | Lệnh | CPI `tb_core` | CPI `soc_top` |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | Dhrystone, 500 lần | rv32i, ENABLE_M=0 | 339 028 | 355 528 | 291 528 | 1,163 | 1,220 |
@@ -48,7 +50,8 @@ Số lệnh trên `soc_top` bằng đúng `tb_core`, nên chuỗi lệnh giống
 | Dhrystone (cả 2 bản) | 16 500 (+4,9%) | 16 500 | 16 500 | 0 | 0 |
 | CoreMark (cả 2 bản) | 3 647 (+0,1% và +0,3%) | 3 647 | 3 647 | 0 | 0 |
 
-- **Wait state SB/SH:** mỗi lệnh SB hoặc SH vào DMEM tốn thêm đúng 1 chu kỳ. Dhrystone có 33 lệnh ghi byte mỗi lần chạy, chủ yếu ở `strcpy` chép chuỗi 30 ký tự từng byte, nên chậm 4,9%. CoreMark gần như chỉ ghi word nên chỉ chậm 0,1 đến 0,3%.
+- **Wait state SB/SH:** mỗi lệnh SB hoặc SH vào DMEM tốn thêm đúng 1 chu kỳ. Dhrystone có 33 lệnh ghi byte mỗi lần chạy: 31 ở `strcpy` (chép chuỗi 30 ký tự và byte 0 cuối, từng byte), 1 ở `Proc_4`, 1 ở `Proc_5` (đếm từ vết lệnh của `tb_core`). Vì vậy chậm 4,9% và DMIPS/MHz giảm từ 0,839 xuống 0,800. Đây là chi phí thật của phần cứng (macro không có chân ghi byte), không phải lỗi đo. CoreMark gần như chỉ ghi word nên chỉ chậm 0,1 đến 0,3%.
+- **Dhrystone M=0 và M=1 cùng số chu kỳ:** trùng hợp, giải thích ở `docs/bench_core.md`. Trên `soc_top` cả hai cùng thêm 16 500 chu kỳ SB/SH nên vẫn trùng nhau (355 528).
 - **Bus:** `sys_bus` không thêm chu kỳ cho đọc và ghi word vào SRAM, giống bộ nhớ lý tưởng của `tb_core`.
 - **Lấy lệnh:** 0 chu kỳ bị chặn, vì `.rodata` nằm ở DMEM (`fw/common/link.ld`). Không có lệnh đọc dữ liệu nào vào IMEM để tranh cổng với lấy lệnh.
 - **APB:** benchmark không truy cập ngoại vi trong vùng đo. APB chỉ ảnh hưởng tới phần accelerator bên dưới.
@@ -67,8 +70,8 @@ Hai bản accelerator ra kết quả giống hệt bản phần mềm (so cả 2
 
 | Cấu hình | sw | poll | irq | Speedup poll | Speedup irq |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| rv32i, ENABLE_M=0 | 577 522 | 23 046 | 25 535 | 25,06× | 22,62× |
-| rv32im, ENABLE_M=1 | 39 039 | 23 100 | 25 522 | 1,69× | 1,53× |
+| rv32i, ENABLE_M=0 | 577 522 | 23 046 | 25 471 | 25,06× | 22,67× |
+| rv32im, ENABLE_M=1 | 39 039 | 23 100 | 25 458 | 1,69× | 1,53× |
 
 Đơn vị là chu kỳ cho cả phép nhân 16 × 16.
 
@@ -87,7 +90,7 @@ Nhận xét:
 - Accelerator chỉ tính 12 chu kỳ trên 235 chu kỳ của mỗi khối. Khoảng 95% thời gian là chuyển dữ liệu qua APB. Riêng đọc 16 word C đã chiếm 70%.
 - Với rv32i, phần mềm phải gọi hàm nhân mềm (khoảng 140 chu kỳ mỗi phép nhân–cộng) nên accelerator nhanh hơn 25 lần dù tốn phí APB.
 - Với rv32im, lệnh MUL làm phần mềm chỉ còn khoảng 9,5 chu kỳ mỗi phép nhân–cộng, nên accelerator chỉ nhanh hơn 1,69 lần. Nếu bỏ hết phí APB (64 × 12 = 768 chu kỳ) thì giới hạn trên khoảng 51 lần.
-- Bản irq chậm hơn poll khoảng 39 chu kỳ mỗi khối: vào trap, handler (xoá DONE và đọc `PENDING` qua APB), `mret`, thức dậy sau WFI. Đổi lại, lõi ngủ trong lúc chờ (512 chu kỳ ngủ trong cả lần chạy, tức 8 chu kỳ mỗi khối) và có thể làm việc khác.
+- Bản irq chậm hơn poll khoảng 37 chu kỳ mỗi khối: vào trap, handler (xoá DONE và đọc `PENDING` qua APB), `mret`, thức dậy sau WFI. Đổi lại, lõi ngủ trong lúc chờ và có thể làm việc khác. Vòng chờ là `csrc MIE`, kiểm cờ, `wfi`, `csrs MIE`, không race, nhờ core nhận ngắt ngay ở lệnh sau `csrs mstatus` (D-038).
 - Số truy cập APB khớp với tính tay. Poll: 64 × (8 + 1 + 16 + 1) cộng 192 lần đọc STATUS = 1856. Irq: 64 × (8 + 1 + 16) cộng 3 truy cập của handler mỗi lần = 1792.
 - Bản accelerator còn 1024 lệnh SB (xoá mảng cộng dồn bằng `memset` từng byte của `bench.c`), tốn 1024 chu kỳ wait state, khoảng 4% thời gian.
 

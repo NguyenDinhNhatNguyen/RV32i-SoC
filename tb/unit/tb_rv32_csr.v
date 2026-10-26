@@ -9,6 +9,8 @@
 //     or on a write to the read-only space addr[11:10] = 11,
 //   - The value of each CSR after reset, unknown addresses read 0,
 //   - mip follows the interrupt pins, irq_pending/irq_take/irq_cause follow mie and mstatus.
+//   - irq_take/irq_cause see the mstatus/mie write that WB presents in the same cycle
+//     (fwd_i, D-038), irq_pending (WFI wake-up) does not.
 // Runs with ENABLE_M=0 and 1 (misa).
 // Plusargs: +seed=<n> (no randomness, accepted to match the other tbs)
 
@@ -35,7 +37,8 @@ module tb_rv32_csr;
     rv32_csr #(.ENABLE_M(ENABLE_M)) dut (
         .clk(clk), .rst_n(rst_n),
         .chk_addr_i(chk_addr), .chk_we_i(chk_we), .chk_illegal_o(chk_illegal),
-        .addr_i(addr), .op_i(op), .wdata_i(wdata), .wr_en_i(wr_en), .rdata_o(rdata),
+        .addr_i(addr), .op_i(op), .wdata_i(wdata), .wr_en_i(wr_en), .fwd_i(wr_en),
+        .rdata_o(rdata),
         .trap_i(1'b0), .trap_pc_i(30'h0), .trap_int_i(1'b0), .trap_cause_i(5'd0),
         .trap_tval_i(32'h0), .mret_i(1'b0), .instret_i(1'b0),
         .mtvec_o(mtvec), .mepc_o(mepc),
@@ -149,6 +152,40 @@ module tb_rv32_csr;
         #1 check_eq(irq_cause, 7, "then MTI");
         mti = 1'b0;
         #1 check_eq(irq_pending, 0, "no pending");
+
+        // ---- WB write forwarded to irq_take (D-038) ------------------------------------
+        // mstatus.MIE = 1, mie = 0x888. A csrc of MIE blocks EX in the same cycle.
+        mei = 1'b1;
+        @(negedge clk);
+        addr = 12'h300; op = 2'b11; wdata = 32'h8; wr_en = 1'b1;
+        #1 check_eq(irq_take, 0, "fwd: csrc mstatus.MIE blocks");
+        @(negedge clk);
+        wr_en = 1'b0;
+        #1 check_eq(irq_take, 0, "MIE = 0 after csrc");
+        // A csrs of MIE lets the pending interrupt in during the same cycle
+        addr = 12'h300; op = 2'b10; wdata = 32'h8; wr_en = 1'b1;
+        #1 check_eq(irq_take, 1, "fwd: csrs mstatus.MIE");
+        check_eq(irq_pending, 1, "pending ignores the write");
+        @(negedge clk);
+        // csrw mie = 0 blocks at once, irq_pending keeps the old mie until the edge
+        addr = 12'h304; op = 2'b01; wdata = 32'h0; wr_en = 1'b1;
+        #1 check_eq(irq_take, 0, "fwd: csrw mie = 0");
+        check_eq(irq_pending, 1, "pending uses the mie register");
+        @(negedge clk);
+        wr_en = 1'b0;
+        #1 check_eq(irq_pending, 0, "mie = 0 after the edge");
+        // csrs mie.MSIE with MSI and MEI pending: only MSI is enabled, cause follows the
+        // forwarded mie
+        msi = 1'b1;
+        addr = 12'h304; op = 2'b10; wdata = 32'h8; wr_en = 1'b1;
+        #1 check_eq(irq_take, 1, "fwd: csrs mie.MSIE");
+        check_eq(irq_cause, 3, "fwd: cause MSI");
+        // The forward does not apply to other CSRs
+        addr = 12'h340; op = 2'b01; wdata = 32'h0;
+        #1 check_eq(irq_take, 0, "no forward from mscratch");
+        @(negedge clk);
+        wr_en = 1'b0;
+        msi = 1'b0; mei = 1'b0;
 
         if (errors == 0)
             $display("PASS: tb_rv32_csr ENABLE_M=%0d (%0d checks, seed %0d)", ENABLE_M, checks, seed);

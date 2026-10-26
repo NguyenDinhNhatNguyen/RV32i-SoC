@@ -89,7 +89,7 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 - mtval: illegal → mã lệnh, lệch địa chỉ/access fault → địa chỉ, breakpoint (EBREAK) → PC của lệnh EBREAK, còn lại 0 (D-035).
 - Ngoại lệ chính xác: trong chu kỳ WB chuyển hướng, chặn yêu cầu bus của lệnh ở EX (tín hiệu valid của bus phụ thuộc tổ hợp vào việc WB có chuyển hướng hay không).
 - Ngắt: MEI (11) > MSI (3) > MTI (7), mcause bit 31 = 1. Khi `MIE=1` và có ngắt chờ được bật, lệnh hợp lệ ở EX được đánh dấu "bị ngắt": không thực thi, không phát yêu cầu bus, tới WB thì nhận trap với mepc = PC của nó.
-- Không nhận ngắt trong chu kỳ WB đang ghi mstatus hoặc mie, hoặc đang chuyển hướng, để thay đổi bật/tắt ngắt có hiệu lực đúng ngay từ lệnh kế tiếp.
+- Khi WB đang ghi mstatus hoặc mie, kiểm tra ngắt ở EX dùng giá trị MIE và mie sau lần ghi đó (forward 4 bit bật ngắt, D-038). Vì vậy bật hay tắt ngắt đều có hiệu lực ngay từ lệnh kế tiếp: sau `csrci mstatus, MIE` lệnh kế không bị ngắt, sau `csrsi mstatus, MIE` lệnh kế bị ngắt nếu có ngắt chờ. Không nhận ngắt khi WB đang chuyển hướng (lệnh ở EX bị huỷ).
 - Lỗi bus (`rsp_err`) cho load/store → access fault tại WB.
 
 ### 4.9 RV32M (`ENABLE_M=1`)
@@ -118,6 +118,8 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 - WFI được xử lý ở WB như lệnh tuần tự hoá: huỷ lệnh ở EX, đặt `sleep_q=1`, PC kế tiếp = PC(WFI)+4.
 - Khi ngủ: `if_req_o=0` (IMEM không đọc), mọi thanh ghi pipeline, register file và M-unit giữ nguyên nhờ tắt enable, để Genus gate clock. mcycle và mtime vẫn chạy.
 - Thức dậy khi `(mip & mie) != 0`, không phụ thuộc mstatus.MIE (đúng đặc tả). Nếu MIE=1, ngắt được nhận ở lệnh kế tiếp với mepc = PC(WFI)+4. Nếu MIE=0, chạy tiếp lệnh sau WFI.
+- Nếu `(mip & mie) != 0` ngay lúc WFI ở WB thì core không ngủ, chỉ chuyển hướng tới PC+4 (D-038). Nếu MIE=1 và ngắt đã chờ khi WFI còn ở EX thì chính WFI bị ngắt, mepc = PC(WFI).
+- Test `fw/tests/asm/wfi_pending.S`: ngắt chờ sẵn rồi mới WFI với MIE=0 (WFI như NOP, 0 chu kỳ ngủ) và với `csrsi mstatus` ngay trước WFI (trap ở WFI), cửa sổ `csrs`/`csrc mstatus`, vòng chờ không race, `csrs mie` khi MIE=1. Chạy cả `ENABLE_WFI_SLEEP=0` và 1.
 - Test: firmware đo số chu kỳ ngủ. Báo cáo so sánh công suất lúc chờ ngắt bằng vòng lặp polling và bằng WFI (cùng testcase, có VCD).
 
 Trace cho testbench (PC, mã lệnh, rd, dữ liệu ghi tại WB) lấy bằng tham chiếu phân cấp, không thêm cổng.

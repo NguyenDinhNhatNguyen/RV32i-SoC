@@ -29,6 +29,7 @@ module rv32_csr #(
     input  wire [1:0]  op_i,           // RV_CSR_RW / RS / RC
     input  wire [31:0] wdata_i,        // rs1 or uimm
     input  wire        wr_en_i,        // Write this cycle
+    input  wire        fwd_i,          // WB holds a CSR write (flops only, see irq_take_o)
     output reg  [31:0] rdata_o,
 
     // Trap, MRET, instruction count (WB)
@@ -48,8 +49,8 @@ module rv32_csr #(
     input  wire        irq_external_i,
     input  wire [63:0] mtime_i,
     output wire        irq_pending_o,  // (mip & mie) != 0, wakes up WFI
-    output wire        irq_take_o,     // Pending and mstatus.MIE = 1
-    output wire [4:0]  irq_cause_o     // MEI > MSI > MTI
+    output wire        irq_take_o,     // Pending and mstatus.MIE = 1, for the instruction in EX
+    output wire [4:0]  irq_cause_o     // MEI > MSI > MTI, for the instruction in EX
 );
 
     // ---- Thanh ghi ------------------------------------------------------------
@@ -267,13 +268,41 @@ module rv32_csr #(
     end
 
     // ---- Interrupts -----------------------------------------------------------------
-    wire msi = irq_software_i & mie_msie_q;
-    wire mti = irq_timer_i    & mie_mtie_q;
-    wire mei = irq_external_i & mie_meie_q;
+    // WFI wake-up uses the registers. WB is empty while asleep, so no write is in flight.
+    assign irq_pending_o = (irq_software_i & mie_msie_q) | (irq_timer_i & mie_mtie_q) |
+                           (irq_external_i & mie_meie_q);
 
-    assign irq_pending_o = msi | mti | mei;
-    assign irq_take_o    = irq_pending_o & mstatus_mie_q;
+    // The instruction in EX sees mstatus.MIE and mie as they are after the CSR write in WB
+    // (D-038). A write that clears them blocks that instruction, a write that sets them lets
+    // a pending interrupt land on it. Only the 4 enable bits are forwarded, computed from
+    // fwd_i (flops) and wdata_i (wb_result_q) without the rdata_o mux, so the path stays short.
+    // A CSR instruction that traps in WB kills EX anyway, so fwd_i ignores the trap.
+    wire fwd_mstatus = fwd_i & (addr_i == `RV_CSR_MSTATUS);
+    wire fwd_mie     = fwd_i & (addr_i == `RV_CSR_MIE);
 
+    function new_bit;
+        input [1:0] op;
+        input       old, w;
+        begin
+            case (op)
+                `RV_CSR_RS: new_bit = old | w;
+                `RV_CSR_RC: new_bit = old & ~w;
+                default:    new_bit = w;
+            endcase
+        end
+    endfunction
+
+    wire eff_mie  = fwd_mstatus ? new_bit(op_i, mstatus_mie_q, wdata_i[`RV_MSTATUS_MIE]) :
+                                  mstatus_mie_q;
+    wire eff_msie = fwd_mie ? new_bit(op_i, mie_msie_q, wdata_i[`RV_MI_MSI]) : mie_msie_q;
+    wire eff_mtie = fwd_mie ? new_bit(op_i, mie_mtie_q, wdata_i[`RV_MI_MTI]) : mie_mtie_q;
+    wire eff_meie = fwd_mie ? new_bit(op_i, mie_meie_q, wdata_i[`RV_MI_MEI]) : mie_meie_q;
+
+    wire msi = irq_software_i & eff_msie;
+    wire mti = irq_timer_i    & eff_mtie;
+    wire mei = irq_external_i & eff_meie;
+
+    assign irq_take_o  = (msi | mti | mei) & eff_mie;
     assign irq_cause_o = mei ? `RV_INT_MEI :
                          msi ? `RV_INT_MSI : `RV_INT_MTI;
 

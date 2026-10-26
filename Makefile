@@ -354,7 +354,7 @@ bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
 	$(call core_run,bench-core,$(addprefix $(CORE_BENCH_OUT)/,$(CORE_BENCH_RUNS)))
 	@fail=0; for r in $(CORE_BENCH_RUNS); do \
 	  t=$${r%%@*}; rest=$${r#*@}; log=$(CORE_BENCH_OUT)/$$t.$${rest%@*}.bench.log; \
-	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t] /"; \
+	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t on $${rest%@*}] /"; \
 	  case $$t in coremark*) \
 	    if ! grep -q 'performance run parameters' $$log || \
 	       grep 'ERROR' $$log | grep -vq 'at least 10 secs'; then \
@@ -418,7 +418,7 @@ bench-soc: $(SOC_BENCH_OUT)/tb_soc_M0W1.vvp $(SOC_BENCH_OUT)/tb_soc_M1W1.vvp \
 	fail=$$(grep -c '^  \[FAIL\]' $(SOC_BENCH_OUT)/bench-soc.summary); \
 	for r in $(SOC_BENCH_RUNS); do \
 	  t=$${r%%@*}; log=$(SOC_BENCH_OUT)/$$t.$${r#*@}.log; \
-	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t] /"; \
+	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t on $${r#*@}] /"; \
 	  case $$t in coremark*) \
 	    if ! grep -q 'performance run parameters' $$log || \
 	       grep 'ERROR' $$log | grep -vq 'at least 10 secs'; then \

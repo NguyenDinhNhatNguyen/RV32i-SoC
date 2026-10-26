@@ -334,10 +334,10 @@ module rv32_core #(
     // When WB redirects, the instruction in EX is killed, so nothing else is needed.
     wire       csr_irq_take;
     wire [4:0] csr_irq_cause;
-    wire       wb_irq_block;
+    wire       wb_csr_fwd;
     reg        ex_req_wait_q;   // The EX bus request was in a wait state last cycle
 
-    wire ex_irq = ex_valid & csr_irq_take & ~wb_irq_block & ~ex_req_wait_q;
+    wire ex_irq = ex_valid & csr_irq_take & ~ex_req_wait_q;
     wire ex_trap = ex_exc | ex_irq;
 
     // ---- Data bus request ------------------------------------------------------
@@ -528,9 +528,9 @@ module rv32_core #(
     assign wb_target   = wb_trap ? csr_mtvec :
                          wb_mret ? csr_mepc  : (wb_pc_q + 32'd4);
 
-    // While WB writes mstatus or mie, EX does not take interrupts.
-    assign wb_irq_block = wb_valid_q & wb_csr_q & wb_csr_we_q &
-                          ((wb_csr_addr == `RV_CSR_MSTATUS) | (wb_csr_addr == `RV_CSR_MIE));
+    // WB holds a CSR write: the CSR file forwards the new mstatus.MIE and mie to the interrupt
+    // check of EX (D-038), so an enable or a disable applies from the very next instruction.
+    assign wb_csr_fwd = wb_valid_q & wb_csr_q & wb_csr_we_q;
 
     rv32_csr #(
         .ENABLE_M (ENABLE_M)
@@ -544,6 +544,7 @@ module rv32_core #(
         .op_i           (wb_funct3_q[1:0]),
         .wdata_i        (wb_result_q),
         .wr_en_i        (wb_csr_wr),
+        .fwd_i          (wb_csr_fwd),
         .rdata_o        (csr_rdata),
         .trap_i         (wb_trap),
         .trap_pc_i      (wb_pc_q[31:2]),
@@ -565,12 +566,13 @@ module rv32_core #(
 
     // ---- WFI sleep (section 4.11) ----------------------------------------------
     // WFI in WB: redirect to PC+4, then sleep. Wake up when (mip & mie) != 0,
-    // regardless of mstatus.MIE. While asleep if_req_o = 0, and EX and WB are empty,
+    // regardless of mstatus.MIE. If that already holds when WFI is in WB, the core does not
+    // sleep at all (D-038). While asleep if_req_o = 0, and EX and WB are empty,
     // so every pipeline flop holds its value.
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             sleep_q <= 1'b0;
-        else if (wb_wfi)
+        else if (wb_wfi & ~csr_irq_pending)
             sleep_q <= 1'b1;
         else if (csr_irq_pending)
             sleep_q <= 1'b0;

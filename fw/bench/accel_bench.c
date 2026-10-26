@@ -20,9 +20,9 @@
 #define MIE_MEIE        (1u << 11)
 #define MSTATUS_MIE     (1u << 3)
 
-#define write_csr(reg, v) __asm__ __volatile__ ("csrw " #reg ", %0" :: "r"(v))
-#define set_csr(reg, v)   __asm__ __volatile__ ("csrs " #reg ", %0" :: "r"(v))
-#define clear_csr(reg, v) __asm__ __volatile__ ("csrc " #reg ", %0" :: "r"(v))
+#define write_csr(reg, v) __asm__ __volatile__ ("csrw " #reg ", %0" :: "r"(v) : "memory")
+#define set_csr(reg, v)   __asm__ __volatile__ ("csrs " #reg ", %0" :: "r"(v) : "memory")
+#define clear_csr(reg, v) __asm__ __volatile__ ("csrc " #reg ", %0" :: "r"(v) : "memory")
 
 static int8_t  mat_a[M * M] __attribute__((aligned(4)));
 static int8_t  mat_b[M * M] __attribute__((aligned(4)));
@@ -117,16 +117,16 @@ __attribute__((interrupt("machine"), aligned(4))) static void trap_handler(void)
 }
 
 // Wait for the interrupt without a race: MIE is off between the flag check and WFI. WFI still
-// wakes on a pending enabled interrupt, then setting MIE takes it. The core takes no interrupt
-// on the instruction right after a write to mstatus (docs/spec/core.md section 4.8), so a nop
-// gives the interrupt one instruction to land before MIE is cleared again.
+// wakes on a pending enabled interrupt, then setting MIE takes it on the next instruction
+// (D-038, docs/spec/core.md section 4.8).
 static inline void wait_irq(void)
 {
     for (;;) {
         clear_csr(mstatus, MSTATUS_MIE);
         if (irq_done)
             break;
-        __asm__ __volatile__ ("wfi\n\tcsrs mstatus, %0\n\tnop" :: "r"(MSTATUS_MIE) : "memory");
+        __asm__ __volatile__ ("wfi" ::: "memory");
+        set_csr(mstatus, MSTATUS_MIE);
     }
     set_csr(mstatus, MSTATUS_MIE);
 }

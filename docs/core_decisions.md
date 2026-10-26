@@ -179,7 +179,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 ### D-024. Ngắt
 
 - **Lựa chọn:** `ex_irq = ex_valid & MIE & (mip & mie != 0) & ~wb_irq_block & ~ex_req_wait_q`. Lệnh bị ngắt không thực thi, không phát yêu cầu bus, không chuyển hướng, không ghi rd. Mã ngắt (MEI > MSI > MTI) được chốt vào `wb_cause_q` lúc lệnh rời EX vì đường ngắt có thể hạ trước khi lệnh tới WB.
-- **`wb_irq_block`:** WB đang ghi mstatus hoặc mie. EX đọc giá trị CSR từ flop nên ở chu kỳ đó còn thấy giá trị cũ. Chặn để lệnh ngay sau `csrci mstatus, MIE` không bị ngắt. Khi bật MIE, ngắt được nhận chậm nhất ở lệnh thứ hai sau lệnh bật (test `irq` kiểm tra).
+- **`wb_irq_block`:** WB đang ghi mstatus hoặc mie. EX đọc giá trị CSR từ flop nên ở chu kỳ đó còn thấy giá trị cũ. Chặn để lệnh ngay sau `csrci mstatus, MIE` không bị ngắt. Khi bật MIE, ngắt được nhận chậm nhất ở lệnh thứ hai sau lệnh bật (test `irq` kiểm tra). **Thay bằng forward ở D-038.**
 - **`ex_req_wait_q`:** Chu kỳ trước yêu cầu bus của lệnh ở EX đã hiện ra mà chưa được nhận. Không ngắt lệnh này nữa vì luật bus 1 bắt master giữ nguyên yêu cầu. Lệnh hoàn thành rồi ngắt được nhận ở lệnh sau.
 - **Đã loại:** Chốt quyết định ngắt vào flop (chậm 1 chu kỳ so với lệnh ghi mstatus/mie, phải thêm logic bù), nhận ngắt ở WB (phải huỷ lệnh đã thực thi ở WB, mất tính chính xác với store).
 - Đường ngắt đi tổ hợp vào `d_req_valid_o`. Cổng ngắt của SoC lấy từ flop của Timer, UART, GPIO nên không thành đường dài.
@@ -281,6 +281,15 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 - **Lý do:** khoảng 58 flop ít nhận clock hơn mỗi chu kỳ (ước lượng với CPI 1,2), không đổi giá trị đọc ra, không đổi timing (lệch trong mức nhiễu).
 - **Đã loại:** chặn hẳn bộ đếm khi không đọc (sai đặc tả, có `mcountinhibit` mới được). Tách thành thanh ghi `_lo_q`, `_hi_q` riêng (Genus thấy cùng cấu trúc, chỉ thêm tên mới khi xem sóng). Chặn `wb_instr_q` khi lệnh không cần (`tb_core` dùng `wb_instr_q` để in vết lệnh và nhận ra lệnh M, MRET, FENCE.I, nên phải sửa cả testbench, để nhóm xem lại).
 - **Kiểm tra:** tương đương hình thức với bộ đếm cũ (Yosys `equiv_induct`, 0 điểm không chứng minh được, cả ENABLE_M=0 và 1). Regression đủ, số chu kỳ bench không đổi. `trap.S` test 83, 84 kiểm nhớ sang nửa cao của `mcycle`.
+
+### D-038. Forward MIE và mie cho kiểm tra ngắt, WFI không ngủ khi đã có ngắt chờ
+
+- **Bối cảnh:** EVA-01 (`fw/bench/accel_bench.c`) chờ ngắt bằng vòng không race: `csrc MIE`, kiểm cờ, `wfi`, `csrs MIE`, lặp lại. Vòng này không bao giờ nhận ngắt. Nguyên nhân là `wb_irq_block` của D-024: lệnh ngay sau `csrs mstatus` (ở đây là `csrc mstatus` của vòng sau) không được ngắt, nên MIE chỉ bằng 1 trong đúng một lệnh không ngắt được. WFI không ngủ mãi: khi ngắt đã chờ, `sleep_q` bật 1 chu kỳ rồi tắt (ưu tiên của `wb_wfi` cao hơn điều kiện thức), nên chỉ ngủ thừa 1 chu kỳ. Đặc tả Privileged cho phép nhận ngắt trễ, nhưng phần mềm (vòng chờ trên, `local_irq_enable` rồi tắt ngay của hệ điều hành) cần cửa sổ một lệnh này.
+- **Lựa chọn:** bỏ `wb_irq_block`. `rv32_csr` nhận `fwd_i` (WB giữ lệnh ghi CSR, chỉ từ flop) và tính 4 bit MIE, MSIE, MTIE, MEIE sau lần ghi đó từ `op_i` và `wdata_i` (là `wb_result_q`), không đi qua mux `rdata_o`. `irq_take_o` và `irq_cause_o` dùng các bit này. `irq_pending_o` (thức WFI) vẫn dùng thanh ghi. WFI chỉ đặt `sleep_q` khi `(mip & mie) == 0`.
+- **Kết quả:** tắt ngắt vẫn có hiệu lực ngay lệnh kế (như cũ). Bật ngắt cũng có hiệu lực ngay lệnh kế. `csrsi mstatus` ngay trước WFI với ngắt chờ sẵn thì trap ở WFI (mepc = PC(WFI)). MIE=0 và ngắt chờ sẵn thì WFI đi tiếp như NOP, 0 chu kỳ ngủ. Đúng cho cả `ENABLE_WFI_SLEEP=0` và 1.
+- **Lý do:** lệnh CSR ghi ở WB thì sẽ hoàn thành (lệnh CSR lỗi đã bị gắn cờ ở EX, khi đó WB chuyển hướng và huỷ EX), nên dùng trước giá trị mới là an toàn. Đường thêm chỉ là vài cổng bắt đầu từ flop của WB (`wb_result_q`, `wb_instr_q`). `make sta-core-nangate` sau khi sửa: M0 2,856 ns (trước 2,855), M1 3,113 ns (trước 3,007, +3,5%, sát mức nhiễu ±3% của abc). Đường găng M1 là `ex_hold_q` → `u_muldiv.cnt_q`, không bắt đầu từ logic forward.
+- **Đã loại:** giữ `wb_irq_block` và bắt firmware chèn `nop` sau `csrs mstatus` (dễ quên, phần mềm chuẩn không làm). Chốt quyết định ngắt vào flop (như D-024 đã loại).
+- **Kiểm tra:** `fw/tests/asm/wfi_pending.S` (FAIL trước khi sửa: W=1 ngủ 1 chu kỳ ở test 2, W=0 và W=1 sai mepc ở test 8), `tb_rv32_csr` thêm kiểm tra forward (xoá, bật MIE, ghi mie, cause theo mie mới, không forward từ CSR khác). `irq.S` vẫn kiểm lệnh sau `csrci mstatus` không bị ngắt. Bỏ `nop` né lỗi trong `accel_bench.c`.
 
 ---
 

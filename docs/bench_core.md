@@ -35,7 +35,14 @@ Log ở `tb/core/out/bench/<tên>.<cấu hình>.bench.log`. Dòng `BENCH` là k�
 
 Ghi chú:
 
-- Dhrystone ra cùng số chu kỳ ở hai cấu hình là trùng hợp. Bản rv32i chạy thêm 30 lệnh mỗi lần (hàm nhân chia mềm của libgcc). Bản rv32im ít lệnh hơn nhưng EX dừng chờ lệnh DIV (33 chu kỳ). Hai phần này bù nhau gần đúng.
+- Dhrystone ra cùng số chu kỳ ở hai cấu hình là trùng hợp thật, không phải đọc nhầm log (kiểm lại 26/10). Mỗi cấu hình có log riêng, tổng chu kỳ cả chương trình khác nhau (364 705 và 360 178), và `make bench-core` in nhãn cấu hình trên từng dòng. Đếm từ vết lệnh (`PLUSARGS=+trace`) trong vùng đo, chu kỳ = số lệnh + số bubble:
+
+| Cấu hình | Lệnh | Nhảy (1 bubble) | MUL (1) | DIV (33) | Tổng chu kỳ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| rv32i, ENABLE_M=0 | 291 528 | 47 500 | 0 | 0 | 339 028 |
+| rv32im, ENABLE_M=1 | 276 528 | 45 500 | 500 | 500 × 33 = 16 500 | 339 028 |
+
+  Mỗi lần chạy có 1 phép nhân và 1 phép chia. Bản rv32i gọi `__mulsi3`, `__divsi3` của libgcc: thêm 30 lệnh và 4 lần nhảy, tức 34 chu kỳ. Bản rv32im mất 1 + 33 = 34 chu kỳ dừng. Hai bên bằng nhau đúng 34 chu kỳ mỗi lần nên tổng trùng nhau. CPI khác nhau vì số lệnh khác nhau.
 - CoreMark nhân nhiều trong phần ma trận nên RV32M nhanh gấp khoảng 2,5 lần.
 - CoreMark tự kiểm CRC đúng (seedcrc 0xe9f5, list 0xe714, matrix 0x1fd7, state 0x8e3a). Dòng `ERROR! Must execute for at least 10 secs` và `Errors detected` là do mô phỏng quá ngắn so với luật chạy chính thức, `make bench-core` bỏ qua lỗi này.
 - CPI chỉ phản ánh core với bộ nhớ không wait state. Số đo trên `soc_top` và phần giải thích chênh lệch ở `docs/bench_soc.md`.
