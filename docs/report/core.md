@@ -76,7 +76,7 @@ Hai quyết định nhỏ hơn nhưng đáng nêu trong báo cáo:
 
 ### Luật nhận ngắt
 
-Core có 3 đường ngắt mức: MEI (từ bộ điều khiển ngắt IRQC, gom UART, GPIO, accelerator), MTI (`mtime >= mtimecmp` của Timer), MSI (bit MSIP của Timer) (`rtl/bus/soc_top.v`). Ngắt được nhận ở EX, không chờ tới WB (mục 4.8, D-024).
+Core có 3 đường ngắt mức: MEI (từ bộ điều khiển ngắt IRQC, gom UART, accelerator, DMA), MTI (`mtime >= mtimecmp` của Timer), MSI (bit MSIP của Timer) (`rtl/bus/soc_top.v`). Ngắt được nhận ở EX, không chờ tới WB (mục 4.8, D-024).
 
 - **Điều kiện:** `mstatus.MIE = 1` và `(mip & mie) != 0`. Ưu tiên MEI > MSI > MTI. Mã ngắt được chốt khi lệnh rời EX, vì đường ngắt có thể hạ trước khi lệnh tới WB.
 - **Lệnh bị ngắt:** lệnh hợp lệ ở EX được đánh dấu "bị ngắt". Nó không thực thi, không phát yêu cầu bus. Tới WB thì nhận trap với mepc = PC của chính nó, nên sau MRET lệnh này chạy lại từ đầu.
