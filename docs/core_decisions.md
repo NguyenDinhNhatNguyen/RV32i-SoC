@@ -293,6 +293,27 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 
 ---
 
+## P8 – Bootloader UART
+
+### D-039. Bootloader UART trong boot ROM, chọn bằng chân strap `gpio_i[0]`
+
+- **Bối cảnh:** Boot ROM 1 KB (256 word) ở 0x0001_0000 là reset vector. Chỉ cổng lấy lệnh đọc được ROM. IMEM ghi được từ cổng dữ liệu, nên không cần sửa `soc_top`. Hằng số trong ROM giống nhau cho mọi mô phỏng, mà `tb_soc` (không được sửa) chạy mọi test qua ROM với timeout 200 000 chu kỳ. Icarus chạy `soc_top` khoảng 9 000 chu kỳ mỗi giây, nên timeout 100 000 chu kỳ đã cộng khoảng 10 s vào mỗi test của `fw-soc`.
+- **Lựa chọn:**
+  - Assembly thuần, chỉ dùng thanh ghi, không stack, không DMEM. 127 / 256 word.
+  - Chân strap `gpio_i[0]`: 0 thì nhảy ngay về 0x0 như ROM base, 1 thì boot qua UART với timeout 1 s (50 000 000 chu kỳ ở 50 MHz, đo bằng `mcycle`). `mtvec` trỏ về nhánh nhảy IMEM trong lúc chạy, nên lỗi bus khi đọc GPIO (build không có GPIO như `tb_core_bus`) cũng nhảy về IMEM. Trước khi nhảy xoá `mtvec` và các thanh ghi đã dùng.
+  - Giao thức MAGIC (lặp tới khi có READY), SYNC, addr, len, data, CRC-32. ACK/NAK sau header và sau CRC. Header sai thì NAK trước khi ghi IMEM. Sau NAK chờ SYNC lại, không timeout.
+  - Tham số build (`BOOT_CLK_HZ`, `BOOT_BAUD`, `BOOT_TIMEOUT`) qua `make boot-gen`, IMEM lấy từ `soc_map.vh`. `make sim-boot` dùng thêm một ROM mô phỏng từ cùng mã nguồn (timeout 20 000 chu kỳ, BAUDDIV 1), include trước `rtl/mem` qua `-I`. ROM đã commit vẫn chạy test strap 0 và một lần nạp ở 115200 baud.
+- **Lý do:** strap giữ test cũ nhanh như trước (thêm khoảng 35 chu kỳ) mà silicon vẫn có cửa sổ chờ đủ dài cho người nhấn reset. Giống chân BOOT0 của nhiều vi điều khiển. Cực tính 0 = chạy IMEM là bắt buộc, vì `tb_soc` có `PAD_IN[0] = 0` và `tb_core_bus` đọc GPIO bị lỗi bus. CRC-32 bắt lỗi tốt hơn tổng byte, chỉ tốn 9 lệnh và khớp `zlib.crc32` ở phía PC. NAK ngay sau header để PC không gửi cả gói vô ích. MAGIC lặp lại có khoảng nghỉ để bộ thu UART đồng bộ lại nếu reset nhả giữa một byte.
+- **Đã loại:**
+  - Timeout ngắn cố định trong ROM (100 000 chu kỳ = 2 ms): `fw-soc` chậm khoảng 10 s mỗi test, còn trên board thì cửa sổ quá ngắn cho người dùng.
+  - `` `ifdef `` trong `boot_rom_init.vh` để mô phỏng dùng timeout khác: mô phỏng khác silicon và phá định dạng file.
+  - Sửa `tb_soc` để gửi gì đó hoặc tăng timeout: ngoài phạm vi được sửa.
+  - Đọc `.data`/`.rodata` từ ROM: cổng dữ liệu không đọc được ROM, nên mọi hằng số dùng `li`.
+  - Cho phép nạp vào DMEM: đề bài yêu cầu NAK mọi địa chỉ ngoài IMEM. Chương trình có `.data` trong DMEM cần bản sau.
+- **Kiểm tra:** `make sim-boot` 6 test PASS (nạp, CRC sai, 4 kiểu địa chỉ sai, timeout, strap 0, nạp ở baud thật). Cấy lỗi bỏ kiểm tra addr + len thì `badaddr` FAIL. Với ROM mới: `lint-core`, `unit-core`, `fw-core`, `isa-core`, `fw-soc` 127/127, `fw-bus` 124/124, `bench-soc`, `lint-soc`, `lint-bus` PASS. `unit-bus` FAIL ở `tb_imem_port` vì testbench này so với nội dung ROM base, cần Phát sửa (xem `docs/boot.md` mục 8).
+
+---
+
 ## Tài liệu
 
 ### D-034. Sơ đồ vi kiến trúc sinh bằng script

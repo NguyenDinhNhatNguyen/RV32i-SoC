@@ -23,6 +23,8 @@ help:
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
 	@echo "make bench-core    - Dhrystone and CoreMark on tb_core (ENABLE_M=0 and 1), prints CPI (T=coremark)"
 	@echo "make bench-soc     - Dhrystone, CoreMark and accelerator speedup on soc_top (tb_soc), T=accel_bench"
+	@echo "make boot-gen      - assemble fw/boot/boot.S and regenerate rtl/mem/boot_rom_init.vh"
+	@echo "make sim-boot      - UART bootloader on soc_top: load, bad CRC, bad address, timeout, strap (T=load)"
 	@echo "make arch-core-dut - riscv-arch-test on the core side only, writes signatures (T=add-01)"
 	@echo "make arch-core     - riscv-arch-test through RISCOF, compared with Spike (needs riscof, spike)"
 	@echo "make synth-core-yosys - trial Yosys synthesis of rv32_core, trends only"
@@ -383,7 +385,8 @@ SOC_BENCH_RUNS := $(foreach b,$(SOC_BENCH_LIST),$(b)_rv32i@M0W1 $(b)_rv32im@M1W1
 SOC_BENCH_RTL  := $(wildcard rtl/core/*.v rtl/bus/*.v rtl/mem/*.v rtl/periph/*.v rtl/accel/*.v)
 
 $(SOC_BENCH_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v scripts/bench_soc_mon.v $(SOC_BENCH_RTL) \
-                               tb/models/sram_2k_macro.v rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
+                               tb/models/sram_2k_macro.v rtl/core/rv32_defs.vh rtl/bus/soc_map.vh \
+                               rtl/mem/boot_rom_init.vh
 	@mkdir -p $(@D)
 	$(IVERILOG) -g2012 -Irtl/bus -Irtl/mem -Irtl/core -s tb_soc -s bench_soc_mon \
 	  -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) \
@@ -425,6 +428,111 @@ bench-soc: $(SOC_BENCH_OUT)/tb_soc_M0W1.vvp $(SOC_BENCH_OUT)/tb_soc_M1W1.vvp \
 	      echo "  [FAIL] $$t: CoreMark could not verify its result"; fail=1; fi;; \
 	  esac; \
 	done; echo "bench-soc: $$fail failed"; [ $$fail = 0 ]
+
+# ---------------------------------------------------------------------------
+# UART bootloader (P8): fw/boot/boot.S in the boot ROM at 0x0001_0000. Docs: docs/boot.md.
+#   make boot-gen                           assemble boot.S, regenerate rtl/mem/boot_rom_init.vh
+#   make sim-boot                           tb/boot/tb_boot.v on soc_top, 6 tests
+#   make sim-boot T=timeout                 one test
+# BOOT_CLK_HZ, BOOT_BAUD and BOOT_TIMEOUT (cycles) set the committed ROM, the IMEM size comes
+# from soc_map.vh. sim-boot builds the ROM again and fails if the committed
+# boot_rom_init.vh differs. Most tests use a second ROM from the same source with a short
+# timeout and BAUDDIV 1 (BOOT_SIM_*), picked up first through -I. The committed ROM runs the
+# strap 0 path and one load at the real baud.
+# ---------------------------------------------------------------------------
+BOOT_OUT         := tb/boot/out
+BOOT_CLK_HZ      ?= 50000000
+BOOT_BAUD        ?= 115200
+BOOT_TIMEOUT     ?= 50000000
+BOOT_SIM_BAUD    := 3125000
+BOOT_SIM_TIMEOUT := 20000
+BOOT_IMEM_SIZE   := $(shell sed -n 's/^`define SOC_IMEM_SIZE *32.d\([0-9]*\).*/\1/p' \
+                      rtl/bus/soc_map.vh)
+boot_asflags      = -march=rv32i_zicsr_zifencei -mabi=ilp32 -nostdlib -nostartfiles -static \
+                    -T fw/boot/boot.ld -DCLK_HZ=$(BOOT_CLK_HZ) -DBAUD=$(1) -DTIMEOUT_CYCLES=$(2) \
+                    -DIMEM_SIZE=$(BOOT_IMEM_SIZE)
+BOOT_RTL         := $(wildcard rtl/core/*.v rtl/bus/*.v rtl/mem/*.v rtl/periph/*.v rtl/accel/*.v)
+BOOT_SRC         := fw/boot/boot.S fw/boot/boot.ld scripts/gen_boot_rom.py scripts/elf2hex.py \
+                    rtl/bus/soc_map.vh
+
+# <test>|<rom: rtl or sim>|<packets: uart_pack options@answer, ...>|<plusargs>, ~ is a space.
+# Answer: A = header and data ACK, H = header NAK, D = data NAK
+BOOT_TESTS := load|sim|--addr~0x2000@A|+jump=2000~+magic_delay=10000 \
+              badcrc|sim|--addr~0x0~--bad-crc@D,--addr~0x0@A|+jump=0 \
+              badaddr|sim|--addr~0x4000~--no-check@H,--addr~0x3fc0~--pad~128~--no-check@H,$\
+              --addr~0x1002~--no-check@H,--addr~0x10000~--no-check@H,--addr~0x3f00~--pad~256@A|$\
+              +jump=3f00 \
+              timeout|sim||+jump=0~+min_jump=$(BOOT_SIM_TIMEOUT)~+max_jump=$(BOOT_SIM_TIMEOUT)00 \
+              fastboot|rtl||+strap=0~+jump=0~+max_jump=100 \
+              rtl_load|rtl|--addr~0x0@A|+jump=0
+BOOT_LIST  := $(if $(T),$(T),load badcrc badaddr timeout fastboot rtl_load)
+
+.PHONY: boot-gen sim-boot
+sim-boot: SHELL := /bin/bash
+sim-boot: .SHELLFLAGS := -o pipefail -c
+
+boot-gen:
+	@mkdir -p $(BOOT_OUT)
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
+	$(RV_PREFIX)-gcc $(call boot_asflags,$(BOOT_BAUD),$(BOOT_TIMEOUT)) \
+	  -o $(BOOT_OUT)/boot.elf fw/boot/boot.S
+	$(PYTHON) scripts/gen_boot_rom.py $(BOOT_OUT)/boot.elf -o rtl/mem/boot_rom_init.vh
+
+# Fresh builds of both ROMs, rtl/ must equal the committed file
+BOOT_ROMS := $(BOOT_OUT)/rtl/boot_rom_init.vh $(BOOT_OUT)/sim/boot_rom_init.vh
+$(BOOT_ROMS): $(BOOT_OUT)/%/boot_rom_init.vh: $(BOOT_SRC)
+	@mkdir -p $(@D)
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
+	$(RV_PREFIX)-gcc $(if $(filter sim,$*),$(call boot_asflags,$(BOOT_SIM_BAUD),$(BOOT_SIM_TIMEOUT)),$\
+	  $(call boot_asflags,$(BOOT_BAUD),$(BOOT_TIMEOUT))) -o $(@D)/boot.elf fw/boot/boot.S
+	$(PYTHON) scripts/gen_boot_rom.py $(@D)/boot.elf -o $@ > /dev/null
+
+# The test program: linked at 0 for the IMEM preload, and as a raw .bin for uart_pack
+$(BOOT_OUT)/hello.elf: tb/boot/hello.S fw/common/link.ld
+	@mkdir -p $(@D)
+	$(RV_PREFIX)-gcc $(CORE_RV_ASFLAGS) -o $@ $<
+
+$(BOOT_OUT)/hello.bin: $(BOOT_OUT)/hello.elf scripts/elf2hex.py
+	$(RV_PREFIX)-objcopy -O binary -j .text $< $@
+	@$(PYTHON) scripts/elf2hex.py $< --imem $(BOOT_OUT)/hello.imem.hex \
+	  --dmem $(BOOT_OUT)/hello.dmem.hex > /dev/null
+
+# tb_boot_rtl uses rtl/mem/boot_rom_init.vh, tb_boot_sim the simulation ROM
+$(BOOT_OUT)/tb_boot_%.vvp: tb/boot/tb_boot.v $(BOOT_RTL) tb/models/sram_2k_macro.v \
+                           rtl/core/rv32_defs.vh rtl/bus/soc_map.vh $(BOOT_OUT)/%/boot_rom_init.vh \
+                           rtl/mem/boot_rom_init.vh
+	$(IVERILOG) -g2012 -Wall -I$(BOOT_OUT)/$* -Irtl/bus -Irtl/mem -Irtl/core -s tb_boot -o $@ \
+	  $(BOOT_RTL) tb/models/sram_2k_macro.v tb/boot/tb_boot.v
+
+sim-boot: $(BOOT_OUT)/tb_boot_rtl.vvp $(BOOT_OUT)/tb_boot_sim.vvp $(BOOT_OUT)/hello.bin
+	@cmp -s $(BOOT_OUT)/rtl/boot_rom_init.vh rtl/mem/boot_rom_init.vh || \
+	  { echo "FAIL: rtl/mem/boot_rom_init.vh does not match fw/boot/boot.S, run make boot-gen"; \
+	    exit 1; }
+	@for e in $(foreach t,$(BOOT_TESTS),'$(t)'); do \
+	  IFS='|' read -r t rom pk pa <<< "$${e//\~/ }"; \
+	  [[ " $(BOOT_LIST) " == *" $$t "* ]] || continue; \
+	  args="+test=$$t $$pa +timeout=2000000"; n=0; \
+	  IFS=',' read -ra list <<< "$$pk"; \
+	  for x in "$${list[@]}"; do \
+	    $(PYTHON) scripts/uart_pack.py $(BOOT_OUT)/hello.bin $${x%@*} \
+	      --hex $(BOOT_OUT)/$$t.$$n.hex > /dev/null || exit 1; \
+	    args="$$args +pkt$$n=$(BOOT_OUT)/$$t.$$n.hex +exp$$n=$${x##*@}"; n=$$((n+1)); \
+	  done; \
+	  [ $$n != 0 ] || args="$$args +imem=$(BOOT_OUT)/hello.imem.hex"; \
+	  ( $(VVP) -n $(BOOT_OUT)/tb_boot_$$rom.vvp $$args +npkt=$$n > $(BOOT_OUT)/$$t.log 2>&1 ) & \
+	done; wait; \
+	fail=0; for t in $(BOOT_LIST); do \
+	  log=$(BOOT_OUT)/$$t.log; \
+	  if grep -q '^PASS' $$log && ! grep -q '^FAIL\|^ERROR' $$log; then \
+	    echo "  $$(grep '^PASS' $$log)"; \
+	  else \
+	    echo "  [FAIL] $$t (log: $$log)"; tail -n 20 $$log | sed 's/^/      /'; fail=1; \
+	  fi; \
+	done; \
+	grep 'Size' rtl/mem/boot_rom_init.vh | sed 's/^\/\/ */  boot ROM: /'; \
+	$(PYTHON) scripts/uart_pack.py $(BOOT_OUT)/hello.bin --pad $(BOOT_IMEM_SIZE) | \
+	  sed 's/^uart_pack:/  full IMEM load:/'; \
+	if [ $$fail = 0 ]; then echo "SIM-BOOT PASS"; else echo "SIM-BOOT FAIL"; exit 1; fi
 
 # ---------------------------------------------------------------------------
 # riscv-arch-test (submodule fw/riscv-arch-test, tag 3.10.0) through RISCOF, with Spike
