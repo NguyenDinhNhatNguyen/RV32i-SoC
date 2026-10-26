@@ -252,6 +252,8 @@ Thay đổi bộ đếm của D-037 được chứng minh tương đương với
 
 ## X.7 Kết quả benchmark
 
+### Trên `tb_core` (không wait state)
+
 Đo trên `tb_core`, bộ nhớ không wait state, GCC 13.2 `-O2`, số chu kỳ và số lệnh lấy từ `mcycle` và `minstret` trong vùng đo (`docs/bench_core.md`, commit core 2193cd1).
 
 | Benchmark | Cấu hình | Chu kỳ | Lệnh | CPI | Hiệu năng |
@@ -278,7 +280,75 @@ So sánh sơ bộ với PicoRV32 cùng script Yosys (`docs/yosys_compare.md`):
 
 Bảng này chưa công bằng: hai core khác tính năng CSR và giao diện bộ nhớ (`docs/yosys_compare.md`).
 
-Số đo trên SoC thật (wait state của bus, truy cập dữ liệu vào IMEM): chờ STA-04.
+### Trên `soc_top` (SRAM macro, bus, APB)
+
+Cùng mã nguồn và cờ dịch, chạy trên `tb/soc/tb_soc.v` bằng `make bench-soc`. Bản rv32i chạy trên ENABLE_M=0, bản rv32im trên ENABLE_M=1, cả hai có ENABLE_WFI_SLEEP=1. Module theo dõi `scripts/bench_soc_mon.v` đếm chu kỳ dừng bus, số lệnh SB/SH, số lần lấy lệnh bị chặn và số truy cập APB trong vùng đo (`docs/bench_soc.md`).
+
+| Benchmark | Cấu hình | Chu kỳ `tb_core` | Chu kỳ `soc_top` | Lệnh | CPI `tb_core` | CPI `soc_top` |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Dhrystone, 500 lần | rv32i | 339 028 | 355 528 | 291 528 | 1,163 | 1,220 |
+| Dhrystone, 500 lần | rv32im | 339 028 | 355 528 | 276 528 | 1,226 | 1,286 |
+| CoreMark, 3 vòng | rv32i | 2 693 735 | 2 697 382 | 2 239 763 | 1,203 | 1,204 |
+| CoreMark, 3 vòng | rv32im | 1 085 261 | 1 088 908 | 939 989 | 1,155 | 1,158 |
+
+| Benchmark | Cấu hình | `tb_core` | `soc_top` | Chênh |
+| --- | --- | ---: | ---: | ---: |
+| Dhrystone | rv32i và rv32im | 0,839 DMIPS/MHz | 0,800 DMIPS/MHz | −4,6% |
+| CoreMark | rv32i | 1,114 CoreMark/MHz | 1,112 CoreMark/MHz | −0,1% |
+| CoreMark | rv32im | 2,764 CoreMark/MHz | 2,755 CoreMark/MHz | −0,3% |
+
+Hai bản tự kiểm kết quả đúng (CRC của CoreMark, giá trị cuối của Dhrystone).
+
+**Phân tích chênh lệch.** Số lệnh trên `soc_top` bằng đúng `tb_core`, nên chuỗi lệnh giống hệt. Toàn bộ phần chênh là chu kỳ dừng bus, và module theo dõi đếm được đúng bằng phần chênh:
+
+| Benchmark | Chu kỳ thêm | SB/SH trong vùng đo | Chu kỳ dừng bus dữ liệu | Lấy lệnh bị chặn | APB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Dhrystone (cả 2 bản) | 16 500 (+4,9%) | 16 500 | 16 500 | 0 | 0 |
+| CoreMark (cả 2 bản) | 3 647 (+0,1% và +0,3%) | 3 647 | 3 647 | 0 | 0 |
+
+- **SB/SH thêm đúng 1 chu kỳ.** Macro SRAM của GPDK45 không có chân ghi theo byte, nên `sram_wrap` làm đọc–sửa–ghi cho SB và SH (luật bus 6). Đây là wait state duy nhất của bộ nhớ trên `soc_top`. Đọc và ghi word không thêm chu kỳ nào.
+- **Dhrystone chịu nhiều nhất** vì có 33 lệnh ghi byte mỗi lần chạy: 31 ở `strcpy` (chép chuỗi 30 ký tự và byte 0 cuối, từng byte), 1 ở `Proc_4`, 1 ở `Proc_5`. 33 × 500 = 16 500 chu kỳ, chậm 4,9%. CoreMark gần như chỉ ghi word nên chỉ chậm 0,1 đến 0,3%.
+- **Lấy lệnh không bị chặn** vì `.rodata` nằm ở DMEM (`fw/common/link.ld`), không có lệnh đọc dữ liệu nào vào IMEM tranh cổng với lấy lệnh.
+- Đây là chi phí thật của phần cứng, không phải lỗi đo. Muốn bỏ thì dùng `strcpy` theo word khi địa chỉ thẳng hàng, phần cứng không cần đổi.
+
+### Speedup accelerator
+
+Bài toán `fw/bench/accel_bench.c`: C = A × B với A, B là ma trận 16 × 16 int8 có dấu, C int32. Bản `sw` là 3 vòng `for` bằng C. Bản `poll` và `irq` chia thành khối 4 × 4, mỗi khối C cộng dồn 4 phép nhân khối trên accelerator, tổng 64 phép nhân khối. Bản `irq` chờ bằng WFI, ngắt đi qua IRQC. Hai bản accelerator cho kết quả giống hệt bản phần mềm (so cả 256 phần tử), bản `irq` nhận đúng 64 ngắt (`docs/bench_soc.md`).
+
+| Cấu hình | sw (chu kỳ) | poll | irq | Speedup poll | Speedup irq |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| rv32i, ENABLE_M=0 | 577 522 | 23 046 | 25 471 | 25,06× | 22,67× |
+| rv32im, ENABLE_M=1 | 39 039 | 23 100 | 25 458 | 1,69× | 1,53× |
+
+![Chu kỳ của accelerator](../figures/accel_breakdown.svg)
+
+*Hình X.3. (a) Chu kỳ của một phép nhân khối 4 × 4 (poll, đo bằng `mcycle`). (b), (c) Tổng chu kỳ cho phép nhân 16 × 16. Hình sinh từ `docs/figures/accel_breakdown.py`.*
+
+| Bước của một phép nhân khối | Chu kỳ | Ghi chú |
+| --- | ---: | --- |
+| Nạp A và B | 41 | 8 lệnh đọc DMEM và 8 lệnh ghi APB |
+| START tới DONE | 24 | Accelerator tính 12 chu kỳ, còn lại là ghi START và đọc STATUS qua APB |
+| Đọc C và cộng dồn | 164 | 16 lệnh đọc APB, khoảng 10 chu kỳ mỗi word |
+| Xoá DONE | 6 | 1 lệnh ghi APB |
+| Tổng | 235 | |
+
+**Phân tích overhead APB.**
+
+- Accelerator chỉ tính 12 trên 235 chu kỳ mỗi khối. Khoảng 95% thời gian là chuyển dữ liệu qua APB. Riêng đọc 16 word C chiếm 70%.
+- Bước đọc C tốn khoảng 10 chu kỳ mỗi word, gồm lệnh đọc APB và phần cộng dồn. Đọc word từ DMEM thì không thêm chu kỳ nào.
+- Số truy cập APB khớp tính tay. Poll: 64 × (8 + 1 + 16 + 1) + 192 lần đọc STATUS = 1 856. Irq: 64 × (8 + 1 + 16) + 3 truy cập của handler mỗi lần = 1 792.
+- Bản accelerator còn 1 024 lệnh SB (xoá mảng cộng dồn bằng `memset` từng byte), tốn 1 024 chu kỳ wait state, khoảng 4% thời gian.
+
+**Vì sao rv32i nhanh 25 lần mà rv32im chỉ 1,7 lần.** Phép nhân 16 × 16 có 4 096 phép nhân–cộng.
+
+- Bản rv32i nhân bằng hàm mềm của libgcc, khoảng 140 chu kỳ mỗi phép nhân–cộng (577 522 / 4 096). Accelerator thắng xa dù tốn phí APB.
+- Bản rv32im dùng lệnh MUL 2 chu kỳ, phần mềm chỉ còn khoảng 9,5 chu kỳ mỗi phép nhân–cộng (39 039 / 4 096). Bản accelerator tốn khoảng 5,6 chu kỳ mỗi phép nhân–cộng (23 100 / 4 096), gần hết là phí APB. Vì vậy chỉ nhanh hơn 1,69 lần.
+- Nếu bỏ hết phí APB (chỉ còn 64 × 12 = 768 chu kỳ tính) thì giới hạn trên khoảng 51 lần so với rv32im.
+- Hướng tăng speedup: đọc nhiều phần tử C mỗi lần đọc (gói 2 kết quả 16 bit vào 1 word nếu đủ), hoặc DMA chép C về DMEM. Cả hai cần đổi RTL accelerator hoặc thêm DMA.
+
+**Poll so với irq.** Bản irq chậm hơn khoảng 37 chu kỳ mỗi khối: vào trap, handler xoá DONE và đọc `PENDING` qua APB, `mret`, thức dậy sau WFI. Đổi lại lõi ngủ trong lúc chờ và có thể làm việc khác. Vòng chờ không race chỉ chạy được nhờ D-038 (mục X.4).
+
+Giới hạn đo: mô phỏng RTL bằng Icarus, chưa tính trễ thật của macro và dây. CoreMark chỉ chạy 3 vòng nên chưa phải điểm CoreMark chính thức (luật cần ít nhất 10 giây).
 
 ## X.9 Timing, diện tích, công suất
 
