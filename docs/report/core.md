@@ -1,12 +1,12 @@
 # Chương X. Core RV32I (`rv32_core`)
 
-**Bản nháp.** Mọi con số có ghi file nguồn trong repo. Ô ghi "chờ STA-04" là số phải lấy từ Genus và Innovus ở trường.
+**Bản nháp.** Mọi con số có ghi file nguồn trong repo. Ô ghi [CHỜ GENUS] là số chính thức phải lấy từ Genus và Innovus ở trường (STA-04).
 
 Quy ước dẫn nguồn:
 
 - "Dx" là quyết định trong `docs/core_decisions.md`.
 - "mục x.y" là mục trong `docs/spec/core.md`.
-- D-036, D-037 và `docs/timing_core.md` hiện nằm trên nhánh `feat/nhan-ppa` (PR chưa merge). Khi merge thì bỏ ghi chú này.
+- D-041 và `docs/btb_eval.md` hiện nằm trên nhánh `feat/nhan-btb` (chưa merge, chờ review 8/11). Mục X.8 dẫn số từ đó.
 
 ## X.1 Mục tiêu và ISA
 
@@ -428,39 +428,59 @@ Dù giữ BTB=0, phần khám phá vẫn có giá trị cho báo cáo: thiết k
 
 ### Xu hướng ở nhà (Yosys, Nangate45, OpenSTA)
 
-**Chỉ để xem xu hướng.** Thư viện Nangate45 (thư viện mở 45 nm), không phải GPDK45, không có đặt cell và đi dây (`docs/timing_core.md`).
+**Các số ở mục này chỉ để xem xu hướng, không phải số chính thức.** Thư viện là Nangate45 (thư viện mở 45 nm, góc typical 1,1 V, 25 °C), không phải GPDK45. Không có đặt cell và đi dây, trễ dây theo wire load mặc định, clock lý tưởng. Số chính thức lấy từ Genus và Innovus ở trường (`docs/timing_core.md`).
 
-Chu kỳ nhỏ nhất của đường flop tới flop, RTL trên main, quét 4 mục tiêu trễ của abc:
+Chu kỳ nhỏ nhất của đường flop tới flop và diện tích, RTL hiện tại (sau D-038), `make sta-core-nangate` với `abc` (`docs/btb_eval.md` mục 4, cấu hình base):
 
-| Cấu hình | D=1500 | D=2000 | D=2500 | D=3000 | Diện tích ở D=2000 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| ENABLE_M=0 | 2,281 ns | 2,529 ns | 2,529 ns | 2,529 ns | 17 112 µm² |
-| ENABLE_M=1 | 3,054 ns | 3,054 ns | 3,352 ns | 3,484 ns | 28 039 µm² |
+| Cấu hình | Flop tới flop, quét `-D` 1500 đến 3000 | Ở `-D 2000` | F_max xu hướng | Diện tích ở `-D 2000` |
+| --- | --- | ---: | ---: | ---: |
+| ENABLE_M=0 | 2,46 đến 2,94 ns | 2,85 ns | khoảng 350 MHz | 16 981 µm² |
+| ENABLE_M=1 | 3,24 đến 3,68 ns | 3,24 ns | khoảng 310 MHz | 28 339 µm² |
 
-Nguồn: `docs/timing_core.md`, việc 1.
+- Đề bài cần 50 MHz (20 ns). Core dư khoảng 6 lần ở flow nhà, kể cả khi GPDK45 và đi dây làm chậm đi vài lần thì vẫn đủ.
+- abc dao động khoảng ±3% khi sửa RTL nhỏ và ±0,3 ns khi đổi `-D`, nên chỉ so được các thay đổi lớn hơn mức này.
+- Đường găng ENABLE_M=0: giữ lệnh → forward → so sánh nhánh → `ex_exc` → `ex_trap` → `d_req_valid_o` → `pipe_stall` → `ex_go` → enable mọi thanh ghi pipeline. Đường găng ENABLE_M=1 nằm ở bộ nhân (`ex_hold_q` → `u_muldiv`) và đường regfile → ALU → `wb_result_q` (`docs/timing_core.md`, D-038).
+- Đã thử rút ngắn đường ENABLE_M=0, được khoảng 5%, chỉ hơn mức nhiễu một chút nên không giữ thay đổi RTL (D-036). Patch còn lưu, áp lại nếu Genus báo vi phạm trên đường này.
+- So chéo một lần bằng OpenROAD (đặt cell thô, `repair_design`): đường flop tới flop 2,4 đến 2,6 ns, gần số của flow wire load. Flow đơn giản đủ để xem xu hướng.
+- Clock gating: 99,8% flop có enable theo Yosys. D-037 cho nửa cao của bộ đếm enable riêng, khoảng 58 flop ít nhận clock hơn mỗi chu kỳ (ước lượng tay, `docs/timing_core.md` việc 3).
 
-- ENABLE_M=0 khoảng 395 MHz, ENABLE_M=1 khoảng 327 MHz. Đề bài cần 50 MHz nên còn dư nhiều.
-- Đường găng ENABLE_M=0: so sánh nhánh và bit thấp ALU → `ex_exc` → `ex_trap` → `d_req_valid_o` → `pipe_stall` → `ex_go` → enable mọi thanh ghi pipeline. Đường găng ENABLE_M=1 nằm ở bộ nhân và `wb_result_q`.
-- Đã thử rút ngắn đường ENABLE_M=0, được khoảng 5%, chỉ hơn mức dao động của abc (±3%) một chút nên không giữ thay đổi RTL (D-036).
-- Clock gating: 99,8% flop có enable theo Yosys (`docs/timing_core.md`, việc 3).
-- Yosys không ràng buộc thời gian: đường dài nhất 58 cell ở cả hai cấu hình (`docs/yosys_compare.md`).
+Lịch sử số liệu (cùng flow, khác phiên bản, không so trực tiếp với bảng trên):
+
+| Thời điểm | ENABLE_M=0 | ENABLE_M=1 | Ghi chú |
+| --- | --- | --- | --- |
+| Gốc, `abc -fast`, `-D 2000` | 2,529 ns, 17 112 µm² | 3,054 ns, 28 039 µm² | `docs/timing_core.md` việc 1 |
+| Sau D-037, `abc -fast` | 2,575 ns, 17 032 µm² | 3,067 ns, 28 559 µm² | Trong mức nhiễu |
+| Sau D-037, đổi sang `abc` | 2,855 ns, 16 995 µm² | 3,007 ns, 28 463 µm² | Yosys trong Docker không nhận `abc -fast` |
+| Sau D-038, `abc` | 2,856 ns | 3,113 ns | D-038 |
+
+Đổi `abc -fast` thành `abc` làm ENABLE_M=0 chậm 10,9% dù RTL không đổi. Đây là ví dụ rõ nhất cho việc số của flow nhà chỉ dùng để xem xu hướng.
 
 ### Số chính thức (Genus, Innovus, GPDK45)
 
-Dự kiến điền bằng `scripts/ppa_table.py` từ report trong `appendix/`.
+Điền bằng `scripts/ppa_table.py` từ report trong `appendix/` (STA-04). Mọi ô [CHỜ GENUS] là số chưa có.
 
 | Chỉ số | ENABLE_M=0 | ENABLE_M=1 |
 | --- | --- | --- |
-| Diện tích sau tổng hợp (µm², kGE) | chờ STA-04 | chờ STA-04 |
-| Slack setup sau tổng hợp ở 20 ns | chờ STA-04 | chờ STA-04 |
-| Slack setup, hold sau route | chờ STA-04 | chờ STA-04 |
-| F_max ước lượng | chờ STA-04 | chờ STA-04 |
-| Mật độ sau đặt cell | chờ STA-04 | chờ STA-04 |
-| Số ICG, tỉ lệ flop được gate | chờ STA-04 | chờ STA-04 |
-| Công suất (mW) ở 50 MHz, CoreMark | chờ STA-04 | chờ STA-04 |
-| EPI (pJ/lệnh) = P × CPI / f | chờ STA-04 | chờ STA-04 |
-| Công suất chờ ngắt: polling so với WFI | chờ STA-04 | chờ STA-04 |
-| LEC RTL ↔ netlist | chờ STA-04 | chờ STA-04 |
+| Diện tích sau tổng hợp (µm²) | [CHỜ GENUS] | [CHỜ GENUS] |
+| Diện tích quy đổi GE (kGE) | [CHỜ GENUS] | [CHỜ GENUS] |
+| Slack setup sau tổng hợp ở 20 ns | [CHỜ GENUS] | [CHỜ GENUS] |
+| Slack setup, hold sau route | [CHỜ GENUS] | [CHỜ GENUS] |
+| F_max ước lượng | [CHỜ GENUS] | [CHỜ GENUS] |
+| Mật độ sau đặt cell | [CHỜ GENUS] | [CHỜ GENUS] |
+| Số ICG, tỉ lệ flop được gate | [CHỜ GENUS] | [CHỜ GENUS] |
+| Công suất (mW) ở 50 MHz, CoreMark | [CHỜ GENUS] | [CHỜ GENUS] |
+| EPI (pJ/lệnh) | [CHỜ GENUS] | [CHỜ GENUS] |
+| Công suất chờ ngắt: polling so với WFI | [CHỜ GENUS] | [CHỜ GENUS] |
+| LEC RTL ↔ netlist | [CHỜ GENUS] | [CHỜ GENUS] |
+
+Cách tính các chỉ số dẫn xuất:
+
+- **GE (gate equivalent):** diện tích cell của core chia cho diện tích cell NAND2 cỡ nhỏ nhất của GPDK45. Dùng để so với core khác ở công nghệ khác (PicoRV32, Ibex, SERV).
+- **F_max ước lượng:** 1 / (20 ns − WNS setup) từ report timing sau route.
+- **EPI (năng lượng mỗi lệnh):** EPI = P / (f / CPI) = P × CPI / f. P là công suất trung bình khi chạy CoreMark (Genus hoặc Innovus đọc VCD/SAIF), f = 50 MHz, CPI lấy từ mục X.7 trên `soc_top` (1,158 với rv32im, 1,204 với rv32i). Ví dụ minh hoạ đơn vị: P = 1 mW, CPI = 1,158 cho EPI = 1 mW × 1,158 / 50 MHz = 23,2 pJ/lệnh. Số thật: [CHỜ GENUS].
+- **Công suất chờ ngắt:** cùng testcase chờ ngắt Timer, một bản polling (W0) và một bản WFI (W1). Theo mục X.4, bản W1 ngủ 801 trên 1003 chu kỳ. Số công suất: [CHỜ GENUS].
+
+Nếu buổi review quyết bật BTB (mục X.8) thì thêm một cột `ENABLE_BTB=1` vào bảng này và chạy lại cả flow.
 
 ## X.10 Giới hạn đã biết
 
@@ -474,4 +494,4 @@ Dự kiến điền bằng `scripts/ppa_table.py` từ report trong `appendix/`.
 - **CoreMark bản rv32i chỉ dư khoảng 1,4 KB IMEM** ở cấu hình 16 KB của tb_core (`docs/bench_core.md`).
 - **Tràn nửa thấp của `minstret`** chỉ được kiểm bằng chứng minh hình thức, không có test mô phỏng (cần 2^32 lệnh). Tràn của `mcycle` có test (`trap.S` test 83, 84) (`docs/timing_core.md`).
 - **`wb_instr_q` (32 bit) nạp mỗi lệnh** dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa chặn vì `tb_core` dùng nó để in vết (`docs/timing_core.md`, D-037).
-- **Số timing ở nhà chỉ là xu hướng.** Số chính thức: chờ STA-04.
+- **Số timing ở nhà chỉ là xu hướng.** Số chính thức: [CHỜ GENUS].
