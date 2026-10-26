@@ -65,9 +65,10 @@ def main():
     def sym(n):
         return symbols.get(n, 0)
 
-    if sym("BOOT_IMEM_SIZE") != soc_define("IMEM_SIZE"):
-        sys.exit("ERROR: gen_boot_rom: built for IMEM_SIZE %d, soc_map.vh has %d"
-                 % (sym("BOOT_IMEM_SIZE"), soc_define("IMEM_SIZE")))
+    for name in ("IMEM_SIZE", "DMEM_BASE", "DMEM_SIZE"):
+        if sym("BOOT_" + name) != soc_define(name):
+            sys.exit("ERROR: gen_boot_rom: built for %s 0x%x, soc_map.vh has 0x%x"
+                     % (name, sym("BOOT_" + name), soc_define(name)))
 
     lines = [
         "// boot_rom_init.vh - boot ROM contents, included inside the case statement of"
@@ -80,6 +81,7 @@ def main():
                                                        sym("BOOT_BAUDDIV")),
         "//   Timeout   %d cycles, then jump to 0x0000_0000" % sym("BOOT_TIMEOUT"),
         "//   IMEM      %d bytes" % sym("BOOT_IMEM_SIZE"),
+        "//   DMEM      %d bytes at 0x%08x" % (sym("BOOT_DMEM_SIZE"), sym("BOOT_DMEM_BASE")),
         "//",
     ]
     for w in range(words):

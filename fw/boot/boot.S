@@ -11,12 +11,14 @@
  *   2. Wait for MAGIC for TIMEOUT_CYCLES (mcycle). Other bytes are ignored.
  *      No MAGIC in time: jump to 0x0000_0000 (program already in IMEM).
  *   3. Send READY, then wait for SYNC (extra MAGIC bytes from the host are skipped).
- *   4. Header: addr (4 bytes, little endian), len (4 bytes). Both word aligned, len > 0 and
- *      [addr, addr + len) inside IMEM, otherwise NAK and back to step 3. Else ACK.
- *   5. Data: len bytes, stored to IMEM word by word through the data port.
- *      Then crc (4 bytes) = CRC-32 (zlib) of addr, len and data.
- *      Mismatch: NAK and back to step 3. Match: ACK, wait until the ACK is on the line,
- *      fence.i, jump to addr.
+ *   4. Header: addr, len, entry (4 bytes each, little endian). addr and len word aligned,
+ *      len > 0 and [addr, addr + len) inside IMEM or inside DMEM (not across a region end).
+ *      entry = NO_JUMP (0xFFFF_FFFF): more segments follow. Any other entry ends the load
+ *      and must be word aligned inside IMEM. Otherwise NAK and back to step 3. Else ACK.
+ *   5. Data: len bytes, stored word by word through the data port.
+ *      Then crc (4 bytes) = CRC-32 (zlib) of addr, len, entry and data.
+ *      Mismatch: NAK and back to step 3. Match: ACK. With entry = NO_JUMP back to step 3
+ *      for the next segment. Else wait until the ACK is on the line, fence.i, jump to entry.
  * After MAGIC there is no timeout, a failed load waits for the host to retry.
  * On every jump mtvec and the registers used here are cleared, except t0 = jump target.
  *
@@ -24,6 +26,7 @@
  *   CLK_HZ, BAUD        UART speed, BAUDDIV = round(CLK_HZ / (16 * BAUD))
  *   TIMEOUT_CYCLES      wait for MAGIC, at most 2^31
  *   IMEM_SIZE           bytes, from SOC_IMEM_SIZE in rtl/bus/soc_map.vh
+ *   DMEM_BASE, DMEM_SIZE  from SOC_DMEM_BASE and SOC_DMEM_SIZE in rtl/bus/soc_map.vh
  */
 
 #ifndef CLK_HZ
@@ -37,6 +40,12 @@
 #endif
 #ifndef IMEM_SIZE
 #define IMEM_SIZE       16384
+#endif
+#ifndef DMEM_BASE
+#define DMEM_BASE       0x10000000
+#endif
+#ifndef DMEM_SIZE
+#define DMEM_SIZE       16384
 #endif
 
 #define BAUD_DIV        ((CLK_HZ + 8 * BAUD) / (16 * BAUD))
@@ -62,6 +71,7 @@
 #define SYNC            0x5A            // Start of a packet
 #define ACK             0x06
 #define NAK             0x15
+#define NO_JUMP         0xFFFFFFFF      // Header entry: more segments follow
 #define CRC_POLY        0xEDB88320      // CRC-32, reflected
 
 #if TIMEOUT_CYCLES > 0x7FFFFFFF
@@ -73,17 +83,21 @@
 
 /* Absolute symbols, read by scripts/gen_boot_rom.py for the header of boot_rom_init.vh */
     .globl  BOOT_TIMEOUT, BOOT_BAUDDIV, BOOT_CLK_HZ, BOOT_BAUD, BOOT_IMEM_SIZE
+    .globl  BOOT_DMEM_BASE, BOOT_DMEM_SIZE
     .set    BOOT_TIMEOUT,   TIMEOUT_CYCLES
     .set    BOOT_BAUDDIV,   BAUD_DIV
     .set    BOOT_CLK_HZ,    CLK_HZ
     .set    BOOT_BAUD,      BAUD
     .set    BOOT_IMEM_SIZE, IMEM_SIZE
+    .set    BOOT_DMEM_BASE, DMEM_BASE
+    .set    BOOT_DMEM_SIZE, DMEM_SIZE
 
 /* Registers
  *   s0  UART base          s1  IMEM size          s2  link for getw
  *   s3  mcycle at start    s4  timeout            s5  load address
- *   s6  length             s7  computed CRC       a1  word from getw
- *   a2  running CRC        a3  CRC polynomial     a0  byte for getc / putc
+ *   s6  length             s7  computed CRC       s8  entry
+ *   a0  byte for getc / putc                      a1  word from getw
+ *   a2  running CRC        a3  CRC polynomial
  *   t0..t6 scratch, ra link for the leaf routines
  */
     .section .text.init, "ax"
@@ -137,14 +151,27 @@ wait_sync:
     mv      s5, a1                      // addr
     jal     s2, getw
     mv      s6, a1                      // len
+    jal     s2, getw
+    mv      s8, a1                      // entry
     or      t0, s5, s6
     andi    t0, t0, 3
     bnez    t0, nak                     // Not word aligned
     beqz    s6, nak                     // Empty
-    bgeu    s5, s1, nak                 // addr outside IMEM
-    sub     t0, s1, s5
-    bltu    t0, s6, nak                 // addr + len past the end of IMEM
-    li      a0, ACK
+    mv      t1, s5                      // t1 = offset in the region, t0 = region size
+    mv      t0, s1
+    bltu    s5, s1, 1f                  // addr inside IMEM
+    li      t1, DMEM_BASE
+    sub     t1, s5, t1
+    li      t0, DMEM_SIZE
+    bgeu    t1, t0, nak                 // addr outside IMEM and DMEM
+1:  sub     t0, t0, t1
+    bltu    t0, s6, nak                 // addr + len past the end of the region
+    li      t0, NO_JUMP
+    beq     s8, t0, 2f                  // Not the last segment
+    andi    t0, s8, 3
+    bnez    t0, nak                     // entry not word aligned
+    bgeu    s8, s1, nak                 // entry outside IMEM
+2:  li      a0, ACK
     jal     putc
 
     mv      t2, s5                      // Write pointer
@@ -160,13 +187,15 @@ data:
 
     li      a0, ACK
     jal     putc
+    li      t0, NO_JUMP
+    beq     s8, t0, wait_sync           // Next segment
 tx_wait:                                // ACK fully sent: TX FIFO empty, shifter idle
     lw      t0, UART_STATUS(s0)
     andi    t0, t0, ST_TXE | ST_TXB
     li      t1, ST_TXE
     bne     t0, t1, tx_wait
     fence.i
-    mv      t0, s5
+    mv      t0, s8
     j       handoff
 
 nak:
@@ -198,6 +227,7 @@ handoff:
     li      s5, 0
     li      s6, 0
     li      s7, 0
+    li      s8, 0
     li      a0, 0
     li      a1, 0
     li      a2, 0

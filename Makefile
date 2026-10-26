@@ -24,7 +24,7 @@ help:
 	@echo "make bench-core    - Dhrystone and CoreMark on tb_core (ENABLE_M=0 and 1), prints CPI (T=coremark)"
 	@echo "make bench-soc     - Dhrystone, CoreMark and accelerator speedup on soc_top (tb_soc), T=accel_bench"
 	@echo "make boot-gen      - assemble fw/boot/boot.S and regenerate rtl/mem/boot_rom_init.vh"
-	@echo "make sim-boot      - UART bootloader on soc_top: load, bad CRC, bad address, timeout, strap (T=load)"
+	@echo "make sim-boot      - UART bootloader on soc_top: load, C ELF, bad CRC, bad address, timeout, strap (T=load)"
 	@echo "make arch-core-dut - riscv-arch-test on the core side only, writes signatures (T=add-01)"
 	@echo "make arch-core     - riscv-arch-test through RISCOF, compared with Spike (needs riscof, spike)"
 	@echo "make synth-core-yosys - trial Yosys synthesis of rv32_core, trends only"
@@ -432,10 +432,10 @@ bench-soc: $(SOC_BENCH_OUT)/tb_soc_M0W1.vvp $(SOC_BENCH_OUT)/tb_soc_M1W1.vvp \
 # ---------------------------------------------------------------------------
 # UART bootloader (P8): fw/boot/boot.S in the boot ROM at 0x0001_0000. Docs: docs/boot.md.
 #   make boot-gen                           assemble boot.S, regenerate rtl/mem/boot_rom_init.vh
-#   make sim-boot                           tb/boot/tb_boot.v on soc_top, 6 tests
+#   make sim-boot                           tb/boot/tb_boot.v on soc_top, 7 tests
 #   make sim-boot T=timeout                 one test
-# BOOT_CLK_HZ, BOOT_BAUD and BOOT_TIMEOUT (cycles) set the committed ROM, the IMEM size comes
-# from soc_map.vh. sim-boot builds the ROM again and fails if the committed
+# BOOT_CLK_HZ, BOOT_BAUD and BOOT_TIMEOUT (cycles) set the committed ROM, the IMEM and DMEM
+# ranges come from soc_map.vh. sim-boot builds the ROM again and fails if the committed
 # boot_rom_init.vh differs. Most tests use a second ROM from the same source with a short
 # timeout and BAUDDIV 1 (BOOT_SIM_*), picked up first through -I. The committed ROM runs the
 # strap 0 path and one load at the real baud.
@@ -448,24 +448,36 @@ BOOT_SIM_BAUD    := 3125000
 BOOT_SIM_TIMEOUT := 20000
 BOOT_IMEM_SIZE   := $(shell sed -n 's/^`define SOC_IMEM_SIZE *32.d\([0-9]*\).*/\1/p' \
                       rtl/bus/soc_map.vh)
+BOOT_DMEM_SIZE   := $(shell sed -n 's/^`define SOC_DMEM_SIZE *32.d\([0-9]*\).*/\1/p' \
+                      rtl/bus/soc_map.vh)
+BOOT_DMEM_BASE   := 0x$(shell sed -n 's/^`define SOC_DMEM_BASE *32.h\([0-9A-Fa-f_]*\).*/\1/p' \
+                      rtl/bus/soc_map.vh | tr -d _)
 boot_asflags      = -march=rv32i_zicsr_zifencei -mabi=ilp32 -nostdlib -nostartfiles -static \
                     -T fw/boot/boot.ld -DCLK_HZ=$(BOOT_CLK_HZ) -DBAUD=$(1) -DTIMEOUT_CYCLES=$(2) \
-                    -DIMEM_SIZE=$(BOOT_IMEM_SIZE)
+                    -DIMEM_SIZE=$(BOOT_IMEM_SIZE) -DDMEM_BASE=$(BOOT_DMEM_BASE) \
+                    -DDMEM_SIZE=$(BOOT_DMEM_SIZE)
 BOOT_RTL         := $(wildcard rtl/core/*.v rtl/bus/*.v rtl/mem/*.v rtl/periph/*.v rtl/accel/*.v)
 BOOT_SRC         := fw/boot/boot.S fw/boot/boot.ld scripts/gen_boot_rom.py scripts/elf2hex.py \
-                    rtl/bus/soc_map.vh
+                    rtl/bus/soc_map.vh Makefile
 
-# <test>|<rom: rtl or sim>|<packets: uart_pack options@answer, ...>|<plusargs>, ~ is a space.
-# Answer: A = header and data ACK, H = header NAK, D = data NAK
-BOOT_TESTS := load|sim|--addr~0x2000@A|+jump=2000~+magic_delay=10000 \
-              badcrc|sim|--addr~0x0~--bad-crc@D,--addr~0x0@A|+jump=0 \
-              badaddr|sim|--addr~0x4000~--no-check@H,--addr~0x3fc0~--pad~128~--no-check@H,$\
-              --addr~0x1002~--no-check@H,--addr~0x10000~--no-check@H,--addr~0x3f00~--pad~256@A|$\
-              +jump=3f00 \
+# <test>|<rom: rtl or sim>|<files: program in BOOT_OUT and uart_pack options@answer, ...>|
+# <plusargs>, ~ is a space. Answer for every packet of the file: A = header and data ACK,
+# H = header NAK, D = data NAK. An .elf file also passes +tohost from its .tohost file.
+BOOT_TESTS := load|sim|hello.bin~--addr~0x2000@A|+jump=2000~+magic_delay=10000 \
+              celf|sim|cprog.elf@A|+jump=0 \
+              badcrc|sim|hello.bin~--addr~0x0~--bad-crc@D,hello.bin~--addr~0x0@A|+jump=0 \
+              badaddr|sim|hello.bin~--addr~0x4000~--no-check@H,$\
+              hello.bin~--addr~0x3fc0~--pad~128~--no-check@H,$\
+              hello.bin~--addr~0x1002~--no-check@H,hello.bin~--addr~0x10000~--no-check@H,$\
+              hello.bin~--addr~0x10003fc0~--pad~128~--no-check@H,$\
+              hello.bin~--addr~0x10004000~--no-check@H,$\
+              hello.bin~--addr~0x0~--entry~0x10000000~--no-check@H,$\
+              hello.bin~--addr~0x0~--entry~0x2~--no-check@H,$\
+              hello.bin~--addr~0x3f00~--pad~256@A|+jump=3f00 \
               timeout|sim||+jump=0~+min_jump=$(BOOT_SIM_TIMEOUT)~+max_jump=$(BOOT_SIM_TIMEOUT)00 \
               fastboot|rtl||+strap=0~+jump=0~+max_jump=100 \
-              rtl_load|rtl|--addr~0x0@A|+jump=0
-BOOT_LIST  := $(if $(T),$(T),load badcrc badaddr timeout fastboot rtl_load)
+              rtl_load|rtl|hello.bin~--addr~0x0@A|+jump=0
+BOOT_LIST  := $(if $(T),$(T),load celf badcrc badaddr timeout fastboot rtl_load)
 
 .PHONY: boot-gen sim-boot
 sim-boot: SHELL := /bin/bash
@@ -497,6 +509,15 @@ $(BOOT_OUT)/hello.bin: $(BOOT_OUT)/hello.elf scripts/elf2hex.py
 	@$(PYTHON) scripts/elf2hex.py $< --imem $(BOOT_OUT)/hello.imem.hex \
 	  --dmem $(BOOT_OUT)/hello.dmem.hex > /dev/null
 
+# C program with .text in IMEM and .rodata, .data in DMEM, loaded from its ELF.
+# cprog.tohost holds +tohost=<address of the tohost symbol>.
+$(BOOT_OUT)/cprog.elf: tb/boot/cprog.c fw/bench/common/crt0.S fw/common/link.ld scripts/elf2hex.py
+	@mkdir -p $(@D)
+	$(RV_PREFIX)-gcc -march=rv32i_zicsr $(BENCH_CFLAGS) -DBENCH_SOC $(BENCH_LDFLAGS) -o $@ \
+	  fw/bench/common/crt0.S tb/boot/cprog.c -lgcc
+	@$(PYTHON) scripts/elf2hex.py $@ --imem $(BOOT_OUT)/cprog.imem.hex \
+	  --dmem $(BOOT_OUT)/cprog.dmem.hex | sed -n 's/^tohost=/+tohost=/p' > $(BOOT_OUT)/cprog.tohost
+
 # tb_boot_rtl uses rtl/mem/boot_rom_init.vh, tb_boot_sim the simulation ROM
 $(BOOT_OUT)/tb_boot_%.vvp: tb/boot/tb_boot.v $(BOOT_RTL) tb/models/sram_2k_macro.v \
                            rtl/core/rv32_defs.vh rtl/bus/soc_map.vh $(BOOT_OUT)/%/boot_rom_init.vh \
@@ -504,7 +525,8 @@ $(BOOT_OUT)/tb_boot_%.vvp: tb/boot/tb_boot.v $(BOOT_RTL) tb/models/sram_2k_macro
 	$(IVERILOG) -g2012 -Wall -I$(BOOT_OUT)/$* -Irtl/bus -Irtl/mem -Irtl/core -s tb_boot -o $@ \
 	  $(BOOT_RTL) tb/models/sram_2k_macro.v tb/boot/tb_boot.v
 
-sim-boot: $(BOOT_OUT)/tb_boot_rtl.vvp $(BOOT_OUT)/tb_boot_sim.vvp $(BOOT_OUT)/hello.bin
+sim-boot: $(BOOT_OUT)/tb_boot_rtl.vvp $(BOOT_OUT)/tb_boot_sim.vvp $(BOOT_OUT)/hello.bin \
+          $(BOOT_OUT)/cprog.elf
 	@cmp -s $(BOOT_OUT)/rtl/boot_rom_init.vh rtl/mem/boot_rom_init.vh || \
 	  { echo "FAIL: rtl/mem/boot_rom_init.vh does not match fw/boot/boot.S, run make boot-gen"; \
 	    exit 1; }
@@ -514,9 +536,10 @@ sim-boot: $(BOOT_OUT)/tb_boot_rtl.vvp $(BOOT_OUT)/tb_boot_sim.vvp $(BOOT_OUT)/he
 	  args="+test=$$t $$pa +timeout=2000000"; n=0; \
 	  IFS=',' read -ra list <<< "$$pk"; \
 	  for x in "$${list[@]}"; do \
-	    $(PYTHON) scripts/uart_pack.py $(BOOT_OUT)/hello.bin $${x%@*} \
+	    $(PYTHON) scripts/uart_pack.py $(BOOT_OUT)/$${x%@*} \
 	      --hex $(BOOT_OUT)/$$t.$$n.hex > /dev/null || exit 1; \
 	    args="$$args +pkt$$n=$(BOOT_OUT)/$$t.$$n.hex +exp$$n=$${x##*@}"; n=$$((n+1)); \
+	    f=$${x%%[ @]*}; [[ $$f != *.elf ]] || args="$$args $$(cat $(BOOT_OUT)/$${f%.elf}.tohost)"; \
 	  done; \
 	  [ $$n != 0 ] || args="$$args +imem=$(BOOT_OUT)/hello.imem.hex"; \
 	  ( $(VVP) -n $(BOOT_OUT)/tb_boot_$$rom.vvp $$args +npkt=$$n > $(BOOT_OUT)/$$t.log 2>&1 ) & \
@@ -531,7 +554,7 @@ sim-boot: $(BOOT_OUT)/tb_boot_rtl.vvp $(BOOT_OUT)/tb_boot_sim.vvp $(BOOT_OUT)/he
 	done; \
 	grep 'Size' rtl/mem/boot_rom_init.vh | sed 's/^\/\/ */  boot ROM: /'; \
 	$(PYTHON) scripts/uart_pack.py $(BOOT_OUT)/hello.bin --pad $(BOOT_IMEM_SIZE) | \
-	  sed 's/^uart_pack:/  full IMEM load:/'; \
+	  sed -n 's/^uart_pack: 1 segments, /  full IMEM load: /p'; \
 	if [ $$fail = 0 ]; then echo "SIM-BOOT PASS"; else echo "SIM-BOOT FAIL"; exit 1; fi
 
 # ---------------------------------------------------------------------------

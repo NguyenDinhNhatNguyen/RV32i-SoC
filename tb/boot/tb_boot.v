@@ -6,17 +6,19 @@
 // A host model plays the PC on the UART pins, at the baud the chip uses (16 x BAUDDIV cycles
 // per bit):
 //   - Sends MAGIC once every 2 byte times until READY comes back (as scripts/uart_pack.py)
-//   - For each packet i (+pkt<i>=<hex from uart_pack.py --hex>): sends SYNC and the header,
-//     waits for ACK/NAK. After ACK sends data and crc, waits for ACK/NAK.
-//     +exp<i>=A (both ACK), H (header NAK), D (data NAK). The first byte of each file (MAGIC)
-//     is not sent again.
+//   - For each file i (+pkt<i>=<hex from uart_pack.py --hex>): the file holds MAGIC and one
+//     packet per segment. For each packet sends SYNC and the header (addr, len, entry), waits
+//     for ACK/NAK. After ACK sends data and crc, waits for ACK/NAK.
+//     +exp<i>=A (both ACK), H (header NAK), D (data NAK), for every packet of the file.
+//     The first byte of each file (MAGIC) is not sent again.
 //   - Prints the bytes that come after the last ACK (output of the loaded program).
 //
 // Checks:
 //   - Every answer as expected, no extra bytes before the program runs
-//   - IMEM writes: none for a header NAK, len / 4 for an accepted header
+//   - IMEM and DMEM writes: none for a header NAK, len / 4 for an accepted header
 //   - First fetch outside the boot ROM is at +jump=<hex>, and not before +min_jump=<cycles>
-//   - The program writes 1 to TOHOST and printed "boot ok\n"
+//   - The program writes 1 to tohost (+tohost=<hex>, default 0x1000_0000) and printed
+//     "boot ok\n"
 // With +npkt=0 the host stays silent: the bootloader must time out (or skip the UART with
 // strap 0) and run the program that +imem=<hex> preloaded in IMEM.
 // gpio_i[0] is the boot strap (+strap=1 UART boot, default), the other pins read 0.
@@ -25,7 +27,7 @@
 //
 // Plusargs: +test=<name> +strap=<0|1> +npkt=<n> +pkt<i>=<hex> +exp<i>=<A|H|D> +imem=<hex>
 //           +jump=<hex> +min_jump=<cycles> +max_jump=<cycles> +magic_delay=<cycles>
-//           +timeout=<cycles>
+//           +timeout=<cycles> +tohost=<hex>
 `include "soc_map.vh"
 
 module tb_boot;
@@ -34,9 +36,9 @@ module tb_boot;
     parameter ENABLE_WFI_SLEEP = 1;
     localparam BANK_W          = 2;     // Matches SOC_IMEM_BANK_W
     localparam WORDS           = 1024 << BANK_W;
-    localparam [31:0] TOHOST   = 32'h1000_0000;
     localparam [7:0] MAGIC = 8'hA5, READY = 8'h3E, ACK = 8'h06, NAK = 8'h15;
     localparam PKT_MAX         = 20000;
+    localparam HDR             = 13;    // SYNC, addr, len, entry
 
     reg clk   = 1'b0;
     reg rst_n = 1'b1;
@@ -92,14 +94,15 @@ module tb_boot;
     reg         host_end = 1'b0;        // Host finished, the bytes now come from the program
     reg  [8*16-1:0]  prog_out = 0;      // Last 16 bytes printed by the program
     integer     n_out    = 0;
-    integer     n_imem_w = 0;           // IMEM writes from the data port
+    integer     n_mem_w  = 0;           // IMEM and DMEM writes from the core data port
+    reg  [31:0] tohost   = 32'h1000_0000;
     integer     jump_cyc = -1;
     reg  [31:0] jump_pc  = 32'h0;
     reg  [31:0] exp_jump = 32'h0;
     integer     min_jump = 0;
     integer     max_jump = 32'h7FFF_FFFF;
-    integer     load_cyc = 0;           // SYNC of the last packet to its last ACK
-    integer     load_len = 0;
+    integer     load_cyc = 0;           // First SYNC of the last file to its last ACK
+    integer     load_len = 0;           // Bytes of the last file
 
     task fail(input [8*160-1:0] why);
         begin
@@ -119,8 +122,10 @@ module tb_boot;
                 fail("timeout");
             if (uart_tx === 1'bx)
                 fail("uart_tx = X");
-            if (dut.imem_v && dut.imem_r && dut.s_we)
-                n_imem_w = n_imem_w + 1;
+            if (dut.d_req_valid && dut.d_req_ready && dut.d_we &&
+                (dut.d_addr < `SOC_IMEM_SIZE ||
+                 (dut.d_addr >= `SOC_DMEM_BASE && dut.d_addr - `SOC_DMEM_BASE < `SOC_DMEM_SIZE)))
+                n_mem_w = n_mem_w + 1;
             // First instruction fetch that leaves the boot ROM
             if (jump_cyc < 0 && dut.if_req && dut.if_gnt && dut.if_addr < `SOC_BOOT_BASE) begin
                 jump_cyc = cycle;
@@ -130,7 +135,9 @@ module tb_boot;
                 $sformat(msg, "trap at pc %08h", dut.u_core.wb_pc_q);
                 fail(msg);
             end
-            if (dut.d_req_valid && dut.d_req_ready && dut.d_we && dut.d_addr == TOHOST)
+            // The bootloader may load the tohost word itself (a .tohost segment)
+            if (jump_cyc >= 0 && dut.d_req_valid && dut.d_req_ready && dut.d_we &&
+                dut.d_addr == tohost)
                 check_end(dut.d_wdata);
         end
     end
@@ -262,7 +269,7 @@ module tb_boot;
                 if (r == 1) pkt_len = pkt_len + 1;
             end
             $fclose(fd);
-            if (pkt_len < 15 || pkt[0] != MAGIC) fail("bad packet file");
+            if (pkt_len < 1 + HDR + 8 || pkt[0] != MAGIC) fail("bad packet file");
         end
     endtask
 
@@ -283,7 +290,7 @@ module tb_boot;
     endtask
 
     // ---------------------------------------------------------- host program
-    integer     npkt = 0, p, k, magic_delay = 0, w0, t0;
+    integer     npkt = 0, p, k, pos, len, n_seg, magic_delay = 0, w0, t0;
     reg  [7:0]  b;
     reg         ok;
     reg  [8*16-1:0] fmt;
@@ -298,6 +305,7 @@ module tb_boot;
         if ($value$plusargs("max_jump=%d", max_jump)) ;
         if ($value$plusargs("strap=%d", strap)) ;
         if ($value$plusargs("magic_delay=%d", magic_delay)) ;
+        if ($value$plusargs("tohost=%h", tohost)) ;
 
         #1 rst_n = 1'b0;                // Falling edge, so the asynchronous reset acts
         repeat (5) @(posedge clk);
@@ -321,24 +329,34 @@ module tb_boot;
                 expc = "A";
                 if ($value$plusargs(fmt, expc)) ;
                 load_pkt(file);
-                w0 = n_imem_w;
-                t0 = cycle;
-                for (k = 1; k < 10; k = k + 1)           // SYNC and header
-                    send_byte(pkt[k]);
-                if (expc[7:0] == "H") begin
-                    expect_byte(NAK, "bad header");
-                    if (n_imem_w != w0) fail("IMEM written after a bad header");
-                end else begin
-                    expect_byte(ACK, "header");
-                    for (k = 10; k < pkt_len; k = k + 1) // Data and crc
+                t0    = cycle;
+                pos   = 1;
+                n_seg = 0;
+                while (pos < pkt_len) begin
+                    if (pkt[pos] != 8'h5A || pos + HDR + 4 > pkt_len) fail("bad packet file");
+                    len = {pkt[pos+8], pkt[pos+7], pkt[pos+6], pkt[pos+5]};
+                    w0  = n_mem_w;
+                    for (k = pos; k < pos + HDR; k = k + 1)          // SYNC and header
                         send_byte(pkt[k]);
-                    expect_byte(expc[7:0] == "D" ? NAK : ACK, "data");
-                    if (n_imem_w - w0 != (pkt_len - 14) / 4) fail("wrong number of IMEM writes");
+                    if (expc[7:0] == "H") begin
+                        expect_byte(NAK, "bad header");
+                        if (n_mem_w != w0) fail("memory written after a bad header");
+                    end else begin
+                        expect_byte(ACK, "header");
+                        for (k = pos + HDR; k < pos + HDR + len + 4; k = k + 1) // Data and crc
+                            send_byte(pkt[k]);
+                        expect_byte(expc[7:0] == "D" ? NAK : ACK, "data");
+                        if (n_mem_w - w0 != len / 4) fail("wrong number of memory writes");
+                    end
+                    pos   = pos + HDR + len + 4;
+                    n_seg = n_seg + 1;
+                end
+                if (expc[7:0] != "H") begin
                     load_cyc = cycle - t0;
                     load_len = pkt_len - 1;
                 end
-                $display("host: packet %0d (%0d bytes) answered as expected (%0s)",
-                         p, pkt_len - 1, expc[7:0] == "A" ? "ACK" : "NAK");
+                $display("host: file %0d (%0d segments, %0d bytes) answered as expected (%0s)",
+                         p, n_seg, pkt_len - 1, expc[7:0] == "A" ? "ACK" : "NAK");
             end
         end
         // No byte may arrive before the program starts

@@ -7,7 +7,7 @@
 | `arch_run.sh` | Chạy một bài riscv-arch-test | Container |
 | `elf2hex.py` | Tách ELF thành ảnh IMEM, DMEM cho `$readmemh` | Container |
 | `gen_boot_rom.py` | ELF của bootloader ra `rtl/mem/boot_rom_init.vh` (`make boot-gen`) | Container |
-| `uart_pack.py` | Đóng gói `.bin` theo giao thức bootloader, hoặc gửi xuống board | Bất kỳ |
+| `uart_pack.py` | Đóng gói ELF (mỗi section một gói) hoặc `.bin` theo giao thức bootloader, hoặc gửi xuống board | Bất kỳ |
 | `isa_status.py` | Lập bảng kết quả riscv-tests | Container |
 | `yosys_summary.sh`, `get_nangate45.sh` | Tóm tắt Yosys, tải thư viện Nangate45 mở | Container |
 | `ppa_table.py` | Gom số PPA từ report Genus, Innovus | Bất kỳ |

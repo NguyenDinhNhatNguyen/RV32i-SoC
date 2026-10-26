@@ -312,6 +312,20 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Cho phép nạp vào DMEM: đề bài yêu cầu NAK mọi địa chỉ ngoài IMEM. Chương trình có `.data` trong DMEM cần bản sau.
 - **Kiểm tra:** `make sim-boot` 6 test PASS (nạp, CRC sai, 4 kiểu địa chỉ sai, timeout, strap 0, nạp ở baud thật). Cấy lỗi bỏ kiểm tra addr + len thì `badaddr` FAIL. Với ROM mới: `lint-core`, `unit-core`, `fw-core`, `isa-core`, `fw-soc` 127/127, `fw-bus` 124/124, `bench-soc`, `lint-soc`, `lint-bus` PASS. `unit-bus` FAIL ở `tb_imem_port` vì testbench này so với nội dung ROM base, cần Phát sửa (xem `docs/boot.md` mục 8).
 
+### D-040. Bootloader nạp cả DMEM, chương trình nhiều segment
+
+- **Bối cảnh:** D-039 chỉ cho ghi IMEM, nên chương trình C có `.rodata`, `.data` trong DMEM (theo `fw/common/link.ld`) không nạp được. Yêu cầu mới: cho ghi cả DMEM.
+- **Lựa chọn:**
+  - Header thêm trường entry (4 byte, có trong CRC). `0xFFFF_FFFF` nghĩa là còn segment sau, bootloader ACK rồi chờ SYNC kế. Giá trị khác là gói cuối, phải chia hết cho 4 và nằm trong IMEM, sau ACK thì nhảy tới đó.
+  - Mỗi segment phải nằm trọn trong IMEM hoặc trọn trong DMEM (`SOC_DMEM_BASE`, `SOC_DMEM_SIZE` từ `soc_map.vh`, kiểm cả trong `gen_boot_rom.py`). Mọi địa chỉ khác và đoạn vượt cuối vùng bị NAK trước khi ghi.
+  - `uart_pack.py` đọc ELF: mỗi section có nội dung là một gói, theo thứ tự địa chỉ, gói cuối mang entry của ELF. File `.bin` vẫn dùng được (một gói, entry = addr).
+- **Lý do:** gói cũ chỉ đổi thêm 4 byte nên host model và `uart_pack.py` giữ nguyên cấu trúc. Entry nằm trong header nên được kiểm trước khi ghi, và gói lỗi vẫn không bao giờ được chạy. Không gửi `.bss` vì crt0 đã xoá.
+- **Đã loại:**
+  - Gói kết thúc riêng (chỉ có entry): thêm một loại gói và một nhánh trong ROM.
+  - Gộp section liền nhau thành segment `PT_LOAD`: khoảng trống giữa section (như căn 64 byte của `.tohost`) phải gửi số 0 vô ích.
+  - Cho entry nằm trong DMEM: core chỉ lấy lệnh từ IMEM và boot ROM.
+- **Kiểm tra:** ROM 143 / 256 word. `make sim-boot` 7 test PASS, thêm `celf` (C, 4 segment) và 4 kiểu NAK mới trong `badaddr`.
+
 ---
 
 ## Tài liệu
