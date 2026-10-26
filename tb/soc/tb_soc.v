@@ -87,6 +87,7 @@ module tb_soc;
     integer     sleep   = 0;
     integer     n_apb   = 0;
     integer     n_uart  = 0;
+    reg         uart_nl = 1'b1;         // Last UART character was a newline (or none yet)
     integer     timeout = 200000;
     reg  [31:0] tohost  = 32'hFFFF_FFFF;
     reg  [8*64-1:0]  test_name = "soc";
@@ -98,12 +99,17 @@ module tb_soc;
         begin
             if (!done) begin
                 done = 1'b1;
+                if (!uart_nl)
+                    $display("");           // Keep the result line at the start of a line
                 if (pass)
-                    $display("PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, UART %0d byte)",
-                             test_name, cycle, instret, (instret > 0) ? (1.0 * cycle / instret) : 0.0,
+                    $display({"PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, ",
+                              "UART %0d byte)"},
+                             test_name, cycle, instret,
+                             (instret > 0) ? (1.0 * cycle / instret) : 0.0,
                              n_apb, sleep, n_uart);
                 else
-                    $display("FAIL: %0s: %0s (cycle %0d, instret %0d)", test_name, why, cycle, instret);
+                    $display("FAIL: %0s: %0s (cycle %0d, instret %0d)",
+                             test_name, why, cycle, instret);
                 $finish;
             end
         end
@@ -168,6 +174,7 @@ module tb_soc;
                         $write("%c", ub_sh);
                         $fflush;
                         n_uart  = n_uart + 1;
+                        uart_nl = (ub_sh == 8'h0A);
                         ub_busy = 1'b0;
                     end
                     ub_bit = ub_bit + 1;

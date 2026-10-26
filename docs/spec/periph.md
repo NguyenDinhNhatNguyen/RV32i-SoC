@@ -64,18 +64,20 @@ UART 8N1, FIFO TX và RX sâu `2**FIFO_AW` byte (mặc định 8).
 - Không có tri-state bên trong. `gpio_o`, `gpio_oe`, `gpio_i` tách riêng, pad thêm ở mức chip.
 - Chưa có ngắt GPIO.
 
-## 4. Bộ gom ngắt IRQC (0x2000_6000, RTL-11, chưa có RTL)
+## 4. Bộ gom ngắt IRQC (`rtl/periph/irqc_apb.v`, 0x2000_6000, RTL-11)
 
 Thanh ghi đã chốt ở `docs/spec/soc_spec.md` mục 5:
 
 | Offset | Tên | Truy cập | Reset | Ý nghĩa |
 | --- | --- | --- | --- | --- |
-| 0x00 | PENDING | R | — | Mỗi bit là mức hiện tại của một nguồn ngắt |
-| 0x04 | ENABLE | RW | 0 | Bật từng nguồn |
+| 0x00 | PENDING | R | — | Mỗi bit là mức hiện tại của một nguồn ngắt. Ghi trả `PSLVERR` |
+| 0x04 | ENABLE | RW | 0 | Bật từng nguồn. Chỉ giữ 5 bit thấp |
 
-`irq_external_i = |(PENDING & ENABLE)`.
+- `irq = |(PENDING & ENABLE)`, qua 1 flop, nối `irq_external_i` của lõi.
+- `PENDING` đi theo mức của nguồn kể cả khi `ENABLE` tắt, nên phần mềm đọc được nguồn nào đang chờ.
+- Không có ghi 1 để xoá. Phần mềm xoá ngắt tại chính ngoại vi: đọc `DATA` của UART, ghi 1 vào bit `DONE` của accelerator.
 
-Gán bit nguồn ngắt (đề xuất, người làm RTL-11 chốt khi viết RTL):
+Gán bit nguồn ngắt (macro `SOC_IRQ_*` trong `rtl/bus/soc_map.vh`):
 
 | Bit | Nguồn | Có sẵn ở `soc_top` |
 | --- | --- | --- |
@@ -85,7 +87,7 @@ Gán bit nguồn ngắt (đề xuất, người làm RTL-11 chốt khi viết RT
 | 3 | SPI | Chưa có, để 0 |
 | 4 | DMA | Chưa có, để 0 |
 
-Hiện `soc_top` nối `irq_external = 0` và khe APB 6 chưa bật.
+Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì nối vào bit tương ứng của `irq_src` trong `soc_top`.
 
 ## 5. Boot ROM (`rtl/mem/boot_rom.v`, 0x0001_0000)
 

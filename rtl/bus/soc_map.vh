@@ -48,4 +48,12 @@
 `define SOC_APB_DMA         8
 `define SOC_APB_N           9
 
+// IRQC source bits (PENDING/ENABLE bit, docs/spec/periph.md section 4)
+`define SOC_IRQ_UART        0
+`define SOC_IRQ_ACCEL       1
+`define SOC_IRQ_GPIO        2               // No source yet, tied to 0
+`define SOC_IRQ_SPI         3               // No source yet, tied to 0
+`define SOC_IRQ_DMA         4               // No source yet, tied to 0
+`define SOC_IRQ_N           5
+
 `endif

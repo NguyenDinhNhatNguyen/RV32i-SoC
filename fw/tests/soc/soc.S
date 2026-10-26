@@ -6,18 +6,22 @@
 //   - Accelerator: 4x4 matrix multiply, compared with precomputed results.
 //   - UART: reset values, send a string over TX, the tb loops uart_tx back to uart_rx so
 //     the whole string comes back on RX with no error flags.
-//   - A slot without RTL (IRQC), partial-word UART accesses and unknown offsets of
-//     the Timer and UART become access faults.
+//   - IRQC: reset values, PENDING follows the sources even when ENABLE masks them,
+//     external interrupt from the accelerator (DONE) and from the UART (RXNE).
+//   - Partial-word UART accesses, a write to IRQC PENDING and unknown offsets of the
+//     Timer, UART and IRQC become access faults.
 //
 // Trap handler: records mcause -> s2, mepc -> s3, mtval -> s4, increments s5.
-// On an exception it returns to s6. On an interrupt it clears the source (MTIMECMP_HI = -1
-// or MSIP = 0) and returns to mepc. The handler uses t0..t2, so the main program keeps
-// no values in these registers while interrupts are enabled.
+// On an exception it returns to s6. On an interrupt it clears the source and returns to
+// mepc: MTIMECMP_HI = -1, MSIP = 0, or for an external interrupt it reads IRQC PENDING,
+// clears DONE at the accelerator and reads UART DATA into s7. The handler uses t0..t2, so
+// the main program keeps no values in these registers while interrupts are enabled.
 #include "test_macros.h"
 
 #define TIMER       0x20000000
 #define GPIO        0x20002000
 #define UART        0x20001000
+#define IRQC        0x20006000
 #define ACCEL       0x30000000
 #define PAD_IN_LO   0x0F96              // Low half of the tb_soc PAD_IN
 
@@ -204,12 +208,82 @@ TEST_CODE_BEGIN
     andi a0, a0, 0xE0                   // OVR, FE, TXOVF
     CHECK(23, a0, 0)
 
-    // ---- A slot without RTL and bad accesses become access faults -----------------
+    // ---- IRQC and external interrupts ---------------------------------------------
+    li   s10, IRQC
+    lw   a0, 4(s10)
+    CHECK(25, a0, 0)                    // ENABLE after reset
+    lw   a0, 0(s10)
+    CHECK(26, a0, 0)                    // PENDING: no source is active
+    li   a0, -1
+    sw   a0, 4(s10)
+    lw   a0, 4(s10)
+    CHECK(27, a0, 0x1F)                 // ENABLE keeps 5 bits
+    sw   zero, 4(s10)
+
+    // Accelerator done with IRQ_EN while ENABLE = 0: PENDING shows it, no interrupt
+    li   s5, 0
+    li   a0, 0x800
+    csrw mie, a0                        // MEIE
+    csrsi mstatus, 8                    // MIE
+    li   a0, 3
+    sw   a0, 0(s8)                      // Accelerator CTRL = START | IRQ_EN
+    li   TESTNUM, 28
+    li   a4, 100
+13: addi a4, a4, -1
+    beqz a4, fail
+    lw   a0, 0(s10)
+    andi a0, a0, 2                      // PENDING bit 1 (accelerator)
+    beqz a0, 13b
+    bnez s5, fail                       // Masked by ENABLE
+    // Enable bit 1: the external interrupt fires, the handler clears DONE
+    li   TESTNUM, 29
+    li   a0, 2
+    sw   a0, 4(s10)                     // ENABLE = accelerator
+14: beqz s5, 14b
+    csrci mstatus, 8
+    csrw mie, zero
+    li   x7, 1
+    bne  s5, x7, fail
+    li   x7, 0x8000000B
+    bne  s2, x7, fail
+    lw   a0, 4(s8)
+    andi a0, a0, 2
+    CHECK(30, a0, 0)                    // DONE cleared by the handler
+    lw   a0, 0(s10)
+    CHECK(31, a0, 0)                    // PENDING back to 0
+
+    // UART RX interrupt: send one byte, it comes back on RX through the tb loop
+    li   TESTNUM, 32
+    li   s5, 0
+    li   s7, 0
+    li   a0, 1
+    sw   a0, 4(s10)                     // ENABLE = UART
+    li   a0, 0x0B
+    sw   a0, 8(s9)                      // UART CTRL = TXEN | RXEN | RXIE
+    li   a0, 0x800
+    csrw mie, a0
+    csrsi mstatus, 8
+    li   a0, 0x5A
+    sw   a0, 0(s9)                      // TX 'Z'
+15: beqz s5, 15b
+    csrci mstatus, 8
+    csrw mie, zero
+    li   x7, 1
+    bne  s5, x7, fail
+    li   x7, 0x8000000B
+    bne  s2, x7, fail
+    li   x7, 0x5A
+    bne  s7, x7, fail                   // The handler read the byte
+    li   a0, 3
+    sw   a0, 8(s9)                      // UART CTRL: RXIE off
+    sw   zero, 4(s10)                   // ENABLE = 0
+
+    // ---- Bad accesses become access faults -----------------------------------------
     li   a5, UART
     EXPECT_TRAP(17, 7, 0x20001000, sb a0, 0(a5))        // APB is word access only
     EXPECT_TRAP(24, 5, 0x20001010, lw a0, 0x10(a5))     // UART: PSLVERR
-    li   a5, 0x20006000
-    EXPECT_TRAP(18, 5, 0x20006000, lw a0, 0(a5))        // IRQC (RTL-11)
+    EXPECT_TRAP(18, 7, 0x20006000, sw a0, 0(s10))       // IRQC: PENDING is read only
+    EXPECT_TRAP(33, 5, 0x20006008, lw a0, 8(s10))       // IRQC: PSLVERR
     EXPECT_TRAP(19, 5, 0x20000014, lw a0, 0x14(s0))     // Timer: PSLVERR
 
     TEST_PASS
@@ -223,8 +297,10 @@ handler:
     bltz s2, 1f
     csrw mepc, s6                       // Exception: return to the label in s6
     mret
-1:  li   t0, TIMER
-    andi t1, s2, 0x1f
+1:  andi t1, s2, 0x1f
+    li   t2, 11
+    beq  t1, t2, 3f
+    li   t0, TIMER
     li   t2, 7
     bne  t1, t2, 2f
     li   t1, -1
@@ -232,6 +308,18 @@ handler:
     mret
 2:  sw   zero, 0x10(t0)                 // Software interrupt: MSIP = 0
     mret
+3:  li   t0, IRQC                       // External interrupt: clear at the peripheral
+    lw   t1, 0(t0)                      // PENDING
+    andi t2, t1, 2
+    beqz t2, 4f
+    li   t0, ACCEL
+    li   t2, 2
+    sw   t2, 4(t0)                      // Accelerator: clear DONE
+4:  andi t2, t1, 1
+    beqz t2, 5f
+    li   t0, UART
+    lw   s7, 0(t0)                      // UART: reading DATA pops RX and clears RXNE
+5:  mret
 
 TEST_DATA_BEGIN
 mat_a:

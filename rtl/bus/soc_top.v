@@ -9,16 +9,17 @@
 //                                └─► apb_bridge ─┬─ slot 0 timer_apb
 //                                                ├─ slot 1 uart_apb
 //                                                ├─ slot 2 gpio_apb
+//                                                ├─ slot 6 irqc_apb
 //                                                └─ slot 7 accel_apb
 //
 // One clock domain. The external reset rst_n goes through reset_sync, and every block
 // uses rst_n_sync.
 //
 // Interrupts: irq_timer and irq_software come from timer_apb (mtime >= mtimecmp, MSIP).
-// irq_external waits for the IRQC interrupt controller (RTL-11, slot 6) and is tied to 0 for now.
-// The UART and accelerator irq lines are already routed here to connect to IRQC.
+// irq_external comes from the IRQC interrupt controller (RTL-11, slot 6), which gathers the
+// UART and accelerator irq lines (bit map SOC_IRQ_* in soc_map.vh).
 //
-// APB slots without RTL yet: SPI (3), I2C (4), PWM (5), IRQC (6), DMA (8). Their APB_EN bit
+// APB slots without RTL yet: SPI (3), I2C (4), PWM (5), DMA (8). Their APB_EN bit
 // is 0, so apb_bridge returns err for every access to them.
 // To add a block: connect the slot's PSEL/PRDATA/PREADY/PSLVERR and set its APB_EN bit.
 `include "soc_map.vh"
@@ -43,6 +44,7 @@ module soc_top #(
     localparam [NS-1:0] APB_EN = (9'b1 << `SOC_APB_TIMER) |
                                  (9'b1 << `SOC_APB_UART)  |
                                  (9'b1 << `SOC_APB_GPIO)  |
+                                 (9'b1 << `SOC_APB_IRQC)  |
                                  (9'b1 << `SOC_APB_ACCEL);
 
     // Reset
@@ -63,7 +65,7 @@ module soc_top #(
     wire        d_rsp_valid, d_rsp_err;
     wire [31:0] d_rsp_rdata;
     wire        irq_timer, irq_software;
-    wire        irq_external = 1'b0;    // Waits for IRQC (RTL-11)
+    wire        irq_external;           // From IRQC (slot 6)
     wire [63:0] mtime;
     wire        core_sleep;
 
@@ -277,6 +279,30 @@ module soc_top #(
         .irq     (accel_irq)
     );
 
+    // Slot 6: interrupt controller (RTL-11). Sources without RTL yet are tied to 0.
+    wire [`SOC_IRQ_N-1:0] irq_src;
+
+    assign irq_src[`SOC_IRQ_UART]  = uart_irq;
+    assign irq_src[`SOC_IRQ_ACCEL] = accel_irq;
+    assign irq_src[`SOC_IRQ_GPIO]  = 1'b0;
+    assign irq_src[`SOC_IRQ_SPI]   = 1'b0;
+    assign irq_src[`SOC_IRQ_DMA]   = 1'b0;
+
+    irqc_apb #(.N(`SOC_IRQ_N)) u_irqc (
+        .PCLK    (clk),
+        .PRESETn (rst_n_sync),
+        .PSEL    (psel[`SOC_APB_IRQC]),
+        .PENABLE (penable),
+        .PWRITE  (pwrite),
+        .PADDR   (paddr),
+        .PWDATA  (pwdata),
+        .PRDATA  (prdata[`SOC_APB_IRQC*32 +: 32]),
+        .PREADY  (pready[`SOC_APB_IRQC]),
+        .PSLVERR (pslverr[`SOC_APB_IRQC]),
+        .irq_src (irq_src),
+        .irq     (irq_external)
+    );
+
     // Slots without RTL: never selected (APB_EN = 0), tied to idle values
     assign prdata [`SOC_APB_SPI*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_SPI]           = 1'b1;
@@ -287,18 +313,14 @@ module soc_top #(
     assign prdata [`SOC_APB_PWM*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_PWM]           = 1'b1;
     assign pslverr[`SOC_APB_PWM]           = 1'b0;
-    assign prdata [`SOC_APB_IRQC*32 +: 32] = 32'h0;
-    assign pready [`SOC_APB_IRQC]          = 1'b1;
-    assign pslverr[`SOC_APB_IRQC]          = 1'b0;
     assign prdata [`SOC_APB_DMA*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_DMA]           = 1'b1;
     assign pslverr[`SOC_APB_DMA]           = 1'b0;
 
-    // Unused: PSEL of empty slots, UART and accelerator irq waiting for IRQC,
-    // core_sleep (IMEM is already off because if_req = 0 while asleep)
+    // Unused: PSEL of empty slots, core_sleep (IMEM is already off because if_req = 0
+    // while asleep)
     wire unused_ok = &{1'b0, psel[`SOC_APB_SPI], psel[`SOC_APB_I2C],
-                       psel[`SOC_APB_PWM], psel[`SOC_APB_IRQC], psel[`SOC_APB_DMA],
-                       uart_irq, accel_irq, core_sleep};
+                       psel[`SOC_APB_PWM], psel[`SOC_APB_DMA], core_sleep};
 
 endmodule
 

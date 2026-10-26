@@ -6,10 +6,10 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 
 | File | Nội dung |
 | --- | --- |
-| `rtl/bus/soc_top.v` | Top của SoC: core, bus, bộ nhớ, Timer, UART, GPIO, accelerator |
+| `rtl/bus/soc_top.v` | Top của SoC: core, bus, bộ nhớ, Timer, UART, GPIO, IRQC, accelerator |
 | `rtl/bus/reset_sync.v` | Bộ đồng bộ reset 2 flop |
 | `tb/soc/tb_soc.v` | Testbench mức SoC, chỉ nối chân của chip |
-| `fw/tests/soc/soc.S` | Test Timer, ngắt, WFI, UART, GPIO, accelerator, khe trống |
+| `fw/tests/soc/soc.S` | Test Timer, ngắt, WFI, UART, GPIO, accelerator, IRQC, truy cập sai |
 | `scripts/soc_run.sh` | Chạy một bài trên `tb_soc`, gọi từ `make fw-soc` |
 
 ## 2. Chân của chip
@@ -32,9 +32,10 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
      └─ cổng dữ liệu ─► sys_bus ─┬─► imem_port (cổng dữ liệu)
                                  ├─► sram_wrap (DMEM 4 macro)
                                  └─► apb_bridge ─┬─ khe 0 timer_apb ── irq_timer, irq_software, mtime ─► core
-                                                 ├─ khe 1 uart_apb ─── uart_rx/tx, irq (chờ IRQC)
+                                                 ├─ khe 1 uart_apb ─── uart_rx/tx, irq ─► IRQC bit 0
                                                  ├─ khe 2 gpio_apb ─── gpio_i/o/oe
-                                                 └─ khe 7 accel_apb ── irq (chờ IRQC)
+                                                 ├─ khe 6 irqc_apb ─── irq ─► irq_external của core
+                                                 └─ khe 7 accel_apb ── irq ─► IRQC bit 1
 ```
 
 ## 4. Các điểm thiết kế
@@ -52,7 +53,7 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 | --- | --- |
 | `irq_timer_i` | `timer_apb.irq_timer` (mtime ≥ mtimecmp) |
 | `irq_software_i` | `timer_apb.irq_software` (MSIP) |
-| `irq_external_i` | 0, chờ IRQC (RTL-11). `irq` của UART và accelerator đã kéo tới `soc_top` |
+| `irq_external_i` | `irqc_apb.irq`. IRQC gom `irq` của UART (bit 0) và accelerator (bit 1), bit 2..4 (GPIO, SPI, DMA) tạm nối 0 |
 | `mtime_i` | `timer_apb.mtime_o`, để CSR `time`, `timeh` đọc đúng mtime |
 
 ### 4.3 Khe APB
@@ -63,18 +64,18 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 | 1 | UART | Đã nối (RTL-10) |
 | 2 | GPIO | Đã nối, `W = 32` |
 | 3, 4, 5 | SPI, I2C, PWM | Chưa có RTL (Tầng 1, 2) |
-| 6 | IRQC | Chưa có RTL (RTL-11) |
+| 6 | IRQC | Đã nối (RTL-11) |
 | 7 | Accelerator | Đã nối qua `accel_apb` |
 | 8 | DMA | Chưa có RTL (Tầng 2) |
 
 Khe chưa có RTL có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB.
 
-Thêm một khối mới vào `soc_top`, ví dụ IRQC (làm giống cách đã nối UART):
+Thêm một khối mới vào `soc_top`, ví dụ SPI (làm giống cách đã nối UART, IRQC):
 
-1. Khởi tạo khối, nối `psel[SOC_APB_IRQC]`, `penable`, `pwrite`, `paddr`, `pwdata`.
+1. Khởi tạo khối, nối `psel[SOC_APB_SPI]`, `penable`, `pwrite`, `paddr`, `pwdata`.
 2. Nối `prdata`, `pready`, `pslverr` của khe vào chỗ đang gán giá trị rảnh.
-3. Thêm bit `SOC_APB_IRQC` vào `APB_EN`.
-4. Với IRQC: nối `uart_irq`, `accel_irq` vào ngõ vào, ngõ ra vào `irq_external`.
+3. Thêm bit `SOC_APB_SPI` vào `APB_EN`.
+4. Nếu khối có ngắt: nối vào `irq_src[SOC_IRQ_SPI]` thay cho giá trị 0.
 
 ### 4.4 Tham số
 
@@ -94,6 +95,8 @@ Kích thước IMEM, DMEM lấy từ `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong 
 | `rtl/periph/gpio_apb.v` | Thêm dòng trống cuối file | Verilator báo `EOFNEWLINE`, lint của `soc_top` FAIL |
 | `rtl/periph/uart_apb.v`, `uart_fifo.v` | Thêm `` `timescale 1ns/1ps `` | Verilator báo `TIMESCALEMOD` vì các file khác đều có, lint của `soc_top` FAIL. `tb_uart_apb` vẫn PASS |
 
+IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-11, theo khuôn `gpio_apb` và thanh ghi đã chốt ở `soc_spec.md` mục 5. Gán bit theo macro `SOC_IRQ_*` thêm vào `soc_map.vh`. `tb_irqc_apb` chưa có target Makefile, giống các testbench Timer, GPIO, UART (VER-02).
+
 ## 5. Kiểm chứng ở nhà
 
 ```sh
@@ -101,12 +104,12 @@ scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 4 cấu hình ENABLE_M x
 scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, riscv-tests trên soc_top
 ```
 
-Kết quả ngày 24/10 (sau khi nối UART):
+Kết quả ngày 26/10 (sau khi nối IRQC):
 
 | Lệnh | Kết quả |
 | --- | --- |
 | `make lint-soc` | 0 warning ở cả 4 cấu hình |
-| `make fw-soc` | 126/126 PASS: `smoke`, `hazard`, `soc`, `bus`, rv32ui, rv32mi (M0W0 và M1W1), rv32um (M1W1) |
+| `make fw-soc` | 126/126 PASS: `smoke`, `hazard`, `soc` (thêm test IRQC), `bus`, rv32ui, rv32mi (M0W0 và M1W1), rv32um (M1W1) |
 | Yosys `synth -top soc_top` | Không cảnh báo, không latch, đủ 8 macro |
 | Test cũ | `fw-bus` 124/124, `unit-bus` 7/7, `tb_timer_apb`, `tb_gpio_apb`, `tb_uart_apb`, `eda.sh check`, `lint-core`, `unit-core`, `fw-core`, `isa-core` vẫn PASS |
 
@@ -122,12 +125,13 @@ Kết quả ngày 24/10 (sau khi nối UART):
 - UART: `CTRL`, `BAUDDIV` sau reset, gửi "soc ok" qua TX và nhận lại đủ ở RX, không có cờ OVR, FE, TXOVF. Log in ra "soc ok".
 - GPIO: `DIR`, `DATA_OUT`, `DATA_IN` đọc lại qua pad của tb, ghi `DATA_IN` thành store access fault.
 - Accelerator: nhân ma trận 4x4 đúng kết quả tính sẵn.
-- Khe IRQC, `sb` vào UART, offset lạ của Timer và UART thành access fault.
+- IRQC: giá trị reset, `ENABLE` chỉ giữ 5 bit, `PENDING` thấy nguồn accelerator kể cả khi `ENABLE` tắt và không có ngắt, bật `ENABLE` thì có ngắt ngoài (`mcause = 0x8000000B`). Ngắt ngoài từ UART khi nhận byte (`RXIE`), handler đọc `DATA` để xoá. Mỗi lần chỉ vào handler đúng 1 lần.
+- `sb` vào UART, ghi `PENDING` của IRQC, offset lạ của Timer, UART, IRQC thành access fault.
 
-Đã cấy thử 14 lỗi vào bản sao `soc_top` và `reset_sync`: mtime nối 0, hở `irq_timer`, hở `irq_software`, tắt khe GPIO, hở `gpio_i`, Timer nhận nhầm PSEL của GPIO, tắt khe accelerator, tắt khe UART, hở `uart_rx`, hở `uart_tx`, UART nhận nhầm PSEL của GPIO, reset chỉ 1 flop, reset assert đồng bộ, core dùng reset chưa đồng bộ. `tb_soc` bắt được cả 14.
+Đã cấy thử 22 lỗi vào bản sao `soc_top`, `reset_sync` và `irqc_apb`: mtime nối 0, hở `irq_timer`, hở `irq_software`, tắt khe GPIO, hở `gpio_i`, Timer nhận nhầm PSEL của GPIO, tắt khe accelerator, tắt khe UART, hở `uart_rx`, hở `uart_tx`, UART nhận nhầm PSEL của GPIO, reset chỉ 1 flop, reset assert đồng bộ, core dùng reset chưa đồng bộ, tắt khe IRQC, hở `irq_external`, hở bit accelerator, hở bit UART, đổi chỗ bit UART và accelerator, IRQC bỏ qua `ENABLE`, cho ghi `PENDING`, `ENABLE` reset về 1. `tb_soc` bắt được cả 22.
 
 ## 6. Còn lại
 
-- RTL-11 (Nhân, Phúc): IRQC ở khe 6, gom `irq` của UART và accelerator vào `irq_external_i`. GPIO hiện chưa có ngõ ra ngắt.
+- GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - STA-01 (Phát): SDC cho `soc_top` theo mục 4.1.
 - Trên server: Genus cho `soc_top` (cần `sram_2k_macro.lib`), GLS với `sram_2k_macro.v` thật.
