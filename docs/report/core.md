@@ -70,8 +70,55 @@ Hai quyết định nhỏ hơn nhưng đáng nêu trong báo cáo:
 
 - **D-035:** mtval của EBREAK = PC, để khớp Spike trong riscv-arch-test (`docs/riscof.md`).
 - **D-037:** nửa cao của `mcycle` và `minstret` có enable riêng, khoảng 58 flop ít nhận clock hơn mỗi chu kỳ (ước lượng tay, `docs/timing_core.md`).
+- **D-038:** forward MIE và mie cho kiểm tra ngắt, thay cho luật chặn ngắt của quyết định 8. Xem mục X.4.
 
-## X.4 Phương pháp kiểm chứng
+## X.4 Ngắt và WFI
+
+### Luật nhận ngắt
+
+Core có 3 đường ngắt mức: MEI (từ IRQC), MTI (Timer), MSI. Ngắt được nhận ở EX, không chờ tới WB (mục 4.8, D-024).
+
+- **Điều kiện:** `mstatus.MIE = 1` và `(mip & mie) != 0`. Ưu tiên MEI > MSI > MTI. Mã ngắt được chốt khi lệnh rời EX, vì đường ngắt có thể hạ trước khi lệnh tới WB.
+- **Lệnh bị ngắt:** lệnh hợp lệ ở EX được đánh dấu "bị ngắt". Nó không thực thi, không phát yêu cầu bus. Tới WB thì nhận trap với mepc = PC của chính nó, nên sau MRET lệnh này chạy lại từ đầu.
+- **Không nhận ngắt** khi WB đang chuyển hướng (lệnh ở EX sẽ bị huỷ), và khi lệnh ở EX có yêu cầu bus đang chờ `ready`. Luật bus 1 bắt master giữ nguyên yêu cầu đã hiện ra, nên lệnh đó phải hoàn thành trước (`ex_req_wait_q`, D-024).
+- **Phép chia đang chạy vẫn bị ngắt** và chạy lại sau MRET. Nhờ vậy độ trễ ngắt không cộng thêm 33 chu kỳ (D-032).
+- **Bật và tắt ngắt có hiệu lực ngay lệnh kế tiếp.** Khi WB đang ghi mstatus hoặc mie, EX dùng 4 bit MIE, MSIE, MTIE, MEIE sau lần ghi đó (forward từ WB, D-038). Sau `csrci mstatus, MIE` lệnh kế không bị ngắt. Sau `csrsi mstatus, MIE` lệnh kế bị ngắt nếu có ngắt chờ.
+
+### Forward MIE (D-038) và câu chuyện `accel_bench`
+
+Bản đầu (D-024) không forward mà chặn hẳn ngắt khi WB đang ghi mstatus hoặc mie (`wb_irq_block`). Tắt ngắt vì vậy vẫn đúng ngay lệnh kế. Bật ngắt thì chậm một lệnh. Đặc tả Privileged cho phép nhận ngắt trễ, và các test `irq`, `wfi` đều PASS.
+
+Lỗi chỉ lộ ra khi chạy benchmark accelerator dùng ngắt (`fw/bench/accel_bench.c`, EVA-01). Firmware chờ ngắt bằng vòng không race, mẫu chuẩn của phần mềm nhúng:
+
+```text
+loop: csrc mstatus, MIE     # tắt ngắt
+      kiểm irq_done         # handler đặt cờ
+      wfi                   # ngủ, thức khi có ngắt chờ dù MIE = 0
+      csrs mstatus, MIE     # bật ngắt, ngắt phải được nhận ở đây
+      j loop
+```
+
+Vòng này không bao giờ vào được handler. Lệnh ngay sau `csrs mstatus` là `csrc mstatus` của vòng sau, và lệnh đó không ngắt được vì `wb_irq_block`. Vậy MIE chỉ bằng 1 trong đúng một lệnh không ngắt được. Handler không bao giờ chạy, `irq_done` không bao giờ bằng 1, nên bản `irq` của benchmark treo trong vòng chờ. Bản `poll` không dùng ngắt nên vẫn chạy đúng.
+
+Cách xử lý:
+
+- Bước đầu né lỗi bằng một `nop` sau `csrs mstatus` trong `accel_bench.c`. Cách này dễ quên và phần mềm chuẩn không làm (ví dụ `local_irq_enable` rồi tắt ngay của hệ điều hành).
+- Sửa RTL (D-038): bỏ `wb_irq_block`. `rv32_csr` tính 4 bit bật ngắt sau lần ghi từ `wb_result_q` và mã lệnh ở WB, chỉ đi từ flop, không qua mux `rdata_o`. Lệnh CSR đã ở WB thì chắc chắn hoàn thành (lệnh CSR lỗi bị gắn cờ từ EX), nên dùng trước giá trị mới là an toàn.
+- Viết test `fw/tests/asm/wfi_pending.S` tái hiện lỗi. Test FAIL trên RTL cũ (W1 ngủ thừa 1 chu kỳ ở test 2, W0 và W1 sai mepc ở test 8) và PASS sau khi sửa. Bỏ `nop` né lỗi trong `accel_bench.c`.
+- Chi phí timing (flow nhà): ENABLE_M=0 2,856 ns (trước 2,855), ENABLE_M=1 3,113 ns (trước 3,007, +3,5%, sát mức nhiễu ±3% của abc). Đường găng ENABLE_M=1 vẫn ở bộ nhân, không đi qua logic forward (D-038).
+
+Bài học: test đơn vị và test assembly chỉ kiểm điều người viết nghĩ tới. Chạy một chương trình thật dùng ngắt theo mẫu chuẩn mới lộ ra khoảng trống này.
+
+### WFI (`ENABLE_WFI_SLEEP=1`)
+
+- WFI xử lý ở WB như lệnh tuần tự hoá: huỷ lệnh ở EX, PC kế = PC(WFI)+4, đặt `sleep_q` (mục 4.11, D-025).
+- Khi ngủ: `if_req_o = 0` từ flop `sleep_q`, mọi flop pipeline, regfile và M-unit giữ nguyên nhờ tắt enable, để Genus gate clock. `mcycle` và `mtime` vẫn chạy. `core_sleep_o` báo cho SoC.
+- **Thức khi `(mip & mie) != 0`**, không xét mstatus.MIE, đúng đặc tả. MIE=1 thì ngắt được nhận ở lệnh kế với mepc = PC(WFI)+4. MIE=0 thì chạy tiếp lệnh sau WFI. Vòng chờ ở trên dùng đúng trường hợp MIE=0 này.
+- **Ngắt đã chờ sẵn thì không ngủ** (D-038). Nếu `(mip & mie) != 0` lúc WFI ở WB thì WFI chỉ chuyển hướng tới PC+4, 0 chu kỳ ngủ. Nếu MIE=1 và ngắt đã chờ khi WFI còn ở EX thì chính WFI bị ngắt, mepc = PC(WFI).
+- `ENABLE_WFI_SLEEP=0`: WFI là NOP. Cả hai cấu hình chạy cùng bộ test `wfi`, `wfi_pending`, `irq`.
+- Số liệu (test `wfi`, nominal): với W1 core ngủ 801 trên 1003 chu kỳ và chỉ chạy 177 lệnh. Với W0 cùng test chạy 625 lệnh trong 954 chu kỳ (`docs/riscv-tests-status.md`). Công suất polling so với WFI: [CHỜ GENUS].
+
+## X.6 Phương pháp kiểm chứng
 
 Kiểm chứng theo 5 lớp, từ khối nhỏ tới bằng chứng tuân thủ chính thức.
 
@@ -134,7 +181,7 @@ Lỗi P7 không bị bắt là "lệnh M bị ngắt vẫn giữ M-unit". Lỗi 
 
 Thay đổi bộ đếm của D-037 được chứng minh tương đương với bản cũ bằng Yosys `equiv_induct`, 0 điểm không chứng minh được, cả `ENABLE_M=0` và 1 (`docs/timing_core.md`).
 
-## X.5 Kết quả benchmark
+## X.7 Kết quả benchmark
 
 Đo trên `tb_core`, bộ nhớ không wait state, GCC 13.2 `-O2`, số chu kỳ và số lệnh lấy từ `mcycle` và `minstret` trong vùng đo (`docs/bench_core.md`, commit core 2193cd1).
 
@@ -164,7 +211,7 @@ Bảng này chưa công bằng: hai core khác tính năng CSR và giao diện b
 
 Số đo trên SoC thật (wait state của bus, truy cập dữ liệu vào IMEM): chờ STA-04.
 
-## X.6 Timing, diện tích, công suất
+## X.9 Timing, diện tích, công suất
 
 ### Xu hướng ở nhà (Yosys, Nangate45, OpenSTA)
 
@@ -202,7 +249,7 @@ Dự kiến điền bằng `scripts/ppa_table.py` từ report trong `appendix/`.
 | Công suất chờ ngắt: polling so với WFI | chờ STA-04 | chờ STA-04 |
 | LEC RTL ↔ netlist | chờ STA-04 | chờ STA-04 |
 
-## X.7 Giới hạn đã biết
+## X.10 Giới hạn đã biết
 
 - **Không hỗ trợ truy cập lệch bằng phần cứng.** Load, store lệch gây trap (mục 4.1). Vì vậy `rv32ui-p-ma_data` bị loại (`docs/riscv-tests-status.md`).
 - **Chỉ M-mode.** Không có S/U-mode, PMP, debug trigger. Loại `rv32mi-p-breakpoint`, `rv32mi-p-pmpaddr` và 41 test `pmp32` (`docs/riscof.md`).
