@@ -118,6 +118,75 @@ Bài học: test đơn vị và test assembly chỉ kiểm điều người vi�
 - `ENABLE_WFI_SLEEP=0`: WFI là NOP. Cả hai cấu hình chạy cùng bộ test `wfi`, `wfi_pending`, `irq`.
 - Số liệu (test `wfi`, nominal): với W1 core ngủ 801 trên 1003 chu kỳ và chỉ chạy 177 lệnh. Với W0 cùng test chạy 625 lệnh trong 954 chu kỳ (`docs/riscv-tests-status.md`). Công suất polling so với WFI: [CHỜ GENUS].
 
+## X.5 Bootloader UART (D-039, D-040)
+
+Boot ROM 1 KB (256 word) ở 0x0001_0000 là reset vector của core. Bootloader trong ROM nhận chương trình qua UART, ghi từng segment vào IMEM hoặc DMEM qua cổng dữ liệu rồi nhảy tới entry. Không cần sửa `soc_top`, vì IMEM ghi được từ cổng dữ liệu (`docs/boot.md`).
+
+![Sơ đồ trạng thái bootloader](../figures/boot_fsm.svg)
+
+*Hình X.2. Sơ đồ trạng thái bootloader trong `fw/boot/boot.S`. Hình sinh từ `docs/figures/boot_fsm.py`.*
+
+### Chân strap `gpio_i[0]`
+
+| `gpio_i[0]` | Hành vi |
+| --- | --- |
+| 0 | Nhảy ngay về 0x0000_0000, không đụng UART, giống boot ROM bản base |
+| 1 | Boot qua UART: chờ MAGIC tối đa `TIMEOUT_CYCLES` (1 s ở 50 MHz), hết giờ thì nhảy về 0x0000_0000 |
+
+- Cực tính 0 = chạy IMEM là bắt buộc. `tb_soc` có `PAD_IN[0] = 0` nên mọi test cũ chạy thẳng IMEM, chỉ thêm khoảng 35 chu kỳ. Bản build không có GPIO (`tb_core_bus`) đọc GPIO bị lỗi bus, trap về nhánh nhảy IMEM vì `mtvec` trỏ sẵn về đó (D-039).
+- Cách làm giống chân BOOT0 của nhiều vi điều khiển. Silicon có cửa sổ chờ đủ dài cho người nhấn reset, còn mô phỏng không chậm đi.
+
+### Giao thức
+
+Mọi số nhiều byte là little endian, UART 8N1.
+
+| Bước | Hướng | Nội dung |
+| --- | --- | --- |
+| 1 | PC → chip | MAGIC `0xA5`, lặp cách nhau khoảng 2 ms tới khi có READY |
+| 2 | chip → PC | READY `0x3E` |
+| 3 | PC → chip | SYNC `0x5A`, rồi header 12 byte: addr, len, entry |
+| 4 | chip → PC | ACK `0x06` hoặc NAK `0x15` cho header |
+| 5 | PC → chip | data (len byte), rồi CRC-32 (như `zlib.crc32`) của addr, len, entry và data |
+| 6 | chip → PC | ACK hoặc NAK cho CRC |
+
+- Mỗi segment là một gói từ SYNC tới CRC. `entry = 0xFFFF_FFFF` nghĩa là còn gói sau. Gói cuối mang địa chỉ nhảy thật (D-040).
+- `scripts/uart_pack.py` đọc ELF và gửi mỗi section có nội dung (`.text`, `.rodata`, `.data`) thành một gói đúng địa chỉ chạy, gói cuối mang entry của ELF. `.bss` không gửi vì crt0 tự xoá.
+- Header hợp lệ khi addr và len chia hết cho 4, len > 0, đoạn [addr, addr + len) nằm trọn trong IMEM hoặc trọn trong DMEM (lấy từ `rtl/bus/soc_map.vh`), entry là `0xFFFF_FFFF` hoặc chia hết cho 4 và nằm trong IMEM.
+- Sau ACK của gói cuối, bootloader chờ ACK ra hết đường truyền, xoá `mtvec` và các thanh ghi đã dùng, chạy `fence.i` rồi nhảy.
+
+### Xử lý lỗi
+
+- **Header sai** (ngoài vùng, vượt cuối vùng, lệch, entry sai): NAK ngay sau header, bộ nhớ không bị ghi. PC không phải gửi cả gói vô ích.
+- **CRC sai:** NAK sau dữ liệu. Dữ liệu đã được ghi vào bộ nhớ trong lúc nhận, nhưng gói lỗi không bao giờ được chạy. PC gửi lại cả gói từ SYNC.
+- Sau NAK bootloader quay về chờ SYNC và không còn timeout.
+- Byte rác trước MAGIC hoặc trước SYNC bị bỏ qua. MAGIC lặp có khoảng nghỉ để bộ thu UART đồng bộ lại nếu reset nhả giữa một byte.
+
+### Kích thước và thời gian nạp
+
+- Assembly thuần, chỉ dùng thanh ghi, không stack, không dùng DMEM. Cổng dữ liệu không đọc được ROM nên mọi hằng số nạp bằng `li`.
+- ROM: **143 / 256 word** (572 byte, 56%). `scripts/gen_boot_rom.py` báo lỗi nếu vượt 256 word.
+- CRC-32 tính từng bit, chỉ tốn 9 lệnh. Mỗi byte xử lý trong khoảng 100 chu kỳ, nhỏ hơn nhiều so với 4 320 chu kỳ của một byte ở 115200 baud và 50 MHz.
+
+Ở 115200 baud mỗi byte mất 86,8 µs. Mỗi gói thêm 17 byte (SYNC, header, CRC), cả luồng thêm 1 byte MAGIC (`docs/boot.md` mục 6).
+
+| Chương trình | Byte truyền | Thời gian |
+| --- | ---: | ---: |
+| `hello.S` (24 word), đo trong test `rtl_load` | 113 (SYNC tới ACK) | 496 232 chu kỳ = 9,9 ms ở 50 MHz |
+| `cprog.c` (4 segment, 380 byte dữ liệu) | 449 | 39 ms |
+| Đầy IMEM 16 KB | 16 402 | 1,42 s |
+
+### Kiểm chứng
+
+`make sim-boot` chạy 7 test trên `soc_top` thật, đều PASS: nạp `hello`, nạp chương trình C 4 segment (`celf`: biến toàn cục khởi tạo khác 0, mảng hằng, chuỗi hằng, `.bss` bằng 0), CRC sai rồi gửi lại, 8 kiểu header sai bị NAK, timeout, strap 0, nạp ở 115200 baud thật bằng ROM đã commit. Mỗi test còn kiểm số lần ghi IMEM/DMEM đúng bằng len / 4 và lần lấy lệnh đầu tiên ngoài ROM đúng địa chỉ. Cấy lỗi bỏ kiểm tra addr + len thì `badaddr` FAIL (D-039, D-040).
+
+### Giới hạn
+
+- Entry phải nằm trong IMEM, vì core chỉ lấy lệnh từ IMEM và boot ROM.
+- Không xác thực chương trình (ngoài phạm vi, đề bài loại phần bảo mật). CRC chỉ bắt lỗi đường truyền.
+- Sau NAK không còn timeout. Nếu PC ngắt kết nối giữa chừng thì phải nhấn reset.
+- Tốc độ cố định lúc build (`BOOT_BAUD`, `BOOT_CLK_HZ`). Đổi clock của SoC thì phải chạy lại `make boot-gen` và `make sim-boot`.
+- Board cần jumper kéo `gpio_i[0]` lên 1 khi muốn nạp. Sau khi boot, chân này dùng như GPIO bình thường.
+
 ## X.6 Phương pháp kiểm chứng
 
 Kiểm chứng theo 5 lớp, từ khối nhỏ tới bằng chứng tuân thủ chính thức.
