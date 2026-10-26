@@ -25,8 +25,9 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | --- | --- |
 | `core_decisions.md` | Nhật ký quyết định thiết kế lõi |
 | `bus_mem.md` | Bus hệ thống, wrapper SRAM, boot ROM |
-| `soc_top.md` | Nối dây `soc_top`, bộ đồng bộ reset, DMA |
+| `soc_top.md` | Nối dây `soc_top`, bộ đồng bộ reset, DMA, SDC |
 | `timing_bus.md` | Timing diagram bus |
+| `sta_results.md` | Bảng kết quả các lần chạy STA của `soc_top` (ở trường và ở nhà) |
 | `macro_notes.md` | SRAM macro qua từng bước flow |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
 

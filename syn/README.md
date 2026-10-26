@@ -2,7 +2,7 @@
 
 | Thư mục | Nội dung | Chạy ở |
 | --- | --- | --- |
-| `constraints/` | SDC (clock 20 ns). Dùng chung cho flow trường và flow nhà | |
+| `constraints/` | SDC (clock 20 ns): `accel.sdc` cho accelerator (PD-01), `soc.sdc` cho `soc_top` (STA-01). Dùng chung cho flow trường và flow nhà | |
 | `scripts/` | Script Genus | Server trường: `make synth-accel` |
 | `yosys/` | Tổng hợp thử bằng Yosys và STA với Nangate45, chỉ xem xu hướng | Nhà: `make synth-core-yosys`, `make sta-core-nangate` |
 
