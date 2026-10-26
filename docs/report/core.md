@@ -25,7 +25,7 @@ ISA (mục 4.1, 4.7):
 - Load, store và nhảy lệch địa chỉ gây ngoại lệ, không xử lý bằng phần cứng.
 - CSR M-mode: mstatus, misa, mie, mip, mtvec (direct), mepc, mcause, mtval, mscratch, mcycle(h), minstret(h), các bí danh chỉ đọc cycle, time, instret và nhóm ID.
 
-Cổng của core (mục 4.10): cổng lấy lệnh `if_*` (đọc đồng bộ từ IMEM hoặc boot ROM), bus dữ liệu valid/ready `d_req_*`, `d_rsp_*`, 3 đường ngắt mức, `mtime_i[63:0]`, `core_sleep_o`. Tham số `ENABLE_M`, `ENABLE_WFI_SLEEP`, `RESET_PC` (mặc định 0x0001_0000, boot ROM).
+Cổng của core (mục 4.10): cổng lấy lệnh `if_*` (đọc đồng bộ từ IMEM hoặc boot ROM), bus dữ liệu valid/ready `d_req_*`, `d_rsp_*`, 3 đường ngắt mức, `mtime_i[63:0]`, `core_sleep_o`. Tham số `ENABLE_M`, `ENABLE_WFI_SLEEP`, `RESET_PC` (mặc định 0x0001_0000, boot ROM). Nhánh `feat/nhan-btb` thêm `ENABLE_BTB` và `BTB_ENTRIES` (mục X.8).
 
 ## X.2 Vi kiến trúc 3 tầng
 
@@ -62,7 +62,7 @@ Chọn 10 quyết định ảnh hưởng nhiều nhất tới CPI, timing và t�
 | 5 | **Bus valid/ready, `d_req_valid_o` không phụ thuộc `ready`** (D-015, mục 5.1) | Đúng luật 5 của bus. Cho phát yêu cầu mới ngay chu kỳ nhận phản hồi nên load liên tiếp mỗi chu kỳ | Bus kiểu req/gnt có `valid` phụ thuộc `gnt` |
 | 6 | **Ngoại lệ gắn cờ ở EX, xử lý ở WB, kiểm tra CSR ở EX** (D-016, D-021) | Một đường ngoại lệ chung. WB không thêm nguồn trap nên `d_req_valid_o` không phụ thuộc giải mã CSR | Kiểm tra CSR ở WB (kéo dài `wb_redirect` → `d_req_valid_o`) |
 | 7 | **Ngoại lệ chính xác: chuyển hướng từ WB chặn tổ hợp yêu cầu bus của EX** (D-023, mục 4.8) | Lệnh sau lệnh trap không ghi bộ nhớ. Không vi phạm luật bus 1 vì lúc đó EX chưa có yêu cầu đang chờ | Cho lệnh sau trap chạy rồi khôi phục (không làm được với store) |
-| 8 | **Ngắt nhận ở EX, chặn khi WB đang ghi mstatus hoặc mie, không ngắt yêu cầu đang wait state** (D-024) | Bật hoặc tắt ngắt có hiệu lực đúng từ lệnh kế tiếp. Giữ luật bus 1 | Chốt quyết định ngắt vào flop (chậm 1 chu kỳ). Nhận ngắt ở WB (mất chính xác với store) |
+| 8 | **Ngắt nhận ở EX, forward MIE và mie từ WB, không ngắt yêu cầu đang wait state** (D-024, D-038) | Bật hoặc tắt ngắt có hiệu lực đúng từ lệnh kế tiếp. Giữ luật bus 1 | Chốt quyết định ngắt vào flop (chậm 1 chu kỳ). Nhận ngắt ở WB (mất chính xác với store). Chặn ngắt khi WB ghi mstatus (bản đầu, gây lỗi ở mục X.4) |
 | 9 | **WFI ngủ thật bằng cách tắt enable** (D-025, mục 4.11) | `if_req_o = 0` từ flop, mọi flop pipeline giữ nguyên để Genus gate clock. Phục vụ phần so sánh công suất polling và WFI | WFI là NOP (vẫn hỗ trợ khi `ENABLE_WFI_SLEEP=0`) |
 | 10 | **Nhân 2 chu kỳ bằng thanh ghi trung gian, chia 1 bit mỗi chu kỳ** (D-031) | Mỗi chu kỳ chỉ có nửa bộ nhân, không cần multicycle path trong SDC. Chia đơn giản, đủ cho 50 MHz | Nhân 33 × 33 một chu kỳ (cần multicycle path). Chia radix-4 (tốn bảng chọn thương) |
 
@@ -76,7 +76,7 @@ Hai quyết định nhỏ hơn nhưng đáng nêu trong báo cáo:
 
 ### Luật nhận ngắt
 
-Core có 3 đường ngắt mức: MEI (từ IRQC), MTI (Timer), MSI. Ngắt được nhận ở EX, không chờ tới WB (mục 4.8, D-024).
+Core có 3 đường ngắt mức: MEI (từ bộ điều khiển ngắt IRQC, gom UART, GPIO, accelerator), MTI (`mtime >= mtimecmp` của Timer), MSI (bit MSIP của Timer) (`rtl/bus/soc_top.v`). Ngắt được nhận ở EX, không chờ tới WB (mục 4.8, D-024).
 
 - **Điều kiện:** `mstatus.MIE = 1` và `(mip & mie) != 0`. Ưu tiên MEI > MSI > MTI. Mã ngắt được chốt khi lệnh rời EX, vì đường ngắt có thể hạ trước khi lệnh tới WB.
 - **Lệnh bị ngắt:** lệnh hợp lệ ở EX được đánh dấu "bị ngắt". Nó không thực thi, không phát yêu cầu bus. Tới WB thì nhận trap với mepc = PC của chính nó, nên sau MRET lệnh này chạy lại từ đầu.
@@ -198,8 +198,8 @@ Kiểm chứng theo 5 lớp, từ khối nhỏ tới bằng chứng tuân thủ 
 
 ### Test assembly trên `tb_core` (`make fw-core`)
 
-- 6 bài trong `fw/tests/asm/`: `smoke`, `hazard`, `trap`, `irq`, `wfi`, `muldiv` (`docs/riscv-tests-status.md`).
-- Chạy với 4 cấu hình `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`, mỗi cấu hình 4 chế độ. Tổng 96/96 (D-033).
+- 7 bài trong `fw/tests/asm/`: `smoke`, `hazard`, `trap`, `irq`, `wfi`, `muldiv` (`docs/riscv-tests-status.md`) và `wfi_pending` (D-038).
+- Chạy với 4 cấu hình `M<ENABLE_M>W<ENABLE_WFI_SLEEP>`, mỗi cấu hình 4 chế độ. Tổng 112/112 (96/96 trước D-038, D-033).
 - `tb_core` kiểm giao thức bus: yêu cầu giữ nguyên khi `ready=0`, không có yêu cầu thứ hai khi còn phản hồi chờ, không X trên valid, địa chỉ, dữ liệu ghi và rd (D-017).
 - Chế độ nominal bật `+strict_timing`: tb tự tính số bubble đúng (1 sau nhánh nhảy, 2 sau chuyển hướng WB, 1 sau truy cập dữ liệu vào IMEM, 1 cho MUL, 33 cho DIV) và báo lỗi nếu lệch. Đây là bằng chứng không có stall load-use và load liên tiếp mỗi chu kỳ (D-017, D-028, D-033).
 
@@ -490,8 +490,11 @@ Nếu buổi review quyết bật BTB (mục X.8) thì thêm một cột `ENABLE
 - **Ngắt lặp quá nhanh làm phép chia không bao giờ xong.** Ngắt được nhận giữa phép chia và phép chạy lại sau MRET. Nếu ngắt tới nhanh hơn khoảng 34 chu kỳ cộng thời gian trình xử lý thì phép chia không kết thúc. Ngắt của Timer, UART, GPIO chậm hơn nhiều nên chấp nhận (D-032).
 - **Nhảy tới đúng PC+4 vẫn mất 1 chu kỳ**, vì không so sánh đích để giữ đường găng ngắn (D-014).
 - **Khi WB chờ mà EX trống, IF vẫn dừng**, mất tối đa 1 chu kỳ (D-014).
-- **CPI chỉ đúng với bộ nhớ không wait state.** Trên SoC, SB/SH vào SRAM có 1 wait state (mục 5.1 luật 6) và truy cập dữ liệu vào IMEM chiếm cổng lấy lệnh (`docs/bench_core.md`).
+- **SB/SH tốn thêm 1 chu kỳ trên `soc_top`** vì macro SRAM không có chân ghi byte (mục 5.1 luật 6). Dhrystone chậm 4,9%, CoreMark 0,1 đến 0,3% (mục X.7). Đọc dữ liệu vào IMEM còn chiếm cổng lấy lệnh, benchmark hiện tại không gặp vì `.rodata` ở DMEM.
 - **CoreMark bản rv32i chỉ dư khoảng 1,4 KB IMEM** ở cấu hình 16 KB của tb_core (`docs/bench_core.md`).
 - **Tràn nửa thấp của `minstret`** chỉ được kiểm bằng chứng minh hình thức, không có test mô phỏng (cần 2^32 lệnh). Tràn của `mcycle` có test (`trap.S` test 83, 84) (`docs/timing_core.md`).
 - **`wb_instr_q` (32 bit) nạp mỗi lệnh** dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa chặn vì `tb_core` dùng nó để in vết (`docs/timing_core.md`, D-037).
+- **Accelerator bị APB giới hạn.** 95% thời gian mỗi khối là chuyển dữ liệu, nên với rv32im chỉ nhanh 1,69 lần (mục X.7).
+- **Không dự đoán nhánh trong bản nộp** (`ENABLE_BTB=0`). Mỗi lệnh nhảy mất 1 chu kỳ, BTB 8 entry sẽ lấy lại 7 đến 10% (mục X.8).
+- **Bootloader không xác thực chương trình** và không còn timeout sau NAK (mục X.5).
 - **Số timing ở nhà chỉ là xu hướng.** Số chính thức: [CHỜ GENUS].
