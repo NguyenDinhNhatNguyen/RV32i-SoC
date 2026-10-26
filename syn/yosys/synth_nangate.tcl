@@ -40,7 +40,7 @@ memory_map
 opt -full
 techmap -autoproc -map +/techmap.v -map $ks
 opt -fast
-abc -fast
+abc
 opt -fast
 synth -run check:
 # Count enable flops before mapping (Nangate has no enable flop, and dfflibmap

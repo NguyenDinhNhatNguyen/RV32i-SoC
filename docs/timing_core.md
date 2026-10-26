@@ -111,6 +111,19 @@ Timing và diện tích sau thay đổi (ns, µm², D=2000): ENABLE_M=0 2,575 v�
 
 Các nhóm khác đã có enable hợp lý: regfile (enable riêng từng thanh ghi), `ex_instr_hold_q` (chỉ nạp khi dừng), thanh ghi WB (`ex_go & ex_valid`), CSR ít ghi (`mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`), M-unit (tích riêng chỉ nạp khi bắt đầu phép nhân, thanh ghi chia chỉ nạp khi đang chia). `wb_instr_q` (32 bit) nạp mỗi lệnh dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa đổi vì `tb_core` dùng `wb_instr_q` để in vết lệnh và nhận ra lệnh M, MRET, FENCE.I, nên phải sửa cả testbench. Nhóm cần xem lại trước.
 
+## Đổi `abc -fast` thành `abc` (26/10)
+
+Yosys trong Docker IIC-OSIC-TOOLS 2026.10 không nhận `abc -fast`. Dòng 43 của `syn/yosys/synth_nangate.tcl` đổi thành `abc`. Bước này chỉ map logic generic, sau đó `abc -liberty` map lại sang cell Nangate45. Từ nay `make sta-core-nangate` dừng với lỗi và in 20 dòng cuối của `yosys.log` hoặc `sta.log` nếu một bước hỏng.
+
+Số mới (D=2000, Yosys 0.33, cùng RTL với mục 3):
+
+| Cấu hình | `abc -fast` (mục 3) | `abc` | Chênh |
+| --- | --- | --- | --- |
+| ENABLE_M=0 | 2,575 ns, 17 032 µm² | 2,855 ns (350 MHz), 16 995 µm² | +10,9% chu kỳ, −0,2% diện tích |
+| ENABLE_M=1 | 3,067 ns, 28 559 µm² | 3,007 ns (333 MHz), 28 463 µm² | −2,0% chu kỳ, −0,3% diện tích |
+
+Chênh lệch chỉ do bỏ `-fast`. Đã chạy lại M0 với `abc -fast` trên cùng RTL và ra đúng 2,575 ns, 17 032 µm². Bước `abc` generic cho ra cấu trúc logic khác, nên `abc -liberty` sau đó tối ưu ra kết quả khác. M0 lệch quá mức nhiễu ±3% của mục 2, M1 vẫn trong mức nhiễu. Các bảng ở mục 1 và 2 được đo với `abc -fast`, chỉ so được với nhau, không so với số mới. Core vẫn dư nhiều so với 50 MHz.
+
 ## Còn lại
 
 - Ở trường: chạy Genus với clock gating bật, so số ICG và công suất trước và sau D-037.

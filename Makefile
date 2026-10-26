@@ -481,11 +481,18 @@ NG_LIB := syn/run_yosys/lib/NangateOpenCellLibrary_typical.lib
 # $(1) label, $(2) top, $(3) source files, $(4) include, $(5) parameters
 define nangate_run
 	@mkdir -p $(YS_RUN)/$(1)_ng
+	@rm -f $(addprefix $(YS_RUN)/$(1)_ng/,stat.txt sta.txt yosys.log sta.log)
 	@YS_TOP=$(2) YS_SRCS="$(3)" YS_INC="$(4)" YS_PARAMS="$(5)" YS_OUT=$(YS_RUN)/$(1)_ng YS_LIB=$(NG_LIB) \
-	  $(YOSYS) -q -l $(YS_RUN)/$(1)_ng/yosys.log -c syn/yosys/synth_nangate.tcl > /dev/null 2>&1
+	  $(YOSYS) -q -l $(YS_RUN)/$(1)_ng/yosys.log -c syn/yosys/synth_nangate.tcl > /dev/null 2>&1 && \
+	  test -s $(YS_RUN)/$(1)_ng/stat.txt || \
+	  { echo "ERROR: yosys failed for $(1), last lines of $(YS_RUN)/$(1)_ng/yosys.log:"; \
+	    tail -n 20 $(YS_RUN)/$(1)_ng/yosys.log; exit 1; }
 	@YS_TOP=$(2) YS_OUT=$(YS_RUN)/$(1)_ng YS_LIB=$(NG_LIB) \
-	  $(STA) -no_splash -exit syn/yosys/sta_nangate.tcl > $(YS_RUN)/$(1)_ng/sta.log 2>&1
-	@printf '  %-14s dien tich %s um2\n' $(1) "$$(awk '/Chip area/ {print $$NF}' $(YS_RUN)/$(1)_ng/stat.txt)"
+	  $(STA) -no_splash -exit syn/yosys/sta_nangate.tcl > $(YS_RUN)/$(1)_ng/sta.log 2>&1 && \
+	  test -s $(YS_RUN)/$(1)_ng/sta.txt && ! grep -q '^Error' $(YS_RUN)/$(1)_ng/sta.log || \
+	  { echo "ERROR: sta failed for $(1), last lines of $(YS_RUN)/$(1)_ng/sta.log:"; \
+	    tail -n 20 $(YS_RUN)/$(1)_ng/sta.log; exit 1; }
+	@printf '  %-14s area %s um2\n' $(1) "$$(awk '/Chip area/ {print $$NF}' $(YS_RUN)/$(1)_ng/stat.txt)"
 	@sed 's/^/                 /' $(YS_RUN)/$(1)_ng/sta.txt
 endef
 
