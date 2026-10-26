@@ -78,6 +78,18 @@ module tb_imem_port;
         end
     endfunction
 
+    // Expected boot ROM word, from the same file as boot_rom.v
+    function [31:0] boot_word(input [7:0] addr);
+        reg [31:0] word;
+        begin
+            case (addr)
+`include "boot_rom_init.vh"
+                default: word = 32'h0;
+            endcase
+            boot_word = word;
+        end
+    endfunction
+
     localparam [31:0] BOOT = `SOC_BOOT_BASE;
     wire hit_imem = (if_addr < (32'd4 << AW));
     wire hit_boot = (if_addr >= BOOT) && (if_addr < BOOT + `SOC_BOOT_SIZE);
@@ -124,7 +136,7 @@ module tb_imem_port;
             if (if_req && if_gnt) begin
                 f_exp_err_q  <= ~hit_imem & ~hit_boot;
                 f_exp_q_data <= hit_imem ? ref_mem[if_addr[AW+1:2]] :
-                                hit_boot ? ((if_addr[9:2] == 8'd0) ? 32'h0000_0067 : 32'h0) : 32'h0;
+                                hit_boot ? boot_word(if_addr[9:2]) : 32'h0;
                 if (hit_imem) n_imem = n_imem + 1;
                 else if (hit_boot) n_rom = n_rom + 1;
                 else n_err = n_err + 1;
