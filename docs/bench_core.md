@@ -38,7 +38,7 @@ Ghi chú:
 - Dhrystone ra cùng số chu kỳ ở hai cấu hình là trùng hợp. Bản rv32i chạy thêm 30 lệnh mỗi lần (hàm nhân chia mềm của libgcc). Bản rv32im ít lệnh hơn nhưng EX dừng chờ lệnh DIV (33 chu kỳ). Hai phần này bù nhau gần đúng.
 - CoreMark nhân nhiều trong phần ma trận nên RV32M nhanh gấp khoảng 2,5 lần.
 - CoreMark tự kiểm CRC đúng (seedcrc 0xe9f5, list 0xe714, matrix 0x1fd7, state 0x8e3a). Dòng `ERROR! Must execute for at least 10 secs` và `Errors detected` là do mô phỏng quá ngắn so với luật chạy chính thức, `make bench-core` bỏ qua lỗi này.
-- CPI chỉ phản ánh core với bộ nhớ không wait state. Ở SoC thật, truy cập dữ liệu vào IMEM và wait state của bus sẽ làm CPI tăng.
+- CPI chỉ phản ánh core với bộ nhớ không wait state. Số đo trên `soc_top` và phần giải thích chênh lệch ở `docs/bench_soc.md`.
 
 ## Kích thước bộ nhớ
 

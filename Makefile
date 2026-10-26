@@ -22,6 +22,7 @@ help:
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
 	@echo "make bench-core    - Dhrystone and CoreMark on tb_core (ENABLE_M=0 and 1), prints CPI (T=coremark)"
+	@echo "make bench-soc     - Dhrystone, CoreMark and accelerator speedup on soc_top (tb_soc), T=accel_bench"
 	@echo "make arch-core-dut - riscv-arch-test on the core side only, writes signatures (T=add-01)"
 	@echo "make arch-core     - riscv-arch-test through RISCOF, compared with Spike (needs riscof, spike)"
 	@echo "make synth-core-yosys - trial Yosys synthesis of rv32_core, trends only"
@@ -306,26 +307,31 @@ bench_march    = -march=$(1)_zicsr
 # Memory region sizes come from tb/core/core_tb_map.vh
 core_map       = $(shell awk '/CORE_TB_$(1) /{print $$3}' tb/core/core_tb_map.vh)
 
-.PRECIOUS: $(CORE_BENCH_OUT)/dhrystone_%.elf $(CORE_BENCH_OUT)/coremark_%.elf
+# Benchmark ELF rules for an output folder: $(1) folder, $(2) extra compiler flags.
+# The same sources build for tb_core and, with -DBENCH_SOC, for tb_soc (bench-soc).
+define bench_elf_rules
+.PRECIOUS: $(1)/dhrystone_%.elf $(1)/coremark_%.elf
 
 # The original Dhrystone code is K&R style, so warnings are off (-w). dhrystone_main.c
 # renames main to dhry_main, and dhry_wrap.c calls it and checks the results.
-$(CORE_BENCH_OUT)/dhrystone_%.elf: $(BENCH_COMMON) $(BENCH_DHRY_C) $(BENCH_DHRY)/dhrystone_main.c \
-                                   $(wildcard fw/bench/dhrystone/*.h) fw/bench/common/bench.h fw/common/link.ld
-	@mkdir -p $(@D)
-	@test -f $(BENCH_DHRY)/dhrystone.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
-	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
-	  -Dmain=dhry_main -c -o $(@D)/dhrystone_main_$*.o $(BENCH_DHRY)/dhrystone_main.c
-	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/dhrystone -I$(BENCH_DHRY) -w \
-	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(BENCH_DHRY_C) $(@D)/dhrystone_main_$*.o -lgcc
+$(1)/dhrystone_%.elf: $$(BENCH_COMMON) $$(BENCH_DHRY_C) $$(BENCH_DHRY)/dhrystone_main.c \
+                      $$(wildcard fw/bench/dhrystone/*.h) fw/bench/common/bench.h fw/common/link.ld
+	@mkdir -p $$(@D)
+	@test -f $$(BENCH_DHRY)/dhrystone.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
+	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w \
+	  -Dmain=dhry_main -c -o $$(@D)/dhrystone_main_$$*.o $$(BENCH_DHRY)/dhrystone_main.c
+	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w \
+	  $$(BENCH_LDFLAGS) -o $$@ $$(BENCH_COMMON) $$(BENCH_DHRY_C) $$(@D)/dhrystone_main_$$*.o -lgcc
 
-$(CORE_BENCH_OUT)/coremark_%.elf: $(BENCH_COMMON) $(BENCH_CM_SRC) fw/bench/coremark/core_portme.h \
-                                  fw/bench/common/bench.h fw/common/link.ld FORCE_CM_ITER
-	@mkdir -p $(@D)
+$(1)/coremark_%.elf: $$(BENCH_COMMON) $$(BENCH_CM_SRC) fw/bench/coremark/core_portme.h \
+                     fw/bench/common/bench.h fw/common/link.ld FORCE_CM_ITER
+	@mkdir -p $$(@D)
 	@test -f fw/coremark/coremark.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
-	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -Ifw/bench/coremark -Ifw/coremark \
-	  -DITERATIONS=$(CM_ITER) -DPERFORMANCE_RUN=1 '-DFLAGS_STR="$(BENCH_OPT)"' \
-	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(BENCH_CM_SRC) -lgcc
+	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/coremark -Ifw/coremark \
+	  -DITERATIONS=$$(CM_ITER) -DPERFORMANCE_RUN=1 '-DFLAGS_STR="$$(BENCH_OPT)"' \
+	  $$(BENCH_LDFLAGS) -o $$@ $$(BENCH_COMMON) $$(BENCH_CM_SRC) -lgcc
+endef
+$(eval $(call bench_elf_rules,$(CORE_BENCH_OUT),))
 
 # CM_ITER is not part of the file name, so CoreMark is always rebuilt
 .PHONY: FORCE_CM_ITER bench-core
@@ -355,6 +361,70 @@ bench-core: $(CORE_OUT)/tb_core_M0W1.vvp $(CORE_OUT)/tb_core_M1W1.vvp \
 	      echo "  [FAIL] $$t: CoreMark could not verify its result"; fail=1; fi;; \
 	  esac; \
 	done; [ $$fail = 0 ]
+
+# ---------------------------------------------------------------------------
+# Benchmarks on soc_top (EVA-01): Dhrystone, CoreMark and the accelerator speedup
+# (fw/bench/accel_bench.c) on tb_soc, built with -DBENCH_SOC (UART output, BAUDDIV = 1).
+# Same sources and flags as bench-core, the rv32i build runs with ENABLE_M=0, the rv32im
+# build with ENABLE_M=1, both with ENABLE_WFI_SLEEP=1. Results: docs/bench_soc.md.
+#   make bench-soc                          all 6 runs
+#   make bench-soc T=accel_bench            one program
+# tb_soc is compiled here with scripts/bench_soc_mon.v as a second root, which prints the
+# bus stall cycles of each measured region ("BENCH soc region" lines).
+# Logs in $(CORE_OUT)/bench_soc.
+# ---------------------------------------------------------------------------
+SOC_BENCH_OUT  := $(CORE_OUT)/bench_soc
+SOC_BENCH_LIST := dhrystone coremark accel_bench
+ifneq ($(T),)
+SOC_BENCH_LIST := $(filter $(T),$(SOC_BENCH_LIST))
+endif
+SOC_BENCH_RUNS := $(foreach b,$(SOC_BENCH_LIST),$(b)_rv32i@M0W1 $(b)_rv32im@M1W1)
+# Same file set as SOC_RTL in the SoC section (defined further down, so listed here again)
+SOC_BENCH_RTL  := $(wildcard rtl/core/*.v rtl/bus/*.v rtl/mem/*.v rtl/periph/*.v rtl/accel/*.v)
+
+$(SOC_BENCH_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v scripts/bench_soc_mon.v $(SOC_BENCH_RTL) \
+                               tb/models/sram_2k_macro.v rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
+	@mkdir -p $(@D)
+	$(IVERILOG) -g2012 -Irtl/bus -Irtl/mem -Irtl/core -s tb_soc -s bench_soc_mon \
+	  -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) \
+	  -o $@ $(SOC_BENCH_RTL) tb/models/sram_2k_macro.v tb/soc/tb_soc.v scripts/bench_soc_mon.v
+
+$(eval $(call bench_elf_rules,$(SOC_BENCH_OUT),-DBENCH_SOC))
+
+.PRECIOUS: $(SOC_BENCH_OUT)/accel_bench_%.elf
+$(SOC_BENCH_OUT)/accel_bench_%.elf: $(BENCH_COMMON) fw/bench/accel_bench.c fw/accel.h \
+                                    fw/bench/common/bench.h fw/common/link.ld
+	@mkdir -p $(@D)
+	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -DBENCH_SOC -Ifw \
+	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) fw/bench/accel_bench.c -lgcc
+
+.PHONY: bench-soc
+bench-soc: SHELL := /bin/bash
+bench-soc: .SHELLFLAGS := -o pipefail -c
+
+# Same pass rules as bench-core (CoreMark CRC, Dhrystone final values, accel results).
+bench-soc: $(SOC_BENCH_OUT)/tb_soc_M0W1.vvp $(SOC_BENCH_OUT)/tb_soc_M1W1.vvp \
+           $(foreach r,$(SOC_BENCH_RUNS),$(SOC_BENCH_OUT)/$(firstword $(subst @, ,$(r))).tohost)
+	@for r in $(SOC_BENCH_RUNS); do \
+	  t=$${r%%@*}; e=$(SOC_BENCH_OUT)/$$t.elf; \
+	  printf '  %-20s .text %6d B, DMEM used %6d B\n' $$t \
+	    $$($(RV_PREFIX)-size -A $$e | awk '$$1==".text"{print $$2}') \
+	    $$($(RV_PREFIX)-size -A $$e | awk '$$1~/^\.(rodata|data|tohost|bss)$$/{s+=$$2} END{print s}'); \
+	done
+	@printf '%s\n' $(addprefix $(SOC_BENCH_OUT)/,$(SOC_BENCH_RUNS)) | \
+	  PLUSARGS="+timeout=50000000 $(PLUSARGS)" xargs -P $(CORE_JOBS) -n 1 bash scripts/bench_soc_run.sh $(SOC_BENCH_OUT) \
+	  > $(SOC_BENCH_OUT)/bench-soc.summary; \
+	cat $(SOC_BENCH_OUT)/bench-soc.summary; \
+	fail=$$(grep -c '^  \[FAIL\]' $(SOC_BENCH_OUT)/bench-soc.summary); \
+	for r in $(SOC_BENCH_RUNS); do \
+	  t=$${r%%@*}; log=$(SOC_BENCH_OUT)/$$t.$${r#*@}.log; \
+	  grep '^BENCH' $$log | sed "s/^BENCH /  [$$t] /"; \
+	  case $$t in coremark*) \
+	    if ! grep -q 'performance run parameters' $$log || \
+	       grep 'ERROR' $$log | grep -vq 'at least 10 secs'; then \
+	      echo "  [FAIL] $$t: CoreMark could not verify its result"; fail=1; fi;; \
+	  esac; \
+	done; echo "bench-soc: $$fail failed"; [ $$fail = 0 ]
 
 # ---------------------------------------------------------------------------
 # riscv-arch-test (submodule fw/riscv-arch-test, tag 3.10.0) through RISCOF, with Spike

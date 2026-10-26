@@ -3,6 +3,11 @@
 
 void bench_putchar(char c)
 {
+#ifdef BENCH_SOC
+    // soc_top UART: wait while the TX FIFO is full (STATUS.TXF), a full FIFO drops the byte
+    while (*(volatile uint32_t *)(BENCH_UART_DATA + 4) & 1u)
+        ;
+#endif
     *(volatile uint32_t *)BENCH_UART_DATA = (uint8_t)c;
 }
 

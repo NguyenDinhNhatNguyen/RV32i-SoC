@@ -8,7 +8,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BENCH_UART_DATA 0x20001000u   // Matches CORE_TB_UART_DATA in tb/core/core_tb_map.vh
+// Matches CORE_TB_UART_DATA in tb/core/core_tb_map.vh and the DATA register of the soc_top
+// UART. Build with -DBENCH_SOC for tb_soc (bench_putchar then waits on STATUS.TXF).
+#define BENCH_UART_DATA 0x20001000u
 
 #define read_csr(reg) ({ unsigned long __v; \
     __asm__ __volatile__ ("csrr %0, " #reg : "=r"(__v)); __v; })
