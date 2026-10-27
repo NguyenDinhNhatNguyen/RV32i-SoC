@@ -414,15 +414,17 @@ Lưu ý về phương án tĩnh: lệnh chỉ biết được khi đã ở EX, �
 | `if_addr_o` ra từ flop | Có | Có | Không |
 | Phải chạy lại flow trường | Có | Có | Có, thêm ràng buộc đường IMEM → IMEM |
 
-**Quyết định: giữ `ENABLE_BTB=0` cho bản nộp.** Lý do:
+**Đề xuất: bật BTB 8 entry (`ENABLE_BTB=1`) cho bản nộp, chốt ở buổi review 8/11, trước khi chạy Genus (STA-03 từ 9/11).** Lý do:
 
-- Lợi 7 đến 10% là thật nhưng nhỏ. Yêu cầu bắt buộc là SoC chạy đúng ở 50 MHz qua flow Cadence, và flow trường (Genus, LEC, Innovus) chưa chạy với cấu hình có BTB. Bật thì phải chạy lại cả flow trước hạn nộp.
-- `ENABLE_BTB=0` là bản đã qua toàn bộ kiểm chứng. Tham số mặc định 0 giữ đúng bản đó, đã chứng minh tương đương hình thức (4 512 điểm với ENABLE_M=0, 5 247 điểm với ENABLE_M=1).
+- Dự đoán nhánh là điểm cộng nhóm đã chọn. BTB 8 entry tăng CoreMark/MHz và DMIPS/MHz 7 đến 10% trên `soc_top`.
+- Flow SoC ở trường (Genus, LEC, Innovus) chưa chạy lần nào. Chốt trước STA-03 thì cấu hình có BTB là cấu hình chạy flow đầu tiên, không tốn thêm vòng flow nào.
+- Chi phí khoảng 4 400 µm² (+15% core có RV32M) ở flow nhà, nhỏ so với cả SoC. `if_addr_o` vẫn ra từ flop, timing ở 50 MHz còn dư nhiều.
+- BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, cấy 3 lỗi đều bị bắt, lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot đều PASS với `BTB=0`, 1 và 2. `ENABLE_BTB=0` vẫn chứng minh tương đương hình thức với RTL cũ (4 512 điểm với ENABLE_M=0, 5 247 điểm với ENABLE_M=1), nên nếu review không đồng ý thì chỉ cần đổi lại một define.
 - BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1%. Không đáng.
 - Phương án tĩnh rẻ diện tích và nhanh nhất ở Dhrystone, nhưng phá quy tắc "`if_addr_o` ra thẳng từ flop" (mục 4.3) và làm khó floorplan, SDC. Không dùng.
-- Nếu buổi review quyết bật thì chọn BTB 8 entry. Chỉ cần thêm define `RV_ENABLE_BTB_DEFAULT=1` khi đọc RTL, không sửa `soc_top`. Bước rẻ tiếp theo là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`, vì JALR chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
+- Bước rẻ tiếp theo là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`, vì JALR chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
 
-Dù giữ BTB=0, phần khám phá vẫn có giá trị cho báo cáo: thiết kế đã được hiện thực và kiểm chứng đủ với cả ba chế độ (`tb_rv32_btb` so với mô hình, cấy 3 lỗi đều bị bắt, lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot đều PASS với `BTB=0`, 1 và 2).
+Trên nhánh `feat/nhan-btb`, mặc định `ENABLE_BTB=1` nằm ở một commit riêng, chưa merge, chờ review. Nếu review đồng ý thì các bảng hiệu năng ở mục X.7 đổi sang cột BTB 8 và bảng số chính thức ở mục X.9 lấy theo cấu hình có BTB.
 
 ## X.9 Timing, diện tích, công suất
 
@@ -480,7 +482,7 @@ Cách tính các chỉ số dẫn xuất:
 - **EPI (năng lượng mỗi lệnh):** EPI = P / (f / CPI) = P × CPI / f. P là công suất trung bình khi chạy CoreMark (Genus hoặc Innovus đọc VCD/SAIF), f = 50 MHz, CPI lấy từ mục X.7 trên `soc_top` (1,158 với rv32im, 1,204 với rv32i). Ví dụ minh hoạ đơn vị: P = 1 mW, CPI = 1,158 cho EPI = 1 mW × 1,158 / 50 MHz = 23,2 pJ/lệnh. Số thật: [CHỜ GENUS].
 - **Công suất chờ ngắt:** cùng testcase chờ ngắt Timer, một bản polling (W0) và một bản WFI (W1). Theo mục X.4, bản W1 ngủ 801 trên 1003 chu kỳ. Số công suất: [CHỜ GENUS].
 
-Nếu buổi review quyết bật BTB (mục X.8) thì thêm một cột `ENABLE_BTB=1` vào bảng này và chạy lại cả flow.
+Nếu review 8/11 đồng ý bật BTB (mục X.8) thì bảng này lấy số của cấu hình `ENABLE_BTB=1`, chạy ngay từ lần Genus đầu tiên.
 
 ## X.10 Giới hạn đã biết
 
@@ -495,6 +497,6 @@ Nếu buổi review quyết bật BTB (mục X.8) thì thêm một cột `ENABLE
 - **Tràn nửa thấp của `minstret`** chỉ được kiểm bằng chứng minh hình thức, không có test mô phỏng (cần 2^32 lệnh). Tràn của `mcycle` có test (`trap.S` test 83, 84) (`docs/timing_core.md`).
 - **`wb_instr_q` (32 bit) nạp mỗi lệnh** dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa chặn vì `tb_core` dùng nó để in vết (`docs/timing_core.md`, D-037).
 - **Accelerator bị APB giới hạn.** 95% thời gian mỗi khối là chuyển dữ liệu, nên với rv32im chỉ nhanh 1,69 lần (mục X.7).
-- **Không dự đoán nhánh trong bản nộp** (`ENABLE_BTB=0`). Mỗi lệnh nhảy mất 1 chu kỳ, BTB 8 entry sẽ lấy lại 7 đến 10% (mục X.8).
+- **Dự đoán nhánh chưa chốt.** Main hiện chưa có BTB, mỗi lệnh nhảy mất 1 chu kỳ. Đề xuất bật BTB 8 entry, lấy lại 7 đến 10%, chờ review 8/11 (mục X.8). JALR vẫn không được đoán.
 - **Bootloader không xác thực chương trình** và không còn timeout sau NAK (mục X.5).
 - **Số timing ở nhà chỉ là xu hướng.** Số chính thức: [CHỜ GENUS].

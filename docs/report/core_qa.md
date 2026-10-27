@@ -15,7 +15,7 @@ Dữ liệu load đi thẳng từ ngõ ra bus qua khối căn chỉnh rồi forw
 Chu kỳ đầu tiên dừng, lệnh ở ngõ ra IMEM được chốt vào `ex_instr_hold_q` và EX đọc thanh ghi giữ cho tới hết dừng. `if_pc_q` không đổi nên khi hết dừng IMEM đang đọc đúng lệnh kế tiếp (D-014, mục 4.3).
 
 **4. Phạt nhánh bao nhiêu chu kỳ? Có dự đoán nhánh không?**
-Bản nộp đoán luôn không nhảy (`ENABLE_BTB=0`). BTB và đoán tĩnh đã thử, xem câu 33 đến 37. Nhảy thật mất 1 chu kỳ, kể cả nhảy tới PC+4, vì không so sánh đích để giữ đường găng ngắn. Trap, MRET, FENCE.I, WFI chuyển hướng từ WB nên mất 2 chu kỳ (D-014, D-023).
+RTL trên main đoán luôn không nhảy. BTB và đoán tĩnh đã thử, đề xuất bật BTB 8 entry cho bản nộp, xem câu 33 đến 37. Nhảy thật mất 1 chu kỳ, kể cả nhảy tới PC+4, vì không so sánh đích để giữ đường găng ngắn. Trap, MRET, FENCE.I, WFI chuyển hướng từ WB nên mất 2 chu kỳ (D-014, D-023).
 
 **5. Vì sao địa chỉ IMEM lấy từ flop `if_pc_q`?**
 Để quyết định nhảy và tín hiệu dừng không đi tổ hợp vào chân địa chỉ SRAM. Địa chỉ ra từ flop thì đường vào macro ngắn và dễ đạt setup của macro (mục 4.3, D-014).
@@ -126,8 +126,8 @@ Lệnh chỉ biết được khi đã ở EX, đúng chu kỳ EX quyết định
 **35. BTB lợi bao nhiêu và tốn bao nhiêu?**
 BTB 8 entry: CoreMark/MHz rv32im 2,755 → 2,967 (+7,7%), DMIPS/MHz 0,800 → 0,856 (+7,0%) trên `soc_top`, đoán đúng 39,8% → 79,8% ở CoreMark rv32im. Diện tích thêm khoảng 4 400 µm² ở Nangate45 (+15% core có RV32M), khoảng 480 flop. Timing không đổi rõ (`docs/btb_eval.md` mục 3, 4).
 
-**36. Vì sao vẫn giữ `ENABLE_BTB=0`?**
-Lợi 7 đến 10% là nhỏ so với rủi ro: flow trường (Genus, LEC, Innovus) chưa chạy với BTB, bật thì phải chạy lại cả flow. Bản 0 là bản đã kiểm chứng đủ và được chứng minh tương đương với RTL cũ. Nếu nhóm quyết bật thì dùng BTB 8 entry, 16 entry tốn gấp đôi để lời thêm 1% (D-041).
+**36. Bản nộp có bật BTB không? Vì sao?**
+Đề xuất bật BTB 8 entry, chốt ở review 8/11 trước khi chạy Genus (STA-03 từ 9/11). Dự đoán nhánh là điểm cộng nhóm đã chọn, lợi 7 đến 10%, và flow SoC chưa chạy lần nào nên chốt sớm thì không tốn thêm vòng flow. 16 entry tốn gấp đôi để lời thêm 1%, phương án tĩnh tạo đường IMEM → IMEM, nên không dùng (D-041).
 
 **37. Tại sao BTB chỉ cần so hướng ở EX mà không so đích?**
 BTB lưu tag đầy đủ, nên trúng nghĩa là đúng lệnh đó. Chỉ nhánh và JAL được đoán, đích của chúng cố định theo PC. FENCE.I xoá hết BTB, nên code bị sửa (bootloader nạp chương trình mới) không bị đoán theo bản cũ (D-041).
