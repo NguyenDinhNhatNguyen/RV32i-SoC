@@ -124,6 +124,21 @@ Số mới (D=2000, Yosys 0.33, cùng RTL với mục 3):
 
 Chênh lệch chỉ do bỏ `-fast`. Đã chạy lại M0 với `abc -fast` trên cùng RTL và ra đúng 2,575 ns, 17 032 µm². Bước `abc` generic cho ra cấu trúc logic khác, nên `abc -liberty` sau đó tối ưu ra kết quả khác. M0 lệch quá mức nhiễu ±3% của mục 2, M1 vẫn trong mức nhiễu. Các bảng ở mục 1 và 2 được đo với `abc -fast`, chỉ so được với nhau, không so với số mới. Core vẫn dư nhiều so với 50 MHz.
 
+## Đo lại cùng một môi trường (27/10)
+
+Môi trường: WSL (Ubuntu), Yosys 0.33 (git sha1 2584903a060), OpenSTA 2.3.1, liberty Nangate45 typical, `make sta-core-nangate` với mục tiêu abc mặc định `-D 2000`. Ba bản RTL chạy cùng lúc trên cùng máy.
+
+| RTL | ENABLE_M=0 | ENABLE_M=1 |
+| --- | --- | --- |
+| Trước D-038 (commit 322375e) | 2,855 ns (350 MHz), 16 995 µm² | 3,007 ns (333 MHz), 28 463 µm² |
+| Main sau D-038 (commit 524f322) | 2,856 ns (350 MHz), 16 929 µm² | 3,113 ns (321 MHz), 27 876 µm² |
+| `feat/nhan-btb`, `ENABLE_BTB=0` | 2,852 ns (351 MHz), 16 981 µm² | 3,235 ns (309 MHz), 28 339 µm² |
+
+- Số của hai dòng đầu trùng đúng tới 3 chữ số với số đã ghi ở mục trên và ở D-038. Vậy số cũ không phụ thuộc môi trường đo.
+- Chỗ lệch ENABLE_M=1 giữa D-038 (3,113 ns) và `docs/btb_eval.md` (3,235 ns) không do môi trường mà do RTL. `ENABLE_BTB=0` tương đương logic với main (Yosys chứng minh), nhưng mã nguồn khác cấu trúc (thêm mux và tham số), nên abc tổng hợp ra mạch khác. Lệch 3,9%, cỡ mức nhiễu ±3% của abc.
+- Diện tích ENABLE_M=0: 16 995 µm² trước D-038, 16 929 µm² sau D-038, 16 981 µm² trên nhánh btb. Ba số lệch nhau dưới 0,4%.
+- Khi so các phương án dự đoán nhánh thì dùng base của nhánh btb (cùng mã nguồn), không dùng số của main.
+
 ## Còn lại
 
 - Ở trường: chạy Genus với clock gating bật, so số ICG và công suất trước và sau D-037.
