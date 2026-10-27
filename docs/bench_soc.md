@@ -12,7 +12,7 @@ make bench-soc T=accel_bench              # chỉ phần accelerator, khoảng 2
 make bench-soc T=dhrystone                # chỉ Dhrystone
 ```
 
-Log ở `tb/core/out/bench_soc/<tên>.<cấu hình>.log`. Dòng `BENCH` là kết quả đo. `tb_soc` chạy khoảng 4 000 chu kỳ mỗi giây nên CoreMark rv32i mất khoảng 12 phút.
+Log ở `tb/core/out/bench_soc/<tên>.<cấu hình>.log`. Dòng `BENCH` là kết quả đo. `tb_soc` chạy khoảng 5 000 chu kỳ mỗi giây khi chạy một mình (đo 27/10/2026: Dhrystone rv32i trên `soc_top`, 414 120 chu kỳ trong 79 s, Icarus 12.0 trong WSL). Chạy song song thì chậm hơn, nên CoreMark rv32i (khoảng 2,7 triệu chu kỳ) mất khoảng 9 đến 12 phút.
 
 ## Cách đo
 
