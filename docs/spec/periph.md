@@ -94,7 +94,7 @@ Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì 
 - 1 KB (256 word), làm bằng logic tổng hợp, không dùng macro.
 - Là reset vector của lõi (`RESET_PC = 0x0001_0000`). Chỉ cổng nạp lệnh đọc được, cổng dữ liệu không thấy.
 - Đọc đồng bộ như SRAM: dữ liệu có ở chu kỳ sau.
-- Nội dung ở `rtl/mem/boot_rom_init.vh`. Bản hiện tại chỉ có `jalr x0, 0(x0)` để nhảy về đầu IMEM. Bản bootloader qua UART (Nhân) sẽ sinh lại file này bằng script, giữ nguyên định dạng.
+- Nội dung ở `rtl/mem/boot_rom_init.vh`: bootloader UART của Nhân (`fw/boot/boot.S`), sinh bằng `scripts/gen_boot_rom.py` (`make boot-gen`). Chân `gpio_i[0] = 0` thì nhảy thẳng về đầu IMEM, bằng 1 thì nạp chương trình qua UART. Giao thức ở `docs/boot.md`.
 
 ## 6. Chân ngoài của `soc_top`
 

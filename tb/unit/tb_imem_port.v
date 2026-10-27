@@ -6,8 +6,8 @@
 //   - if_gnt = 0 when fetching from IMEM while the bus uses IMEM, 1 for the boot ROM and
 //     error addresses.
 //   - The cycle after each accepted fetch: the instruction matches the reference memory (IMEM
-//     including bus writes), boot ROM word 0 = jalr x0, 0(x0), and error addresses give
-//     if_err = 1.
+//     including bus writes), boot ROM words match boot_rom_init.vh, and error addresses
+//     give if_err = 1.
 //   - Bus responses arrive in the right cycle with the right data.
 // Plusargs: +seed=<n> +n=<fetches> +timeout=<cycles>
 `include "soc_map.vh"

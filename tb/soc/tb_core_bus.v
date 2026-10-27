@@ -3,9 +3,10 @@
 // tb_core_bus - rv32_core on the real SoC bus and memories (RTL-03, RTL-08):
 // sys_bus, imem_port (IMEM 4 macros + boot ROM), sram_wrap (DMEM 4 macros),
 // apb_bridge with a fake UART in the tb (slot 1) and accel_apb (slot 7).
-// Not soc_top yet (RTL-09): no reset synchronizer, Timer, GPIO or interrupt controller.
+// Not soc_top (that is tb_soc.v): no reset synchronizer, Timer, GPIO or interrupt controller.
 //
-// The core boots at the default RESET_PC 0x0001_0000, and the boot ROM jumps to IMEM.
+// The core boots at the default RESET_PC 0x0001_0000. The UART bootloader reads the boot strap
+// from GPIO, there is no GPIO here, so the bus error traps to its mtvec, which jumps to IMEM.
 // Memory images (elf2hex.py, 16 KB per region) load straight into the sram_2k_macro model
 // by hierarchical reference. Result rules, as in tb_core:
 //   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1

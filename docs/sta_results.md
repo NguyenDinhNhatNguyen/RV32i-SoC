@@ -29,3 +29,24 @@ Ghi chú lần chạy 26/10 (STA-01):
 - Removal âm ở cả 2917 chân reset là do netlist ở nhà, không phải do SDC. Một flop của `reset_sync` lái thẳng 2917 chân reset, Yosys không chèn buffer nên slew lên 11,75 ns và thời gian removal bị ngoại suy thành 14,9 ns. Genus và Innovus sẽ chèn buffer cho mạng này.
 - Setup tốt vì đường qua macro SRAM chưa được tính (ở nhà macro không có `.lib`). Đây lại là các đường găng dự kiến (`docs/spec/core.md` mục 4.5), nên số setup ở nhà lạc quan hơn thật.
 - Tổng hợp mất khoảng 11 phút. Lệnh làm tay, chưa có target Makefile (sẽ cân nhắc thêm ở STA-03).
+
+## 3. Tổng hợp từng khối trên Genus (STA-02, ở trường)
+
+Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), cách chạy ở `docs/flow_notes.md` mục 2. Mỗi khối một dòng, lấy số từ `syn/out_blocks/<khối>/reports/` và `summary.txt`. Diện tích của `imem_port`, `sram_wrap` gồm cả macro SRAM. Lõi `rv32_core` dùng flow riêng của Nhân (`make synth-core`, `docs/genus_core.md`), không ghi ở bảng này.
+
+| Ngày | Khối | Clock gating | Diện tích (µm²) | Flop | Scan flop | ICG | Latch | Setup WNS (ns) | Unconstrained | Report gốc | Ghi chú |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | `sys_bus` | | | | | | | | | | |
+| | `apb_bridge` | | | | | | | | | | |
+| | `dma_apb` | | | | | | | | | | |
+| | `imem_port` | | | | | | | | | | |
+| | `sram_wrap` | | | | | | | | | | |
+| | `timer_apb` | | | | | | | | | | |
+| | `uart_apb` | | | | | | | | | | |
+| | `gpio_apb` | | | | | | | | | | |
+| | `irqc_apb` | | | | | | | | | | |
+| | `accel_apb` | | | | | | | | | | |
+
+Tiêu chí: Scan flop = 0, Latch = 0, Unconstrained = 0, Setup WNS >= 0 ở 20 ns.
+
+Lần chạy đầu điền vào các dòng có sẵn. Các lần sau (ví dụ chạy lại sau khi sửa RTL) thêm dòng mới ở cuối bảng.

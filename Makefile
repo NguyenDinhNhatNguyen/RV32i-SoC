@@ -977,3 +977,44 @@ fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
 
 clean-soc:
 	rm -rf $(SOC_OUT)
+
+# ---------------------------------------------------------------------------
+# Genus trial synthesis of each SoC block (Phat, STA-02). Runs ON THE SCHOOL SERVER only.
+# Scan flops are forbidden: SDFF* gets dont_use and the netlist is checked for SDFF* cells.
+# Results in syn/out_blocks/<block>/ (netlist, block SDC, reports/, summary.txt), logs in
+# syn/run_blocks/<block>/genus.log. Both folders are ignored. Docs: docs/sta_results.md.
+#   make synth-block B=sys_bus     one block (CG=0 for the run without clock gating)
+#   make synth-blocks              every block in SYN_BLOCKS, then prints syn/out_blocks/summary.txt
+# ---------------------------------------------------------------------------
+# Must match the block table in syn/scripts/synth_block.tcl
+# rv32_core is synthesized by make synth-core (Nhan, docs/genus_core.md), not here
+SYN_BLOCKS := sys_bus apb_bridge dma_apb imem_port sram_wrap \
+              timer_apb uart_apb gpio_apb irqc_apb accel_apb
+B ?=
+
+.PHONY: synth-block synth-blocks
+
+synth-block:
+	@test -n "$(B)" || { echo "ERROR: set B=<block>, one of: $(SYN_BLOCKS)"; exit 1; }
+	@command -v genus > /dev/null || \
+	  { echo "ERROR: genus not found, this target runs on the school server"; exit 1; }
+	rm -f syn/out_blocks/$(B)/$(B)_netlist.v syn/out_blocks/$(B)/summary.txt
+	mkdir -p syn/run_blocks/$(B)
+	cd syn/run_blocks/$(B) && rm -f genus.log* genus.cmd* && \
+	  BLOCK=$(B) genus -batch -files ../../scripts/synth_block.tcl -log genus.log \
+	    > /dev/null 2>&1 || true
+	@test -f syn/out_blocks/$(B)/$(B)_netlist.v || \
+	  { echo "ERROR: Genus produced no netlist for $(B), see syn/run_blocks/$(B)/genus.log"; exit 1; }
+	@grep -q 'scan_flops=0 ' syn/out_blocks/$(B)/summary.txt || \
+	  { echo "ERROR: scan flops in $(B), see syn/out_blocks/$(B)/summary.txt"; exit 1; }
+	@cat syn/out_blocks/$(B)/summary.txt
+
+# Keeps going after a failing block so one run of the server session covers every block
+synth-blocks:
+	@fail=0; \
+	for b in $(SYN_BLOCKS); do \
+	  echo "== $$b"; $(MAKE) --no-print-directory synth-block B=$$b || fail=1; \
+	done; \
+	cat syn/out_blocks/*/summary.txt > syn/out_blocks/summary.txt 2>/dev/null; \
+	echo "== summary (syn/out_blocks/summary.txt)"; cat syn/out_blocks/summary.txt; \
+	[ $$fail = 0 ]

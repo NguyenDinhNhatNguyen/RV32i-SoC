@@ -37,6 +37,24 @@ Từng bước riêng:
 | `make gls-accel` | Xcelium chạy `tb_accel_wrapper.v` trên netlist, không SDF | `syn/out_accel/gls/xrun.log` |
 | `make pnr-accel` | Innovus theo `pnr/scripts/run_all.tcl` | `pnr/out_accel/`, database `DBS/*.enc` trong `pnr/run_accel/` |
 
+Tổng hợp thử từng khối của SoC (STA-02), mỗi khối một lần chạy Genus riêng:
+
+```bash
+make synth-blocks > synth_blocks.txt 2>&1 &      # cả 10 khối, khối lỗi không làm dừng các khối sau
+make synth-block B=sys_bus                       # một khối
+```
+
+| Mục | Nội dung |
+| --- | --- |
+| Khối | `sys_bus`, `apb_bridge`, `dma_apb`, `imem_port`, `sram_wrap`, `timer_apb`, `uart_apb`, `gpio_apb`, `irqc_apb`, `accel_apb`. Lõi `rv32_core` tổng hợp riêng bằng `make synth-core` của Nhân (`docs/genus_core.md`) |
+| Tham số | Theo mặc định của `soc_top` (1 master trên bus, mỗi bộ nhớ 16 KB) |
+| SDC | Mỗi khối một file sinh tự động: clock 20 ns trên cổng clock của khối, uncertainty và IO delay theo tỉ lệ Lab, false path từ cổng reset |
+| SRAM macro | `imem_port`, `sram_wrap` đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib` |
+| Cấm scan flop | `SDFF*` bị `dont_use`, `use_scan_seqs_for_non_dft = false`. Sau tổng hợp đếm `SDFF*` trong netlist, khác 0 là `ERROR` |
+| Kết quả | `syn/out_blocks/<khối>/` (netlist, SDC, `reports/`, `summary.txt`), tổng hợp ở `syn/out_blocks/summary.txt`, log ở `syn/run_blocks/<khối>/genus.log` |
+
+Tiêu chí giống mục 3 (0 unresolved, 0 latch, 0 unconstrained endpoint, slack >= 0 ở 20 ns), thêm 0 scan flop. Copy `syn/out_blocks/` vào `appendix/synth_blocks/` và ghi số vào `docs/sta_results.md` mục 3.
+
 Xem layout và chụp hình cho report:
 
 ```bash

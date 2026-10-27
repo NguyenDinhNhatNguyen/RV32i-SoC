@@ -72,7 +72,7 @@ Cầu trả err mà không tạo giao dịch APB khi: địa chỉ không thuộ
 - SB/SH: đọc-sửa-ghi trong 2 chu kỳ (spec SoC mục 7.3). Đọc và SW vẫn 1 chu kỳ.
 - `rsp_rdata = 0` với lệnh ghi, vì Q của macro sau chu kỳ ghi chưa biết.
 - IMEM: bus được ưu tiên hơn lấy lệnh, IF dừng 1 chu kỳ. Lấy lệnh ở boot ROM không bị bus chặn.
-- Boot ROM 1 KB ở 0x0001_0000, reset vector mặc định của core (spec SoC mục 7.1). Bản base chỉ có `jalr x0, 0(x0)` để nhảy về IMEM. Bản bootloader UART của Nhân thay file `boot_rom_init.vh`, giữ định dạng `8'hNN: word = 32'hXXXXXXXX;`.
+- Boot ROM 1 KB ở 0x0001_0000, reset vector mặc định của core (spec SoC mục 7.1). Nội dung là bootloader UART của Nhân (`fw/boot/boot.S`), sinh vào `boot_rom_init.vh` bằng `scripts/gen_boot_rom.py` (`make boot-gen`), giữ định dạng `8'hNN: word = 32'hXXXXXXXX;`. Chân `gpio_i[0] = 0` thì nhảy thẳng về IMEM, bằng 1 thì nạp chương trình qua UART (`docs/boot.md`).
 
 ### 4.3 Các điểm spec SoC mục 7 mà RTL đang theo
 
@@ -80,7 +80,7 @@ RTL làm theo đề xuất của mục 7. Nhóm chưa chốt nên phần nào đ
 
 | Điểm | RTL hiện tại | Đổi thế nào nếu nhóm chọn khác |
 | --- | --- | --- |
-| 7.1 Reset vector | Boot ROM 0x0001_0000 nhảy về 0x0 | Đặt `RESET_PC = 0` ở core, boot ROM vẫn để đó |
+| 7.1 Reset vector | Boot ROM 0x0001_0000 (bootloader UART, `gpio_i[0] = 0` thì nhảy về 0x0) | Đặt `RESET_PC = 0` ở core, boot ROM vẫn để đó |
 | 7.2 IMEM, DMEM | 16 KB mỗi vùng | `SOC_*_BANK_W` |
 | 7.3 SB, SH | Đọc-sửa-ghi | Không cần đổi |
 | 7.4 Địa chỉ không ánh xạ | Trả err | Phải sửa slave lỗi trong `sys_bus` |
@@ -124,5 +124,5 @@ Unit test kiểm tra:
 
 - RTL-09 (Phát): đã có `soc_top` và bộ đồng bộ reset, xem `docs/soc_top.md`.
 - Phúc: ngoại vi APB nối vào khe theo bảng mục 3. PREADY của khe trống nối 1.
-- Nhân: bootloader UART sinh lại `boot_rom_init.vh`.
+- Nhân: bootloader UART đã sinh lại `boot_rom_init.vh` (D-039, D-040). `tb_imem_port` đọc word kỳ vọng từ chính file này.
 - Hiếu: firmware ghi ngoại vi bằng `sw`/`lw`. Testbench SoC nạp chương trình vào mô hình macro như `tb_core_bus`.

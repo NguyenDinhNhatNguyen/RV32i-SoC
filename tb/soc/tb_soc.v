@@ -7,7 +7,8 @@
 //   - Release rst_n mid-cycle: rst_n_sync rises exactly on the second rising edge
 //   - Pull rst_n low mid-cycle: rst_n_sync drops to 0 at once, without a clock
 // Memory images (elf2hex.py, 16 KB per region) load straight into the sram_2k_macro model.
-// The core boots from the boot ROM (default RESET_PC 0x0001_0000).
+// The core boots from the boot ROM (default RESET_PC 0x0001_0000). PAD_IN bit 0 is 0, so the
+// boot strap gpio_i[0] = 0 and the UART bootloader jumps straight to IMEM (docs/boot.md).
 //
 // GPIO pads: a pin with gpio_oe = 1 reads back its own gpio_o, the others read PAD_IN.
 // UART: uart_tx loops back to uart_rx. The tb 8N1 decoder samples uart_tx with the
