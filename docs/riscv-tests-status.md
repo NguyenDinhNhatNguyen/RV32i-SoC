@@ -98,5 +98,8 @@ Lịch sử: P4 đạt 440/440 (rv32ui, rv32mi). P7 thêm rv32um.
 | irq | 4/4 | 4/4 | 4/4 | 4/4 | mip theo cổng, MIE và mie chặn ngắt, ưu tiên MEI > MSI > MTI, ngắt chính xác (90 thời điểm ngắt khác nhau trong đoạn tính toán), không nhận ngắt sau lệnh tắt MIE / mie |
 | wfi | 4/4 | 4/4 | 4/4 | 4/4 | WFI với MIE = 0 và MIE = 1, nguồn bị tắt trong mie không đánh thức, ngắt chờ sẵn thì không ngủ, số chu kỳ ngủ, mepc = PC(WFI)+4 |
 | muldiv | 4/4 | 4/4 | 4/4 | 4/4 | M0: lệnh M là illegal, mtval = mã lệnh, rd không đổi. M1: forward vào và ra M-unit, load ngay trước lệnh M, kết quả M làm địa chỉ/dữ liệu store và điều kiện nhánh, rd = x0, ngắt rơi vào giữa phép chia ở 60 thời điểm |
+| wfi_pending | 4/4 | 4/4 | 4/4 | 4/4 | Ngắt chờ sẵn (D-038): MIE = 0 thì WFI như NOP, 0 chu kỳ ngủ. `csrs mstatus` ngay trước WFI thì trap ở WFI. Cửa sổ `csrs` rồi `csrc mstatus` nhận ngắt ở `csrc`. Vòng chờ không race kết thúc sau một ngắt. `csrs mie` khi MIE = 1 nhận ngắt ở lệnh kế |
+
+Tổng `make fw-core`: 7 bài × 4 cấu hình × 4 chế độ = 112/112 lần chạy đạt (96/96 trước khi thêm `wfi_pending` ở D-038).
 
 Số chu kỳ ngủ của `wfi` (nominal): với W1 core ngủ 801 trên 1003 chu kỳ và chỉ chạy 177 lệnh. Với W0 (WFI là NOP, chờ bằng vòng lặp) cùng test chạy 625 lệnh trong 954 chu kỳ.
