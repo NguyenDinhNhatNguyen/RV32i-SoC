@@ -985,8 +985,9 @@ clean-soc:
 # syn/run_blocks/<block>/genus.log. Both folders are ignored. Docs: docs/sta_results.md.
 #   make synth-block B=sys_bus     one block (CG=0 for the run without clock gating)
 #   make synth-blocks              every block in SYN_BLOCKS, then prints syn/out_blocks/summary.txt
+#   make synth-block B=sram_wrap1  sram_wrap with 1 macro, to practice the macro flow
 # ---------------------------------------------------------------------------
-# Must match the block table in syn/scripts/synth_block.tcl
+# Must match the block table in syn/scripts/synth_block.tcl (the table also has sram_wrap1)
 # rv32_core is synthesized by make synth-core (Nhan, docs/genus_core.md), not here
 SYN_BLOCKS := sys_bus apb_bridge dma_apb imem_port sram_wrap \
               timer_apb uart_apb gpio_apb irqc_apb accel_apb

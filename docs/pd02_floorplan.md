@@ -1,6 +1,6 @@
 # PD-02: ước lượng die, đặt macro, pin plan, power plan
 
-Bản ước lượng ngày 25/10, làm ở nhà. Số chính thức thay vào khi có diện tích Genus của toàn SoC (STA-02, STA-04). Script tương ứng: `pnr/scripts/soc_floorplan.tcl`, chạy thử lần đầu ở PD-03.
+Bản ước lượng ngày 25/10, làm ở nhà. Số chính thức thay vào khi có diện tích Genus của toàn SoC (`make synth-soc`, STA-04). Script tương ứng: `pnr/scripts/soc_floorplan.tcl`, chạy thử lần đầu ở PD-03.
 
 ## 1. Diện tích cell chuẩn
 
@@ -67,6 +67,6 @@ Cạnh trên và dưới không đặt chân vì đã có macro. Cả hai cạnh
 
 | Việc | Vì sao chưa xong | Khi nào |
 | --- | --- | --- |
-| Chạy `soc_floorplan.tcl` trên Innovus | Cần server trường và netlist Genus của `soc_top` | PD-03 (05/11) |
+| Chạy `soc_floorplan.tcl` trên Innovus | Cần server trường và netlist Genus của `soc_top` (`syn/out_soc/soc_top_netlist.v`, từ `make synth-soc`) | PD-03 (05/11) |
 | Chọn hướng macro và lớp ring | Cần output `scripts/macro_info.sh` trên server | Buổi lên trường tới |
-| Thay diện tích ước lượng bằng số Genus | Cần tổng hợp toàn SoC bằng Genus (Phát, STA-02) | 08/11 |
+| Thay diện tích ước lượng bằng số Genus | Cần chạy `make synth-soc` trên server (Phát), diện tích ở `syn/out_soc/reports/synthesis/area.rpt` | Buổi lên trường 29–30/10 |

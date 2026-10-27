@@ -85,4 +85,4 @@ Còn hỏi:
 
 ## 5. Thử trước trên một khối nhỏ
 
-Giống PD-01 với accelerator: dựng wrapper SRAM với 1 macro, chạy Genus, LEC, Innovus trên server để luyện đủ các bước 3.2 đến 3.7 trước khi ghép cả SoC. Cần RTL-08 của Phát.
+Giống PD-01 với accelerator: dựng wrapper SRAM với 1 macro, chạy Genus, LEC, Innovus trên server để luyện đủ các bước 3.2 đến 3.7 trước khi ghép cả SoC. Cần RTL-08 của Phát. Genus cho bản 1 macro: `make synth-block B=sram_wrap1` (kết quả ở `syn/out_blocks/sram_wrap1/`).

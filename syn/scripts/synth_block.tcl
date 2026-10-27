@@ -19,6 +19,8 @@ source $REPO/pnr/scripts/config.tcl
 
 # Block table: name {top  files  clock  reset  parameters  uses_sram_macro}
 # Parameters follow the soc_top defaults (one bus master, 16 KB per memory).
+# sram_wrap1 is sram_wrap with one macro (BANK_W = 0), a small block to practice the macro flow
+# in Genus, Conformal and Innovus (docs/macro_notes.md section 5). It is not in make synth-blocks.
 set ACCEL [list $REPO/rtl/accel/pe.v $REPO/rtl/accel/accelerator_top.v \
                 $REPO/rtl/accel/accel_wrapper.v $REPO/rtl/accel/accel_apb.v]
 set BLOCKS [dict create \
@@ -30,6 +32,8 @@ set BLOCKS [dict create \
                                  clk rst_n {} 1] \
     sram_wrap  [list sram_wrap  [list $REPO/rtl/mem/sram_array.v $REPO/rtl/mem/sram_wrap.v] \
                                  clk rst_n {} 1] \
+    sram_wrap1 [list sram_wrap  [list $REPO/rtl/mem/sram_array.v $REPO/rtl/mem/sram_wrap.v] \
+                                 clk rst_n {{BANK_W 0}} 1] \
     timer_apb  [list timer_apb  [list $REPO/rtl/periph/timer_apb.v] PCLK PRESETn {} 0] \
     uart_apb   [list uart_apb   [list $REPO/rtl/periph/uart_fifo.v $REPO/rtl/periph/uart_apb.v] \
                                  PCLK PRESETn {} 0] \

@@ -42,6 +42,7 @@ Tổng hợp thử từng khối của SoC (STA-02), mỗi khối một lần ch
 ```bash
 make synth-blocks > synth_blocks.txt 2>&1 &      # cả 10 khối, khối lỗi không làm dừng các khối sau
 make synth-block B=sys_bus                       # một khối
+make synth-block B=sram_wrap1                    # sram_wrap với 1 macro, để luyện flow macro
 ```
 
 | Mục | Nội dung |
