@@ -895,6 +895,46 @@ clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
 
 # ---------------------------------------------------------------------------
+# Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb.
+# Unit tests for VER-02. Runs at home (Icarus). Results in tb/unit/out/periph (ignored).
+#   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb (TB=tb_uart_apb runs one)
+#   make unit-periph PLUSARGS="+seed=7"
+# The peripherals are linted inside soc_top by make lint-soc.
+# ---------------------------------------------------------------------------
+PERIPH_RTL      := $(wildcard rtl/periph/*.v)
+PERIPH_OUT      := tb/unit/out/periph
+PERIPH_IVFLAGS  := -g2012 -Wall
+PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb
+ifneq ($(TB),)
+PERIPH_UNIT_TBS := $(filter $(TB),$(PERIPH_UNIT_TBS))
+endif
+
+unit-periph: SHELL := /bin/bash
+unit-periph: .SHELLFLAGS := -o pipefail -c
+
+.PHONY: unit-periph clean-periph
+
+# Same pass rule as unit-bus: the log has a line starting with PASS and no FAIL line.
+# A TB name that matches nothing fails instead of passing with 0 runs.
+unit-periph:
+	@mkdir -p $(PERIPH_OUT); pass=0; fail=0; \
+	for tb in $(PERIPH_UNIT_TBS); do \
+	  log=$(PERIPH_OUT)/$$tb.log; \
+	  if $(IVERILOG) $(PERIPH_IVFLAGS) -s $$tb -o $(PERIPH_OUT)/$$tb.vvp \
+	       $(PERIPH_RTL) tb/unit/$$tb.v > $$log 2>&1 && \
+	     $(VVP) -n $(PERIPH_OUT)/$$tb.vvp $(PLUSARGS) >> $$log 2>&1 && \
+	     grep -q '^PASS' $$log && ! grep -q '^FAIL' $$log; then \
+	    pass=$$((pass+1)); echo "  $$(grep '^PASS' $$log | tail -n 1)"; \
+	  else \
+	    fail=$$((fail+1)); echo "  [FAIL] $$tb (log: $$log)"; tail -n 20 $$log; \
+	  fi; \
+	done; \
+	echo "UNIT-PERIPH: $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass -gt 0 ]
+
+clean-periph:
+	rm -rf $(PERIPH_OUT)
+
+# ---------------------------------------------------------------------------
 # SoC (Phat): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v, RTL-15 rtl/bus/dma_apb.v.
 # Docs: docs/soc_top.md. Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
 #   make lint-soc                  Verilator -Wall on soc_top (ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA),
