@@ -99,6 +99,9 @@ try_cmd {report_timing -max_paths 10  > $RPT/timing_paths.rpt}
 try_cmd {report_area                  > $RPT/area.rpt}
 try_cmd {report_gates                 > $RPT/gates.rpt}
 try_cmd {report_power                 > $RPT/power.rpt}
+# Max transition, fanout and cap violations. Check that the reset net from reset_sync (fanout
+# about 2900, docs/soc_top.md section 4.7) is buffered
+try_cmd {report_design_rules          > $RPT/design_rules.rpt}
 if {$CG} { try_cmd {report_clock_gating > $RPT/clock_gating.rpt} }
 
 # Scan flop ban, layer 2, and the macro count: count cell instances in the written netlist
