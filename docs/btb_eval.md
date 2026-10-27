@@ -120,6 +120,18 @@ Nhận xét:
 | ENABLE_M=1, BTB 16 | 37 189 | +8 850 (+31 %) | 3,13 đến 3,49 | không có | 0,14 |
 | ENABLE_M=1, tĩnh | 27 985 | khoảng 0 | 3,27 đến 3,73 | 1,89 | 2,51 |
 
+Đo lại ngày 27/10 trong cùng một môi trường (WSL, Yosys 0.33 git sha1 2584903a060, OpenSTA 2.3.1, `make sta-core-nangate`, `-D 2000`), ra đúng các số ở `-D 2000` dùng cho bảng trên:
+
+| Cấu hình | ENABLE_M=0 | ENABLE_M=1 |
+| --- | --- | --- |
+| Base (`ENABLE_BTB=0`) | 2,852 ns, 16 981 µm² | 3,235 ns, 28 339 µm² |
+| BTB 8 | 2,852 ns, 21 557 µm² | 3,276 ns, 32 652 µm² |
+| BTB 16 | | 3,129 ns, 37 189 µm² |
+| Tĩnh | 3,067 ns, 17 530 µm² | 3,274 ns, 27 985 µm² |
+| Main sau D-038 (không có tham số BTB) | 2,856 ns, 16 929 µm² | 3,113 ns, 27 876 µm² |
+
+Base ở nhánh này tương đương logic với main (mục 4.1) nhưng mã nguồn khác cấu trúc, nên abc cho ENABLE_M=1 chậm hơn 3,9% và diện tích lệch dưới 2%, cỡ mức nhiễu. Bảng so sánh các phương án dùng base cùng nhánh. Chi tiết ở `docs/timing_core.md` trên main.
+
 - BTB 8 entry có khoảng 480 flop (8 × (1 + 27 + 30 + 2)). Phần lớn diện tích thêm là flop của tag và đích.
 - BTB: đường flop tới flop ở ENABLE_M=1 không đổi (cùng khoảng dao động). Ở ENABLE_M=0 chậm hơn 0 đến 0,4 ns tuỳ `-D`, cỡ vùng dao động của abc. Netlist không giữ tên net nên chưa đọc được đường găng đi qua đâu. Đường tra BTB (`if_pc_q` → so tag 27 bit → mux PC kế) về lý thuyết ngắn hơn đường cũ (giữ lệnh, forward, so sánh nhánh, `ex_go`).
 - Phương án tĩnh: đường flop tới flop chậm hơn 0,2 đến 0,7 ns ở ENABLE_M=0. Quan trọng hơn là đường mới từ IMEM về IMEM. Trên `soc_top` đường này là: SRAM clock → Q, cộng 1,9 ns trong core, cộng mux của `imem_port`, rồi tới setup địa chỉ SRAM. Ở 50 MHz (20 ns) vẫn đủ, nhưng nó gắn timing của SRAM macro với logic core. Floorplan và SDC phải tính đường này.
