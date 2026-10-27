@@ -30,6 +30,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `timing_bus.md` | Timing diagram bus |
 | `sta_results.md` | Bảng kết quả các lần chạy STA của `soc_top` (ở trường và ở nhà) |
 | `macro_notes.md` | SRAM macro qua từng bước flow |
+| `genus_core.md` | Genus, Conformal, GLS cho `rv32_core` ở trường, quét chu kỳ tìm F_max |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
 
 ## Kiểm chứng và đánh giá

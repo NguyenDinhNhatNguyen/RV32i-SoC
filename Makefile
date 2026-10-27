@@ -30,6 +30,10 @@ help:
 	@echo "make synth-core-yosys - trial Yosys synthesis of rv32_core, trends only"
 	@echo "make synth-compare-yosys - as above, plus PicoRV32 (ref/picorv32) for comparison"
 	@echo "make sta-core-nangate - Yosys + OpenSTA with the open Nangate45 library, critical path ns and F_max (trends)"
+	@echo "make synth-core    - Genus synthesis of rv32_core (server), CG=0/1, PERIOD=20, ENABLE_BTB=1"
+	@echo "make synth-core-sweep - Genus at PERIODS=\"20 10 8 6 5\" ns, WNS and F_max table (server)"
+	@echo "make lec-core      - Conformal compares rv32_core RTL with the netlist (server)"
+	@echo "make gls-core      - Xcelium runs rv32ui and rv32um on the netlist with tb_core (server, SDF=auto)"
 	@echo "make clean-core    - delete core simulation results"
 
 sim-accel:
@@ -734,6 +738,43 @@ sta-core-nangate:
 	$(call nangate_run,rv32_core_M1_btb16,rv32_core,$(CORE_RTL),rtl/core,$(NG_BTB16))
 	$(call nangate_run,rv32_core_M0_static,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0 ENABLE_BTB=2)
 	$(call nangate_run,rv32_core_M1_static,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1 ENABLE_BTB=2)
+
+# ---------------------------------------------------------------------------
+# rv32_core with Cadence (Nhan), server only. Steps and criteria: docs/genus_core.md
+# The netlist top is the wrapper rv32_core_syn (ENABLE_M=1, ENABLE_BTB, RESET_PC=0).
+#   make synth-core                Genus, CG=1, PERIOD=20 ns, ENABLE_BTB=1 -> syn/out_core/
+#   make synth-core CG=0           baseline without clock gating (rename syn/out_core first)
+#   make synth-core-sweep          PERIODS="20 10 8 6 5", WNS and F_max table
+#   make lec-core                  Conformal, lec/core_rtl2gate.do
+#   make gls-core                  Xcelium, tb_core -DGLS with rv32ui and rv32um (SDF=auto|0|1)
+# At home these targets print an ERROR line about the missing tool and stop.
+# ---------------------------------------------------------------------------
+# CG, PERIOD and ENABLE_BTB reach synth_core.tcl as environment variables (make puts
+# command-line variables in the environment), defaults are in the script
+SYN_CORE_NET := syn/out_core/rv32_core_syn_netlist.v
+
+.PHONY: synth-core synth-core-sweep lec-core gls-core
+synth-core:
+	@command -v genus > /dev/null || { echo "ERROR: genus not found, synth-core runs on the school server"; exit 1; }
+	rm -f $(SYN_CORE_NET)
+	mkdir -p syn/run_core && cd syn/run_core && rm -f genus.log* genus.cmd* && \
+	  genus -batch -files ../scripts/synth_core.tcl -log genus.log
+	@test -f $(SYN_CORE_NET) || { echo "ERROR: Genus produced no netlist, see syn/run_core/genus.log"; exit 1; }
+	@cat syn/out_core/reports/synthesis/run_info.txt
+
+synth-core-sweep:
+	bash syn/scripts/sweep_core.sh
+
+# < /dev/null so Conformal exits if the dofile stops midway
+lec-core:
+	@command -v lec > /dev/null || { echo "ERROR: lec (Conformal) not found, lec-core runs on the school server"; exit 1; }
+	@test -f $(SYN_CORE_NET) || { echo "ERROR: no netlist yet, run make synth-core first"; exit 1; }
+	mkdir -p syn/out_core/reports
+	lec -nogui -dofile lec/core_rtl2gate.do < /dev/null > syn/out_core/lec.txt 2>&1 || true
+	@grep -E 'Compare Results|Non-equivalent|Equivalent|Abort|// Error' syn/out_core/lec.txt | tail -12
+
+gls-core:
+	@bash scripts/gls_core.sh
 
 # ---------------------------------------------------------------------------
 # Bus and memories (Phat): RTL-03 rtl/bus, RTL-08 rtl/mem. Docs: docs/bus_mem.md
