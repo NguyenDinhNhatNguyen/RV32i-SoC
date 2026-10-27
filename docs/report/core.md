@@ -388,7 +388,7 @@ Lưu ý về phương án tĩnh: lệnh chỉ biết được khi đã ở EX, �
 
 ### Diện tích và timing (flow nhà, chỉ xem xu hướng)
 
-`make sta-core-nangate`, Yosys và OpenSTA với Nangate45. Diện tích ở mục tiêu abc `-D 2000`. Chu kỳ flop tới flop lấy khoảng min đến max khi quét `-D` = 1500 đến 3000 ps, vì abc dao động khoảng ±0,3 ns.
+`make sta-core-nangate`, Yosys và OpenSTA với Nangate45. Diện tích ở mục tiêu abc `-D 2000`. Base ở bảng này là nhánh `feat/nhan-btb` với `ENABLE_BTB=0`. Nó tương đương logic với main nhưng khác cấu trúc mã nguồn, nên abc cho số hơi khác bảng ở mục X.9 (ENABLE_M=1 3,235 ns so với 3,113 ns, cỡ mức nhiễu của abc). So các phương án với nhau thì dùng base cùng nhánh. Chu kỳ flop tới flop lấy khoảng min đến max khi quét `-D` = 1500 đến 3000 ps, vì abc dao động khoảng ±0,3 ns.
 
 | Cấu hình | Diện tích (µm²) | Thêm | Flop tới flop (ns) | `if_rdata_i` → `if_addr_o` (ns) |
 | --- | ---: | ---: | --- | ---: |
@@ -430,12 +430,12 @@ Dù giữ BTB=0, phần khám phá vẫn có giá trị cho báo cáo: thiết k
 
 **Các số ở mục này chỉ để xem xu hướng, không phải số chính thức.** Thư viện là Nangate45 (thư viện mở 45 nm, góc typical 1,1 V, 25 °C), không phải GPDK45. Không có đặt cell và đi dây, trễ dây theo wire load mặc định, clock lý tưởng. Số chính thức lấy từ Genus và Innovus ở trường (`docs/timing_core.md`).
 
-Chu kỳ nhỏ nhất của đường flop tới flop và diện tích, RTL hiện tại (sau D-038), `make sta-core-nangate` với `abc` (`docs/btb_eval.md` mục 4, cấu hình base):
+Môi trường đo: WSL, Yosys 0.33, OpenSTA 2.3.1, `make sta-core-nangate`, mục tiêu abc `-D 2000`. RTL trên main sau D-038, đo lại ngày 27/10 (`docs/timing_core.md`):
 
-| Cấu hình | Flop tới flop, quét `-D` 1500 đến 3000 | Ở `-D 2000` | F_max xu hướng | Diện tích ở `-D 2000` |
-| --- | --- | ---: | ---: | ---: |
-| ENABLE_M=0 | 2,46 đến 2,94 ns | 2,85 ns | khoảng 350 MHz | 16 981 µm² |
-| ENABLE_M=1 | 3,24 đến 3,68 ns | 3,24 ns | khoảng 310 MHz | 28 339 µm² |
+| Cấu hình | Flop tới flop | F_max xu hướng | Diện tích |
+| --- | ---: | ---: | ---: |
+| ENABLE_M=0 | 2,856 ns | khoảng 350 MHz | 16 929 µm² |
+| ENABLE_M=1 | 3,113 ns | khoảng 321 MHz | 27 876 µm² |
 
 - Đề bài cần 50 MHz (20 ns). Core dư khoảng 6 lần ở flow nhà, kể cả khi GPDK45 và đi dây làm chậm đi vài lần thì vẫn đủ.
 - abc dao động khoảng ±3% khi sửa RTL nhỏ và ±0,3 ns khi đổi `-D`, nên chỉ so được các thay đổi lớn hơn mức này.
@@ -451,7 +451,7 @@ Lịch sử số liệu (cùng flow, khác phiên bản, không so trực tiếp
 | Gốc, `abc -fast`, `-D 2000` | 2,529 ns, 17 112 µm² | 3,054 ns, 28 039 µm² | `docs/timing_core.md` việc 1 |
 | Sau D-037, `abc -fast` | 2,575 ns, 17 032 µm² | 3,067 ns, 28 559 µm² | Trong mức nhiễu |
 | Sau D-037, đổi sang `abc` | 2,855 ns, 16 995 µm² | 3,007 ns, 28 463 µm² | Yosys trong Docker không nhận `abc -fast` |
-| Sau D-038, `abc` | 2,856 ns | 3,113 ns | D-038 |
+| Sau D-038, `abc` (bảng trên) | 2,856 ns, 16 929 µm² | 3,113 ns, 27 876 µm² | D-038, đo lại 27/10 ra cùng số |
 
 Đổi `abc -fast` thành `abc` làm ENABLE_M=0 chậm 10,9% dù RTL không đổi. Đây là ví dụ rõ nhất cho việc số của flow nhà chỉ dùng để xem xu hướng.
 
