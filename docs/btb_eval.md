@@ -10,7 +10,7 @@ Quyết định ghi ở `docs/core_decisions.md` (D-041).
   - (a) `ENABLE_BTB=2`: đoán tĩnh, nhánh lùi và JAL coi là nhảy.
   - (b) `ENABLE_BTB=1`: BTB 8 hoặc 16 entry, bộ đếm 2 bit, tra ở IF.
 - Hai phương án tăng hiệu năng 7 đến 11 %. BTB 8 entry thêm khoảng 4 400 µm² (Nangate45, +15 % core có RV32M). Phương án tĩnh gần như không tốn diện tích nhưng nối tổ hợp ngõ ra IMEM vào địa chỉ IMEM.
-- **Đề xuất:** giữ `ENABLE_BTB=0` cho bản nộp. Nếu nhóm muốn thêm hiệu năng thì chọn BTB 8 entry. Không dùng phương án tĩnh. Lý do ở mục 5.
+- **Đề xuất:** bật BTB 8 entry (`ENABLE_BTB=1`) cho bản nộp, chốt trước khi chạy Genus (STA-03 từ 9/11). Không dùng phương án tĩnh. Lý do ở mục 5.
 - `ENABLE_BTB=0` giống hệt RTL trước đây về logic: Yosys chứng minh tương đương (mục 4.1).
 
 ## 2. Thiết kế
@@ -131,11 +131,13 @@ Yosys `equiv_make`, `equiv_simple -seq 2`, `equiv_induct -seq 2` so `rv32_core` 
 
 ## 5. Đề xuất
 
-**Giữ `ENABLE_BTB=0` cho bản nộp. Nếu nhóm quyết bật thì dùng BTB 8 entry (`ENABLE_BTB=1`).**
+**Bật BTB 8 entry (`ENABLE_BTB=1`, `BTB_ENTRIES=8`) cho bản nộp. Chốt ở buổi review 8/11, trước khi chạy Genus (STA-03 từ 9/11).**
 
-- Lợi 7 đến 10 % CoreMark/MHz và DMIPS/MHz là thật nhưng nhỏ. Đề bài yêu cầu SoC chạy đúng ở 50 MHz qua flow Cadence, không chấm hiệu năng.
-- BTB 8 entry thêm khoảng 4 400 µm² (+15 % core có RV32M, flow nhà). So với cả SoC (SRAM macro, accelerator) thì nhỏ, nhưng flow trường (Genus, LEC, Innovus) chưa chạy với cấu hình này. Bật thì phải chạy lại cả flow trước khi nộp.
-- BTB 16 entry tốn gấp đôi diện tích để lời thêm khoảng 1 %. Không đáng.
+- Dự đoán nhánh là một điểm cộng nhóm đã chọn (`docs/spec/requirements.md`, mở rộng lõi), cùng nhóm với tối ưu CPI. BTB 8 entry tăng CoreMark/MHz và DMIPS/MHz 7 đến 10 % trên `soc_top`.
+- Flow SoC ở trường (Genus, LEC, Innovus) chưa chạy lần nào. Chốt BTB trước STA-03 thì cấu hình có BTB là cấu hình chạy flow đầu tiên, không tốn thêm vòng flow nào. Nếu để sau STA-03 mới bật thì phải chạy lại cả flow.
+- BTB 8 entry thêm khoảng 4 400 µm² (+15 % core có RV32M, flow nhà), khoảng 480 flop. So với cả SoC (SRAM macro, accelerator) thì nhỏ. Timing ở 50 MHz còn dư nhiều, `if_addr_o` vẫn ra từ flop nên không đổi quy tắc thiết kế của core.
+- BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, toàn bộ test PASS với `ENABLE_BTB=1` (mục 7). `ENABLE_BTB=0` vẫn giống hệt RTL cũ (mục 4.1), nên nếu review không đồng ý thì chỉ cần đổi lại một define.
+- BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1 %. Không đáng.
 - Phương án tĩnh rẻ về diện tích và nhanh nhất ở Dhrystone. Nhưng nó nối tổ hợp ngõ ra IMEM vào địa chỉ IMEM, phá quy tắc thiết kế của core và làm khó floorplan, SDC. Không dùng.
 - Muốn thêm hiệu năng sau này thì bước rẻ nhất là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`. JALR đang chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
 
