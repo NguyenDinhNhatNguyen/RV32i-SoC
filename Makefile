@@ -101,19 +101,19 @@ PLUSARGS  ?=
 TB        ?=
 T         ?=
 
-# Branch prediction experiment (docs/btb_eval.md). BTB=1 (BTB with BTB_N entries) or BTB=2
-# (static backward taken) changes the default ENABLE_BTB / BTB_ENTRIES of rv32_core with -D,
+# Branch prediction (docs/btb_eval.md). The RTL default is BTB=1 (8-entry BTB). BTB=0 (none) or
+# BTB=2 (static backward taken) changes the default ENABLE_BTB / BTB_ENTRIES of rv32_core with -D,
 # for every Icarus and Verilator build of this Makefile (tb_core, tb_soc, tb_boot, lint-soc).
 # The .vvp files do not record the mode, so when BTB/BTB_N differ from the last run (kept in
 # tb/core/out/btb.cfg) every .vvp under tb/core/out, tb/soc/out and tb/boot/out is deleted.
 # Do not run two modes at the same time in one checkout.
-BTB   ?= 0
+BTB   ?= 1
 BTB_N ?= 8
-ifneq ($(BTB)/$(BTB_N),0/8)
+ifneq ($(BTB)/$(BTB_N),1/8)
 IVERILOG  += -DRV_ENABLE_BTB_DEFAULT=$(BTB) -DRV_BTB_ENTRIES_DEFAULT=$(BTB_N)
 VERILATOR += -DRV_ENABLE_BTB_DEFAULT=$(BTB) -DRV_BTB_ENTRIES_DEFAULT=$(BTB_N)
 endif
-ifneq ($(BTB)/$(BTB_N),$(shell cat tb/core/out/btb.cfg 2>/dev/null || echo 0/8))
+ifneq ($(BTB)/$(BTB_N),$(shell cat tb/core/out/btb.cfg 2>/dev/null || echo none))
 $(shell find tb/core/out tb/soc/out tb/boot/out -name '*.vvp' -delete 2>/dev/null; \
         mkdir -p tb/core/out; echo '$(BTB)/$(BTB_N)' > tb/core/out/btb.cfg)
 endif
@@ -136,7 +136,8 @@ lint-core unit-core: .SHELLFLAGS := -o pipefail -c
 CORE_LINT_CFG_rv32_decoder    := ENABLE_M=0 ENABLE_M=1
 CORE_LINT_CFG_rv32_core       := ENABLE_M=0,ENABLE_WFI_SLEEP=0 ENABLE_M=0,ENABLE_WFI_SLEEP=1 \
                                  ENABLE_M=1,ENABLE_WFI_SLEEP=0 ENABLE_M=1,ENABLE_WFI_SLEEP=1 \
-                                 ENABLE_M=0,ENABLE_BTB=1 ENABLE_M=1,ENABLE_BTB=1,BTB_ENTRIES=16 \
+                                 ENABLE_M=0,ENABLE_BTB=0 ENABLE_M=1,ENABLE_BTB=0 \
+                                 ENABLE_M=1,ENABLE_BTB=1,BTB_ENTRIES=16 \
                                  ENABLE_M=0,ENABLE_BTB=2 ENABLE_M=1,ENABLE_BTB=2
 CORE_LINT_CFG_rv32_btb        := ENTRIES=8 ENTRIES=16
 CORE_LINT_CFG_rv32_csr        := ENABLE_M=0 ENABLE_M=1
@@ -726,8 +727,8 @@ NG_BTB16 := ENABLE_M=1 ENABLE_BTB=1 BTB_ENTRIES=16
 sta-core-nangate:
 	@command -v $(STA) > /dev/null || { echo "ERROR: OpenSTA ($(STA)) not found, see docs/timing_core.md"; exit 1; }
 	@bash scripts/get_nangate45.sh > /dev/null
-	$(call nangate_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0)
-	$(call nangate_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1)
+	$(call nangate_run,rv32_core_M0,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0 ENABLE_BTB=0)
+	$(call nangate_run,rv32_core_M1,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1 ENABLE_BTB=0)
 	$(call nangate_run,rv32_core_M0_btb8,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=0 ENABLE_BTB=1)
 	$(call nangate_run,rv32_core_M1_btb8,rv32_core,$(CORE_RTL),rtl/core,ENABLE_M=1 ENABLE_BTB=1)
 	$(call nangate_run,rv32_core_M1_btb16,rv32_core,$(CORE_RTL),rtl/core,$(NG_BTB16))

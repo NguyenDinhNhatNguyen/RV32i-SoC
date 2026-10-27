@@ -330,10 +330,10 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 
 - **Bối cảnh:** mỗi lệnh nhảy mất 1 chu kỳ. Cần số liệu cho buổi review 8/11 để quyết có thêm dự đoán nhánh không. Số liệu đầy đủ ở `docs/btb_eval.md`.
 - **Lựa chọn:**
-  - Tham số `ENABLE_BTB` của `rv32_core`: 0 không đoán (mặc định), 1 BTB (`rv32_btb`, `BTB_ENTRIES` mặc định 8), 2 đoán tĩnh nhánh lùi nhảy. Mặc định lấy từ macro trong `rv32_defs.vh` để bật được cho `soc_top` bằng `-D`, không sửa `soc_top`.
+  - Tham số `ENABLE_BTB` của `rv32_core`: 0 không đoán, 1 BTB (`rv32_btb`, `BTB_ENTRIES` mặc định 8, là mặc định của `ENABLE_BTB`, chờ review 8/11), 2 đoán tĩnh nhánh lùi nhảy. Mặc định lấy từ macro trong `rv32_defs.vh` để bật được cho `soc_top` bằng `-D`, không sửa `soc_top`.
   - EX vẫn quyết định nhánh và chỉ chuyển hướng khi đoán sai, phạt 1 chu kỳ như cũ. Chỉ đoán nhánh và JAL. BTB dùng tag đầy đủ và bị xoá khi FENCE.I, nên EX chỉ so hướng, không so đích.
   - BTB tra ở IF bằng `if_pc_q`, nên `if_addr_o` vẫn ra từ flop.
-- **Lý do:** tham số mặc định 0 giữ nguyên bản đã kiểm chứng (Yosys chứng minh tương đương với RTL cũ). Đo thật cả hai phương án thay vì chọn theo cảm tính. Kết quả: lợi 7 đến 11 %, BTB 8 entry thêm khoảng 4 400 µm² (Nangate45).
+- **Lý do:** tham số có giá trị 0 giữ nguyên bản đã kiểm chứng (Yosys chứng minh tương đương với RTL cũ). Đo thật cả hai phương án thay vì chọn theo cảm tính. Kết quả: lợi 7 đến 11 %, BTB 8 entry thêm khoảng 4 400 µm² (Nangate45).
 - **Đề xuất cho bản nộp:** bật BTB 8 entry, chốt ở review 8/11 trước khi chạy Genus (STA-03 từ 9/11). Dự đoán nhánh là điểm cộng nhóm đã chọn (`docs/spec/requirements.md`). Flow SoC chưa chạy lần nào, nên chốt trước STA-03 thì không tốn thêm vòng flow. BTB 16 entry và phương án tĩnh không dùng (`docs/btb_eval.md` mục 5).
 - **Đã loại:**
   - Đoán tĩnh qua flop: lệnh chỉ biết ở EX, cùng chu kỳ EX quyết định nhánh, nên không lợi chu kỳ nào. Bản tĩnh có lợi (`ENABLE_BTB=2`) phải đưa đích tổ hợp ra `if_addr_o`, tạo đường IMEM → IMEM. Giữ lại chỉ để so sánh.

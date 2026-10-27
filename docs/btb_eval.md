@@ -47,7 +47,7 @@ Chỉ nhánh và JAL được đoán. Đích của chúng cố định theo PC n
 
 | Tham số `rv32_core` | Mặc định | Ý nghĩa |
 | --- | --- | --- |
-| `ENABLE_BTB` | 0 | 0 không đoán, 1 BTB, 2 tĩnh |
+| `ENABLE_BTB` | 1 | 0 không đoán, 1 BTB, 2 tĩnh |
 | `BTB_ENTRIES` | 8 | Số entry BTB, luỹ thừa của 2 |
 
 Mặc định lấy từ macro `RV_ENABLE_BTB_DEFAULT`, `RV_BTB_ENTRIES_DEFAULT` trong `rtl/core/rv32_defs.vh`. Vì vậy có thể bật cho `soc_top` bằng `-D` mà không sửa `soc_top`.
@@ -156,8 +156,9 @@ Yosys `equiv_make`, `equiv_simple -seq 2`, `equiv_induct -seq 2` so `rv32_core` 
 ## 6. Cách chạy
 
 ```sh
-make bench-core BTB=1              # BTB 8 entry
-make bench-soc BTB=1 BTB_N=16      # BTB 16 entry trên soc_top
+make bench-core                    # BTB 8 entry (mặc định)
+make bench-core BTB=0              # không đoán, như RTL trên main
+make bench-soc BTB_N=16            # BTB 16 entry trên soc_top
 make fw-core BTB=2                 # phương án tĩnh
 make sta-core-nangate              # diện tích và timing mọi cấu hình
 ```
@@ -165,7 +166,7 @@ make sta-core-nangate              # diện tích và timing mọi cấu hình
 - `BTB` và `BTB_N` đổi mặc định của `rv32_core` qua `-D` cho mọi bản dịch Icarus và Verilator (`tb_core`, `tb_soc`, `tb_boot`, `lint-soc`).
 - File `.vvp` không ghi lại cấu hình. Khi `BTB`/`BTB_N` khác lần chạy trước (lưu ở `tb/core/out/btb.cfg`), Makefile xoá mọi `.vvp` trong `tb/core/out`, `tb/soc/out`, `tb/boot/out`. Đừng chạy hai cấu hình cùng lúc trên một bản checkout.
 - Log có thêm dòng `BENCH branch` (tb_core) và `BENCH soc region <k> branch` (`scripts/bench_soc_mon.v`): số nhánh, số nhảy, JAL, JALR, số lần chuyển hướng và tỉ lệ đoán đúng.
-- Bật cho `soc_top` trong flow Cadence (nếu nhóm quyết): thêm define `RV_ENABLE_BTB_DEFAULT=1` khi đọc RTL trong Genus. Không cần sửa `soc_top`.
+- Flow Cadence đọc `rv32_defs.vh` nên tự dùng BTB 8 entry. Nếu review không đồng ý thì đổi `RV_ENABLE_BTB_DEFAULT` về 0 trong `rv32_defs.vh`, hoặc thêm define đó khi đọc RTL trong Genus. Không cần sửa `soc_top`.
 
 ## 7. Kiểm chứng
 

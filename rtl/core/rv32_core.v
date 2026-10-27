@@ -17,7 +17,7 @@
 // (section 4.8). RV32M instructions run in rv32_muldiv inside EX (ENABLE_M=1), and
 // EX stalls until the result is ready.
 //
-// Branch prediction (ENABLE_BTB, experiment, docs/btb_eval.md). EX always resolves the
+// Branch prediction (ENABLE_BTB, default 1, docs/btb_eval.md). EX always resolves the
 // branch and redirects IF when the prediction was wrong (1-cycle penalty, as before).
 //   0: none, every taken jump costs 1 cycle (the base design).
 //   1: rv32_btb looked up with if_pc_q in IF. A predicted taken branch or JAL fetches its
