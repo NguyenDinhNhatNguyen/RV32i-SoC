@@ -187,5 +187,5 @@ Kết quả ngày 26/10 (sau khi thêm DMA). `fw-soc` dựng M0W0 với `ENABLE_
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - Bật `ENABLE_DMA` mặc định hay không: nhóm quyết ở review 8/11 (Tầng 2).
-- STA-02 (Phát): script Genus cho `soc_top` dùng `soc.sdc` (cần `sram_2k_macro.lib`), kiểm 0 unconstrained endpoint và recovery/removal sau khi Genus chèn buffer.
-- Trên server: Genus cho `soc_top` (cần `sram_2k_macro.lib`), GLS với `sram_2k_macro.v` thật.
+- Trên server: chạy `make synth-soc` (`syn/scripts/synth_soc.tcl`, dùng `soc.sdc` và `sram_2k_macro.lib`), kiểm 0 unconstrained endpoint. Recovery và removal sau khi có buffer trên mạng reset kiểm bằng Tempus (STA-03).
+- Trên server: GLS với `sram_2k_macro.v` thật.

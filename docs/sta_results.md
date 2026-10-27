@@ -16,7 +16,7 @@ Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho rep
 
 | Ngày | Bước | Tool, thư viện, corner | Netlist | SDC, chu kỳ | Setup WNS / TNS | Hold WNS / TNS | Recovery WNS | Removal WNS | Unconstrained | Diện tích | Report gốc | Ghi chú |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | | | | Chưa chạy. Lần đầu ở STA-02 |
+| | | | | | | | | | | | | Chưa chạy. Lần đầu bằng `make synth-soc` (`syn/scripts/synth_soc.tcl`) |
 
 ## 2. Ở nhà (chỉ xem xu hướng)
 

@@ -55,6 +55,21 @@ make synth-block B=sys_bus                       # một khối
 
 Tiêu chí giống mục 3 (0 unresolved, 0 latch, 0 unconstrained endpoint, slack >= 0 ở 20 ns), thêm 0 scan flop. Copy `syn/out_blocks/` vào `appendix/synth_blocks/` và ghi số vào `docs/sta_results.md` mục 3.
 
+Tổng hợp cả `soc_top` với `syn/constraints/soc.sdc`, lấy netlist cho `pnr/scripts/soc_floorplan.tcl` (PD-02, PD-03):
+
+```bash
+make synth-soc > synth_soc.txt 2>&1 &
+```
+
+| Mục | Nội dung |
+| --- | --- |
+| Tham số | Mặc định của `soc_top`: `ENABLE_M = 1`, `ENABLE_WFI_SLEEP = 1`, `ENABLE_DMA = 0`, lõi có BTB 8 entry |
+| SRAM macro | Đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib`. Netlist phải có đúng 8 macro, khác 8 là `ERROR` |
+| Cấm scan flop | Như `synth-blocks` |
+| Kết quả | `syn/out_soc/` (`soc_top_netlist.v`, `soc_top_synth.sdc`, `soc_top.sdf`, `reports/`, `summary.txt`), log ở `syn/run_soc/genus.log` |
+
+Tiêu chí giống `synth-blocks`. Copy `syn/out_soc/` vào `appendix/synth_soc/` và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow. Hold và removal trên mạng reset kiểm bằng Tempus (STA-03).
+
 Xem layout và chụp hình cho report:
 
 ```bash

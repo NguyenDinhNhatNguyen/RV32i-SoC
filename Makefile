@@ -1018,3 +1018,25 @@ synth-blocks:
 	cat syn/out_blocks/*/summary.txt > syn/out_blocks/summary.txt 2>/dev/null; \
 	echo "== summary (syn/out_blocks/summary.txt)"; cat syn/out_blocks/summary.txt; \
 	[ $$fail = 0 ]
+
+# ---------------------------------------------------------------------------
+# Genus synthesis of the whole soc_top with syn/constraints/soc.sdc (Phat). Runs ON THE SCHOOL
+# SERVER only. Same scan flop ban as synth-block, and the netlist must hold 8 sram_2k_macro.
+# Results in syn/out_soc/ (soc_top_netlist.v, soc_top_synth.sdc, reports/, summary.txt), log in
+# syn/run_soc/genus.log. The netlist feeds pnr/scripts/soc_floorplan.tcl (PD-02, PD-03).
+#   make synth-soc                 CG=1 (CG=0 for the baseline, rename syn/out_soc first)
+# ---------------------------------------------------------------------------
+SYN_SOC_NET := syn/out_soc/soc_top_netlist.v
+
+.PHONY: synth-soc
+synth-soc:
+	@command -v genus > /dev/null || \
+	  { echo "ERROR: genus not found, this target runs on the school server"; exit 1; }
+	rm -f $(SYN_SOC_NET) syn/out_soc/summary.txt
+	mkdir -p syn/run_soc && cd syn/run_soc && rm -f genus.log* genus.cmd* && \
+	  genus -batch -files ../scripts/synth_soc.tcl -log genus.log
+	@test -f $(SYN_SOC_NET) || \
+	  { echo "ERROR: Genus produced no netlist, see syn/run_soc/genus.log"; exit 1; }
+	@grep -q 'macros=8 scan_flops=0 ' syn/out_soc/summary.txt || \
+	  { echo "ERROR: wrong macro count or scan flops, see syn/out_soc/summary.txt"; exit 1; }
+	@cat syn/out_soc/summary.txt
