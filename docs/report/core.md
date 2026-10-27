@@ -6,7 +6,7 @@ Quy ước dẫn nguồn:
 
 - "Dx" là quyết định trong `docs/core_decisions.md`.
 - "mục x.y" là mục trong `docs/spec/core.md`.
-- D-041 và `docs/btb_eval.md` hiện nằm trên nhánh `feat/nhan-btb` (chưa merge, chờ review 8/11). Mục X.8 dẫn số từ đó.
+- D-041 và `docs/btb_eval.md` đã merge vào main, mặc định `ENABLE_BTB=1`, chốt ở review 8/11. Mục X.8 dẫn số từ đó.
 
 ## X.1 Mục tiêu và ISA
 
@@ -25,7 +25,7 @@ ISA (mục 4.1, 4.7):
 - Load, store và nhảy lệch địa chỉ gây ngoại lệ, không xử lý bằng phần cứng.
 - CSR M-mode: mstatus, misa, mie, mip, mtvec (direct), mepc, mcause, mtval, mscratch, mcycle(h), minstret(h), các bí danh chỉ đọc cycle, time, instret và nhóm ID.
 
-Cổng của core (mục 4.10): cổng lấy lệnh `if_*` (đọc đồng bộ từ IMEM hoặc boot ROM), bus dữ liệu valid/ready `d_req_*`, `d_rsp_*`, 3 đường ngắt mức, `mtime_i[63:0]`, `core_sleep_o`. Tham số `ENABLE_M`, `ENABLE_WFI_SLEEP`, `RESET_PC` (mặc định 0x0001_0000, boot ROM). Nhánh `feat/nhan-btb` thêm `ENABLE_BTB` và `BTB_ENTRIES` (mục X.8).
+Cổng của core (mục 4.10): cổng lấy lệnh `if_*` (đọc đồng bộ từ IMEM hoặc boot ROM), bus dữ liệu valid/ready `d_req_*`, `d_rsp_*`, 3 đường ngắt mức, `mtime_i[63:0]`, `core_sleep_o`. Tham số `ENABLE_M`, `ENABLE_WFI_SLEEP`, `RESET_PC` (mặc định 0x0001_0000, boot ROM). Thêm `ENABLE_BTB` (mặc định 1) và `BTB_ENTRIES` (mặc định 8), xem mục X.8.
 
 ## X.2 Vi kiến trúc 3 tầng
 
@@ -352,7 +352,7 @@ Giới hạn đo: mô phỏng RTL bằng Icarus, chưa tính trễ thật của 
 
 ## X.8 Khám phá dự đoán nhánh (D-041)
 
-Dự đoán nhánh là một điểm cộng nhóm chọn trong `docs/spec/requirements.md`. Core gốc đoán luôn không nhảy, mỗi lệnh nhảy mất 1 chu kỳ, và đây là phần lớn số bubble ở Dhrystone và CoreMark. Hai phương án được thử qua tham số `ENABLE_BTB` của `rv32_core` (nhánh `feat/nhan-btb`, chưa merge, số liệu ở `docs/btb_eval.md`):
+Dự đoán nhánh là một điểm cộng nhóm chọn trong `docs/spec/requirements.md`. Core gốc đoán luôn không nhảy, mỗi lệnh nhảy mất 1 chu kỳ, và đây là phần lớn số bubble ở Dhrystone và CoreMark. Hai phương án được thử qua tham số `ENABLE_BTB` của `rv32_core` (số liệu ở `docs/btb_eval.md`):
 
 | `ENABLE_BTB` | Phương án | Cách làm |
 | --- | --- | --- |
@@ -424,7 +424,7 @@ Lưu ý về phương án tĩnh: lệnh chỉ biết được khi đã ở EX, �
 - Phương án tĩnh rẻ diện tích và nhanh nhất ở Dhrystone, nhưng phá quy tắc "`if_addr_o` ra thẳng từ flop" (mục 4.3) và làm khó floorplan, SDC. Không dùng.
 - Bước rẻ tiếp theo là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`, vì JALR chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
 
-Trên nhánh `feat/nhan-btb`, mặc định `ENABLE_BTB=1` nằm ở một commit riêng, chưa merge, chờ review. Nếu review đồng ý thì các bảng hiệu năng ở mục X.7 đổi sang cột BTB 8 và bảng số chính thức ở mục X.9 lấy theo cấu hình có BTB.
+Main đã dùng mặc định `ENABLE_BTB=1` (một commit riêng, dễ đổi lại). Nếu review đồng ý thì các bảng hiệu năng ở mục X.7 đổi sang cột BTB 8 và bảng số chính thức ở mục X.9 lấy theo cấu hình có BTB.
 
 ## X.9 Timing, diện tích, công suất
 
@@ -497,6 +497,6 @@ Nếu review 8/11 đồng ý bật BTB (mục X.8) thì bảng này lấy số c
 - **Tràn nửa thấp của `minstret`** chỉ được kiểm bằng chứng minh hình thức, không có test mô phỏng (cần 2^32 lệnh). Tràn của `mcycle` có test (`trap.S` test 83, 84) (`docs/timing_core.md`).
 - **`wb_instr_q` (32 bit) nạp mỗi lệnh** dù chỉ cần cho lệnh CSR và mtval của illegal. Chưa chặn vì `tb_core` dùng nó để in vết (`docs/timing_core.md`, D-037).
 - **Accelerator bị APB giới hạn.** 95% thời gian mỗi khối là chuyển dữ liệu, nên với rv32im chỉ nhanh 1,69 lần (mục X.7).
-- **Dự đoán nhánh chưa chốt.** Main hiện chưa có BTB, mỗi lệnh nhảy mất 1 chu kỳ. Đề xuất bật BTB 8 entry, lấy lại 7 đến 10%, chờ review 8/11 (mục X.8). JALR vẫn không được đoán.
+- **Dự đoán nhánh chưa chốt.** Main đã bật BTB 8 entry làm mặc định. Không có BTB thì mỗi lệnh nhảy mất 1 chu kỳ. BTB lấy lại 7 đến 10%, chốt ở review 8/11 (mục X.8). JALR vẫn không được đoán.
 - **Bootloader không xác thực chương trình** và không còn timeout sau NAK (mục X.5).
 - **Số timing ở nhà chỉ là xu hướng.** Số chính thức: [CHỜ GENUS].

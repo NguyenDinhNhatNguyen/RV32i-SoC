@@ -1,7 +1,7 @@
 # Câu hỏi vấn đáp về core RV32I
 
 Dùng để ôn trước buổi bảo vệ. Mỗi câu trả lời ngắn, kèm quyết định hoặc tài liệu để đọc thêm.
-"Dx" là mục trong `docs/core_decisions.md`, "mục x.y" là mục trong `docs/spec/core.md`. Chương báo cáo đầy đủ ở `docs/report/core.md`. D-041 và `docs/btb_eval.md` hiện nằm trên nhánh `feat/nhan-btb` (chưa merge).
+"Dx" là mục trong `docs/core_decisions.md`, "mục x.y" là mục trong `docs/spec/core.md`. Chương báo cáo đầy đủ ở `docs/report/core.md`. D-041 và `docs/btb_eval.md` đã merge vào main.
 
 ## Pipeline
 
@@ -15,7 +15,7 @@ Dữ liệu load đi thẳng từ ngõ ra bus qua khối căn chỉnh rồi forw
 Chu kỳ đầu tiên dừng, lệnh ở ngõ ra IMEM được chốt vào `ex_instr_hold_q` và EX đọc thanh ghi giữ cho tới hết dừng. `if_pc_q` không đổi nên khi hết dừng IMEM đang đọc đúng lệnh kế tiếp (D-014, mục 4.3).
 
 **4. Phạt nhánh bao nhiêu chu kỳ? Có dự đoán nhánh không?**
-RTL trên main đoán luôn không nhảy. BTB và đoán tĩnh đã thử, đề xuất bật BTB 8 entry cho bản nộp, xem câu 33 đến 37. Nhảy thật mất 1 chu kỳ, kể cả nhảy tới PC+4, vì không so sánh đích để giữ đường găng ngắn. Trap, MRET, FENCE.I, WFI chuyển hướng từ WB nên mất 2 chu kỳ (D-014, D-023).
+RTL trên main mặc định dùng BTB 8 entry (`ENABLE_BTB=1`), với `ENABLE_BTB=0` thì đoán luôn không nhảy. BTB và đoán tĩnh đã thử, đề xuất giữ BTB 8 entry cho bản nộp, xem câu 33 đến 37. Nhảy thật mất 1 chu kỳ, kể cả nhảy tới PC+4, vì không so sánh đích để giữ đường găng ngắn. Trap, MRET, FENCE.I, WFI chuyển hướng từ WB nên mất 2 chu kỳ (D-014, D-023).
 
 **5. Vì sao địa chỉ IMEM lấy từ flop `if_pc_q`?**
 Để quyết định nhảy và tín hiệu dừng không đi tổ hợp vào chân địa chỉ SRAM. Địa chỉ ra từ flop thì đường vào macro ngắn và dễ đạt setup của macro (mục 4.3, D-014).

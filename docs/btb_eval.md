@@ -1,6 +1,6 @@
 # Thử nghiệm dự đoán nhánh cho rv32_core
 
-Chủ: Nhân. Nhánh `feat/nhan-btb`, chưa merge. Chuẩn bị cho buổi review 8/11.
+Chủ: Nhân. Đã merge vào main, mặc định `ENABLE_BTB=1`. Chốt bật hay tắt ở buổi review 8/11.
 Quyết định ghi ở `docs/core_decisions.md` (D-041).
 
 ## 1. Tóm tắt
