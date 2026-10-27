@@ -32,6 +32,13 @@
 //   +signature=<file>         On PASS, write [+sig_begin, +sig_end) (hex) to a file,
 //                             one word per line, in the riscv-arch-test signature format
 //
+// With -DGLS (scripts/gls_core.sh) the DUT is the Genus netlist top rv32_core_syn, built with
+// ENABLE_M=1, ENABLE_WFI_SLEEP=1 and RESET_PC=0. The netlist has no internal signals, so the
+// checks that read dut.* (WB monitor, strict timing, trap without handler, branch statistics)
+// are left out. The test then ends on the tohost store seen on the data bus.
+// -DGLS_HALF=<ns> sets half the clock period (default 5 ns, 10 for the 20 ns SDF run), and
+// -DGLS_SDF=<file> annotates the netlist with that SDF.
+//
 // At the end the tb prints one "BENCH branch" line: branches and jumps that left EX and how
 // many redirected IF (1 bubble each, a wrong or missing prediction, docs/btb_eval.md).
 // Counted between two "csrr minstret" in WB (the benchmark region of fw/bench), or over the
@@ -59,7 +66,11 @@ module tb_core;
 
     reg clk   = 1'b0;
     reg rst_n = 1'b0;
+`ifdef GLS_HALF
+    always #(`GLS_HALF) clk = ~clk;
+`else
     always #5 clk = ~clk;
+`endif
 
     // ---------------------------------------------------------------- DUT
     wire        if_req, if_gnt, if_err;
@@ -73,11 +84,15 @@ module tb_core;
     reg  [63:0] mtime  = 64'h0;
     wire        core_sleep;
 
+`ifdef GLS
+    rv32_core_syn dut (
+`else
     rv32_core #(
         .ENABLE_M         (ENABLE_M),
         .ENABLE_WFI_SLEEP (ENABLE_WFI_SLEEP),
         .RESET_PC         (`CORE_TB_IMEM_BASE)
     ) dut (
+`endif
         .clk           (clk),
         .rst_n         (rst_n),
         .if_req_o      (if_req),
@@ -343,7 +358,11 @@ module tb_core;
             if (d_acc && pend_q && !d_rsp_valid)
                 end_test(1'b0, "new request while a response is pending");
             // While asleep: no fetch, no data access, WB empty
+`ifdef GLS
+            if (core_sleep && (if_req || d_req_valid))
+`else
             if (core_sleep && (if_req || d_req_valid || dut.wb_valid_q))
+`endif
                 end_test(1'b0, "core active while core_sleep_o = 1");
         end
         req_wait_q  <= d_req_valid & ~d_req_ready;
@@ -353,6 +372,29 @@ module tb_core;
         req_wdata_q <= d_wdata;
     end
 
+`ifdef GLS
+    // ------------------------------------------------------- end of a gate-level run
+    // tohost_seen is set by the store request itself, one cycle before this block sees it
+    always @(posedge clk) begin
+        if (rst_n) begin
+            cycle = cycle + 1;
+            if (cycle >= timeout)
+                end_test(1'b0, "timeout");
+            if (tohost_seen) begin
+                if (tohost_val == 32'd1)
+                    end_test(1'b1, "");
+                else begin
+                    $sformat(msg, "tohost = 0x%08h (test %0d)", tohost_val, tohost_val >> 1);
+                    end_test(1'b0, msg);
+                end
+            end
+        end
+    end
+
+`ifdef GLS_SDF
+    initial $sdf_annotate(`GLS_SDF, dut);
+`endif
+`else
     // ------------------------------------------------------- WB monitor
     integer    prev_cycle     = 0;
     reg        have_prev      = 1'b0;
@@ -509,6 +551,7 @@ module tb_core;
                      br_seen ? "" : " (whole run)", br_r[0], br_r[1], br_r[2], br_r[3],
                      br_r[4], 100.0 * (br_all - br_r[4]) / br_all);
     end
+`endif
 
     // ------------------------------------------------------- startup
     initial begin
