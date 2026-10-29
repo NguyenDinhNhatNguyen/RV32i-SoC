@@ -82,3 +82,7 @@ Thumbs.db
 *.swp
 *~
 .idea/
+
+# Bắt buộc Git phải theo dõi mọi thứ trong thư mục appendix
+!appendix/
+!appendix/**
