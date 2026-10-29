@@ -141,7 +141,7 @@ Kiểm thử ở nhà (26/10). Tổng hợp `soc_top` bằng flow Nangate45 củ
 - Setup và hold của nhóm `clk` đều đạt ở 20 ns. Đường qua macro SRAM chưa được tính vì ở nhà macro không có `.lib`.
 - Số liệu Nangate45 chỉ để xem xu hướng, không dùng cho report.
 
-Lưu ý cho STA-02 và PD: mạng `rst_n_sync` có fanout khoảng 2900. Cần xem `report_timing -check_type recovery/removal` và max transition của mạng này sau Genus và sau CTS.
+Lưu ý cho STA-02 và PD: mạng `rst_n_sync` có fanout khoảng 2900. Cần xem `report_timing -check_type recovery/removal` và max transition của mạng này sau Genus và sau CTS. 29/10 Genus: không vi phạm max transition (`design_rules.rpt`). Còn recovery và removal bằng Tempus sau CTS.
 
 ## 5. Kiểm chứng ở nhà
 
@@ -187,5 +187,5 @@ Kết quả ngày 26/10 (sau khi thêm DMA). `fw-soc` dựng M0W0 với `ENABLE_
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - Bật `ENABLE_DMA` mặc định hay không: nhóm quyết ở review 8/11 (Tầng 2).
-- Trên server: chạy `make synth-soc` (`syn/scripts/synth_soc.tcl`, dùng `soc.sdc` và `sram_2k_macro.lib`), kiểm 0 unconstrained endpoint. Recovery và removal sau khi có buffer trên mạng reset kiểm bằng Tempus (STA-03).
+- Genus `soc_top` đạt ngày 29/10 (`docs/sta_results.md` mục 1). Còn recovery và removal của mạng reset, kiểm bằng Tempus (STA-03).
 - Trên server: GLS với `sram_2k_macro.v` thật.

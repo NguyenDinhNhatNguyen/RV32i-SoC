@@ -146,7 +146,7 @@ Yosys `equiv_make`, `equiv_simple -seq 2`, `equiv_induct -seq 2` so `rv32_core` 
 **Bật BTB 8 entry (`ENABLE_BTB=1`, `BTB_ENTRIES=8`) cho bản nộp. Chốt ở buổi review 8/11, trước khi chạy Genus (STA-03 từ 9/11).**
 
 - Dự đoán nhánh là một điểm cộng nhóm đã chọn (`docs/spec/requirements.md`, mở rộng lõi), cùng nhóm với tối ưu CPI. BTB 8 entry tăng CoreMark/MHz và DMIPS/MHz 7 đến 10 % trên `soc_top`.
-- Flow SoC ở trường (Genus, LEC, Innovus) chưa chạy lần nào. Chốt BTB trước STA-03 thì cấu hình có BTB là cấu hình chạy flow đầu tiên, không tốn thêm vòng flow nào. Nếu để sau STA-03 mới bật thì phải chạy lại cả flow.
+- Lần chạy Genus `soc_top` đầu tiên ở trường (29/10, `docs/sta_results.md`) đã dùng BTB 8 entry và đạt 20 ns. Chốt BTB ở review 8/11 thì giữ được cấu hình này cho STA-03, không tốn thêm vòng flow nào. Nếu review chọn tắt BTB thì phải chạy lại flow.
 - BTB 8 entry thêm khoảng 4 400 µm² (+15 % core có RV32M, flow nhà), khoảng 480 flop. So với cả SoC (SRAM macro, accelerator) thì nhỏ. Timing ở 50 MHz còn dư nhiều, `if_addr_o` vẫn ra từ flop nên không đổi quy tắc thiết kế của core.
 - BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, toàn bộ test PASS với `ENABLE_BTB=1` (mục 7). `ENABLE_BTB=0` vẫn giống hệt RTL cũ (mục 4.1), nên nếu review không đồng ý thì chỉ cần đổi lại một define.
 - BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1 %. Không đáng.

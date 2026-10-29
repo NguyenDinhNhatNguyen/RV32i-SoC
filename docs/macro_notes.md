@@ -13,7 +13,7 @@ Thầy nhắc xem kỹ cách làm với macro. Tài liệu này gom những gì 
 | Ghi theo byte | Không có |
 | File trên server | `~/PDK_GPDK45/lef/sram_2k_macro.lef`, `lib/sram_2k_macro.lib`, `lib/sram_2k_macro.v` |
 | Không có | GDS, file CDL/SPICE. Thầy xác nhận ngày 22/10 là không cần (mục 3.7) |
-| Còn phải kiểm tra | `.lib` có corner fast không |
+| Corner của `.lib` | Chỉ có 1 file, corner typical (1,0 V, 25 °C), không có bản fast hay slow (đọc trên server 29/10) |
 
 ## 2. Việc cần kiểm tra trên server
 
@@ -79,7 +79,7 @@ Chạy `bash scripts/macro_info.sh` và dán output vào chat. Script trả lờ
 
 Còn hỏi:
 
-1. Macro có `.lib` corner fast không? Nếu không, hold cho đường qua macro tính thế nào?
+1. Macro chỉ có `.lib` corner typical (đã kiểm 29/10). Hold cho đường qua macro tính thế nào, có bản slow và fast không?
 2. Tên "2k" là 2 KB hay 2K word? File `.v` cho thấy 1024 word × 32 bit = 4 KB.
 3. Được dùng bao nhiêu macro trong một thiết kế (spec SoC mục 7.2 đề xuất 8 macro cho 32 KB)?
 

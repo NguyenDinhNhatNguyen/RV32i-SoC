@@ -417,7 +417,7 @@ Lưu ý về phương án tĩnh: lệnh chỉ biết được khi đã ở EX, �
 **Đề xuất: bật BTB 8 entry (`ENABLE_BTB=1`) cho bản nộp, chốt ở buổi review 8/11, trước khi chạy Genus (STA-03 từ 9/11).** Lý do:
 
 - Dự đoán nhánh là điểm cộng nhóm đã chọn. BTB 8 entry tăng CoreMark/MHz và DMIPS/MHz 7 đến 10% trên `soc_top`.
-- Flow SoC ở trường (Genus, LEC, Innovus) chưa chạy lần nào. Chốt trước STA-03 thì cấu hình có BTB là cấu hình chạy flow đầu tiên, không tốn thêm vòng flow nào.
+- Lần chạy Genus `soc_top` đầu tiên ở trường (29/10) đã dùng BTB 8 entry và đạt 20 ns. Chốt ở review 8/11 thì giữ được cấu hình này cho STA-03, không tốn thêm vòng flow nào.
 - Chi phí khoảng 4 400 µm² (+15% core có RV32M) ở flow nhà, nhỏ so với cả SoC. `if_addr_o` vẫn ra từ flop, timing ở 50 MHz còn dư nhiều.
 - BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, cấy 3 lỗi đều bị bắt, lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot đều PASS với `BTB=0`, 1 và 2. `ENABLE_BTB=0` vẫn chứng minh tương đương hình thức với RTL cũ (4 512 điểm với ENABLE_M=0, 5 247 điểm với ENABLE_M=1), nên nếu review không đồng ý thì chỉ cần đổi lại một define.
 - BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1%. Không đáng.

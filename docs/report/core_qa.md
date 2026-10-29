@@ -127,7 +127,7 @@ Lệnh chỉ biết được khi đã ở EX, đúng chu kỳ EX quyết định
 BTB 8 entry: CoreMark/MHz rv32im 2,755 → 2,967 (+7,7%), DMIPS/MHz 0,800 → 0,856 (+7,0%) trên `soc_top`, đoán đúng 39,8% → 79,8% ở CoreMark rv32im. Diện tích thêm khoảng 4 400 µm² ở Nangate45 (+15% core có RV32M), khoảng 480 flop. Timing không đổi rõ (`docs/btb_eval.md` mục 3, 4).
 
 **36. Bản nộp có bật BTB không? Vì sao?**
-Đề xuất bật BTB 8 entry, chốt ở review 8/11 trước khi chạy Genus (STA-03 từ 9/11). Dự đoán nhánh là điểm cộng nhóm đã chọn, lợi 7 đến 10%, và flow SoC chưa chạy lần nào nên chốt sớm thì không tốn thêm vòng flow. 16 entry tốn gấp đôi để lời thêm 1%, phương án tĩnh tạo đường IMEM → IMEM, nên không dùng (D-041).
+Đề xuất bật BTB 8 entry, chốt ở review 8/11 trước khi chạy Genus (STA-03 từ 9/11). Dự đoán nhánh là điểm cộng nhóm đã chọn, lợi 7 đến 10%, và lần chạy Genus `soc_top` đầu tiên (29/10) đã dùng BTB 8 entry và đạt 20 ns, nên chốt sớm thì không tốn thêm vòng flow. 16 entry tốn gấp đôi để lời thêm 1%, phương án tĩnh tạo đường IMEM → IMEM, nên không dùng (D-041).
 
 **37. Tại sao BTB chỉ cần so hướng ở EX mà không so đích?**
 BTB lưu tag đầy đủ, nên trúng nghĩa là đúng lệnh đó. Chỉ nhánh và JAL được đoán, đích của chúng cố định theo PC. FENCE.I xoá hết BTB, nên code bị sửa (bootloader nạp chương trình mới) không bị đoán theo bản cũ (D-041).

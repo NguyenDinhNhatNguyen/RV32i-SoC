@@ -18,11 +18,10 @@ set_clock_transition 0.08 [get_clocks clk]
 # 3. Delays around the SRAM macros (docs/macro_notes.md).
 # In soc_top, if_* goes through imem_port to the IMEM sram_2k_macro and d_* goes through the
 # bus to the DMEM macro, the peripherals and the IMEM data port. Macro delays do not scale with
-# the clock, so they are absolute values. They are placeholders for the slow corner: read the
-# real CLK->Q and setup of sram_2k_macro.lib on the server (scripts/macro_info.sh) and update
-# SRAM_CQ and SRAM_SU before taking official numbers.
-set SRAM_CQ 1.5   ;# CLK->Q of the macro (Q output valid after the clock edge)
-set SRAM_SU 0.3   ;# Setup of the macro address, data, CE, WE and BE pins
+# the clock, so they are absolute values. Read from sram_2k_macro.lib on the server (29/10).
+# The library has only a typical corner, so these values are slightly optimistic for slow.
+set SRAM_CQ 1.2   ;# CLK->Q of the macro (Q output valid after the clock edge)
+set SRAM_SU 0.4   ;# Worst setup of the macro pins (CEN and WEN 0.40, A 0.35, D 0.30)
 set BUS_D   0.5   ;# Interconnect outside the core: address decode and read data mux
 # Signals that come from flops in the SoC (grant, ready, irq, mtime, rst_n) and outputs that
 # go to flops keep the Lab 01 ratios (24% and 20% of the period)

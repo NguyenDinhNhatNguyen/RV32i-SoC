@@ -20,8 +20,8 @@ Chủ: Nhân. Tổng hợp, LEC và GLS cho lõi RV32I đứng riêng, để l�
 ### Ràng buộc `syn/constraints/core.sdc`
 
 - Các cổng `if_*` nối tới IMEM macro qua `imem_port`, các cổng `d_*` nối tới DMEM macro và ngoại vi qua bus.
-- Delay của macro không co theo chu kỳ nên là số tuyệt đối: `SRAM_CQ` 1,5 ns (CLK→Q), `SRAM_SU` 0,3 ns (setup), `BUS_D` 0,5 ns (decode và mux của bus).
-- **Đây là số tạm.** Ở trường chạy `bash scripts/macro_info.sh`, đọc CLK→Q và setup của `sram_2k_macro` ở corner slow, sửa `SRAM_CQ` và `SRAM_SU` trước khi lấy số chính thức.
+- Delay của macro không co theo chu kỳ nên là số tuyệt đối: `SRAM_CQ` 1,2 ns (CLK→Q), `SRAM_SU` 0,4 ns (setup xấu nhất, ở `CEN` và `WEN`), `BUS_D` 0,5 ns (decode và mux của bus).
+- `SRAM_CQ` và `SRAM_SU` đọc từ `sram_2k_macro.lib` trên server ngày 29/10 (`docs/sta_results.md` mục 1). File `.lib` chỉ có corner typical nên hai số này hơi lạc quan so với corner slow.
 - Tín hiệu đến từ flop trong SoC (grant, ready, ngắt, `mtime_i`, `rst_n`) giữ tỉ lệ Lab 01: input 24%, output 20% chu kỳ.
 - `rst_n` không phải false path. Trong `soc_top` nó ra từ flop của `reset_sync`, nên được kiểm recovery và removal như `soc.sdc`.
 

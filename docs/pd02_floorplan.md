@@ -9,7 +9,7 @@ Tổng hợp `soc_top` bằng Yosys với thư viện mở Nangate45 (cùng scri
 | Khối | Nangate45 (Yosys) | GPDK45 (Genus) |
 | --- | --- | --- |
 | `accel_wrapper` | 17 906 µm² | 14 665 µm² (21/10, `appendix/synth_accel/cg1`) |
-| `soc_top`, không tính macro | 51 714 µm² | ≈ 42 400 µm² (nhân tỉ lệ 0,82) |
+| `soc_top`, không tính macro | 51 714 µm² | ≈ 42 400 µm² (nhân tỉ lệ 0,82). Số thật: 52 757 µm² (Genus 29/10, `appendix/synth_soc`) |
 
 Dùng **51 714 µm²** làm số an toàn để chọn floorplan. Số GPDK45 là quy đổi thô, chỉ để biết cỡ.
 
@@ -68,5 +68,3 @@ Cạnh trên và dưới không đặt chân vì đã có macro. Cả hai cạnh
 | Việc | Vì sao chưa xong | Khi nào |
 | --- | --- | --- |
 | Chạy `soc_floorplan.tcl` trên Innovus | Cần server trường và netlist Genus của `soc_top` (`syn/out_soc/soc_top_netlist.v`, từ `make synth-soc`) | PD-03 (05/11) |
-| Chọn hướng macro và lớp ring | Cần output `scripts/macro_info.sh` trên server | Buổi lên trường tới |
-| Thay diện tích ước lượng bằng số Genus | Cần chạy `make synth-soc` trên server (Phát), diện tích ở `syn/out_soc/reports/synthesis/area.rpt` | Buổi lên trường 29–30/10 |
