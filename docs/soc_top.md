@@ -118,11 +118,11 @@ File `syn/constraints/soc.sdc`. Mỗi ràng buộc có chú thích lý do ngay t
 
 | Ràng buộc | Giá trị | Ghi chú |
 | --- | --- | --- |
-| Clock `clk` | Chu kỳ 20 ns (50 MHz), duty 50% | Một miền clock |
+| Clock `clk` | Chu kỳ 20 ns (50 MHz), duty 50% | Một miền clock. Chu kỳ là biến `SOC_PERIOD`, đổi số này thì input và output delay max đổi theo (STA-03) |
 | Uncertainty | Setup 0,15 ns, hold 0,08 ns | Giống Lab 01 và `accel.sdc` |
 | Clock transition | 0,08 ns | Chỉ dùng trước CTS, sau CTS tool dùng clock thật |
-| Input delay | Max 4,8 ns, min 0,3 ns cho `gpio_i[*]`, `uart_rx` | Khoảng 24% chu kỳ như Lab. Hai chân này bất đồng bộ, đi thẳng vào bộ đồng bộ 2 flop |
-| Output delay | Max 4,0 ns, min 0,2 ns cho `gpio_o[*]`, `gpio_oe[*]`, `uart_tx` | Khoảng 20% chu kỳ. Mọi ngõ ra đều lấy từ flop |
+| Input delay | Max 4,8 ns, min 0,3 ns cho `gpio_i[*]`, `uart_rx` | Max bằng 24% chu kỳ như Lab. Hai chân này bất đồng bộ, đi thẳng vào bộ đồng bộ 2 flop |
+| Output delay | Max 4,0 ns, min 0,2 ns cho `gpio_o[*]`, `gpio_oe[*]`, `uart_tx` | Max bằng 20% chu kỳ. Mọi ngõ ra đều lấy từ flop |
 | Input slew, output load | `set_input_transition 0,1`, `set_load -pin_load 0,05` | Không ghi tên cell thư viện, để chạy được cả GPDK45 lẫn Nangate45 |
 | Reset | `set_false_path -from rst_n`, kèm input delay 0 | `rst_n` chỉ vào 2 flop của `u_rst`. Đường deassert từ `u_rst` tới chân reset các flop là đường thường, tool kiểm recovery và removal |
 

@@ -4,8 +4,12 @@
 # Ports of soc_top: clk, rst_n, gpio_i[31:0], uart_rx, gpio_o[31:0], gpio_oe[31:0], uart_tx.
 # Details and reasons: docs/soc_top.md section 4.7.
 
-# 1. Clock: one clock domain, 50 MHz minimum (20 ns), 50% duty cycle
-create_clock -name clk -period 20.0 -waveform {0 10.0} [get_ports clk]
+# 1. Clock: one clock domain, 50 MHz minimum (20 ns), 50% duty cycle.
+# SOC_PERIOD is the only number to change for another frequency. synth_soc.tcl replaces this
+# line for the F_max sweep (STA-03), and the max IO delays below follow it.
+set SOC_PERIOD 20.0
+create_clock -name clk -period $SOC_PERIOD -waveform [list 0 [expr {$SOC_PERIOD / 2.0}]] \
+    [get_ports clk]
 
 # 2. Clock uncertainty and transition before CTS, same values as Lab 01 and accel.sdc.
 # Setup 0.15 ns covers jitter plus part of the 80 ps skew target, hold 0.08 ns covers skew.
@@ -14,18 +18,18 @@ set_clock_uncertainty -setup 0.15 [get_clocks clk]
 set_clock_uncertainty -hold  0.08 [get_clocks clk]
 set_clock_transition 0.08 [get_clocks clk]
 
-# 3. Input delays, about 24% of the period for max and 0.3 ns for min (Lab 01 ratio).
+# 3. Input delays, 24% of the period for max (4.8 ns at 20 ns) and 0.3 ns for min (Lab 01 ratio).
 # gpio_i and uart_rx are asynchronous to clk and each bit goes straight into a 2-flop
 # synchronizer (gpio_apb, uart_apb). They still get an input delay so the path to the first
 # synchronizer flop is constrained and no endpoint is left unconstrained.
 set in_ports [get_ports {gpio_i[*] uart_rx}]
-set_input_delay  -clock clk -max 4.8 $in_ports
+set_input_delay  -clock clk -max [expr {0.24 * $SOC_PERIOD}] $in_ports
 set_input_delay  -clock clk -min 0.3 $in_ports
 
-# 4. Output delays, about 20% of the period for max and 0.2 ns for min (Lab 01 ratio).
+# 4. Output delays, 20% of the period for max (4.0 ns at 20 ns) and 0.2 ns for min (Lab 01 ratio).
 # Every output comes straight from a flop (gpio_apb data_out and dir, uart_apb uart_txd).
 set out_ports [get_ports {gpio_o[*] gpio_oe[*] uart_tx}]
-set_output_delay -clock clk -max 4.0 $out_ports
+set_output_delay -clock clk -max [expr {0.20 * $SOC_PERIOD}] $out_ports
 set_output_delay -clock clk -min 0.2 $out_ports
 
 # 5. Input slew and output load. set_input_transition replaces the Lab set_driving_cell so

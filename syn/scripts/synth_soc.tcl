@@ -1,6 +1,8 @@
 # synth_soc.tcl - Genus synthesis of the whole soc_top with soc.sdc, same Lab 01 flow as
 # synth_accel.tcl: pre-synthesis checks -> syn_generic/map/opt -> post-synthesis checks -> files.
 # Run from the repo root on the server: make synth-soc (CG=0 for the run without clock gating).
+# Environment: CG=0|1 (default 1), PERIOD=<ns> (default 20, replaces SOC_PERIOD in soc.sdc),
+# SYN_OUT=<dir> (default syn/out_soc). make synth-soc-sweep sets PERIOD and SYN_OUT (STA-03).
 # The netlist and SDC are the input of soc_floorplan.tcl (PD-02, PD-03, docs/pd02_floorplan.md).
 #
 # Parameters are the soc_top defaults: ENABLE_M=1, ENABLE_WFI_SLEEP=1, ENABLE_DMA=0, and the
@@ -15,12 +17,18 @@
 set REPO [file normalize [file dirname [info script]]/../..]
 source $REPO/pnr/scripts/config.tcl
 
-set TOP   soc_top
-set OUT   $REPO/syn/out_soc
+proc env_or {name def} {
+    if {[info exists ::env($name)] && $::env($name) ne ""} { return $::env($name) }
+    return $def
+}
+
+set TOP    soc_top
+set PERIOD [env_or PERIOD 20.0]
+set OUT    [file normalize [env_or SYN_OUT $REPO/syn/out_soc]]
 set AUDIT $OUT/reports/audit
 set RPT   $OUT/reports/synthesis
 file mkdir $OUT $AUDIT $RPT
-set CG [expr {[info exists ::env(CG)] ? $::env(CG) : 1}]
+set CG [env_or CG 1]
 set N_MACRO 8
 
 # Try a command: on error only warn and keep going (names differ between Genus versions)
@@ -67,7 +75,18 @@ if {$CG && [catch {set_db [get_db designs] .lp_clock_gating_min_flops 4} msg]} {
 # Pre-synthesis checks (Quality Gate 1)
 check_design -unresolved > $AUDIT/pre_syn_unresolved.rpt     ;# Must be 0 unresolved
 check_design -all        > $AUDIT/pre_syn_design_lint.rpt    ;# 0 latch, 0 loop, 0 multi-driven
-read_sdc $REPO/syn/constraints/soc.sdc
+# SDC for this run: soc.sdc with the SOC_PERIOD line replaced, kept with the reports
+set fp [open $REPO/syn/constraints/soc.sdc r]
+set sdc_text [read $fp]
+close $fp
+if {![regsub -line {^set SOC_PERIOD .*$} $sdc_text "set SOC_PERIOD $PERIOD" sdc_text]} {
+    puts "ERROR: no \"set SOC_PERIOD\" line in syn/constraints/soc.sdc"
+    quit
+}
+set fp [open $OUT/soc_run.sdc w]
+puts -nonewline $fp $sdc_text
+close $fp
+read_sdc $OUT/soc_run.sdc
 check_timing_intent -verbose > $AUDIT/pre_syn_timing_intent.rpt  ;# 0 unconstrained endpoint
 
 # 3-stage synthesis
@@ -120,8 +139,8 @@ catch {set wns [get_db [get_db designs] .slack]}
 if {$wns eq ""} { set wns "n/a" }
 
 set fp [open $OUT/summary.txt w]
-puts $fp "top=$TOP cg=$CG macros=$n_macro scan_flops=$n_scan flops=$n_flop latches=$n_latch\
-icg=$n_icg wns_ps=$wns"
+puts $fp "top=$TOP period=$PERIOD cg=$CG macros=$n_macro scan_flops=$n_scan flops=$n_flop\
+latches=$n_latch icg=$n_icg wns_ps=$wns"
 close $fp
 
 if {$n_scan > 0} {
@@ -129,6 +148,7 @@ if {$n_scan > 0} {
 } elseif {$n_macro != $N_MACRO} {
     puts "ERROR: $n_macro sram_2k_macro instances in $netlist, expected $N_MACRO"
 } else {
-    puts "Genus done: $netlist (CG=$CG, $n_macro macros, 0 scan flops, $n_flop flops, WNS $wns ps)"
+    puts "Genus done: $netlist (PERIOD=$PERIOD, CG=$CG, $n_macro macros, 0 scan flops,\
+$n_flop flops, WNS $wns ps)"
 }
 quit

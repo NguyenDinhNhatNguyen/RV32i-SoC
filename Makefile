@@ -1065,11 +1065,18 @@ synth-blocks:
 # SERVER only. Same scan flop ban as synth-block, and the netlist must hold 8 sram_2k_macro.
 # Results in syn/out_soc/ (soc_top_netlist.v, soc_top_synth.sdc, reports/, summary.txt), log in
 # syn/run_soc/genus.log. The netlist feeds pnr/scripts/soc_floorplan.tcl (PD-02, PD-03).
-#   make synth-soc                 CG=1 (CG=0 for the baseline, rename syn/out_soc first)
+#   make synth-soc                 CG=1 (CG=0 for the baseline, rename syn/out_soc first),
+#                                  PERIOD=20 ns (replaces SOC_PERIOD of soc.sdc for this run)
+#   make synth-soc-sweep           PERIODS="20 18 16 15 14", WNS and F_max table (STA-03)
+#   make sta-soc                   Tempus on syn/out_soc: setup, hold, recovery, removal (STA-03)
+#                                  SPEF=<file> NETLIST=<file> for the routed design (STA-05)
+#   make sta-soc-nangate           AT HOME: Yosys + OpenSTA with Nangate45 and soc.sdc, trends
+#                                  only (STA_PERIOD=20). Synthesis takes about 11 minutes and
+#                                  reruns only when the RTL changes
 # ---------------------------------------------------------------------------
 SYN_SOC_NET := syn/out_soc/soc_top_netlist.v
 
-.PHONY: synth-soc
+.PHONY: synth-soc synth-soc-sweep sta-soc sta-soc-nangate
 synth-soc:
 	@command -v genus > /dev/null || \
 	  { echo "ERROR: genus not found, this target runs on the school server"; exit 1; }
@@ -1081,3 +1088,45 @@ synth-soc:
 	@grep -q 'macros=8 scan_flops=0 ' syn/out_soc/summary.txt || \
 	  { echo "ERROR: wrong macro count or scan flops, see syn/out_soc/summary.txt"; exit 1; }
 	@cat syn/out_soc/summary.txt
+
+# Results in syn/out_soc_sweep/p<period>/ and syn/out_soc_sweep/summary.md
+synth-soc-sweep:
+	bash syn/scripts/sweep_soc.sh
+
+# Reports in sta/run_soc/pre/ (or sta/run_soc/spef/ with SPEF), log in sta/run_soc/tempus.log.
+# < /dev/null so Tempus exits if the script stops midway
+sta-soc:
+	@command -v tempus > /dev/null || \
+	  { echo "ERROR: tempus not found, this target runs on the school server"; exit 1; }
+	mkdir -p sta/run_soc && cd sta/run_soc && rm -f tempus.log* tempus.cmd* && \
+	  tempus -nowin -files ../scripts/sta_soc.tcl -log tempus.log < /dev/null > /dev/null 2>&1 || true
+	@f=sta/run_soc/$$( [ -n "$(SPEF)" ] && echo spef || echo pre )/summary.txt; \
+	  test -f $$f || { echo "ERROR: Tempus wrote no summary, see sta/run_soc/tempus.log"; exit 1; }; \
+	  cat $$f
+
+# Home trend run of the whole soc_top. The 8 SRAM macros are black boxes (no Nangate45 .lib),
+# so paths through them are not timed. Results in syn/run_yosys/soc_top_ng/sta_p<period>/
+SOC_NG_DIR := $(YS_RUN)/soc_top_ng
+SOC_NG_NET := $(SOC_NG_DIR)/soc_top_nangate.v
+SOC_NG_SRC := $(SOC_RTL) syn/yosys/sram_2k_macro_bb.v
+STA_PERIOD ?= 20
+
+$(SOC_NG_NET): $(SOC_NG_SRC) rtl/core/rv32_defs.vh rtl/bus/soc_map.vh rtl/mem/boot_rom_init.vh \
+               syn/yosys/synth_nangate.tcl
+	@bash scripts/get_nangate45.sh > /dev/null
+	@mkdir -p $(SOC_NG_DIR)
+	@echo "sta-soc-nangate: Yosys synthesis of soc_top (about 11 minutes)"
+	@YS_TOP=soc_top YS_SRCS="$(SOC_NG_SRC)" YS_INC="rtl/core rtl/bus rtl/mem" YS_PARAMS="" \
+	  YS_OUT=$(SOC_NG_DIR) YS_LIB=$(NG_LIB) nice -n 19 \
+	  $(YOSYS) -q -l $(SOC_NG_DIR)/yosys.log -c syn/yosys/synth_nangate.tcl > /dev/null 2>&1 && \
+	  test -s $(SOC_NG_NET) || \
+	  { echo "ERROR: yosys failed for soc_top, see $(SOC_NG_DIR)/yosys.log"; \
+	    rm -f $(SOC_NG_NET); exit 1; }
+
+sta-soc-nangate: $(SOC_NG_NET)
+	@command -v $(STA) > /dev/null || { echo "ERROR: OpenSTA ($(STA)) not found"; exit 1; }
+	@YS_OUT=$(SOC_NG_DIR) YS_LIB=$(NG_LIB) STA_PERIOD=$(STA_PERIOD) \
+	  $(STA) -no_splash -exit syn/yosys/sta_soc_nangate.tcl > $(SOC_NG_DIR)/sta.log 2>&1 && \
+	  test -s $(SOC_NG_DIR)/sta_p$(STA_PERIOD)/summary.txt || \
+	  { echo "ERROR: sta failed for soc_top, see $(SOC_NG_DIR)/sta.log"; exit 1; }
+	@cat $(SOC_NG_DIR)/sta_p$(STA_PERIOD)/summary.txt

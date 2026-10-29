@@ -71,6 +71,25 @@ make synth-soc > synth_soc.txt 2>&1 &
 
 Tiêu chí giống `synth-blocks`. Copy `syn/out_soc/` vào `appendix/synth_soc/` và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow. Hold và removal trên mạng reset kiểm bằng Tempus (STA-03).
 
+STA-03: quét chu kỳ tìm F_max, rồi chạy Tempus trên netlist Genus:
+
+```bash
+make synth-soc-sweep > sweep_soc.txt 2>&1 &      # PERIODS="20 18 16 15 14" (mặc định)
+make synth-soc PERIOD=15                         # một chu kỳ, ghi vào syn/out_soc/
+make sta-soc                                     # Tempus trên syn/out_soc/
+```
+
+| Mục | Nội dung |
+| --- | --- |
+| Chu kỳ | `synth_soc.tcl` thay dòng `set SOC_PERIOD` của `soc.sdc` bằng `PERIOD`, input và output delay max đổi theo (24% và 20% chu kỳ). SDC thật của mỗi lần chạy là `soc_run.sdc` trong thư mục kết quả |
+| Kết quả quét | `syn/out_soc_sweep/p<chu kỳ>/` và bảng `syn/out_soc_sweep/summary.md` (WNS, chu kỳ nhỏ nhất, F_max ước lượng, diện tích). F_max = 1 / (chu kỳ - WNS), chỉ là ước lượng từ đường xấu nhất |
+| Tempus | `sta/scripts/sta_soc.tcl`, corner theo `pnr/scripts/mmmc.view`: slow cho setup và recovery, fast cho hold và removal. Report ở `sta/run_soc/pre/`, tóm tắt ở `summary.txt`. Chưa chạy lần nào trên server |
+| Sau route (STA-05) | `make sta-soc SPEF=<file> NETLIST=<file>`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/` |
+
+Ở nhà xem xu hướng trước bằng `make sta-soc-nangate STA_PERIOD=<ns>` (Yosys, Nangate45, OpenSTA với `soc.sdc`, macro SRAM là hộp đen nên đường qua macro không được tính). Lần đầu tổng hợp khoảng 11 phút, các lần sau chỉ chạy lại OpenSTA. Số ở nhà ghi vào `docs/sta_results.md` mục 2, không đưa vào report.
+
+Trước layout chưa có SPEF nên Tempus không tính delay dây, số lạc quan. Ghi mỗi chu kỳ một dòng vào `docs/sta_results.md` mục 1 và copy report vào `appendix/`.
+
 Xem layout và chụp hình cho report:
 
 ```bash
