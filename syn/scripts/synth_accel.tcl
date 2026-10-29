@@ -25,7 +25,9 @@ foreach c [get_db lib_cells -if {.base_name == SDFF*}] { set_db $c .dont_use tru
 foreach n $DONT_USE_CELLS { foreach c [get_db lib_cells -if ".base_name == $n"] { set_db $c .dont_use true } }
 
 # Clock gating must be enabled before elaborate, otherwise Genus ignores it (POPT-104)
-if {$CG} { set_db lp_insert_clock_gating true }
+if {$CG} { set_db lp_insert_clock_gating true
+    set_db [get_db designs accel_wrapper] .lp_clock_gating_max_flops 16
+}
 
 read_hdl -language v2001 {pe.v accelerator_top.v accel_wrapper.v}
 elaborate $TOP
