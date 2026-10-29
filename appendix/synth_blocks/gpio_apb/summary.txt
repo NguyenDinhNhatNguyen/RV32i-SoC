@@ -1,0 +1,1 @@
+block=gpio_apb top=gpio_apb cg=1 scan_flops=0 flops=128 latches=0 icg=2 wns_ps=9968.2

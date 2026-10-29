@@ -1,0 +1,250 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'sys_bus'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'sys_bus'
+
+No empty modules in design 'sys_bus'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'sys_bus'
+
+No unloaded port in 'sys_bus'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'sys_bus'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:sys_bus/s_addr[31]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[30]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[29]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[28]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[27]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[26]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[25]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[24]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[23]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[22]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[21]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[20]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[19]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[18]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[17]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[16]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[15]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[14]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[13]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[12]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[11]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[10]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[9]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[8]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[7]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[6]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[5]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[4]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[3]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[2]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[1]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_addr[0]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_we' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_be[3]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_be[2]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_be[1]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_be[0]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[31]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[30]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[29]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[28]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[27]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[26]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[25]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[24]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[23]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[22]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[21]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[20]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[19]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[18]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[17]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[16]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[15]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[14]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[13]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[12]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[11]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[10]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[9]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[8]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[7]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[6]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[5]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[4]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[3]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[2]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[1]' in design sys_bus
+Encountered an assign statement at port 'port:sys_bus/s_wdata[0]' in design sys_bus
+Total number of assign statements in design 'sys_bus' : 69
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'sys_bus'
+
+No undriven sequential pin in 'sys_bus'
+
+No undriven hierarchical pin in 'sys_bus'
+
+No undriven port in 'sys_bus'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'sys_bus'
+
+No multidriven sequential pin in 'sys_bus'
+
+No multidriven hierarchical pin in 'sys_bus'
+
+No multidriven ports in 'sys_bus'
+
+No multidriven unloaded nets in 'sys_bus'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'sys_bus'
+
+No constant sequential pin(s) in design 'sys_bus'
+
+design 'sys_bus' has the following constant input hierarchical pin(s)
+hpin:sys_bus/lt_119_58/A[31] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/A[30] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/A[29] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/A[28] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[14] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[13] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[12] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[11] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[10] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[9] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[8] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[7] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[6] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[5] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[4] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[3] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[2] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[1] 	 (fanout : 1)
+hpin:sys_bus/lt_119_58/B[0] 	 (fanout : 1)
+hpin:sys_bus/mux_119_58/in_0[1] 	 (fanout : 1)
+hpin:sys_bus/mux_119_58/in_0[0] 	 (fanout : 1)
+hpin:sys_bus/mux_119_58/in_1[1] 	 (fanout : 1)
+hpin:sys_bus/mux_119_58/in_1[0] 	 (fanout : 1)
+hpin:sys_bus/mux_120_58/in_0 	 (fanout : 1)
+hpin:sys_bus/mux_120_58/in_1 	 (fanout : 1)
+hpin:sys_bus/mux_rsp_src_valid_131_15/in_3 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[31] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[30] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[29] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[28] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[27] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[26] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[25] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[24] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[23] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[22] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[21] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[20] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[19] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[18] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[17] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[16] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[15] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[14] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[13] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[12] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[11] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[10] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[9] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[8] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[7] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[6] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[5] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[4] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[3] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[2] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[1] 	 (fanout : 1)
+hpin:sys_bus/mux_144_38/in_0[0] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_118_15/in_1[0] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_118_15/in_2[1] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_118_15/in_2[0] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_118_15/in_3[1] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_118_15/in_3[0] 	 (fanout : 1)
+hpin:sys_bus/mux_slv_ready_156_15/in_3 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'sys_bus' : 64
+
+No constant connected ports in design 'sys_bus'
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'sys_bus'
+No preserved sequential instance(s) in design 'sys_bus'
+No preserved hierarchical instance(s) in design 'sys_bus'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'sys_bus'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'sys_bus'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     69
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             0
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                64
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

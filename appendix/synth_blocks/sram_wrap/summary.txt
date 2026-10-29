@@ -1,0 +1,1 @@
+block=sram_wrap top=sram_wrap cg=1 scan_flops=0 flops=5 latches=0 icg=0 wns_ps=10555.7

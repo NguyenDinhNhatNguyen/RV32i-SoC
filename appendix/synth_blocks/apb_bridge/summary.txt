@@ -1,0 +1,1 @@
+block=apb_bridge top=apb_bridge cg=1 scan_flops=0 flops=94 latches=0 icg=4 wns_ps=13713.1

@@ -1,0 +1,1 @@
+block=accel_apb top=accel_apb cg=1 scan_flops=0 flops=792 latches=0 icg=14 wns_ps=9209.3

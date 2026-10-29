@@ -1,0 +1,158 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'gpio_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'gpio_apb'
+
+No empty modules in design 'gpio_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'gpio_apb'
+
+No unloaded port in 'gpio_apb'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'gpio_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:gpio_apb/PREADY' in design gpio_apb
+Total number of assign statements in design 'gpio_apb' : 1
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'gpio_apb'
+
+No undriven sequential pin in 'gpio_apb'
+
+No undriven hierarchical pin in 'gpio_apb'
+
+No undriven port in 'gpio_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'gpio_apb'
+
+No multidriven sequential pin in 'gpio_apb'
+
+No multidriven hierarchical pin in 'gpio_apb'
+
+No multidriven ports in 'gpio_apb'
+
+No multidriven unloaded nets in 'gpio_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'gpio_apb'
+
+No constant sequential pin(s) in design 'gpio_apb'
+
+design 'gpio_apb' has the following constant input hierarchical pin(s)
+hpin:gpio_apb/lte_35_57/B[1] 	 (fanout : 2)
+hpin:gpio_apb/lte_35_57/B[0] 	 (fanout : 1)
+hpin:gpio_apb/eq_37_50/B 	 (fanout : 1)
+hpin:gpio_apb/eq_52_31/B 	 (fanout : 1)
+hpin:gpio_apb/eq_53_31/B[1] 	 (fanout : 1)
+hpin:gpio_apb/eq_53_31/B[0] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[31] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[30] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[29] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[28] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[27] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[26] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[25] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[24] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[23] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[22] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[21] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[20] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[19] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[18] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[17] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[16] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[15] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[14] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[13] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[12] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[11] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[10] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[9] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[8] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[7] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[6] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[5] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[4] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[3] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[2] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[1] 	 (fanout : 1)
+hpin:gpio_apb/mux_PRDATA_61_15/in_3[0] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'gpio_apb' : 38
+
+design 'gpio_apb' has the following constant port(s)
+port:gpio_apb/PREADY
+Total number of constant port(s) in design 'gpio_apb' : 1
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'gpio_apb'
+No preserved sequential instance(s) in design 'gpio_apb'
+No preserved hierarchical instance(s) in design 'gpio_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'gpio_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'gpio_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                      1
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             1
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                38
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

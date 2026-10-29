@@ -1,0 +1,1 @@
+block=dma_apb top=dma_apb cg=1 scan_flops=0 flops=191 latches=0 icg=7 wns_ps=9523.6

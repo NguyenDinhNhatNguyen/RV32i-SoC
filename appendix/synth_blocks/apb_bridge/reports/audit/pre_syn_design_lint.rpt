@@ -1,0 +1,233 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'apb_bridge'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'apb_bridge'
+
+No empty modules in design 'apb_bridge'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'apb_bridge'
+
+No unloaded port in 'apb_bridge'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+design 'apb_bridge' has the following unloaded combinational elements
+pin:apb_bridge/ctl_req_addr_66_15/g7/z
+Total number of unloaded combinational elements in design 'apb_bridge' : 1
+
+ Assigns
+ ------- 
+Encountered an assign statement at hport 'hport:apb_bridge/ctl_st_107_19/out_0[0]' in module case_box_6
+Total number of assign statements in design 'apb_bridge' : 1
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'apb_bridge'
+
+No undriven sequential pin in 'apb_bridge'
+
+No undriven hierarchical pin in 'apb_bridge'
+
+No undriven port in 'apb_bridge'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'apb_bridge'
+
+No multidriven sequential pin in 'apb_bridge'
+
+No multidriven hierarchical pin in 'apb_bridge'
+
+No multidriven ports in 'apb_bridge'
+
+No multidriven unloaded nets in 'apb_bridge'
+
+  Constant Pin(s)
+  ----------------
+design 'apb_bridge' has the following constant input combinational pin(s)
+pin:apb_bridge/g143/in_0
+Total number of constant combinational pins in design 'apb_bridge' : 1
+
+No constant sequential pin(s) in design 'apb_bridge'
+
+design 'apb_bridge' has the following constant input hierarchical pin(s)
+hpin:apb_bridge/eq_69_41/B 	 (fanout : 1)
+hpin:apb_bridge/lte_69_71/B[2] 	 (fanout : 2)
+hpin:apb_bridge/lte_69_71/B[1] 	 (fanout : 2)
+hpin:apb_bridge/lte_69_71/B[0] 	 (fanout : 1)
+hpin:apb_bridge/eq_73_41/B 	 (fanout : 1)
+hpin:apb_bridge/sll_112_66/A 	 (fanout : 0)
+hpin:apb_bridge/mux_hit_66_15/in_3 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_1[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_1[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_1[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_1[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_2[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_2[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_2[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_2[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_3[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_3[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_3[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_slot_66_15/in_3[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_penable_107_19/in_0 	 (fanout : 1)
+hpin:apb_bridge/mux_penable_107_19/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[8] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[7] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[6] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[5] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[4] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_psel_107_19/in_1[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_err_117_34/in_0 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_err_117_34/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_err_109_29/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_err_128_25/in_0 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_err_107_19/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[31] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[30] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[29] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[28] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[27] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[26] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[25] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[24] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[23] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[22] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[21] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[20] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[19] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[18] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[17] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[16] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[15] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[14] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[13] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[12] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[11] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[10] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[9] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[8] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[7] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[6] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[5] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[4] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_134_46/in_1[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[31] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[30] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[29] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[28] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[27] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[26] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[25] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[24] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[23] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[22] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[21] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[20] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[19] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[18] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[17] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[16] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[15] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[14] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[13] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[12] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[11] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[10] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[9] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[8] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[7] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[6] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[5] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[4] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[3] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[2] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_rdata_107_19/in_0[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_117_34/in_0 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_117_34/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_109_29/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_128_25/in_0 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_128_25/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_rsp_valid_107_19/in_1 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_0[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_0[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_1[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_1[0] 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_2[1] 	 (fanout : 1)
+hpin:apb_bridge/mux_st_107_19/in_2[0] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'apb_bridge' : 111
+
+No constant connected ports in design 'apb_bridge'
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'apb_bridge'
+No preserved sequential instance(s) in design 'apb_bridge'
+No preserved hierarchical instance(s) in design 'apb_bridge'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'apb_bridge'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'apb_bridge'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                1
+Assigns                                      1
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             0
+Constant Leaf Pin(s)                         1
+Constant hierarchical Pin(s)               111
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

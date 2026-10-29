@@ -1,0 +1,10 @@
+block=accel_apb top=accel_apb cg=1 scan_flops=0 flops=792 latches=0 icg=14 wns_ps=9209.3
+block=apb_bridge top=apb_bridge cg=1 scan_flops=0 flops=94 latches=0 icg=4 wns_ps=13713.1
+block=dma_apb top=dma_apb cg=1 scan_flops=0 flops=191 latches=0 icg=7 wns_ps=9523.6
+block=gpio_apb top=gpio_apb cg=1 scan_flops=0 flops=128 latches=0 icg=2 wns_ps=9968.2
+block=imem_port top=imem_port cg=1 scan_flops=0 flops=38 latches=0 icg=1 wns_ps=10044.3
+block=irqc_apb top=irqc_apb cg=1 scan_flops=0 flops=6 latches=0 icg=1 wns_ps=10125.2
+block=sram_wrap top=sram_wrap cg=1 scan_flops=0 flops=5 latches=0 icg=0 wns_ps=10555.7
+block=sys_bus top=sys_bus cg=1 scan_flops=0 flops=3 latches=0 icg=0 wns_ps=9561.8
+block=timer_apb top=timer_apb cg=1 scan_flops=0 flops=130 latches=0 icg=3 wns_ps=9728.1
+block=uart_apb top=uart_apb cg=1 scan_flops=0 flops=223 latches=0 icg=28 wns_ps=9320.5

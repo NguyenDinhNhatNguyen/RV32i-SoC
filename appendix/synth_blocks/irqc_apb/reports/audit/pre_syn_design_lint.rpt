@@ -1,0 +1,210 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'irqc_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'irqc_apb'
+
+No empty modules in design 'irqc_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'irqc_apb'
+
+design 'irqc_apb' has the following unloaded port(s)
+port:irqc_apb/PWDATA[31]
+port:irqc_apb/PWDATA[30]
+port:irqc_apb/PWDATA[29]
+port:irqc_apb/PWDATA[28]
+port:irqc_apb/PWDATA[27]
+port:irqc_apb/PWDATA[26]
+port:irqc_apb/PWDATA[25]
+port:irqc_apb/PWDATA[24]
+port:irqc_apb/PWDATA[23]
+port:irqc_apb/PWDATA[22]
+port:irqc_apb/PWDATA[21]
+port:irqc_apb/PWDATA[20]
+port:irqc_apb/PWDATA[19]
+port:irqc_apb/PWDATA[18]
+port:irqc_apb/PWDATA[17]
+port:irqc_apb/PWDATA[16]
+port:irqc_apb/PWDATA[15]
+port:irqc_apb/PWDATA[14]
+port:irqc_apb/PWDATA[13]
+port:irqc_apb/PWDATA[12]
+port:irqc_apb/PWDATA[11]
+port:irqc_apb/PWDATA[10]
+port:irqc_apb/PWDATA[9]
+port:irqc_apb/PWDATA[8]
+port:irqc_apb/PWDATA[7]
+port:irqc_apb/PWDATA[6]
+port:irqc_apb/PWDATA[5]
+Total number of unloaded ports in design 'irqc_apb' : 27
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'irqc_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[31]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[30]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[29]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[28]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[27]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[26]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[25]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[24]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[23]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[22]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[21]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[20]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[19]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[18]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[17]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[16]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[15]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[14]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[13]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[12]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[11]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[10]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[9]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[8]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[7]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[6]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PRDATA[5]' in design irqc_apb
+Encountered an assign statement at port 'port:irqc_apb/PREADY' in design irqc_apb
+Total number of assign statements in design 'irqc_apb' : 28
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'irqc_apb'
+
+No undriven sequential pin in 'irqc_apb'
+
+No undriven hierarchical pin in 'irqc_apb'
+
+No undriven port in 'irqc_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'irqc_apb'
+
+No multidriven sequential pin in 'irqc_apb'
+
+No multidriven hierarchical pin in 'irqc_apb'
+
+No multidriven ports in 'irqc_apb'
+
+No multidriven unloaded nets in 'irqc_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'irqc_apb'
+
+No constant sequential pin(s) in design 'irqc_apb'
+
+design 'irqc_apb' has the following constant input hierarchical pin(s)
+hpin:irqc_apb/lte_30_57/B 	 (fanout : 1)
+hpin:irqc_apb/eq_33_60/B 	 (fanout : 1)
+hpin:irqc_apb/eq_32_50/B 	 (fanout : 1)
+hpin:irqc_apb/mux_PRDATA_51_15/in_2[4] 	 (fanout : 1)
+hpin:irqc_apb/mux_PRDATA_51_15/in_2[3] 	 (fanout : 1)
+hpin:irqc_apb/mux_PRDATA_51_15/in_2[2] 	 (fanout : 1)
+hpin:irqc_apb/mux_PRDATA_51_15/in_2[1] 	 (fanout : 1)
+hpin:irqc_apb/mux_PRDATA_51_15/in_2[0] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'irqc_apb' : 8
+
+design 'irqc_apb' has the following constant port(s)
+port:irqc_apb/PRDATA[31]
+port:irqc_apb/PRDATA[30]
+port:irqc_apb/PRDATA[29]
+port:irqc_apb/PRDATA[28]
+port:irqc_apb/PRDATA[27]
+port:irqc_apb/PRDATA[26]
+port:irqc_apb/PRDATA[25]
+port:irqc_apb/PRDATA[24]
+port:irqc_apb/PRDATA[23]
+port:irqc_apb/PRDATA[22]
+port:irqc_apb/PRDATA[21]
+port:irqc_apb/PRDATA[20]
+port:irqc_apb/PRDATA[19]
+port:irqc_apb/PRDATA[18]
+port:irqc_apb/PRDATA[17]
+port:irqc_apb/PRDATA[16]
+port:irqc_apb/PRDATA[15]
+port:irqc_apb/PRDATA[14]
+port:irqc_apb/PRDATA[13]
+port:irqc_apb/PRDATA[12]
+port:irqc_apb/PRDATA[11]
+port:irqc_apb/PRDATA[10]
+port:irqc_apb/PRDATA[9]
+port:irqc_apb/PRDATA[8]
+port:irqc_apb/PRDATA[7]
+port:irqc_apb/PRDATA[6]
+port:irqc_apb/PRDATA[5]
+port:irqc_apb/PREADY
+Total number of constant port(s) in design 'irqc_apb' : 28
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'irqc_apb'
+No preserved sequential instance(s) in design 'irqc_apb'
+No preserved hierarchical instance(s) in design 'irqc_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'irqc_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'irqc_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            27
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     28
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                            28
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                 8
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

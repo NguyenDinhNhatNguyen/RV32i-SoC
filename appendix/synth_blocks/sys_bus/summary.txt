@@ -1,0 +1,1 @@
+block=sys_bus top=sys_bus cg=1 scan_flops=0 flops=3 latches=0 icg=0 wns_ps=9561.8

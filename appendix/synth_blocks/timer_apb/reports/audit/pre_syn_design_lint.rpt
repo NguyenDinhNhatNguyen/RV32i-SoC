@@ -1,0 +1,197 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'timer_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'timer_apb'
+
+No empty modules in design 'timer_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'timer_apb'
+
+No unloaded port in 'timer_apb'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'timer_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:timer_apb/PREADY' in design timer_apb
+Total number of assign statements in design 'timer_apb' : 1
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'timer_apb'
+
+No undriven sequential pin in 'timer_apb'
+
+No undriven hierarchical pin in 'timer_apb'
+
+No undriven port in 'timer_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'timer_apb'
+
+No multidriven sequential pin in 'timer_apb'
+
+No multidriven hierarchical pin in 'timer_apb'
+
+No multidriven ports in 'timer_apb'
+
+No multidriven unloaded nets in 'timer_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'timer_apb'
+
+No constant sequential pin(s) in design 'timer_apb'
+
+design 'timer_apb' has the following constant input hierarchical pin(s)
+hpin:timer_apb/lte_40_57/B[2] 	 (fanout : 2)
+hpin:timer_apb/lte_40_57/B[1] 	 (fanout : 2)
+hpin:timer_apb/lte_40_57/B[0] 	 (fanout : 1)
+hpin:timer_apb/eq_44_39/B 	 (fanout : 1)
+hpin:timer_apb/add_62_52/B 	 (fanout : 2)
+hpin:timer_apb/eq_45_39/B 	 (fanout : 1)
+hpin:timer_apb/add_68_52/B 	 (fanout : 2)
+hpin:timer_apb/eq_46_39/B[1] 	 (fanout : 1)
+hpin:timer_apb/eq_46_39/B[0] 	 (fanout : 1)
+hpin:timer_apb/eq_47_39/B[1] 	 (fanout : 1)
+hpin:timer_apb/eq_47_39/B[0] 	 (fanout : 1)
+hpin:timer_apb/eq_48_39/B[2] 	 (fanout : 1)
+hpin:timer_apb/eq_48_39/B[1] 	 (fanout : 1)
+hpin:timer_apb/eq_48_39/B[0] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[31] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[30] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[29] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[28] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[27] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[26] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[25] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[24] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[23] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[22] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[21] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[20] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[19] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[18] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[17] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[16] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[15] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[14] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[13] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[12] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[11] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[10] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[9] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[8] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[7] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[6] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[5] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[4] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[3] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[2] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_4[1] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[31] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[30] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[29] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[28] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[27] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[26] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[25] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[24] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[23] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[22] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[21] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[20] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[19] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[18] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[17] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[16] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[15] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[14] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[13] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[12] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[11] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[10] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[9] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[8] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[7] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[6] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[5] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[4] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[3] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[2] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[1] 	 (fanout : 1)
+hpin:timer_apb/mux_PRDATA_92_15/in_5[0] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'timer_apb' : 77
+
+design 'timer_apb' has the following constant port(s)
+port:timer_apb/PREADY
+Total number of constant port(s) in design 'timer_apb' : 1
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'timer_apb'
+No preserved sequential instance(s) in design 'timer_apb'
+No preserved hierarchical instance(s) in design 'timer_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'timer_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'timer_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                      1
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             1
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                77
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

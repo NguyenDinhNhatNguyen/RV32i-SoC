@@ -111,6 +111,8 @@ puts $fp "set_input_delay  -clock clk -min 0.3 \$in_ports"
 puts $fp "set_output_delay -clock clk -max 4.0 \[all_outputs\]"
 puts $fp "set_output_delay -clock clk -min 0.2 \[all_outputs\]"
 puts $fp "set_driving_cell -lib_cell INVX2 \$in_ports"
+# The reset port also needs a driver, otherwise check_timing_intent reports it (29/10 run)
+puts $fp "set_driving_cell -lib_cell INVX2 \[get_ports $RST\]"
 puts $fp "set_load -pin_load 0.05 \[all_outputs\]"
 puts $fp "set_false_path -from \[get_ports $RST\]"
 puts $fp "set_input_delay -clock clk 0.0 \[get_ports $RST\]"

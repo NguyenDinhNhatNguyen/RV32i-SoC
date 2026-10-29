@@ -1,0 +1,145 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'sram_wrap'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'sram_wrap'
+
+No empty modules in design 'sram_wrap'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'sram_wrap'
+
+design 'sram_wrap' has the following unloaded port(s)
+port:sram_wrap/req_addr[31]
+port:sram_wrap/req_addr[30]
+port:sram_wrap/req_addr[29]
+port:sram_wrap/req_addr[28]
+port:sram_wrap/req_addr[27]
+port:sram_wrap/req_addr[26]
+port:sram_wrap/req_addr[25]
+port:sram_wrap/req_addr[24]
+port:sram_wrap/req_addr[23]
+port:sram_wrap/req_addr[22]
+port:sram_wrap/req_addr[21]
+port:sram_wrap/req_addr[20]
+port:sram_wrap/req_addr[19]
+port:sram_wrap/req_addr[18]
+port:sram_wrap/req_addr[17]
+port:sram_wrap/req_addr[16]
+port:sram_wrap/req_addr[15]
+port:sram_wrap/req_addr[14]
+port:sram_wrap/req_addr[1]
+port:sram_wrap/req_addr[0]
+Total number of unloaded ports in design 'sram_wrap' : 20
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'sram_wrap'
+
+ Assigns
+ ------- 
+Total number of assign statements in design 'sram_wrap' : 0
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'sram_wrap'
+
+No undriven sequential pin in 'sram_wrap'
+
+No undriven hierarchical pin in 'sram_wrap'
+
+No undriven port in 'sram_wrap'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'sram_wrap'
+
+No multidriven sequential pin in 'sram_wrap'
+
+No multidriven hierarchical pin in 'sram_wrap'
+
+No multidriven ports in 'sram_wrap'
+
+No multidriven unloaded nets in 'sram_wrap'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'sram_wrap'
+
+No constant sequential pin(s) in design 'sram_wrap'
+
+No constant hierarchical pin(s) in design 'sram_wrap'
+
+No constant connected ports in design 'sram_wrap'
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'sram_wrap'
+No preserved sequential instance(s) in design 'sram_wrap'
+No preserved hierarchical instance(s) in design 'sram_wrap'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'sram_wrap'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+design 'sram_wrap' has following logical only instance(s)
+inst:sram_wrap/u_arr/g_multi.g_bank[0].u_mac
+inst:sram_wrap/u_arr/g_multi.g_bank[1].u_mac
+inst:sram_wrap/u_arr/g_multi.g_bank[2].u_mac
+inst:sram_wrap/u_arr/g_multi.g_bank[3].u_mac
+Total number of logical only instances in design 'sram_wrap' : 4
+
+design 'sram_wrap' has the following logical only libcells linked to above instance(s)
+lib_cell:default_emulate_libset_max/sram_2k_macro_lib/sram_2k_macro
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            20
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                      0
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             0
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                 0
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     4
+
+  Done Checking the design.

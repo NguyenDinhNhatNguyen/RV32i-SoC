@@ -1,0 +1,317 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'uart_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'uart_apb'
+
+No empty modules in design 'uart_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'uart_apb'
+
+design 'uart_apb' has the following unloaded port(s)
+port:uart_apb/PWDATA[31]
+port:uart_apb/PWDATA[30]
+port:uart_apb/PWDATA[29]
+port:uart_apb/PWDATA[28]
+port:uart_apb/PWDATA[27]
+port:uart_apb/PWDATA[26]
+port:uart_apb/PWDATA[25]
+port:uart_apb/PWDATA[24]
+port:uart_apb/PWDATA[23]
+port:uart_apb/PWDATA[22]
+port:uart_apb/PWDATA[21]
+port:uart_apb/PWDATA[20]
+port:uart_apb/PWDATA[19]
+port:uart_apb/PWDATA[18]
+port:uart_apb/PWDATA[17]
+port:uart_apb/PWDATA[16]
+Total number of unloaded ports in design 'uart_apb' : 16
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'uart_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at hport 'hport:uart_apb/u_txf/ctl_wptr_40_22/out_0[0]' in module case_box
+Encountered an assign statement at port 'port:uart_apb/PRDATA[31]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[30]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[29]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[28]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[27]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[26]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[25]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[24]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[23]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[22]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[21]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[20]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[19]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[18]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[17]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[16]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PREADY' in design uart_apb
+Encountered an assign statement at hport 'hport:uart_apb/ctl_rx_st_205_19/out_0[0]' in module case_box_34
+Total number of assign statements in design 'uart_apb' : 19
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'uart_apb'
+
+No undriven sequential pin in 'uart_apb'
+
+No undriven hierarchical pin in 'uart_apb'
+
+No undriven port in 'uart_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'uart_apb'
+
+No multidriven sequential pin in 'uart_apb'
+
+No multidriven hierarchical pin in 'uart_apb'
+
+No multidriven ports in 'uart_apb'
+
+No multidriven unloaded nets in 'uart_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'uart_apb'
+
+No constant sequential pin(s) in design 'uart_apb'
+
+design 'uart_apb' has the following constant input hierarchical pin(s)
+hpin:uart_apb/lte_45_57/B[1] 	 (fanout : 2)
+hpin:uart_apb/lte_45_57/B[0] 	 (fanout : 1)
+hpin:uart_apb/eq_52_37/B[1] 	 (fanout : 1)
+hpin:uart_apb/eq_52_37/B[0] 	 (fanout : 1)
+hpin:uart_apb/eq_53_37/B[1] 	 (fanout : 1)
+hpin:uart_apb/eq_53_37/B[0] 	 (fanout : 1)
+hpin:uart_apb/eq_104_27/B 	 (fanout : 1)
+hpin:uart_apb/gt_93_31/B 	 (fanout : 1)
+hpin:uart_apb/sub_93_47/B 	 (fanout : 2)
+hpin:uart_apb/sub_108_26/B 	 (fanout : 2)
+hpin:uart_apb/eq_50_37/B 	 (fanout : 1)
+hpin:uart_apb/sub_147_41/B 	 (fanout : 2)
+hpin:uart_apb/add_145_32/B 	 (fanout : 2)
+hpin:uart_apb/add_226_36/B 	 (fanout : 2)
+hpin:uart_apb/add_228_42/B 	 (fanout : 2)
+hpin:uart_apb/eq_51_37/B 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[15] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[14] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[13] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[12] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[11] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[10] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[9] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[8] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[7] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[6] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[5] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[4] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[3] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[2] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[1] 	 (fanout : 1)
+hpin:uart_apb/mux_93_31/in_0[0] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_os_138_25/in_1[3] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_os_138_25/in_1[2] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_os_138_25/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_os_138_25/in_1[0] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_bits_138_25/in_1[3] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_bits_138_25/in_1[2] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_bits_138_25/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_tx_bits_138_25/in_1[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_214_29/in_0 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_214_29/in_1 	 (fanout : 1)
+hpin:uart_apb/mux_rx_bit_205_19/in_0[2] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_bit_205_19/in_0[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_bit_205_19/in_0[0] 	 (fanout : 1)
+hpin:uart_apb/mux_234_50/in_0 	 (fanout : 1)
+hpin:uart_apb/mux_234_50/in_1 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_19/in_0 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_19/in_1 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_19/in_2 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_19/in_3 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_19/in_4 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_0[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_0[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_2[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_2[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_3[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_4[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_4[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_5[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_5[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_6[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_6[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_7[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_st_205_85/in_7[0] 	 (fanout : 1)
+hpin:uart_apb/mux_uart_txd_138_25/in_1 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[7] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[6] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[5] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[4] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[3] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[2] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_280_40/in_1[0] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[15] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[14] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[13] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[12] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[11] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[10] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[9] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_0[8] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[15] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[14] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[13] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[12] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[11] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[10] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[9] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_1[8] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[15] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[14] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[13] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[12] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[11] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[10] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[9] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[8] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[7] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[6] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_2[5] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[15] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[14] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[13] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[12] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[11] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[10] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[9] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[8] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[7] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[6] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[5] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[4] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[3] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[2] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[1] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_279_20/in_4[0] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[15] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[14] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[13] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[12] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[11] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[10] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[9] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[8] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[7] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[6] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[5] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[4] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[3] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[2] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_PRDATA_278_13/in_1[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_213_31/in_1[3] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_213_31/in_1[2] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_213_31/in_1[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_213_31/in_1[0] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_205_19/in_0[3] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_205_19/in_0[2] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_205_19/in_0[1] 	 (fanout : 1)
+hpin:uart_apb/mux_rx_os_205_19/in_0[0] 	 (fanout : 1)
+hpin:uart_apb/u_txf/add_34_39/B 	 (fanout : 2)
+hpin:uart_apb/u_txf/add_35_39/B 	 (fanout : 2)
+hpin:uart_apb/u_rxf/add_34_39/B 	 (fanout : 2)
+hpin:uart_apb/u_rxf/add_35_39/B 	 (fanout : 2)
+Total number of constant hierarchical pins in design 'uart_apb' : 146
+
+design 'uart_apb' has the following constant port(s)
+port:uart_apb/PRDATA[31]
+port:uart_apb/PRDATA[30]
+port:uart_apb/PRDATA[29]
+port:uart_apb/PRDATA[28]
+port:uart_apb/PRDATA[27]
+port:uart_apb/PRDATA[26]
+port:uart_apb/PRDATA[25]
+port:uart_apb/PRDATA[24]
+port:uart_apb/PRDATA[23]
+port:uart_apb/PRDATA[22]
+port:uart_apb/PRDATA[21]
+port:uart_apb/PRDATA[20]
+port:uart_apb/PRDATA[19]
+port:uart_apb/PRDATA[18]
+port:uart_apb/PRDATA[17]
+port:uart_apb/PRDATA[16]
+port:uart_apb/PREADY
+Total number of constant port(s) in design 'uart_apb' : 17
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'uart_apb'
+No preserved sequential instance(s) in design 'uart_apb'
+No preserved hierarchical instance(s) in design 'uart_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'uart_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'uart_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            16
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     19
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                            17
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)               146
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

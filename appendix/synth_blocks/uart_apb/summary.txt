@@ -1,0 +1,1 @@
+block=uart_apb top=uart_apb cg=1 scan_flops=0 flops=223 latches=0 icg=28 wns_ps=9320.5

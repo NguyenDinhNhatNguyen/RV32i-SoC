@@ -1,0 +1,1 @@
+block=timer_apb top=timer_apb cg=1 scan_flops=0 flops=130 latches=0 icg=3 wns_ps=9728.1

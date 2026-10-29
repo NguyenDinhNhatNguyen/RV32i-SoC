@@ -1,0 +1,1 @@
+block=irqc_apb top=irqc_apb cg=1 scan_flops=0 flops=6 latches=0 icg=1 wns_ps=10125.2

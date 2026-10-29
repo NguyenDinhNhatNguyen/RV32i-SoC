@@ -1,0 +1,308 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'dma_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'dma_apb'
+
+No empty modules in design 'dma_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'dma_apb'
+
+No unloaded port in 'dma_apb'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'dma_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:dma_apb/PREADY' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_addr[1]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_addr[0]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[3]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[2]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[1]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[0]' in design dma_apb
+Encountered an assign statement at hport 'hport:dma_apb/ctl_st_129_19/out_0[0]' in module case_box
+Total number of assign statements in design 'dma_apb' : 8
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'dma_apb'
+
+No undriven sequential pin in 'dma_apb'
+
+No undriven hierarchical pin in 'dma_apb'
+
+No undriven port in 'dma_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'dma_apb'
+
+No multidriven sequential pin in 'dma_apb'
+
+No multidriven hierarchical pin in 'dma_apb'
+
+No multidriven ports in 'dma_apb'
+
+No multidriven unloaded nets in 'dma_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'dma_apb'
+
+No constant sequential pin(s) in design 'dma_apb'
+
+design 'dma_apb' has the following constant input hierarchical pin(s)
+hpin:dma_apb/lte_69_57/B[2] 	 (fanout : 2)
+hpin:dma_apb/lte_69_57/B[1] 	 (fanout : 2)
+hpin:dma_apb/lte_69_57/B[0] 	 (fanout : 1)
+hpin:dma_apb/eq_73_37/B 	 (fanout : 1)
+hpin:dma_apb/eq_74_37/B 	 (fanout : 1)
+hpin:dma_apb/eq_75_37/B[1] 	 (fanout : 1)
+hpin:dma_apb/eq_75_37/B[0] 	 (fanout : 1)
+hpin:dma_apb/eq_76_37/B[1] 	 (fanout : 1)
+hpin:dma_apb/eq_76_37/B[0] 	 (fanout : 1)
+hpin:dma_apb/eq_133_33/B 	 (fanout : 1)
+hpin:dma_apb/eq_88_24/B 	 (fanout : 1)
+hpin:dma_apb/eq_77_37/B[2] 	 (fanout : 1)
+hpin:dma_apb/eq_77_37/B[1] 	 (fanout : 1)
+hpin:dma_apb/eq_77_37/B[0] 	 (fanout : 1)
+hpin:dma_apb/add_146_44/B 	 (fanout : 2)
+hpin:dma_apb/add_167_44/B 	 (fanout : 2)
+hpin:dma_apb/sub_177_36/B 	 (fanout : 2)
+hpin:dma_apb/mux_st_157_29/in_0[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_157_29/in_0[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_157_29/in_0[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_157_29/in_1[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_157_29/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_157_29/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_151_32/in_1[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_151_32/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_151_32/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_181_38/in_0[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_181_38/in_0[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_181_38/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_181_38/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_178_29/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_178_29/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_172_32/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_172_32/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_done_133_33/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_done_133_33/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_done_131_25/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_done_151_32/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_done_151_32/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_done_178_29/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_done_178_29/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_done_176_34/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_done_172_32/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_done_129_19/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_err_151_32/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_err_151_32/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_err_172_32/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_err_172_32/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_err_129_19/in_0 	 (fanout : 1)
+hpin:dma_apb/mux_err_129_19/in_1 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_0[1] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_0[0] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[31] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[30] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[29] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[28] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[27] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[26] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[25] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[24] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[23] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[22] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[21] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[20] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[19] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[18] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[17] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_2[16] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[31] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[30] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[29] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[28] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[27] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[26] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[25] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[24] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[23] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[22] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[21] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[20] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[19] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[18] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[17] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[16] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[15] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[14] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[13] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[12] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[11] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[10] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[9] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[8] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[7] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[6] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[5] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[4] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[3] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[2] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_3[0] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[31] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[30] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[29] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[28] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[27] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[26] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[25] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[24] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[23] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[22] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[21] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[20] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[19] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[18] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[17] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[16] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[15] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[14] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[13] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[12] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[11] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[10] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[9] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[8] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[7] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[6] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[5] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[4] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_4[3] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[31] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[30] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[29] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[28] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[27] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[26] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[25] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[24] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[23] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[22] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[21] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[20] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[19] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[18] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[17] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[16] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[15] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[14] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[13] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[12] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[11] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[10] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[9] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[8] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[7] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[6] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[5] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[4] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[3] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[2] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[1] 	 (fanout : 1)
+hpin:dma_apb/mux_PRDATA_199_15/in_5[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_0[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_0[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_0[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_1[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_1[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_1[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_3[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_3[1] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_3[0] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_4[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_5[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_6[2] 	 (fanout : 1)
+hpin:dma_apb/mux_st_129_19/in_7[2] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'dma_apb' : 175
+
+design 'dma_apb' has the following constant port(s)
+port:dma_apb/PREADY
+port:dma_apb/m_addr[1]
+port:dma_apb/m_addr[0]
+port:dma_apb/m_be[3]
+port:dma_apb/m_be[2]
+port:dma_apb/m_be[1]
+port:dma_apb/m_be[0]
+Total number of constant port(s) in design 'dma_apb' : 7
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'dma_apb'
+No preserved sequential instance(s) in design 'dma_apb'
+No preserved hierarchical instance(s) in design 'dma_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'dma_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'dma_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                      8
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             7
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)               175
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

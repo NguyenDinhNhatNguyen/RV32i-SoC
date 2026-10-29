@@ -1,0 +1,865 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'dma_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'dma_apb'
+
+No empty modules in design 'dma_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'dma_apb'
+
+No unloaded port in 'dma_apb'
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'dma_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:dma_apb/PREADY' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_addr[1]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_addr[0]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[3]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[2]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[1]' in design dma_apb
+Encountered an assign statement at port 'port:dma_apb/m_be[0]' in design dma_apb
+Total number of assign statements in design 'dma_apb' : 7
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'dma_apb'
+
+No undriven sequential pin in 'dma_apb'
+
+No undriven hierarchical pin in 'dma_apb'
+
+No undriven port in 'dma_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'dma_apb'
+
+No multidriven sequential pin in 'dma_apb'
+
+No multidriven hierarchical pin in 'dma_apb'
+
+No multidriven ports in 'dma_apb'
+
+No multidriven unloaded nets in 'dma_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'dma_apb'
+
+No constant sequential pin(s) in design 'dma_apb'
+
+design 'dma_apb' has the following constant input hierarchical pin(s)
+hpin:dma_apb/RC_CG_HIER_INST0/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST1/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST2/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST3/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST4/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST5/test 	 (fanout : 1)
+hpin:dma_apb/RC_CG_HIER_INST6/test 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'dma_apb' : 7
+
+design 'dma_apb' has the following constant port(s)
+port:dma_apb/PREADY
+port:dma_apb/m_addr[1]
+port:dma_apb/m_addr[0]
+port:dma_apb/m_be[3]
+port:dma_apb/m_be[2]
+port:dma_apb/m_be[1]
+port:dma_apb/m_be[0]
+Total number of constant port(s) in design 'dma_apb' : 7
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'dma_apb'
+No preserved sequential instance(s) in design 'dma_apb'
+No preserved hierarchical instance(s) in design 'dma_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'dma_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+design 'dma_apb' has following logical only instance(s)
+inst:dma_apb/RC_CG_HIER_INST0/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST1/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST2/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST3/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST4/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST5/RC_CGIC_INST
+inst:dma_apb/RC_CG_HIER_INST6/RC_CGIC_INST
+inst:dma_apb/buf_q_reg[0]
+inst:dma_apb/buf_q_reg[1]
+inst:dma_apb/buf_q_reg[2]
+inst:dma_apb/buf_q_reg[3]
+inst:dma_apb/buf_q_reg[4]
+inst:dma_apb/buf_q_reg[5]
+inst:dma_apb/buf_q_reg[6]
+inst:dma_apb/buf_q_reg[7]
+inst:dma_apb/buf_q_reg[8]
+inst:dma_apb/buf_q_reg[9]
+inst:dma_apb/buf_q_reg[10]
+inst:dma_apb/buf_q_reg[11]
+inst:dma_apb/buf_q_reg[12]
+inst:dma_apb/buf_q_reg[13]
+inst:dma_apb/buf_q_reg[14]
+inst:dma_apb/buf_q_reg[15]
+inst:dma_apb/buf_q_reg[16]
+inst:dma_apb/buf_q_reg[17]
+inst:dma_apb/buf_q_reg[18]
+inst:dma_apb/buf_q_reg[19]
+inst:dma_apb/buf_q_reg[20]
+inst:dma_apb/buf_q_reg[21]
+inst:dma_apb/buf_q_reg[22]
+inst:dma_apb/buf_q_reg[23]
+inst:dma_apb/buf_q_reg[24]
+inst:dma_apb/buf_q_reg[25]
+inst:dma_apb/buf_q_reg[26]
+inst:dma_apb/buf_q_reg[27]
+inst:dma_apb/buf_q_reg[28]
+inst:dma_apb/buf_q_reg[29]
+inst:dma_apb/buf_q_reg[30]
+inst:dma_apb/buf_q_reg[31]
+inst:dma_apb/dst_reg[1]
+inst:dma_apb/dst_reg[2]
+inst:dma_apb/dst_reg[3]
+inst:dma_apb/dst_reg[4]
+inst:dma_apb/dst_reg[5]
+inst:dma_apb/dst_reg[6]
+inst:dma_apb/dst_reg[7]
+inst:dma_apb/dst_reg[8]
+inst:dma_apb/dst_reg[9]
+inst:dma_apb/dst_reg[10]
+inst:dma_apb/dst_reg[11]
+inst:dma_apb/dst_reg[12]
+inst:dma_apb/dst_reg[13]
+inst:dma_apb/dst_reg[14]
+inst:dma_apb/dst_reg[15]
+inst:dma_apb/dst_reg[16]
+inst:dma_apb/dst_reg[17]
+inst:dma_apb/dst_reg[18]
+inst:dma_apb/dst_reg[19]
+inst:dma_apb/dst_reg[20]
+inst:dma_apb/dst_reg[21]
+inst:dma_apb/dst_reg[22]
+inst:dma_apb/dst_reg[23]
+inst:dma_apb/dst_reg[24]
+inst:dma_apb/dst_reg[25]
+inst:dma_apb/dst_reg[26]
+inst:dma_apb/dst_reg[27]
+inst:dma_apb/dst_reg[28]
+inst:dma_apb/dst_reg[29]
+inst:dma_apb/irq_reg
+inst:dma_apb/len_reg[2]
+inst:dma_apb/len_reg[4]
+inst:dma_apb/len_reg[7]
+inst:dma_apb/len_reg[9]
+inst:dma_apb/len_reg[11]
+inst:dma_apb/len_reg[12]
+inst:dma_apb/len_reg[14]
+inst:dma_apb/len_reg[15]
+inst:dma_apb/src_reg[1]
+inst:dma_apb/src_reg[2]
+inst:dma_apb/src_reg[3]
+inst:dma_apb/src_reg[4]
+inst:dma_apb/src_reg[5]
+inst:dma_apb/src_reg[6]
+inst:dma_apb/src_reg[7]
+inst:dma_apb/src_reg[8]
+inst:dma_apb/src_reg[9]
+inst:dma_apb/src_reg[10]
+inst:dma_apb/src_reg[11]
+inst:dma_apb/src_reg[12]
+inst:dma_apb/src_reg[13]
+inst:dma_apb/src_reg[14]
+inst:dma_apb/src_reg[15]
+inst:dma_apb/src_reg[16]
+inst:dma_apb/src_reg[17]
+inst:dma_apb/src_reg[18]
+inst:dma_apb/src_reg[19]
+inst:dma_apb/src_reg[20]
+inst:dma_apb/src_reg[21]
+inst:dma_apb/src_reg[22]
+inst:dma_apb/src_reg[23]
+inst:dma_apb/src_reg[24]
+inst:dma_apb/src_reg[25]
+inst:dma_apb/src_reg[26]
+inst:dma_apb/src_reg[27]
+inst:dma_apb/src_reg[28]
+inst:dma_apb/src_reg[29]
+inst:dma_apb/g8173__2398
+inst:dma_apb/g8174__5107
+inst:dma_apb/g8175__6260
+inst:dma_apb/g8176__4319
+inst:dma_apb/g8177
+inst:dma_apb/g8178__8428
+inst:dma_apb/g8179__5526
+inst:dma_apb/g8180__6783
+inst:dma_apb/g8181__3680
+inst:dma_apb/g8182__1617
+inst:dma_apb/g8183__2802
+inst:dma_apb/g8184__1705
+inst:dma_apb/g8185__5122
+inst:dma_apb/g8186__8246
+inst:dma_apb/g8187__7098
+inst:dma_apb/g8188__6131
+inst:dma_apb/g8189
+inst:dma_apb/g8190__1881
+inst:dma_apb/g8191__5115
+inst:dma_apb/g8193__7482
+inst:dma_apb/g8194__4733
+inst:dma_apb/g8195__6161
+inst:dma_apb/g8196__9315
+inst:dma_apb/g8197__9945
+inst:dma_apb/g8198__2883
+inst:dma_apb/g8199__2346
+inst:dma_apb/g8200__1666
+inst:dma_apb/g8201__7410
+inst:dma_apb/g8203__6417
+inst:dma_apb/g8204__5477
+inst:dma_apb/g8205__2398
+inst:dma_apb/g8206__5107
+inst:dma_apb/g8207__6260
+inst:dma_apb/g8208__4319
+inst:dma_apb/g8209__8428
+inst:dma_apb/g8210__5526
+inst:dma_apb/g8212__3680
+inst:dma_apb/g8213__1617
+inst:dma_apb/g8215__1705
+inst:dma_apb/g8216__5122
+inst:dma_apb/g8217__8246
+inst:dma_apb/g8218__7098
+inst:dma_apb/g8220__1881
+inst:dma_apb/g8221__5115
+inst:dma_apb/g8222__7482
+inst:dma_apb/g8223__4733
+inst:dma_apb/g8225__9315
+inst:dma_apb/g8226__9945
+inst:dma_apb/g8227__2883
+inst:dma_apb/g8228__2346
+inst:dma_apb/g8229__1666
+inst:dma_apb/g8230__7410
+inst:dma_apb/g8231__6417
+inst:dma_apb/g8232__5477
+inst:dma_apb/g8233__2398
+inst:dma_apb/g8234__5107
+inst:dma_apb/g8235__6260
+inst:dma_apb/g8237__8428
+inst:dma_apb/g8238__5526
+inst:dma_apb/g8239__6783
+inst:dma_apb/g8240__3680
+inst:dma_apb/g8242__2802
+inst:dma_apb/g8243__1705
+inst:dma_apb/g8244__5122
+inst:dma_apb/g8245__8246
+inst:dma_apb/g8246__7098
+inst:dma_apb/g8247__6131
+inst:dma_apb/g8248__1881
+inst:dma_apb/g8249__5115
+inst:dma_apb/g8250__7482
+inst:dma_apb/g8251__4733
+inst:dma_apb/g8252__6161
+inst:dma_apb/g8253__9315
+inst:dma_apb/g8254__9945
+inst:dma_apb/g8255__2883
+inst:dma_apb/g8256__2346
+inst:dma_apb/g8257__1666
+inst:dma_apb/g8259__6417
+inst:dma_apb/g8260__5477
+inst:dma_apb/g8261__2398
+inst:dma_apb/g8262__5107
+inst:dma_apb/g8263__6260
+inst:dma_apb/g8264__4319
+inst:dma_apb/g8265__8428
+inst:dma_apb/g8266__5526
+inst:dma_apb/g8267__6783
+inst:dma_apb/g8268__3680
+inst:dma_apb/g8269__1617
+inst:dma_apb/g8270__2802
+inst:dma_apb/g8271__1705
+inst:dma_apb/g8272__5122
+inst:dma_apb/g8273__8246
+inst:dma_apb/g8275__6131
+inst:dma_apb/g8276__1881
+inst:dma_apb/g8277__5115
+inst:dma_apb/g8278__7482
+inst:dma_apb/g8279__4733
+inst:dma_apb/g8280__6161
+inst:dma_apb/g8281__9315
+inst:dma_apb/g8282__9945
+inst:dma_apb/g8283__2883
+inst:dma_apb/g8284__2346
+inst:dma_apb/g8285__1666
+inst:dma_apb/g8286__7410
+inst:dma_apb/g8287__6417
+inst:dma_apb/g8288__5477
+inst:dma_apb/g8289__2398
+inst:dma_apb/g8290__5107
+inst:dma_apb/g8291__6260
+inst:dma_apb/g8292__4319
+inst:dma_apb/g8293__8428
+inst:dma_apb/g8294__5526
+inst:dma_apb/g8295__6783
+inst:dma_apb/g8296__3680
+inst:dma_apb/g8297__1617
+inst:dma_apb/g8298__2802
+inst:dma_apb/g8299__1705
+inst:dma_apb/g8300__5122
+inst:dma_apb/g8301__8246
+inst:dma_apb/g8302__7098
+inst:dma_apb/g8303__6131
+inst:dma_apb/g8304__1881
+inst:dma_apb/g8305__5115
+inst:dma_apb/g8306__7482
+inst:dma_apb/g8307__4733
+inst:dma_apb/g8308__6161
+inst:dma_apb/g8309__9315
+inst:dma_apb/g8310__9945
+inst:dma_apb/g8311__2883
+inst:dma_apb/g8312__2346
+inst:dma_apb/g8313__1666
+inst:dma_apb/g8314__7410
+inst:dma_apb/g8315__6417
+inst:dma_apb/g8316__5477
+inst:dma_apb/g8317__2398
+inst:dma_apb/g8318__5107
+inst:dma_apb/g8319__6260
+inst:dma_apb/g8320__4319
+inst:dma_apb/g8321__8428
+inst:dma_apb/g8322__5526
+inst:dma_apb/g8323__6783
+inst:dma_apb/g8324__3680
+inst:dma_apb/g8325__1617
+inst:dma_apb/g8326__2802
+inst:dma_apb/g8327__1705
+inst:dma_apb/g8328__5122
+inst:dma_apb/g8329__8246
+inst:dma_apb/g8330__7098
+inst:dma_apb/g8331__6131
+inst:dma_apb/g8332__1881
+inst:dma_apb/g8333__5115
+inst:dma_apb/g8334__7482
+inst:dma_apb/g8335__4733
+inst:dma_apb/g8336__6161
+inst:dma_apb/g8337__9315
+inst:dma_apb/g8338__9945
+inst:dma_apb/g8340__2883
+inst:dma_apb/g8341__2346
+inst:dma_apb/g8342__1666
+inst:dma_apb/g8344
+inst:dma_apb/g8345__7410
+inst:dma_apb/g8346__6417
+inst:dma_apb/g8347__5477
+inst:dma_apb/g8348__2398
+inst:dma_apb/g8349__5107
+inst:dma_apb/g8351__6260
+inst:dma_apb/g8352__4319
+inst:dma_apb/g8353
+inst:dma_apb/g8354__8428
+inst:dma_apb/g8355__5526
+inst:dma_apb/g8356__6783
+inst:dma_apb/g8357__3680
+inst:dma_apb/g8358__1617
+inst:dma_apb/g8359__2802
+inst:dma_apb/g8360__1705
+inst:dma_apb/g8361__5122
+inst:dma_apb/g8362__8246
+inst:dma_apb/g8363__7098
+inst:dma_apb/g8364__6131
+inst:dma_apb/g8365__1881
+inst:dma_apb/g8366__5115
+inst:dma_apb/g8367__7482
+inst:dma_apb/g8368__4733
+inst:dma_apb/g8369__6161
+inst:dma_apb/g8370__9315
+inst:dma_apb/g8371__9945
+inst:dma_apb/g8372__2883
+inst:dma_apb/g8373__2346
+inst:dma_apb/g8374__1666
+inst:dma_apb/g8375__7410
+inst:dma_apb/g8376__6417
+inst:dma_apb/g8377__5477
+inst:dma_apb/g8378__2398
+inst:dma_apb/g8379__5107
+inst:dma_apb/g8380__6260
+inst:dma_apb/g8381__4319
+inst:dma_apb/g8382__8428
+inst:dma_apb/g8383__5526
+inst:dma_apb/g8384__6783
+inst:dma_apb/g8385__3680
+inst:dma_apb/g8386__1617
+inst:dma_apb/g8387__2802
+inst:dma_apb/g8388__1705
+inst:dma_apb/g8389__5122
+inst:dma_apb/g8390__8246
+inst:dma_apb/g8392__7098
+inst:dma_apb/g8393
+inst:dma_apb/g8394
+inst:dma_apb/g8396__6131
+inst:dma_apb/g8397__1881
+inst:dma_apb/g8398__5115
+inst:dma_apb/g8399__7482
+inst:dma_apb/g8401__4733
+inst:dma_apb/g8402__6161
+inst:dma_apb/g8403__9315
+inst:dma_apb/g8404__9945
+inst:dma_apb/g8405__2883
+inst:dma_apb/g8462
+inst:dma_apb/g8463
+inst:dma_apb/g8468__2346
+inst:dma_apb/g8487__1666
+inst:dma_apb/g8498__7410
+inst:dma_apb/g8503__6417
+inst:dma_apb/g8521
+inst:dma_apb/g8522
+inst:dma_apb/g2__5477
+inst:dma_apb/g8523__2398
+inst:dma_apb/g8524__5107
+inst:dma_apb/g8525
+inst:dma_apb/cnt_reg[0]
+inst:dma_apb/cnt_reg[1]
+inst:dma_apb/cnt_reg[2]
+inst:dma_apb/cnt_reg[3]
+inst:dma_apb/cnt_reg[4]
+inst:dma_apb/cnt_reg[5]
+inst:dma_apb/cnt_reg[7]
+inst:dma_apb/cnt_reg[8]
+inst:dma_apb/cnt_reg[9]
+inst:dma_apb/cnt_reg[10]
+inst:dma_apb/cnt_reg[11]
+inst:dma_apb/cnt_reg[12]
+inst:dma_apb/cnt_reg[13]
+inst:dma_apb/cnt_reg[14]
+inst:dma_apb/cnt_reg[15]
+inst:dma_apb/cur_dst_reg[0]
+inst:dma_apb/cur_dst_reg[1]
+inst:dma_apb/cur_dst_reg[2]
+inst:dma_apb/cur_dst_reg[3]
+inst:dma_apb/cur_dst_reg[4]
+inst:dma_apb/cur_dst_reg[5]
+inst:dma_apb/cur_dst_reg[6]
+inst:dma_apb/cur_dst_reg[7]
+inst:dma_apb/cur_dst_reg[8]
+inst:dma_apb/cur_dst_reg[9]
+inst:dma_apb/cur_dst_reg[10]
+inst:dma_apb/cur_dst_reg[11]
+inst:dma_apb/cur_dst_reg[12]
+inst:dma_apb/cur_dst_reg[13]
+inst:dma_apb/cur_dst_reg[14]
+inst:dma_apb/cur_dst_reg[15]
+inst:dma_apb/cur_dst_reg[16]
+inst:dma_apb/cur_dst_reg[17]
+inst:dma_apb/cur_dst_reg[18]
+inst:dma_apb/cur_dst_reg[19]
+inst:dma_apb/cur_dst_reg[20]
+inst:dma_apb/cur_dst_reg[21]
+inst:dma_apb/cur_dst_reg[22]
+inst:dma_apb/cur_dst_reg[23]
+inst:dma_apb/cur_dst_reg[24]
+inst:dma_apb/cur_dst_reg[25]
+inst:dma_apb/cur_dst_reg[26]
+inst:dma_apb/cur_dst_reg[27]
+inst:dma_apb/cur_dst_reg[28]
+inst:dma_apb/cur_dst_reg[29]
+inst:dma_apb/cur_src_reg[0]
+inst:dma_apb/cur_src_reg[1]
+inst:dma_apb/cur_src_reg[2]
+inst:dma_apb/cur_src_reg[3]
+inst:dma_apb/cur_src_reg[4]
+inst:dma_apb/cur_src_reg[5]
+inst:dma_apb/cur_src_reg[6]
+inst:dma_apb/cur_src_reg[7]
+inst:dma_apb/cur_src_reg[8]
+inst:dma_apb/cur_src_reg[9]
+inst:dma_apb/cur_src_reg[10]
+inst:dma_apb/cur_src_reg[11]
+inst:dma_apb/cur_src_reg[12]
+inst:dma_apb/cur_src_reg[13]
+inst:dma_apb/cur_src_reg[14]
+inst:dma_apb/cur_src_reg[15]
+inst:dma_apb/cur_src_reg[16]
+inst:dma_apb/cur_src_reg[17]
+inst:dma_apb/cur_src_reg[18]
+inst:dma_apb/cur_src_reg[19]
+inst:dma_apb/cur_src_reg[20]
+inst:dma_apb/cur_src_reg[21]
+inst:dma_apb/cur_src_reg[22]
+inst:dma_apb/cur_src_reg[23]
+inst:dma_apb/cur_src_reg[24]
+inst:dma_apb/cur_src_reg[25]
+inst:dma_apb/cur_src_reg[26]
+inst:dma_apb/cur_src_reg[27]
+inst:dma_apb/cur_src_reg[28]
+inst:dma_apb/cur_src_reg[29]
+inst:dma_apb/done_reg
+inst:dma_apb/err_reg
+inst:dma_apb/irq_en_reg
+inst:dma_apb/st_reg[0]
+inst:dma_apb/st_reg[1]
+inst:dma_apb/st_reg[2]
+inst:dma_apb/g7213__6260
+inst:dma_apb/g7215__4319
+inst:dma_apb/g7217__8428
+inst:dma_apb/g7219__5526
+inst:dma_apb/g7220__6783
+inst:dma_apb/g7221__3680
+inst:dma_apb/g7223__1617
+inst:dma_apb/g7224__2802
+inst:dma_apb/g7226__1705
+inst:dma_apb/g7227__5122
+inst:dma_apb/g7228__8246
+inst:dma_apb/g7230__7098
+inst:dma_apb/g7231__6131
+inst:dma_apb/g7232__1881
+inst:dma_apb/g7234__5115
+inst:dma_apb/g7235__7482
+inst:dma_apb/g7236__4733
+inst:dma_apb/g7238__6161
+inst:dma_apb/g7239__9315
+inst:dma_apb/g7241__9945
+inst:dma_apb/g7242__2883
+inst:dma_apb/g7243
+inst:dma_apb/g7245__2346
+inst:dma_apb/g7246__1666
+inst:dma_apb/g7247__7410
+inst:dma_apb/g7248__6417
+inst:dma_apb/g7249__5477
+inst:dma_apb/g7250__2398
+inst:dma_apb/g7251__5107
+inst:dma_apb/g7252__6260
+inst:dma_apb/g7254__4319
+inst:dma_apb/g7255__8428
+inst:dma_apb/g7256__5526
+inst:dma_apb/g7257__6783
+inst:dma_apb/g7258
+inst:dma_apb/g7259__3680
+inst:dma_apb/g7260__1617
+inst:dma_apb/g7262__1705
+inst:dma_apb/g7263__5122
+inst:dma_apb/g7266__8246
+inst:dma_apb/g7268__7098
+inst:dma_apb/g7269__6131
+inst:dma_apb/g7272
+inst:dma_apb/g7273__1881
+inst:dma_apb/g7274__5115
+inst:dma_apb/g7276__7482
+inst:dma_apb/g7278__4733
+inst:dma_apb/g7279__6161
+inst:dma_apb/g7280__9315
+inst:dma_apb/g7281__9945
+inst:dma_apb/g7282__2883
+inst:dma_apb/g7283__2346
+inst:dma_apb/g7284__1666
+inst:dma_apb/g7285__7410
+inst:dma_apb/g7286__6417
+inst:dma_apb/g7287__5477
+inst:dma_apb/g7288__2398
+inst:dma_apb/g7347__5107
+inst:dma_apb/g7350__6260
+inst:dma_apb/g7352__4319
+inst:dma_apb/g7354
+inst:dma_apb/g7355__8428
+inst:dma_apb/g7356__5526
+inst:dma_apb/g7357__6783
+inst:dma_apb/g7358__3680
+inst:dma_apb/g7359__1617
+inst:dma_apb/g7360__2802
+inst:dma_apb/g7361__1705
+inst:dma_apb/g7362__5122
+inst:dma_apb/g7363__8246
+inst:dma_apb/g7364__7098
+inst:dma_apb/g7365__6131
+inst:dma_apb/g7366__1881
+inst:dma_apb/g7367__5115
+inst:dma_apb/g7368__7482
+inst:dma_apb/g7369__4733
+inst:dma_apb/g7370__6161
+inst:dma_apb/g7371__9315
+inst:dma_apb/g7372__9945
+inst:dma_apb/g7373__2883
+inst:dma_apb/g7374__2346
+inst:dma_apb/g7375__1666
+inst:dma_apb/g7376__7410
+inst:dma_apb/g7377__6417
+inst:dma_apb/g7378__5477
+inst:dma_apb/g7379__2398
+inst:dma_apb/g7380__5107
+inst:dma_apb/g7381__6260
+inst:dma_apb/g7382__4319
+inst:dma_apb/g7383__8428
+inst:dma_apb/g7384__5526
+inst:dma_apb/g7385__6783
+inst:dma_apb/g7386__3680
+inst:dma_apb/g7387__1617
+inst:dma_apb/g7388__2802
+inst:dma_apb/g7389__1705
+inst:dma_apb/g7390__5122
+inst:dma_apb/g7391__8246
+inst:dma_apb/g7392__7098
+inst:dma_apb/g7393__6131
+inst:dma_apb/g7394__1881
+inst:dma_apb/g7395__5115
+inst:dma_apb/g7396__7482
+inst:dma_apb/g7397__4733
+inst:dma_apb/g7398__6161
+inst:dma_apb/g7399__9315
+inst:dma_apb/g7400__9945
+inst:dma_apb/g7401__2883
+inst:dma_apb/g7402__2346
+inst:dma_apb/g7403__1666
+inst:dma_apb/g7404__7410
+inst:dma_apb/g7405__6417
+inst:dma_apb/g7406__5477
+inst:dma_apb/g7407__2398
+inst:dma_apb/g7408__5107
+inst:dma_apb/g7409__6260
+inst:dma_apb/g7410__4319
+inst:dma_apb/g7411__8428
+inst:dma_apb/g7412__5526
+inst:dma_apb/g7413__6783
+inst:dma_apb/g7414__3680
+inst:dma_apb/g7415__1617
+inst:dma_apb/g7416__2802
+inst:dma_apb/g7417__1705
+inst:dma_apb/g7418__5122
+inst:dma_apb/g7419__8246
+inst:dma_apb/g7420__7098
+inst:dma_apb/g7421__6131
+inst:dma_apb/g7422__1881
+inst:dma_apb/g7423
+inst:dma_apb/g7424__5115
+inst:dma_apb/g7425__7482
+inst:dma_apb/g7426__4733
+inst:dma_apb/g7428
+inst:dma_apb/inc_add_146_44_g381__6161
+inst:dma_apb/inc_add_146_44_g382__9315
+inst:dma_apb/inc_add_146_44_g383__9945
+inst:dma_apb/inc_add_146_44_g384__2883
+inst:dma_apb/inc_add_146_44_g385__2346
+inst:dma_apb/inc_add_146_44_g386__1666
+inst:dma_apb/inc_add_146_44_g387__7410
+inst:dma_apb/inc_add_146_44_g388__6417
+inst:dma_apb/inc_add_146_44_g389__5477
+inst:dma_apb/inc_add_146_44_g390__2398
+inst:dma_apb/inc_add_146_44_g391__5107
+inst:dma_apb/inc_add_146_44_g392__6260
+inst:dma_apb/inc_add_146_44_g393__4319
+inst:dma_apb/inc_add_146_44_g394__8428
+inst:dma_apb/inc_add_146_44_g395__5526
+inst:dma_apb/inc_add_146_44_g396__6783
+inst:dma_apb/inc_add_146_44_g397__3680
+inst:dma_apb/inc_add_146_44_g398__1617
+inst:dma_apb/inc_add_146_44_g399__2802
+inst:dma_apb/inc_add_146_44_g400__1705
+inst:dma_apb/inc_add_146_44_g401__5122
+inst:dma_apb/inc_add_146_44_g402__8246
+inst:dma_apb/inc_add_146_44_g403__7098
+inst:dma_apb/inc_add_146_44_g404__6131
+inst:dma_apb/inc_add_146_44_g405__1881
+inst:dma_apb/inc_add_146_44_g406__5115
+inst:dma_apb/inc_add_146_44_g407__7482
+inst:dma_apb/inc_add_146_44_g408__4733
+inst:dma_apb/inc_add_146_44_g409__6161
+inst:dma_apb/inc_add_146_44_g410__9315
+inst:dma_apb/inc_add_146_44_g411__9945
+inst:dma_apb/inc_add_146_44_g412__2883
+inst:dma_apb/inc_add_146_44_g413__2346
+inst:dma_apb/inc_add_146_44_g414__1666
+inst:dma_apb/inc_add_146_44_g415__7410
+inst:dma_apb/inc_add_146_44_g416__6417
+inst:dma_apb/inc_add_146_44_g417__5477
+inst:dma_apb/inc_add_146_44_g418__2398
+inst:dma_apb/inc_add_146_44_g419__5107
+inst:dma_apb/inc_add_146_44_g420__6260
+inst:dma_apb/inc_add_146_44_g421__4319
+inst:dma_apb/inc_add_146_44_g422__8428
+inst:dma_apb/inc_add_146_44_g423__5526
+inst:dma_apb/inc_add_146_44_g424__6783
+inst:dma_apb/inc_add_146_44_g425__3680
+inst:dma_apb/inc_add_146_44_g426__1617
+inst:dma_apb/inc_add_146_44_g427__2802
+inst:dma_apb/inc_add_146_44_g428__1705
+inst:dma_apb/inc_add_146_44_g429__5122
+inst:dma_apb/inc_add_146_44_g430__8246
+inst:dma_apb/inc_add_146_44_g431__7098
+inst:dma_apb/inc_add_146_44_g432__6131
+inst:dma_apb/inc_add_146_44_g433__1881
+inst:dma_apb/inc_add_146_44_g434__5115
+inst:dma_apb/inc_add_167_44_g381__7482
+inst:dma_apb/inc_add_167_44_g382__4733
+inst:dma_apb/inc_add_167_44_g383__6161
+inst:dma_apb/inc_add_167_44_g384__9315
+inst:dma_apb/inc_add_167_44_g385__9945
+inst:dma_apb/inc_add_167_44_g386__2883
+inst:dma_apb/inc_add_167_44_g387__2346
+inst:dma_apb/inc_add_167_44_g388__1666
+inst:dma_apb/inc_add_167_44_g389__7410
+inst:dma_apb/inc_add_167_44_g390__6417
+inst:dma_apb/inc_add_167_44_g391__5477
+inst:dma_apb/inc_add_167_44_g392__2398
+inst:dma_apb/inc_add_167_44_g393__5107
+inst:dma_apb/inc_add_167_44_g394__6260
+inst:dma_apb/inc_add_167_44_g395__4319
+inst:dma_apb/inc_add_167_44_g396__8428
+inst:dma_apb/inc_add_167_44_g397__5526
+inst:dma_apb/inc_add_167_44_g398__6783
+inst:dma_apb/inc_add_167_44_g399__3680
+inst:dma_apb/inc_add_167_44_g400__1617
+inst:dma_apb/inc_add_167_44_g401__2802
+inst:dma_apb/inc_add_167_44_g402__1705
+inst:dma_apb/inc_add_167_44_g403__5122
+inst:dma_apb/inc_add_167_44_g404__8246
+inst:dma_apb/inc_add_167_44_g405__7098
+inst:dma_apb/inc_add_167_44_g406__6131
+inst:dma_apb/inc_add_167_44_g407__1881
+inst:dma_apb/inc_add_167_44_g408__5115
+inst:dma_apb/inc_add_167_44_g409__7482
+inst:dma_apb/inc_add_167_44_g410__4733
+inst:dma_apb/inc_add_167_44_g411__6161
+inst:dma_apb/inc_add_167_44_g412__9315
+inst:dma_apb/inc_add_167_44_g413__9945
+inst:dma_apb/inc_add_167_44_g414__2883
+inst:dma_apb/inc_add_167_44_g415__2346
+inst:dma_apb/inc_add_167_44_g416__1666
+inst:dma_apb/inc_add_167_44_g417__7410
+inst:dma_apb/inc_add_167_44_g418__6417
+inst:dma_apb/inc_add_167_44_g419__5477
+inst:dma_apb/inc_add_167_44_g420__2398
+inst:dma_apb/inc_add_167_44_g421__5107
+inst:dma_apb/inc_add_167_44_g422__6260
+inst:dma_apb/inc_add_167_44_g423__4319
+inst:dma_apb/inc_add_167_44_g424__8428
+inst:dma_apb/inc_add_167_44_g425__5526
+inst:dma_apb/inc_add_167_44_g426__6783
+inst:dma_apb/inc_add_167_44_g427__3680
+inst:dma_apb/inc_add_167_44_g428__1617
+inst:dma_apb/inc_add_167_44_g429__2802
+inst:dma_apb/inc_add_167_44_g430__1705
+inst:dma_apb/inc_add_167_44_g431__5122
+inst:dma_apb/inc_add_167_44_g432__8246
+inst:dma_apb/inc_add_167_44_g433__7098
+inst:dma_apb/inc_add_167_44_g434__6131
+inst:dma_apb/len_reg[5]
+inst:dma_apb/len_reg[3]
+inst:dma_apb/len_reg[10]
+inst:dma_apb/len_reg[13]
+inst:dma_apb/len_reg[0]
+inst:dma_apb/src_reg[0]
+inst:dma_apb/dst_reg[0]
+inst:dma_apb/len_reg[6]
+inst:dma_apb/len_reg[8]
+inst:dma_apb/len_reg[1]
+inst:dma_apb/cnt_reg[6]
+inst:dma_apb/g2
+inst:dma_apb/g8548
+inst:dma_apb/g8549
+inst:dma_apb/g8550
+inst:dma_apb/g8551
+Total number of logical only instances in design 'dma_apb' : 674
+
+design 'dma_apb' has the following logical only libcells linked to above instance(s)
+lib_cell:default_emulate_libset_max/slow_vdd1v0/TLATNTSCAX2
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFRHQX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2BXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI21X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/INVX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR2BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND3X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI211XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR3X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR4X8
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AO22XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/CLKMX2X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2X8
+lib_cell:default_emulate_libset_max/slow_vdd1v0/INVXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2X4
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2X2
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR4BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR4BBX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4BBX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/BUFX6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFRX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI2BB1X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/XNOR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI22X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/ADDHX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI21X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/MX2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI211X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI21XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND3XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI2BB1X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND3BXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI22XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OA21X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI2BB1XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AO22X1
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                             0
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                      7
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                             7
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                 7
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                   674
+
+  Done Checking the design.

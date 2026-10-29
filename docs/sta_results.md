@@ -16,7 +16,14 @@ Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho rep
 
 | Ngày | Bước | Tool, thư viện, corner | Netlist | SDC, chu kỳ | Setup WNS / TNS | Hold WNS / TNS | Recovery WNS | Removal WNS | Unconstrained | Diện tích | Report gốc | Ghi chú |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | | | | Chưa chạy. Lần đầu bằng `make synth-soc` (`syn/scripts/synth_soc.tcl`) |
+| 29/10 | Genus `soc_top` (chạy sớm cho PD-02, PD-03) | Genus 21.10-p002_1, slow 0,9 V 125 °C, macro typical | `make synth-soc`, CG=1, `ENABLE_DMA = 0`, BTB 8 entry | `soc.sdc`, 20 ns | +2,179 / 0 | Chưa kiểm | Chưa kiểm | Chưa kiểm | 0 | 52 757 (116 757 gồm 8 macro) | `appendix/synth_soc/` | Xem dưới bảng |
+
+Ghi chú lần chạy 29/10 (`soc_top`):
+- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. Không có vi phạm max transition và max capacitance, nên mạng reset từ `reset_sync` (fanout khoảng 2900) đã được chèn buffer.
+- Đường găng: từ CLK của macro IMEM qua bộ cộng của ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, dài 17,57 ns. Đúng đường dự đoán ở `docs/spec/core.md` mục 4.5 và `docs/timing_core.md`.
+- `sram_2k_macro.lib` chỉ có corner typical (1,0 V, 25 °C), còn cell chuẩn ở corner slow (0,9 V, 125 °C). Đường qua macro vì vậy hơi lạc quan.
+- Lint timing chỉ báo 1 mục: false path từ `rst_n` "no effect", vì Genus không tính đường vào chân reset bất đồng bộ. Exception vẫn giữ cho Tempus và Innovus.
+- Genus không kiểm hold, recovery và removal. Ba số này lấy bằng Tempus ở STA-03.
 
 ## 2. Ở nhà (chỉ xem xu hướng)
 
@@ -36,17 +43,21 @@ Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), cách chạy 
 
 | Ngày | Khối | Clock gating | Diện tích (µm²) | Flop | Scan flop | ICG | Latch | Setup WNS (ns) | Unconstrained | Report gốc | Ghi chú |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | `sys_bus` | | | | | | | | | | |
-| | `apb_bridge` | | | | | | | | | | |
-| | `dma_apb` | | | | | | | | | | |
-| | `imem_port` | | | | | | | | | | |
-| | `sram_wrap` | | | | | | | | | | |
-| | `timer_apb` | | | | | | | | | | |
-| | `uart_apb` | | | | | | | | | | |
-| | `gpio_apb` | | | | | | | | | | |
-| | `irqc_apb` | | | | | | | | | | |
-| | `accel_apb` | | | | | | | | | | |
+| 29/10 | `sys_bus` | Có | 585,2 | 3 | 0 | 0 | 0 | +9,562 | 0 | `appendix/synth_blocks/sys_bus/` |  |
+| 29/10 | `apb_bridge` | Có | 1 435,0 | 94 | 0 | 4 | 0 | +13,713 | 0 | `appendix/synth_blocks/apb_bridge/` |  |
+| 29/10 | `dma_apb` | Có | 2 318,8 | 191 | 0 | 7 | 0 | +9,524 | 0 | `appendix/synth_blocks/dma_apb/` | Trong `soc_top` đang tắt (`ENABLE_DMA = 0`) |
+| 29/10 | `imem_port` | Có | 33 649,8 | 38 | 0 | 1 | 0 | +10,044 | 0 | `appendix/synth_blocks/imem_port/` | Gồm 4 macro (32 000), logic 1 649,8 |
+| 29/10 | `sram_wrap` | Có | 32 725,5 | 5 | 0 | 0 | 0 | +10,556 | 0 | `appendix/synth_blocks/sram_wrap/` | Gồm 4 macro (32 000), logic 725,5 |
+| 29/10 | `timer_apb` | Có | 2 110,1 | 130 | 0 | 3 | 0 | +9,728 | 0 | `appendix/synth_blocks/timer_apb/` |  |
+| 29/10 | `uart_apb` | Có | 2 165,9 | 223 | 0 | 28 | 0 | +9,321 | 0 | `appendix/synth_blocks/uart_apb/` |  |
+| 29/10 | `gpio_apb` | Có | 1 293,1 | 128 | 0 | 2 | 0 | +9,968 | 0 | `appendix/synth_blocks/gpio_apb/` |  |
+| 29/10 | `irqc_apb` | Có | 105,0 | 6 | 0 | 1 | 0 | +10,125 | 0 | `appendix/synth_blocks/irqc_apb/` |  |
+| 29/10 | `accel_apb` | Có | 15 283,3 | 792 | 0 | 14 | 0 | +9,209 | 0 | `appendix/synth_blocks/accel_apb/` |  |
+
+| 29/10 | `sram_wrap1` | Có | 8 298,6 | 3 | 0 | 0 | 0 | +10,556 | 0 | `appendix/synth_blocks/sram_wrap1/` | `sram_wrap` với 1 macro (`BANK_W = 0`), để luyện flow macro. Logic 298,6 |
 
 Tiêu chí: Scan flop = 0, Latch = 0, Unconstrained = 0, Setup WNS >= 0 ở 20 ns.
+
+Ghi chú lần chạy 29/10 (STA-02): cả 10 khối đạt tiêu chí. Lint timing của mỗi khối báo 2 mục không ảnh hưởng timing: false path từ cổng reset "no effect" (như `soc_top`), và cổng reset thiếu driving cell (SDC sinh ra chỉ gán cho các cổng vào khác). Mục thứ hai đã sửa trong `synth_block.tcl` sau lần chạy này.
 
 Lần chạy đầu điền vào các dòng có sẵn. Các lần sau (ví dụ chạy lại sau khi sửa RTL) thêm dòng mới ở cuối bảng.

@@ -1,0 +1,1 @@
+block=imem_port top=imem_port cg=1 scan_flops=0 flops=38 latches=0 icg=1 wns_ps=10044.3
