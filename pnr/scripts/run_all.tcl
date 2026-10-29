@@ -8,10 +8,10 @@
 set REPO [file normalize [file dirname [info script]]/../..]
 source $REPO/pnr/scripts/config.tcl
 
-set TOP        accel_wrapper
-set NETLIST    $REPO/syn/out_accel/${TOP}_netlist.v
-set DESIGN_SDC $REPO/syn/out_accel/${TOP}_synth.sdc
-set OUT        $REPO/pnr/out_accel
+set TOP        soc_top
+set NETLIST    $REPO/syn/out_soc/${TOP}_netlist.v
+set DESIGN_SDC $REPO/syn/out_soc/${TOP}_synth.sdc
+set OUT        $REPO/pnr/out_soc
 set RPT        $OUT/reports
 file mkdir $OUT $RPT DBS
 
@@ -51,9 +51,9 @@ floorPlan -site $CORE_SITE -r 1.0 $UTIL $IO_GAP $IO_GAP $IO_GAP $IO_GAP
 # Double-height cells (BUFX2...) are banned instead of adding CoreSiteDouble rows, see DONT_USE_CELLS
 # in config.tcl
 foreach c $DONT_USE_CELLS { try_cmd {setDontUse $c true} }
-editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
-editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
-editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3
+#editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
+#editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
+#editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3
 # With SRAM (soc_top): placeInstance <macro> x y R0 -fixed and addHaloToBlock 5 5 5 5 <macro>
 
 # Power plan (Lab 03)

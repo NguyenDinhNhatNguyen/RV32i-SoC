@@ -7,9 +7,9 @@
 # Needs: try_cmd (as in run_all.tcl) and the config.tcl variables (PWR_NET, GND_NET, CORE_SITE).
 
 # ---- Parameters ----------------------------------------------------------------------
-set CORE_W     391.0      ;# um, estimate_die.py with the safe area 51 714 um2 at 70% density
-set CORE_H     392.0
-set IO_GAP     15.0       ;# Core to die edge, room for the power ring
+set CORE_W     524.0      ;# um, updated via estimate_die.py for soc_top (area 116,757 um^2, util 60%)
+set CORE_H     523.3      ;# um, updated via estimate_die.py for soc_top (area 116,757 um^2, util 60%)
+set IO_GAP     15.0       ;# Core-to-die margin. 10.0 um is the minimum required by estimate_die.p  but 15.0 um is retained here to ensure ample clearance for power rings and signal breakouts.
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
 set HALO       5.0
@@ -23,7 +23,7 @@ set BLK_RING_H Metal6
 set BLK_RING_V Metal5
 
 # ---- Floorplan with a fixed core size ------------------------------------------------
-floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP
+floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP	
 
 # ---- Macro placement -----------------------------------------------------------------
 # Find macros by cell name, split IMEM and DMEM by instance name (u_imem, u_dmem in soc_top)

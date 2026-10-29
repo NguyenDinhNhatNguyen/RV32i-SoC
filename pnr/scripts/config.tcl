@@ -24,9 +24,9 @@ set CELL_GDS  {}                           ;# Cell library GDS: not found by HT-
 # no GDS (not required, lecturer 22/10).
 # Leave empty for the accelerator. For soc_top set:
 #   SRAM_LEF $PDK_DIR/lef/sram_2k_macro.lef, SRAM_LIB_SLOW and SRAM_LIB_FAST $PDK_DIR/lib/sram_2k_macro.lib
-set SRAM_LEF       {}
-set SRAM_LIB_SLOW  {}
-set SRAM_LIB_FAST  {}
+set SRAM_LEF       $PDK_DIR/lef/sram_2k_macro.lef
+set SRAM_LIB_SLOW  $PDK_DIR/lib/sram_2k_macro.lib
+set SRAM_LIB_FAST  $PDK_DIR/lib/sram_2k_macro.lib
 
 # Double-height cells (SITE CoreSiteDouble) in gsclib045: BUFX2 and the low-power cells
 # (switch, isolation, level shifter). The floorplan has only CoreSite rows, so BUFX2 is banned in
