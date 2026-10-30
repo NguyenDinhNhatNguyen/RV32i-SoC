@@ -359,6 +359,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 - **Kết quả:**
   - LEC (Conformal 24.1, không Ultra): 2199 Equivalent, 0 Non-equivalent, 68 Abort. Các điểm abort là DFF thuộc khối nhân và chia 32×32, không chứng minh được khi thiếu analyze datapath của Ultra. Mapping đủ: 2163 DFF ở golden bằng ở revised, cộng 58 latch ICG unreachable. Chạy khoảng 53 phút.
   - GLS (Xcelium 24.03): 49/49 PASS (rv32ui và rv32um) trên netlist Genus kèm SDF, clock 20 ns. GLS kiểm chức năng của khối nhân và chia mà LEC để abort.
+  - Report và log copy từ server: [`appendix/core_signoff/`](../appendix/core_signoff/).
 - **Đã loại:** sửa riêng file trên server rồi chép tay về (dễ lệch với repo). Bật `analyze datapath` (không có license).
 
 ---

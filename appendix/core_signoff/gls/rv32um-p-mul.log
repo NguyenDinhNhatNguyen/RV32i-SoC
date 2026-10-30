@@ -1,0 +1,26 @@
+xrun(64): 24.03-s013: (c) Copyright 1995-2025 Cadence Design Systems, Inc.
+TOOL:	xrun(64)	24.03-s013: Started on Oct 30, 2026 at 14:35:53 +07
+xrun
+	-64bit
+	-R
+	-snapshot gls_core
+	+imem=/home/s23521043/rv32i-soc/tb/core/out/isa/rv32um-p-mul.imem.hex
+	+dmem=/home/s23521043/rv32i-soc/tb/core/out/isa/rv32um-p-mul.dmem.hex
+	+tohost=000006c0
+	+test=rv32um-p-mul/gls
+	-l /home/s23521043/rv32i-soc/syn/out_core/gls/rv32um-p-mul.log
+
+   User defined plus("+") options:
+	+imem=/home/s23521043/rv32i-soc/tb/core/out/isa/rv32um-p-mul.imem.hex
+	+dmem=/home/s23521043/rv32i-soc/tb/core/out/isa/rv32um-p-mul.dmem.hex
+	+tohost=000006c0
+	+test=rv32um-p-mul/gls
+
+Loading snapshot worklib.gls_core:v .................... Done
+xcelium> source /home/eda/cadence/XCELIUM2403/tools/xcelium/files/xmsimrc
+xcelium> run
+PASS: rv32um-p-mul/gls (cycles 599, instret 0, CPI 0.000, seed 1)
+Simulation complete via $finish(1) at time 12030 NS + 0
+/home/s23521043/rv32i-soc/tb/core/tb_core.v:317                 $finish;
+xcelium> exit
+TOOL:	xrun(64)	24.03-s013: Exiting on Oct 30, 2026 at 14:35:54 +07  (total: 00:00:01)
