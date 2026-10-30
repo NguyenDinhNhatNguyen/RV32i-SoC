@@ -43,4 +43,12 @@ SECTIONS
     } > DMEM
 
     __stack_top = ORIGIN(DMEM) + LENGTH(DMEM);
+
+    /* Some riscv gcc builds (Vitis on the school server) add .note.gnu.build-id. With no
+     * output section for it the linker puts it at address 0, before _start.
+     */
+    /DISCARD/ : {
+        *(.note.gnu.build-id)
+        *(.note.*)
+    }
 }

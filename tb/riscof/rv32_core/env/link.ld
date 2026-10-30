@@ -20,4 +20,12 @@ SECTIONS
     .data.string : { *(.data.string) }
     .bss : { *(.bss) }
     _end = .;
+
+    /* Some riscv gcc builds (Vitis on the school server) add .note.gnu.build-id. With no
+     * output section for it the linker puts it at 0x8000_0000, before the entry point.
+     */
+    /DISCARD/ : {
+        *(.note.gnu.build-id)
+        *(.note.*)
+    }
 }

@@ -352,6 +352,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Thêm các flatten option `-seq_constant`, `-seq_constant_x_to 0`, `-nodff_to_dlat_zero`, `-nodff_to_dlat_feedback`, `-hier_seq_merge`, cùng `-gated_clock` đã có.
   - Không dùng `set analyze option -auto` vì cần license Conformal_Ultra, server không có.
 - **Bỏ `.note.gnu.build-id`** trong `fw/common/link_isa.ld` và `fw/boot/boot.ld` bằng `/DISCARD/`. riscv gcc của Vitis trên server tự gắn section này. Linker script không có chỗ cho nó, nên linker đặt nó ở địa chỉ 0, trước `_start`. File hex khi đó bắt đầu bằng `00000004 00000014 00000003 00554e47` thay vì lệnh `j`, core chạy từ rác và mọi bài GLS đều timeout. gcc ở nhà không gắn build-id, nên hex ở nhà không đổi (đã so md5).
+- **Áp dụng thêm cho `fw/common/link.ld` và `tb/riscof/rv32_core/env/link.ld`** (firmware, benchmark, bootloader test và riscv-arch-test). Hex và bin ở nhà không đổi (đã so md5).
 - **Hai sửa trong `scripts/gls_core.sh`:**
   - Mảng `timing` rỗng khi có SDF. Bash 4.2 trên server với `set -u` báo unbound variable ở `"${timing[@]}"`, nên đổi thành `${timing[@]+"${timing[@]}"}`.
   - File `.tohost` được đọc sau `cd "$OUT"`, nên đường dẫn tương đối bị sai. Đổi thành `$REPO/$HEX_DIR`.
