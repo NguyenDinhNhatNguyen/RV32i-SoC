@@ -52,7 +52,7 @@ make lec-core
 
 Đạt khi 0 non-equivalent. Report ở `syn/out_core/reports/lec_verification.rpt`, log đầy đủ ở `syn/out_core/lec.txt`. Bộ nhân 32x32 có thể để lại điểm abort. Khi đó GLS ở bước 3 kiểm chức năng thay.
 
-Conformal 24.1 không nhận `-incdir` trong `read design`, nên dofile dùng `add search path rtl/core -design -golden`. Không có license Conformal_Ultra, nên dofile không dùng `set analyze option -auto`. LEC chạy khoảng 53 phút, nên chạy bằng `nohup` (mục 7).
+Conformal 24.1 không nhận `-incdir` trong `read design`, nên dofile dùng `add search path rtl/core -design -golden`. Không có license Conformal_Ultra, nên dofile không dùng `set analyze option -auto`. Lần chạy LEC ngày 30/10 dùng dofile trên server còn dòng này. Lệnh báo lỗi thiếu Conformal_Ultra và không có tác dụng. Dofile đặt `set dofile abort off` nên vẫn chạy tiếp, kết quả không bị ảnh hưởng. Dofile trong repo đã bỏ dòng này và server đã đồng bộ chiều 30/10. LEC chạy khoảng 53 phút, nên chạy bằng `nohup` (mục 7).
 
 ### Bước 3. GLS
 
