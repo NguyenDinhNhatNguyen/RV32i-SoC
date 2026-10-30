@@ -17,4 +17,12 @@ SECTIONS
         *(.text.init)
         *(.text .text.*)
     } > ROM
+
+    /* Some riscv gcc builds (Vitis on the school server) add .note.gnu.build-id. Drop it
+     * so that the ROM image holds only code.
+     */
+    /DISCARD/ : {
+        *(.note.gnu.build-id)
+        *(.note.*)
+    }
 }
