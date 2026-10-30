@@ -93,8 +93,8 @@ echo "gls-core: $NETLIST, $mode"
 
 # Compile and elaborate once. tb_core sets `default_nettype none, so it goes last and the
 # cell models do not see it.
-if ! (cd "$OUT" && "$XRUN" -64bit -elaborate -timescale 1ns/1ps "${defs[@]}" "${timing[@]}" \
-        -incdir "$REPO/tb/core" -incdir "$REPO/rtl/core" \
+if ! (cd "$OUT" && "$XRUN" -64bit -elaborate -timescale 1ns/1ps "${defs[@]}" \
+        ${timing[@]+"${timing[@]}"} -incdir "$REPO/tb/core" -incdir "$REPO/rtl/core" \
         -defparam tb_core.ENABLE_M=1 -defparam tb_core.ENABLE_WFI_SLEEP=1 \
         -top tb_core -snapshot gls_core \
         "$GLS_LIB" "$REPO/$NETLIST" "$REPO/tb/models/sram_1rw_model.v" "$REPO/tb/core/tb_core.v" \
@@ -110,7 +110,7 @@ for t in $tests; do
     log=$OUT/$t.log
     (cd "$OUT" && "$XRUN" -64bit -R -snapshot gls_core \
         +imem="$REPO/$HEX_DIR/$t.imem.hex" +dmem="$REPO/$HEX_DIR/$t.dmem.hex" \
-        +"$(cat "$HEX_DIR/$t.tohost")" +test="$t/gls" -l "$REPO/$log" > /dev/null 2>&1)
+        +"$(cat "$REPO/$HEX_DIR/$t.tohost")" +test="$t/gls" -l "$REPO/$log" > /dev/null 2>&1)
     if grep -q '^PASS' "$log" && ! grep -qE '^(FAIL|ERROR)' "$log"; then
         echo "  $(grep '^PASS' "$log" | tail -n 1)"
         pass=$((pass + 1))

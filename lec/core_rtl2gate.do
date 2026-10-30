@@ -8,10 +8,17 @@
 set dofile abort off
 
 read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
-// -incdir for `include "rv32_defs.vh"
-read design -golden -verilog -incdir rtl/core rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v rtl/core/rv32_core.v syn/out_core/rv32_core_syn.v
+// Search path for `include "rv32_defs.vh" (Conformal 24.1 rejects -incdir in read design)
+add search path rtl/core -design -golden
+read design -golden -verilog rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v rtl/core/rv32_core.v syn/out_core/rv32_core_syn.v
 read design -revised -verilog syn/out_core/rv32_core_syn_netlist.v
 set root module rv32_core_syn -both
+// Constant flops, flops without a clock and merged hierarchy flops, so that the key points map
+set flatten model -seq_constant
+set flatten model -seq_constant_x_to 0
+set flatten model -nodff_to_dlat_zero
+set flatten model -nodff_to_dlat_feedback
+set flatten model -hier_seq_merge
 // The netlist has clock gating cells (latch + AND): model them as flop enables
 set flatten model -gated_clock
 set system mode lec

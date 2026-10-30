@@ -116,6 +116,13 @@ proc try_cmd {cmd} {
 # assign statements in the netlist break Innovus (attribute since Genus 21.1)
 try_cmd {set_db remove_assigns true}
 
+# Keep every flop so that LEC maps 1:1 with the RTL
+catch {set_db optimize_merge_flops false}
+catch {set_db optimize_merge_latches false}
+catch {set_db optimize_constant_0_flops false}
+catch {set_db optimize_constant_1_flops false}
+catch {set_db delete_unloaded_seqs false}
+
 syn_generic
 syn_map
 syn_opt
