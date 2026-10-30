@@ -1,0 +1,1 @@
+top=soc_top period=8 cg=1 macros=8 scan_flops=0 flops=3574 latches=0 icg=112 wns_ps=0.2

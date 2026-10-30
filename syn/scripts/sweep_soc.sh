@@ -46,6 +46,7 @@ for p in $PERIODS; do
 done
 
 {
+    # WNS with 4 decimals: below 14 ns Genus ends a few ps above 0 (30/10 sweep)
     head="| Chu kỳ (ns) | WNS (ns) | Chu kỳ nhỏ nhất (ns) | F_max ước lượng (MHz)"
     echo "$head | Diện tích (µm²) | Macro | Scan flop |"
     echo "| --- | --- | --- | --- | --- | --- | --- |"
@@ -58,7 +59,7 @@ done
         if [ -n "$w" ] && [ "$w" != "n/a" ]; then
             awk -v p="$p" -v w="$w" -v a="${a:--}" -v m="${m:--}" -v s="${s:--}" 'BEGIN {
                 wns = w / 1000.0; tmin = p - wns
-                printf "| %s | %.3f | %.3f | %.0f | %s | %s | %s |\n",
+                printf "| %s | %.4f | %.4f | %.0f | %s | %s | %s |\n",
                        p, wns, tmin, 1000.0 / tmin, a, m, s }'
         else
             echo "| $p | - | - | - | ${a:--} | ${m:--} | ${s:--} |"
