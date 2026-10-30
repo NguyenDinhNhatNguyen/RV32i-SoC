@@ -52,6 +52,7 @@ make synth-block B=sram_wrap1                    # sram_wrap với 1 macro, đ�
 | SDC | Mỗi khối một file sinh tự động: clock 20 ns trên cổng clock của khối, uncertainty và IO delay theo tỉ lệ Lab, false path từ cổng reset |
 | SRAM macro | `imem_port`, `sram_wrap` đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib` |
 | Cấm scan flop | `SDFF*` bị `dont_use`, `use_scan_seqs_for_non_dft = false`. Sau tổng hợp đếm `SDFF*` trong netlist, khác 0 là `ERROR` |
+| Giữ flop | Tắt gộp flop, bỏ flop hằng và flop không có tải như `synth_core.tcl` (D-042), để LEC của Phúc map 1:1 với RTL. Có từ 30/10, các lần chạy trước chưa có |
 | Kết quả | `syn/out_blocks/<khối>/` (netlist, SDC, `reports/`, `summary.txt`), tổng hợp ở `syn/out_blocks/summary.txt`, log ở `syn/run_blocks/<khối>/genus.log` |
 
 Tiêu chí giống mục 3 (0 unresolved, 0 latch, 0 unconstrained endpoint, slack >= 0 ở 20 ns), thêm 0 scan flop. Copy `syn/out_blocks/` vào `appendix/synth_blocks/` và ghi số vào `docs/sta_results.md` mục 3.
@@ -66,7 +67,7 @@ make synth-soc > synth_soc.txt 2>&1 &
 | --- | --- |
 | Tham số | Mặc định của `soc_top`: `ENABLE_M = 1`, `ENABLE_WFI_SLEEP = 1`, `ENABLE_DMA = 0`, lõi có BTB 8 entry |
 | SRAM macro | Đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib`. Netlist phải có đúng 8 macro, khác 8 là `ERROR` |
-| Cấm scan flop | Như `synth-blocks` |
+| Cấm scan flop, giữ flop | Như `synth-blocks` |
 | Kết quả | `syn/out_soc/` (`soc_top_netlist.v`, `soc_top_synth.sdc`, `soc_top.sdf`, `reports/`, `summary.txt`), log ở `syn/run_soc/genus.log` |
 
 Tiêu chí giống `synth-blocks`. Copy `syn/out_soc/` vào `appendix/synth_soc/` và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow. Hold và removal trên mạng reset kiểm bằng Tempus (STA-03).

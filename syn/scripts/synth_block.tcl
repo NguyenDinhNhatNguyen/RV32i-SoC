@@ -130,6 +130,14 @@ set_db syn_map_effort     medium
 set_db syn_opt_effort     medium
 try_cmd {set_db remove_assigns true}
 
+# Keep every flop so that LEC (Phuc, LEC-01 and LEC-02) maps 1:1 with the RTL, same settings as
+# synth_core.tcl (D-042). Wrapped in catch because attribute names differ between versions
+catch {set_db optimize_merge_flops false}
+catch {set_db optimize_merge_latches false}
+catch {set_db optimize_constant_0_flops false}
+catch {set_db optimize_constant_1_flops false}
+catch {set_db delete_unloaded_seqs false}
+
 syn_generic
 syn_map
 syn_opt
