@@ -21,7 +21,7 @@ Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho rep
 | 30/10 | Genus giữ flop cho LEC, rồi Tempus | Genus 21.10-p002_1 và Tempus 23.14, corner như trên | `make synth-soc` sau commit giữ flop, 3663 flop, 115 ICG | `soc.sdc`, 20 ns | Genus +2,040, Tempus +2,071 / 0 | -0,147 / -43,291 (1080 đường) | -25,261 / -46 972 (3512 đường) | +7,022 | 0 (Genus) | 53 408 (117 408 gồm 8 macro) | `appendix/synth_soc_keepflop/`, `appendix/sta_soc/` | Xem dưới bảng |
 
 Ghi chú lần chạy 29/10 (`soc_top`):
-- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. `design_rules.rpt` không báo vi phạm max transition hay max capacitance. Đính chính 30/10: điều này không có nghĩa mạng reset đã được buffer. Netlist có `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` tới khoảng 3125 chân, không có buffer nào, và Tempus báo recovery −23,567 ns trên mạng này. Hướng sửa chờ nhóm quyết.
+- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. `design_rules.rpt` không báo vi phạm max transition hay max capacitance. Đính chính 30/10: điều này không có nghĩa mạng reset đã được buffer. Netlist có `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` tới khoảng 3125 chân, không có buffer nào, và Tempus báo recovery −23,567 ns trên mạng này. Đã thêm `set_max_transition` và `set_max_fanout` vào `soc.sdc` ngày 30/10, chờ chạy lại Genus và Tempus.
 - Đường găng: từ CLK của macro IMEM qua bộ cộng của ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, dài 17,57 ns. Đúng đường dự đoán ở `docs/spec/core.md` mục 4.5 và `docs/timing_core.md`.
 - `sram_2k_macro.lib` chỉ có corner typical (1,0 V, 25 °C), còn cell chuẩn ở corner slow (0,9 V, 125 °C). Đường qua macro vì vậy hơi lạc quan.
 - Timing của macro theo `.lib` (không đổi theo slew): CLK→Q 1,20 ns (slew ra 0,10 ns), setup `CEN` và `WEN` 0,40 ns, `A` 0,35 ns, `D` 0,30 ns, hold mọi chân vào 0,20 ns, độ rộng xung CLK tối thiểu 0,45 ns, slew vào tối đa 0,25 ns.
@@ -30,10 +30,10 @@ Ghi chú lần chạy 29/10 (`soc_top`):
 
 Ghi chú lần chạy 30/10 (Tempus, STA-03):
 - Setup: đường găng giống Genus (macro IMEM → ALU → `u_core.if_pc_q_reg[31]`), Tempus và Genus chênh dưới 0,03 ns.
-- Recovery vi phạm ở gần như mọi chân reset (3512 trên 3518). `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` mà không có buffer, CK→Q khoảng 23 ns. Genus không chèn buffer cho mạng này. Hướng sửa chờ nhóm quyết (`docs/soc_top.md` mục 4.7). Removal dương chỉ vì reset đến rất trễ, phải kiểm lại sau khi sửa.
+- Recovery vi phạm ở gần như mọi chân reset (3512 trên 3518). `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` mà không có buffer, CK→Q khoảng 23 ns. Genus không chèn buffer cho mạng này vì SDC chưa có giới hạn transition và fanout. Đã thêm `set_max_transition 0.5` và `set_max_fanout 32` vào `soc.sdc` (30/10). OpenSTA ở nhà xác nhận giới hạn mới bắt đúng net này (fanout 3428, vượt 32). Chờ chạy lại Genus và Tempus ở trường. Removal dương chỉ vì reset đến rất trễ, phải kiểm lại sau khi sửa.
 - Hold vi phạm 1080 đường, xấu nhất -0,147 ns ở chân `CEN` của macro IMEM (từ `u_core.if_pc_q_reg`). Trước CTS clock còn lý tưởng nên đây là chuyện thường gặp, Innovus phải sửa hold sau CTS (PD-06, kiểm lại ở STA-05).
 - Giữ flop (D-042, như `synth_core.tcl`): thêm 89 flop và 3 ICG, diện tích +0,56%, setup giảm 0,14 ns. Netlist này là bản Phúc dùng cho LEC và Nguyên dùng cho PnR tới.
-- Tempus `check_timing` báo 242 endpoint unconstrained (flop của `reset_sync` do false path `rst_n`, chân cell clock gating) và 70 cổng không có driving cell (SDC dùng `set_input_transition`). Coverage: setup 4009 đạt, 6 không kiểm.
+- Tempus `check_timing` báo 242 endpoint unconstrained, mỗi chân đếm 2 lần (view setup và hold), đều vô hại: chân `SE` của 115 cell clock gating (nối cố định vì không có scan), chân `RN` của 2 flop `reset_sync` (false path `rst_n`) và của 4 flop hằng được giữ lại (`wb_cause_q`, `rr_q`, `hold_mst_q`, `apb_slot_q`). 6 flop này cũng là 6 điểm "không kiểm" trong coverage. 70 cổng không có driving cell vì SDC dùng `set_input_transition`.
 - Trước layout chưa có SPEF nên Tempus không tính delay dây.
 
 ## 2. Ở nhà (chỉ xem xu hướng)

@@ -118,7 +118,7 @@ Unit test kiểm tra:
 
 - Genus: thêm `sram_2k_macro.lib` vào `read_libs`, `init_hdl_search_path` gồm `rtl/bus` và `rtl/mem` (cho file `.vh`). Không đọc `tb/models/sram_2k_macro.v`.
 - Xcelium (GLS): dùng `~/PDK_GPDK45/lib/sram_2k_macro.v` thay cho mô hình ở nhà.
-- Còn phải kiểm tra bằng `scripts/macro_info.sh`: Q của macro thật làm gì khi ghi và khi `CEN = 1`. Wrapper hiện không dựa vào hai hành vi này.
+- Hành vi Q của macro thật (đọc model `.v` trên server bằng `scripts/macro_info.sh` ngày 30/10): Q chỉ đổi ở chu kỳ đọc. Ở chu kỳ ghi và khi `CEN = 1`, Q giữ giá trị cũ. Wrapper không dựa vào hai hành vi này (lệnh ghi trả `rsp_rdata = 0`), nên đúng với macro thật. Mô hình ở nhà cho Q thành X khi ghi, chặt hơn macro thật, nên giữ nguyên.
 
 ## 7. Việc còn lại cho người khác
 
