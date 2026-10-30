@@ -137,11 +137,11 @@ Xem recovery và removal:
 Kiểm thử ở nhà (26/10). Tổng hợp `soc_top` bằng flow Nangate45 của Nhân (`syn/yosys/synth_nangate.tcl`, macro SRAM để hộp đen, khoảng 11 phút), rồi chạy OpenSTA với `soc.sdc`:
 - OpenSTA đọc `soc.sdc` không lỗi. `check_setup -verbose` không báo gì: không còn cổng thiếu delay, không có endpoint thiếu ràng buộc.
 - Recovery và removal được kiểm trên 2917 chân reset (nhóm `asynchronous`). Recovery đạt, slack 4,91 ns.
-- Removal báo âm (-2,56 ns). Đây là do netlist ở nhà, không phải do SDC: Yosys không chèn buffer cho mạng `rst_n_sync`, một flop lái thẳng 2917 chân nên slew lên 11,75 ns và thư viện ngoại suy thời gian removal thành 14,9 ns. Genus sẽ chèn buffer theo giới hạn transition và fanout của thư viện, Innovus dựng cây buffer cho mạng này. Kết quả chính thức lấy từ Genus và Tempus (STA-02, STA-05).
+- Removal báo âm (-2,56 ns). Đây là do netlist ở nhà, không phải do SDC: Yosys không chèn buffer cho mạng `rst_n_sync`, một flop lái thẳng 2917 chân nên slew lên 11,75 ns và thư viện ngoại suy thời gian removal thành 14,9 ns. Dự đoán ban đầu là Genus sẽ chèn buffer, nhưng lần chạy ở trường cho thấy Genus không chèn (xem lưu ý ngay dưới). Innovus thì có dựng cây buffer khi PnR. Kết quả chính thức lấy từ Genus và Tempus (STA-02, STA-05).
 - Setup và hold của nhóm `clk` đều đạt ở 20 ns. Đường qua macro SRAM chưa được tính vì ở nhà macro không có `.lib`.
 - Số liệu Nangate45 chỉ để xem xu hướng, không dùng cho report.
 
-Lưu ý cho STA-02 và PD: mạng `rst_n_sync` có fanout khoảng 2900. Cần xem `report_timing -check_type recovery/removal` và max transition của mạng này sau Genus và sau CTS. 29/10 Genus: không vi phạm max transition (`design_rules.rpt`). Còn recovery và removal bằng Tempus sau CTS.
+Lưu ý cho STA-02 và PD: mạng `rst_n_sync` có fanout khoảng 2900. Cần xem `report_timing -check_type recovery/removal` và max transition của mạng này sau Genus và sau CTS. Đính chính 30/10: `design_rules.rpt` của Genus (29/10) không báo vi phạm, nhưng netlist vẫn để `u_rst_sync_q_reg` lái thẳng khoảng 3125 chân. Tempus trước layout báo recovery −23,567 ns (CK→Q 22,98 ns). Hai hướng sửa đang chờ nhóm quyết: thêm `set_max_transition` và `set_max_fanout` vào `soc.sdc` để Genus buộc phải buffer, hoặc coi mạng reset là lý tưởng trước layout và chỉ kiểm recovery, removal sau CTS (STA-05).
 
 ## 5. Kiểm chứng ở nhà
 

@@ -1,7 +1,7 @@
 # sta_soc.tcl - Tempus STA of soc_top (STA-03 before layout, STA-05 after route with SPEF).
 # Run from the repo root on the server: make sta-soc (after make synth-soc).
-# NOT RUN ON THE SERVER YET: the first run at school may need command fixes, every report goes
-# through try_cmd so one wrong command only warns and the other reports are still written.
+# First run on the server 30/10 (Tempus 23.14). Every report goes through try_cmd so one wrong
+# command only warns and the other reports are still written.
 #
 # Environment:
 #   NETLIST=<file>   default syn/out_soc/soc_top_netlist.v (Genus)
@@ -58,13 +58,14 @@ if {$SPEF ne ""} {
 
 update_timing -full
 
-# Reports: setup and recovery are late checks, hold and removal are early checks
+# Reports, one per check type. Tempus 23.1 rejects -check_type together with -late or -early
+# (TCLCMD-393, first run 30/10), and -late alone mixes recovery paths into the setup report
 try_cmd {check_timing -verbose                         > $OUT/check_timing.rpt}
 try_cmd {report_analysis_coverage                      > $OUT/coverage.rpt}
-try_cmd {report_timing -late  -max_paths 10            > $OUT/setup.rpt}
-try_cmd {report_timing -early -max_paths 10            > $OUT/hold.rpt}
-try_cmd {report_timing -late  -check_type recovery -max_paths 10 > $OUT/recovery.rpt}
-try_cmd {report_timing -early -check_type removal  -max_paths 10 > $OUT/removal.rpt}
+try_cmd {report_timing -check_type setup    -max_paths 10 > $OUT/setup.rpt}
+try_cmd {report_timing -check_type hold     -max_paths 10 > $OUT/hold.rpt}
+try_cmd {report_timing -check_type recovery -max_paths 10 > $OUT/recovery.rpt}
+try_cmd {report_timing -check_type removal  -max_paths 10 > $OUT/removal.rpt}
 try_cmd {report_constraint -all_violators              > $OUT/violators.rpt}
 try_cmd {report_analysis_summary                       > $OUT/analysis_summary.rpt}
 
@@ -77,10 +78,10 @@ proc worst_slack {args} {
     }
     return $s
 }
-set s_setup    [worst_slack -late]
-set s_hold     [worst_slack -early]
-set s_recovery [worst_slack -late  -check_type recovery]
-set s_removal  [worst_slack -early -check_type removal]
+set s_setup    [worst_slack -check_type setup]
+set s_hold     [worst_slack -check_type hold]
+set s_recovery [worst_slack -check_type recovery]
+set s_removal  [worst_slack -check_type removal]
 
 set fp [open $OUT/summary.txt w]
 puts $fp "top=$TOP stage=$STAGE setup_ns=$s_setup hold_ns=$s_hold recovery_ns=$s_recovery\

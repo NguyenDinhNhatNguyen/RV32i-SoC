@@ -19,7 +19,7 @@ Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho rep
 | 29/10 | Genus `soc_top` (chạy sớm cho PD-02, PD-03) | Genus 21.10-p002_1, slow 0,9 V 125 °C, macro typical | `make synth-soc`, CG=1, `ENABLE_DMA = 0`, BTB 8 entry | `soc.sdc`, 20 ns | +2,179 / 0 | Chưa kiểm | Chưa kiểm | Chưa kiểm | 0 | 52 757 (116 757 gồm 8 macro) | `appendix/synth_soc/` | Xem dưới bảng |
 
 Ghi chú lần chạy 29/10 (`soc_top`):
-- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. Không có vi phạm max transition và max capacitance, nên mạng reset từ `reset_sync` (fanout khoảng 2900) đã được chèn buffer.
+- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. `design_rules.rpt` không báo vi phạm max transition hay max capacitance. Đính chính 30/10: điều này không có nghĩa mạng reset đã được buffer. Netlist có `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` tới khoảng 3125 chân, không có buffer nào, và Tempus báo recovery −23,567 ns trên mạng này. Hướng sửa chờ nhóm quyết.
 - Đường găng: từ CLK của macro IMEM qua bộ cộng của ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, dài 17,57 ns. Đúng đường dự đoán ở `docs/spec/core.md` mục 4.5 và `docs/timing_core.md`.
 - `sram_2k_macro.lib` chỉ có corner typical (1,0 V, 25 °C), còn cell chuẩn ở corner slow (0,9 V, 125 °C). Đường qua macro vì vậy hơi lạc quan.
 - Timing của macro theo `.lib` (không đổi theo slew): CLK→Q 1,20 ns (slew ra 0,10 ns), setup `CEN` và `WEN` 0,40 ns, `A` 0,35 ns, `D` 0,30 ns, hold mọi chân vào 0,20 ns, độ rộng xung CLK tối thiểu 0,45 ns, slew vào tối đa 0,25 ns.
@@ -35,7 +35,7 @@ Ghi chú lần chạy 29/10 (`soc_top`):
 
 Ghi chú lần chạy 26/10 (STA-01):
 - Mục đích là kiểm `soc.sdc`: OpenSTA đọc không lỗi, `check_setup -verbose` không báo gì. Nhóm `clk` có 3127 endpoint, nhóm reset có 2917 endpoint.
-- Removal âm ở cả 2917 chân reset là do netlist ở nhà, không phải do SDC. Một flop của `reset_sync` lái thẳng 2917 chân reset, Yosys không chèn buffer nên slew lên 11,75 ns và thời gian removal bị ngoại suy thành 14,9 ns. Genus và Innovus sẽ chèn buffer cho mạng này.
+- Removal âm ở cả 2917 chân reset là do netlist ở nhà, không phải do SDC. Một flop của `reset_sync` lái thẳng 2917 chân reset, Yosys không chèn buffer nên slew lên 11,75 ns và thời gian removal bị ngoại suy thành 14,9 ns. Dự đoán "Genus sẽ chèn buffer" là sai (xem ghi chú lần chạy 29/10 ở mục 1). Innovus thì có chèn buffer khi PnR.
 - Setup tốt vì đường qua macro SRAM chưa được tính (ở nhà macro không có `.lib`). Đây lại là các đường găng dự kiến (`docs/spec/core.md` mục 4.5), nên số setup ở nhà lạc quan hơn thật.
 - Tổng hợp mất khoảng 11 phút. Lần này làm tay. Từ STA-03 chạy bằng `make sta-soc-nangate STA_PERIOD=<ns>` (`syn/yosys/sta_soc_nangate.tcl`).
 
