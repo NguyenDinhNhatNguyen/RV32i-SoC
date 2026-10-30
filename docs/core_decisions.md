@@ -341,6 +341,25 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
   - Đoán JALR, RAS: để sau nếu nhóm bật dự đoán.
 - **Kiểm tra:** `tb_rv32_btb` so với mô hình (8 và 16 entry, cấy lỗi thì FAIL). Toàn bộ lint, unit, isa, arch, fw-core, fw-soc, fw-bus, sim-boot PASS với `BTB=0`, 1 và 2. Bảng ở `docs/btb_eval.md` mục 7.
 
+## Flow ở trường
+
+### D-042. Sign-off core trên server: LEC và GLS
+
+- **Bối cảnh:** lần chạy đầu `make synth-core`, `make lec-core`, `make gls-core` trên server ngày 30/10. Server không có git, nên các sửa ở đó được làm lại trong repo. Chi tiết ở `docs/genus_core.md` mục 6 và 7.
+- **Genus giữ mọi flop** (`syn/scripts/synth_core.tcl`, ngay trước `syn_generic`): tắt `optimize_merge_flops`, `optimize_merge_latches`, `optimize_constant_0_flops`, `optimize_constant_1_flops`, `delete_unloaded_seqs`. Mỗi lệnh bọc trong `catch` vì tên attribute có thể khác giữa các bản Genus. Lý do: Genus gộp flop trùng và bỏ flop hằng, nên key point của LEC không khớp 1:1 với RTL.
+- **Conformal** (`lec/core_rtl2gate.do`):
+  - Conformal 24.1 báo lỗi với `-incdir` trong `read design`. Thay bằng `add search path rtl/core -design -golden` đặt trước `read design -golden`.
+  - Thêm các flatten option `-seq_constant`, `-seq_constant_x_to 0`, `-nodff_to_dlat_zero`, `-nodff_to_dlat_feedback`, `-hier_seq_merge`, cùng `-gated_clock` đã có.
+  - Không dùng `set analyze option -auto` vì cần license Conformal_Ultra, server không có.
+- **Bỏ `.note.gnu.build-id`** trong `fw/common/link_isa.ld` và `fw/boot/boot.ld` bằng `/DISCARD/`. riscv gcc của Vitis trên server tự gắn section này. Linker script không có chỗ cho nó, nên linker đặt nó ở địa chỉ 0, trước `_start`. File hex khi đó bắt đầu bằng `00000004 00000014 00000003 00554e47` thay vì lệnh `j`, core chạy từ rác và mọi bài GLS đều timeout. gcc ở nhà không gắn build-id, nên hex ở nhà không đổi (đã so md5).
+- **Hai sửa trong `scripts/gls_core.sh`:**
+  - Mảng `timing` rỗng khi có SDF. Bash 4.2 trên server với `set -u` báo unbound variable ở `"${timing[@]}"`, nên đổi thành `${timing[@]+"${timing[@]}"}`.
+  - File `.tohost` được đọc sau `cd "$OUT"`, nên đường dẫn tương đối bị sai. Đổi thành `$REPO/$HEX_DIR`.
+- **Kết quả:**
+  - LEC (Conformal 24.1, không Ultra): 2199 Equivalent, 0 Non-equivalent, 68 Abort. Các điểm abort là DFF thuộc khối nhân và chia 32×32, không chứng minh được khi thiếu analyze datapath của Ultra. Mapping đủ: 2163 DFF ở golden bằng ở revised, cộng 58 latch ICG unreachable. Chạy khoảng 53 phút.
+  - GLS (Xcelium 24.03): 49/49 PASS (rv32ui và rv32um) trên netlist Genus kèm SDF, clock 20 ns. GLS kiểm chức năng của khối nhân và chia mà LEC để abort.
+- **Đã loại:** sửa riêng file trên server rồi chép tay về (dễ lệch với repo). Bật `analyze datapath` (không có license).
+
 ---
 
 ## Tài liệu

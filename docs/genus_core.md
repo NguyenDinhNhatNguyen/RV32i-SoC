@@ -2,7 +2,7 @@
 
 Chủ: Nhân. Tổng hợp, LEC và GLS cho lõi RV32I đứng riêng, để lấy số PPA chính thức của lõi (thay số Nangate45 ở `docs/timing_core.md`). Flow chung và tiêu chí nghiệm thu theo Lab ở `docs/flow_notes.md`. Flow `soc_top` dùng `soc.sdc` của Phát và không thuộc file này.
 
-**Trạng thái:** script viết ở nhà, chưa chạy trên server. Đã kiểm ở nhà: cú pháp Tcl (chạy `synth_core.tcl` với lệnh Genus giả trong Tcl 8.6), `core.sdc` đọc được bằng OpenSTA trên netlist Yosys Nangate45, `tb_core -DGLS` PASS trên netlist Yosys bằng Icarus. Lần đầu ở trường cần xem kỹ log Genus và Conformal.
+**Trạng thái:** đã chạy Genus, LEC và GLS trên server ngày 30/10. LEC 0 non-equivalent, GLS 49/49 PASS (mục 6). Các sửa cần cho server ghi ở D-042 và mục 7.
 
 ## 1. Cấu hình
 
@@ -52,11 +52,11 @@ make lec-core
 
 Đạt khi 0 non-equivalent. Report ở `syn/out_core/reports/lec_verification.rpt`, log đầy đủ ở `syn/out_core/lec.txt`. Bộ nhân 32x32 có thể để lại điểm abort. Khi đó GLS ở bước 3 kiểm chức năng thay.
 
-Nếu Conformal báo lỗi ở dòng `read design -golden` (tùy chọn `-incdir`), xem lỗi trong `lec.txt` rồi sửa dòng đó trong `lec/core_rtl2gate.do`.
+Conformal 24.1 không nhận `-incdir` trong `read design`, nên dofile dùng `add search path rtl/core -design -golden`. Không có license Conformal_Ultra, nên dofile không dùng `set analyze option -auto`. LEC chạy khoảng 53 phút, nên chạy bằng `nohup` (mục 7).
 
 ### Bước 3. GLS
 
-Server có thể không có riscv gcc. Khi đó tạo file hex ở nhà rồi chép lên:
+riscv gcc trên server lấy từ Vitis và tự gắn `.note.gnu.build-id`. `fw/common/link_isa.ld` đã bỏ section này (D-042), nên `make isa-core` tạo được hex ngay trên server. Nếu không dùng được gcc thì tạo file hex ở nhà rồi chép lên:
 
 ```bash
 # Ở nhà
@@ -155,3 +155,23 @@ Bảng ra dán vào mục số chính thức của `docs/report/core.md` (các �
 | `lec/core_rtl2gate.do` | Conformal, mẫu `accel_rtl2gate.do` |
 | `scripts/gls_core.sh` | Xcelium, `tb_core -DGLS`, rv32ui và rv32um |
 | `tb/core/tb_core.v` | Nhánh `` `ifdef GLS `` (top `rv32_core_syn`, bỏ phép kiểm đọc `dut.*`), RTL không đổi |
+
+## 6. Kết quả ngày 30/10
+
+| Bước | Công cụ | Kết quả |
+| --- | --- | --- |
+| LEC | Conformal 24.1, không Ultra | 2199 Equivalent, 0 Non-equivalent, 68 Abort |
+| GLS | Xcelium 24.03 | 49/49 PASS (rv32ui và rv32um), netlist Genus kèm SDF, clock 20 ns |
+
+- Mapping đủ: 2163 DFF bên golden bằng bên revised, cộng 58 latch ICG unreachable.
+- 68 điểm abort là DFF thuộc khối nhân và chia 32×32. Không chứng minh được vì thiếu analyze datapath của Conformal_Ultra. GLS ở trên kiểm chức năng của các phép M thay cho phần này.
+- LEC chạy khoảng 53 phút.
+- Để LEC map 1:1, `synth_core.tcl` giữ mọi flop (tắt gộp flop, bỏ flop hằng và flop không có tải) và dofile thêm các flatten option (D-042).
+- Đường găng trong lần Genus `soc_top` của Phát ngày 29/10: 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`, `appendix/synth_soc/reports/synthesis/timing.rpt`).
+
+## 7. Lưu ý trên server
+
+- Python mặc định bị môi trường Xilinx làm hỏng. Gọi make với `PYTHON="env LD_LIBRARY_PATH= /usr/bin/python3"`, ví dụ `make isa-core PYTHON="env LD_LIBRARY_PATH= /usr/bin/python3"`.
+- Server không có iverilog. riscv gcc lấy từ Vitis và có gắn build-id. Linker script đã bỏ section này (D-042).
+- Mỗi user chỉ có `nproc` = 1. Job dài (LEC, quét chu kỳ) thì chạy bằng `nohup`, ví dụ `nohup make lec-core > lec_nohup.log 2>&1 &`.
+- Nếu trên server thiếu `tb/models/sram_1rw_model.v` hoặc `fw/common/link_isa.ld` thì lấy lại từ repo.

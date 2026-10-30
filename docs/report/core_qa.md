@@ -24,7 +24,7 @@ RTL trên main mặc định dùng BTB 8 entry (`ENABLE_BTB=1`), với `ENABLE_B
 Không. Nếu phụ thuộc `pipe_stall` thì `d_req_ready_i` sẽ đi tổ hợp tới chân enable IMEM qua sys_bus và APB. `if_req_o` chỉ bằng 0 khi ngủ WFI, và lấy từ flop `sleep_q` (D-014, D-025).
 
 **7. Đường găng nằm ở đâu?**
-Theo flow nhà, ENABLE_M=0 có đường găng là so sánh nhánh → `ex_trap` → `d_req_valid_o` → `pipe_stall` → `ex_go` → enable thanh ghi pipeline. ENABLE_M=1 có đường găng ở bộ nhân. Đã thử rút ngắn đường ENABLE_M=0, nhanh hơn khoảng 5%, nhưng không giữ vì chỉ hơn mức nhiễu của abc một chút (D-036, `docs/timing_core.md`). Số của Genus: [CHỜ GENUS].
+Theo flow nhà, ENABLE_M=0 có đường găng là so sánh nhánh → `ex_trap` → `d_req_valid_o` → `pipe_stall` → `ex_go` → enable thanh ghi pipeline. ENABLE_M=1 có đường găng ở bộ nhân. Đã thử rút ngắn đường ENABLE_M=0, nhanh hơn khoảng 5%, nhưng không giữ vì chỉ hơn mức nhiễu của abc một chút (D-036, `docs/timing_core.md`). Genus `soc_top` ngày 29/10 (GPDK45) cho đường găng 17,57 ns từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`).
 
 ## ALU, regfile, decoder
 

@@ -250,6 +250,13 @@ Lỗi P7 không bị bắt là "lệnh M bị ngắt vẫn giữ M-unit". Lỗi 
 
 Thay đổi bộ đếm của D-037 được chứng minh tương đương với bản cũ bằng Yosys `equiv_induct`, 0 điểm không chứng minh được, cả `ENABLE_M=0` và 1 (`docs/timing_core.md`).
 
+### Kiểm tra trên netlist ở trường (LEC, GLS, 30/10)
+
+Netlist Genus của `rv32_core` (`ENABLE_M=1`, BTB 8 entry) được kiểm bằng hai cách bổ sung cho nhau (`docs/genus_core.md` mục 6, D-042):
+
+- **LEC** (Conformal 24.1, không có license Ultra): 2199 Equivalent, 0 Non-equivalent, 68 Abort. Mapping đủ: 2163 DFF ở RTL bằng ở netlist, cộng 58 latch ICG unreachable. 68 điểm abort là DFF thuộc khối nhân và chia 32×32, không chứng minh được khi thiếu analyze datapath của Ultra. Để key point khớp 1:1, Genus được dặn giữ mọi flop (không gộp flop, không bỏ flop hằng).
+- **GLS** (Xcelium 24.03): `tb_core -DGLS` chạy 49/49 bài rv32ui và rv32um PASS trên netlist kèm SDF, clock 20 ns. Các bài rv32um kiểm chức năng của khối nhân và chia mà LEC để abort.
+
 ## X.7 Kết quả benchmark
 
 ### Trên `tb_core` (không wait state)
@@ -461,6 +468,8 @@ Lịch sử số liệu (cùng flow, khác phiên bản, không so trực tiếp
 
 Điền bằng `scripts/ppa_table.py` từ report trong `appendix/` (STA-04). Mọi ô [CHỜ GENUS] là số chưa có.
 
+Đã có từ lần Genus `soc_top` của Phát ngày 29/10: đường găng dài 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là đường so sánh nhánh rồi chuyển hướng PC. Số này là của cả SoC sau tổng hợp, chưa phải số của lõi đứng riêng hay sau route, nên chưa điền vào bảng.
+
 | Chỉ số | ENABLE_M=0 | ENABLE_M=1 |
 | --- | --- | --- |
 | Diện tích sau tổng hợp (µm²) | [CHỜ GENUS] | [CHỜ GENUS] |
@@ -473,7 +482,8 @@ Lịch sử số liệu (cùng flow, khác phiên bản, không so trực tiếp
 | Công suất (mW) ở 50 MHz, CoreMark | [CHỜ GENUS] | [CHỜ GENUS] |
 | EPI (pJ/lệnh) | [CHỜ GENUS] | [CHỜ GENUS] |
 | Công suất chờ ngắt: polling so với WFI | [CHỜ GENUS] | [CHỜ GENUS] |
-| LEC RTL ↔ netlist | [CHỜ GENUS] | [CHỜ GENUS] |
+| LEC RTL ↔ netlist | [CHỜ GENUS] | 2199 Equivalent, 0 Non-equivalent, 68 Abort (nhân, chia) |
+| GLS netlist kèm SDF, 20 ns | [CHỜ GENUS] | 49/49 PASS (rv32ui, rv32um) |
 
 Cách tính các chỉ số dẫn xuất:
 

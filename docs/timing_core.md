@@ -139,6 +139,15 @@ Môi trường: WSL (Ubuntu), Yosys 0.33 (git sha1 2584903a060), OpenSTA 2.3.1, 
 - Diện tích ENABLE_M=0: 16 995 µm² trước D-038, 16 929 µm² sau D-038, 16 981 µm² trên nhánh btb. Ba số lệch nhau dưới 0,4%.
 - Khi so các phương án dự đoán nhánh thì dùng base của nhánh btb (cùng mã nguồn), không dùng số của main.
 
+## Kết quả ở trường (29/10 và 30/10)
+
+Số GPDK45, khác thư viện với các bảng ở trên nên không so trực tiếp.
+
+- **Đường găng trong `soc_top`** (Genus, lần chạy của Phát ngày 29/10): 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`. Slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là đường so sánh nhánh rồi chuyển hướng PC, không phải đường `ex_trap` → `ex_go` của việc 2. Slack dương nên chưa cần áp patch của việc 2.
+- **LEC** (Conformal 24.1, không Ultra, 30/10): 2199 Equivalent, 0 Non-equivalent, 68 Abort. Các điểm abort là DFF thuộc khối nhân và chia 32×32. Mapping đủ: 2163 DFF ở golden bằng ở revised, cộng 58 latch ICG unreachable.
+- **GLS** (Xcelium 24.03, 30/10): 49/49 PASS (rv32ui và rv32um) trên netlist Genus kèm SDF, clock 20 ns.
+- Cách chạy và các sửa cho server: `docs/genus_core.md` mục 6 và 7, D-042.
+
 ## Còn lại
 
 - Ở trường: chạy Genus với clock gating bật, so số ICG và công suất trước và sau D-037.
