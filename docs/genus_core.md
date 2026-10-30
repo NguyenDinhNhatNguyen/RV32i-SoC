@@ -2,7 +2,7 @@
 
 Chủ: Nhân. Tổng hợp, LEC và GLS cho lõi RV32I đứng riêng, để lấy số PPA chính thức của lõi (thay số Nangate45 ở `docs/timing_core.md`). Flow chung và tiêu chí nghiệm thu theo Lab ở `docs/flow_notes.md`. Flow `soc_top` dùng `soc.sdc` của Phát và không thuộc file này.
 
-**Trạng thái:** đã chạy Genus, LEC và GLS trên server ngày 30/10. LEC 0 non-equivalent, GLS 49/49 PASS (mục 6). Các sửa cần cho server ghi ở D-042 và mục 7.
+**Trạng thái:** đã chạy Genus trên server ngày 28/10, LEC và GLS ngày 30/10 trên netlist đó. LEC 0 non-equivalent, GLS 49/49 PASS (mục 6). Các sửa cần cho server ghi ở D-042 và mục 7.
 
 ## 1. Cấu hình
 
@@ -156,7 +156,9 @@ Bảng ra dán vào mục số chính thức của `docs/report/core.md` (các �
 | `scripts/gls_core.sh` | Xcelium, `tb_core -DGLS`, rv32ui và rv32um |
 | `tb/core/tb_core.v` | Nhánh `` `ifdef GLS `` (top `rv32_core_syn`, bỏ phép kiểm đọc `dut.*`), RTL không đổi |
 
-## 6. Kết quả ngày 30/10
+## 6. Kết quả
+
+Genus chạy ngày 28/10 (đã có 5 attribute giữ flop). LEC và GLS chạy ngày 30/10 trên netlist của lần tổng hợp đó.
 
 | Bước | Công cụ | Kết quả |
 | --- | --- | --- |

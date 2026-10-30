@@ -345,7 +345,7 @@ Chép từ nhật ký của phần core khi tích hợp vào repo nhóm. Giữ n
 
 ### D-042. Sign-off core trên server: LEC và GLS
 
-- **Bối cảnh:** lần chạy đầu `make synth-core`, `make lec-core`, `make gls-core` trên server ngày 30/10. Server không có git, nên các sửa ở đó được làm lại trong repo. Chi tiết ở `docs/genus_core.md` mục 6 và 7.
+- **Bối cảnh:** lần chạy đầu trên server. `make synth-core` (đã có 5 attribute giữ flop ở dưới) chạy ngày 28/10. `make lec-core` và `make gls-core` chạy ngày 30/10 trên netlist của lần tổng hợp đó. Server không có git, nên các sửa ở đó được làm lại trong repo. Chi tiết ở `docs/genus_core.md` mục 6 và 7.
 - **Genus giữ mọi flop** (`syn/scripts/synth_core.tcl`, ngay trước `syn_generic`): tắt `optimize_merge_flops`, `optimize_merge_latches`, `optimize_constant_0_flops`, `optimize_constant_1_flops`, `delete_unloaded_seqs`. Mỗi lệnh bọc trong `catch` vì tên attribute có thể khác giữa các bản Genus. Lý do: Genus gộp flop trùng và bỏ flop hằng, nên key point của LEC không khớp 1:1 với RTL.
 - **Conformal** (`lec/core_rtl2gate.do`):
   - Conformal 24.1 báo lỗi với `-incdir` trong `read design`. Thay bằng `add search path rtl/core -design -golden` đặt trước `read design -golden`.
