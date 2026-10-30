@@ -1,0 +1,162 @@
+                          CONFORMAL (R)
+                   Version 24.10-s300 (06-Dec-2024) (64 bit executable)
+   Copyright (c) Cadence Design Systems, Inc., 1997-2024. All Rights Reserved
+
+
+This program is proprietary and confidential information belonging to
+Cadence Design Systems, Inc., and may be used and disclosed only as authorized
+in a license agreement controlling such use and disclosure.
+
+// Warning: This version is 692 days old. You can download the latest version from http://downloads.cadence.com.
+
+// Check out Conformal_Asic 24.1 license
+// Command: set dofile abort off
+CPU time     : 0.14    seconds
+Elapse time  : 0       seconds
+Memory usage : 42.57   M bytes
+// Command: read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+// Parsing file /home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v ...
+// Warning: (RTL14.1) Fanout load of the signal is removed (occurrence:56)
+// Warning: (VLG5.5) Internal primitive is recognized (occurrence:120)
+// Warning: (VLG5.6) Named port association is ignored for primitive gate (occurrence:120)
+// Warning: (IGN7.1) trireg net is modeled as a latch to hold value (occurrence:1)
+// Warning: (HRC1.4) Module/entity is empty (blackboxed) (occurrence:1)
+// Note: (HRC3.5b) Open output port connection is detected (occurrence:80)
+// Warning: (HRC3.10b) An input port is declared, but it is not used. Module is empty (occurrence:1)
+// Note: Read VERILOG library successfully
+CPU time     : 0.26    seconds
+Elapse time  : 0       seconds
+Memory usage : 65.50   M bytes
+// Command: add search path rtl/core -design -golden
+// Command: read design -golden -verilog rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v rtl/core/rv32_core.v syn/out_core/rv32_core_syn.v
+// Parsing file rtl/core/rv32_alu.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_btb.v ...
+// Parsing file rtl/core/rv32_csr.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_decoder.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_imm_gen.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_lsu_align.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_muldiv.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file rtl/core/rv32_regfile.v ...
+// Parsing file rtl/core/rv32_core.v ...
+// Parsing file rtl/core/rv32_defs.vh ...
+// Parsing file syn/out_core/rv32_core_syn.v ...
+// Golden root module is set to 'rv32_core_syn'
+// Warning: (RTL1.5b) Potential loss of RHS msb or carry-out bit (occurrence:12)
+// Note: (RTL1.9h) Parameter declaration with no type or range specification (occurrence:9)
+// Note: (RTL5.5a) Default case item with non-X assignment(s) (occurrence:14)
+// Note: (RTL5.7) Default case item with inconsistent assignment(s). (occurrence:3)
+// Warning: (RTL7.10a) Comparison with different data sizes (occurrence:7)
+// Note: (RTL8.1) Multiple multipliers/dividers are in module/entity (occurrence:1)
+// Warning: (RTL14) Signal has input but it has no output (occurrence:1)
+// Warning: (RTL14.1) Fanout load of the signal is removed (occurrence:1)
+// Warning: (RTL25) Non-automatic task/function (occurrence:1)
+// Note: (VLG6.4) Supported system datapath function call (occurrence:1)
+// Note: (VLG9.2) The `define macro is used (occurrence:138)
+// Warning: (DIR6.1) Ignored compiler directive is detected (occurrence:9)
+// Warning: (DIR6.2) Supported compiler directive is detected (occurrence:60)
+// Note: (DIR6.3) Conditional compiler directive clause is effective (occurrence:3)
+// Warning: (HRC3.10a) An input port is declared, but it is not completely used in the module (occurrence:6)
+// Warning: (HRC3.16) A wire is declared, but not used in the module (occurrence:2)
+// Note: Read VERILOG design successfully
+CPU time     : 0.37    seconds
+Elapse time  : 0       seconds
+Memory usage : 81.24   M bytes
+// Command: read design -revised -verilog syn/out_core/rv32_core_syn_netlist.v
+// Parsing file syn/out_core/rv32_core_syn_netlist.v ...
+// Revised root module is set to 'rv32_core_syn'
+// Warning: (RTL2.13) Undriven pin is detected (occurrence:1)
+// Note: (HRC3.5b) Open output port connection is detected (occurrence:2)
+// Warning: There are 1 undriven nets in Revised
+// Warning: There are 1 undriven pins in Revised
+// Note: Read VERILOG design successfully
+CPU time     : 0.74    seconds
+Elapse time  : 1       seconds
+Memory usage : 87.55   M bytes
+// Command: set root module rv32_core_syn -both
+// Warning: Golden root module is already at 'rv32_core_syn'
+// Warning: Revised root module is already at 'rv32_core_syn'
+// Command: set flatten model -seq_constant
+// Command: set flatten model -seq_constant_x_to 0
+// Command: set flatten model -nodff_to_dlat_zero
+// Command: set flatten model -nodff_to_dlat_feedback
+// Command: set flatten model -hier_seq_merge
+// Command: set flatten model -gated_clock
+// Command: set analyze option -auto
+// Error: Auto analysis requires a Conformal_Ultra license.
+To use this feature, start the tool with the -xl option.
+// Command: set system mode lec
+// Processing Golden ...
+//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  28% completed//  32% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  51% completed//  52% completed//  53% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  59% completed//  60% completed//  69% completed//  77% completed//  78% completed//  79% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  86% completed//  87% completed//  88% completed// 100% completed// Modeling Golden ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  54% completed// Processing Revised ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  26% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  33% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  53% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  59% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  66% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  73% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  79% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  86% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  93% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed//  99% completed// 100% completed// Modeling Revised ...
+//   0% completed//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  54% completed// Balanced modeling (auto) mapped 4326 out of 4384 DFF/DLATs
+//  55% completed//  56% completed//  57% completed//  58% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed// 100% completed//  55% completed//  56% completed//  57% completed//  58% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  80% completed// (F14) Remodeled 2146 gated-clock DFF/DLAT(s)
+//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed// 100% completed// (F28) Converted 1 internal output port(s) to inout port(s)
+CPU time     : 1.89    seconds
+Elapse time  : 2       seconds
+Memory usage : 126.24  M bytes
+// Warning: Golden and Revised have different numbers of key points:
+// Golden  key points = 2405
+// Revised key points = 2463
+// Mapping key points ...
+//   1% completed//   2% completed//   3% completed//   4% completed//   5% completed//   6% completed//   7% completed//   8% completed//   9% completed//  10% completed//  11% completed//  12% completed//  13% completed//  14% completed//  15% completed//  16% completed//  17% completed//  18% completed//  19% completed//  20% completed//  21% completed//  22% completed//  23% completed//  24% completed//  25% completed//  26% completed//  27% completed//  28% completed//  29% completed//  30% completed//  31% completed//  32% completed//  33% completed//  34% completed//  35% completed//  36% completed//  37% completed//  38% completed//  39% completed//  40% completed//  41% completed//  42% completed//  43% completed//  44% completed//  45% completed//  46% completed//  47% completed//  48% completed//  49% completed//  50% completed//  51% completed//  52% completed//  53% completed//  54% completed//  55% completed//  56% completed//  57% completed//  58% completed//  59% completed//  60% completed//  61% completed//  62% completed//  63% completed//  64% completed//  65% completed//  66% completed//  67% completed//  68% completed//  69% completed//  70% completed//  71% completed//  72% completed//  73% completed//  74% completed//  75% completed//  76% completed//  77% completed//  78% completed//  79% completed//  80% completed//  81% completed//  82% completed//  83% completed//  84% completed//  85% completed//  86% completed//  87% completed//  88% completed//  89% completed//  90% completed//  91% completed//  92% completed//  93% completed//  94% completed//  95% completed//  96% completed//  97% completed//  98% completed//  99% completed// 100% completed================================================================================
+Mapped points: SYSTEM class
+--------------------------------------------------------------------------------
+Mapped points     PI     PO     DFF       Total   
+--------------------------------------------------------------------------------
+Golden            138    104    2163      2405    
+--------------------------------------------------------------------------------
+Revised           138    104    2163      2405    
+================================================================================
+Unmapped points:
+================================================================================
+Revised:
+--------------------------------------------------------------------------------
+Unmapped points   DLAT      Total   
+--------------------------------------------------------------------------------
+Unreachable       58        58      
+================================================================================
+CPU time     : 2.08    seconds
+Elapse time  : 2       seconds
+Memory usage : 126.69  M bytes
+// Command: set compare effort high
+// Command: add compared points -all
+// 2267 compared points added to compare list
+// Command: compare
+//   0% Comparing 0 out of 2267 points, 0 Non-equivalent//   0% Comparing 1 out of 2267 points, 0 Non-equivalent//   0% Comparing 2 out of 2267 points, 0 Non-equivalent//   0% Comparing 3 out of 2267 points, 0 Non-equivalent//   0% Comparing 4 out of 2267 points, 0 Non-equivalent//   0% Comparing 5 out of 2267 points, 0 Non-equivalent//   0% Comparing 6 out of 2267 points, 0 Non-equivalent//   0% Comparing 7 out of 2267 points, 0 Non-equivalent//   0% Comparing 8 out of 2267 points, 0 Non-equivalent//   0% Comparing 9 out of 2267 points, 0 Non-equivalent//   0% Comparing 10 out of 2267 points, 0 Non-equivalent//   0% Comparing 11 out of 2267 points, 0 Non-equivalent//   0% Comparing 12 out of 2267 points, 0 Non-equivalent//   0% Comparing 13 out of 2267 points, 0 Non-equivalent//   0% Comparing 14 out of 2267 points, 0 Non-equivalent//   0% Comparing 15 out of 2267 points, 0 Non-equivalent//   0% Comparing 16 out of 2267 points, 0 Non-equivalent//   0% Comparing 17 out of 2267 points, 0 Non-equivalent//   0% Comparing 18 out of 2267 points, 0 Non-equivalent//   0% Comparing 19 out of 2267 points, 0 Non-equivalent//   0% Comparing 20 out of 2267 points, 0 Non-equivalent//   0% Comparing 21 out of 2267 points, 0 Non-equivalent//   0% Comparing 22 out of 2267 points, 0 Non-equivalent//   1% Comparing 23 out of 2267 points, 0 Non-equivalent//   1% Comparing 24 out of 2267 points, 0 Non-equivalent//   1% Comparing 25 out of 2267 points, 0 Non-equivalent//   1% Comparing 26 out of 2267 points, 0 Non-equivalent//   1% Comparing 27 out of 2267 points, 0 Non-equivalent//   1% Comparing 28 out of 2267 points, 0 Non-equivalent//   1% Comparing 29 out of 2267 points, 0 Non-equivalent//   1% Comparing 30 out of 2267 points, 0 Non-equivalent//   1% Comparing 31 out of 2267 points, 0 Non-equivalent//   1% Comparing 32 out of 2267 points, 0 Non-equivalent//   1% Comparing 33 out of 2267 points, 0 Non-equivalent//   1% Comparing 34 out of 2267 points, 0 Non-equivalent//  57% Comparing 1298 out of 2267 points, 0 Non-equivalent//  96% Comparing 2196 out of 2267 points, 0 Non-equivalent//  97% Comparing 2199 out of 2267 points, 0 Non-equivalent, 1 Abort//  97% Comparing 2201 out of 2267 points, 0 Non-equivalent, 2 Abort//  97% Comparing 2202 out of 2267 points, 0 Non-equivalent, 3 Abort//  97% Comparing 2203 out of 2267 points, 0 Non-equivalent, 4 Abort//  97% Comparing 2204 out of 2267 points, 0 Non-equivalent, 5 Abort//  97% Comparing 2205 out of 2267 points, 0 Non-equivalent, 6 Abort//  97% Comparing 2206 out of 2267 points, 0 Non-equivalent, 7 Abort//  97% Comparing 2207 out of 2267 points, 0 Non-equivalent, 8 Abort//  97% Comparing 2208 out of 2267 points, 0 Non-equivalent, 9 Abort//  97% Comparing 2209 out of 2267 points, 0 Non-equivalent, 10 Abort//  97% Comparing 2210 out of 2267 points, 0 Non-equivalent, 11 Abort//  97% Comparing 2211 out of 2267 points, 0 Non-equivalent, 12 Abort//  97% Comparing 2212 out of 2267 points, 0 Non-equivalent, 13 Abort//  97% Comparing 2213 out of 2267 points, 0 Non-equivalent, 14 Abort//  97% Comparing 2214 out of 2267 points, 0 Non-equivalent, 15 Abort//  97% Comparing 2215 out of 2267 points, 0 Non-equivalent, 16 Abort//  97% Comparing 2216 out of 2267 points, 0 Non-equivalent, 17 Abort//  97% Comparing 2217 out of 2267 points, 0 Non-equivalent, 18 Abort//  97% Comparing 2218 out of 2267 points, 0 Non-equivalent, 19 Abort//  97% Comparing 2219 out of 2267 points, 0 Non-equivalent, 20 Abort//  97% Comparing 2220 out of 2267 points, 0 Non-equivalent, 21 Abort//  97% Comparing 2221 out of 2267 points, 0 Non-equivalent, 22 Abort//  98% Comparing 2222 out of 2267 points, 0 Non-equivalent, 23 Abort//  98% Comparing 2223 out of 2267 points, 0 Non-equivalent, 24 Abort//  98% Comparing 2224 out of 2267 points, 0 Non-equivalent, 25 Abort//  98% Comparing 2225 out of 2267 points, 0 Non-equivalent, 26 Abort//  98% Comparing 2226 out of 2267 points, 0 Non-equivalent, 27 Abort//  98% Comparing 2227 out of 2267 points, 0 Non-equivalent, 28 Abort//  98% Comparing 2228 out of 2267 points, 0 Non-equivalent, 29 Abort//  98% Comparing 2229 out of 2267 points, 0 Non-equivalent, 30 Abort//  98% Comparing 2230 out of 2267 points, 0 Non-equivalent, 31 Abort//  98% Comparing 2231 out of 2267 points, 0 Non-equivalent, 32 Abort//  98% Comparing 2232 out of 2267 points, 0 Non-equivalent, 33 Abort//  98% Comparing 2233 out of 2267 points, 0 Non-equivalent, 34 Abort//  98% Comparing 2234 out of 2267 points, 0 Non-equivalent, 35 Abort//  98% Comparing 2235 out of 2267 points, 0 Non-equivalent, 36 Abort//  98% Comparing 2236 out of 2267 points, 0 Non-equivalent, 37 Abort//  98% Comparing 2237 out of 2267 points, 0 Non-equivalent, 38 Abort//  98% Comparing 2238 out of 2267 points, 0 Non-equivalent, 39 Abort//  98% Comparing 2239 out of 2267 points, 0 Non-equivalent, 40 Abort//  98% Comparing 2240 out of 2267 points, 0 Non-equivalent, 41 Abort//  98% Comparing 2241 out of 2267 points, 0 Non-equivalent, 42 Abort//  98% Comparing 2242 out of 2267 points, 0 Non-equivalent, 43 Abort//  98% Comparing 2243 out of 2267 points, 0 Non-equivalent, 44 Abort//  98% Comparing 2244 out of 2267 points, 0 Non-equivalent, 45 Abort//  99% Comparing 2245 out of 2267 points, 0 Non-equivalent, 46 Abort//  99% Comparing 2246 out of 2267 points, 0 Non-equivalent, 47 Abort//  99% Comparing 2247 out of 2267 points, 0 Non-equivalent, 48 Abort//  99% Comparing 2248 out of 2267 points, 0 Non-equivalent, 49 Abort//  99% Comparing 2249 out of 2267 points, 0 Non-equivalent, 50 Abort//  99% Comparing 2250 out of 2267 points, 0 Non-equivalent, 51 Abort//  99% Comparing 2251 out of 2267 points, 0 Non-equivalent, 52 Abort//  99% Comparing 2252 out of 2267 points, 0 Non-equivalent, 53 Abort//  99% Comparing 2253 out of 2267 points, 0 Non-equivalent, 54 Abort//  99% Comparing 2254 out of 2267 points, 0 Non-equivalent, 55 Abort//  99% Comparing 2255 out of 2267 points, 0 Non-equivalent, 56 Abort//  99% Comparing 2256 out of 2267 points, 0 Non-equivalent, 57 Abort//  99% Comparing 2257 out of 2267 points, 0 Non-equivalent, 58 Abort//  99% Comparing 2258 out of 2267 points, 0 Non-equivalent, 59 Abort//  99% Comparing 2259 out of 2267 points, 0 Non-equivalent, 60 Abort//  99% Comparing 2260 out of 2267 points, 0 Non-equivalent, 61 Abort//  99% Comparing 2261 out of 2267 points, 0 Non-equivalent, 62 Abort//  99% Comparing 2262 out of 2267 points, 0 Non-equivalent, 63 Abort//  99% Comparing 2263 out of 2267 points, 0 Non-equivalent, 64 Abort//  99% Comparing 2264 out of 2267 points, 0 Non-equivalent, 65 Abort//  99% Comparing 2265 out of 2267 points, 0 Non-equivalent, 66 Abort//  99% Comparing 2266 out of 2267 points, 0 Non-equivalent, 67 Abort// 100% Comparing 2267 out of 2267 points, 0 Non-equivalent, 68 Abort================================================================================
+Compared points      PO     DFF       Total   
+--------------------------------------------------------------------------------
+Equivalent           104    2095      2199    
+--------------------------------------------------------------------------------
+Abort                0      68        68      
+================================================================================
+CPU time     : 3170.95 seconds
+Elapse time  : 3171    seconds
+Memory usage : 187.74  M bytes
+// Command: report verification > syn/out_core/reports/lec_verification.rpt
+// Command: report unmapped points > syn/out_core/reports/lec_unmapped.rpt
+// Command: report verification
+================================================================================
+                            Verification Report
+--------------------------------------------------------------------------------
+Category                                                                  Count
+--------------------------------------------------------------------------------
+1. Non-standard modeling options used:                                      0
+--------------------------------------------------------------------------------
+2. Incomplete verification:                                                 0
+--------------------------------------------------------------------------------
+3. User modification to design:                                             0
+--------------------------------------------------------------------------------
+4. Conformal Constraint Designer clock domain crossing checks recommended:  0
+--------------------------------------------------------------------------------
+5. Design ambiguity:                                                        0
+--------------------------------------------------------------------------------
+6. Compare Results:                                                       ABORT
+================================================================================
+// Command: exit -force

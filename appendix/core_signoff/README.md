@@ -12,7 +12,7 @@ Report Genus, Conformal LEC và GLS Xcelium của core (`ENABLE_M=1`, BTB 8 entr
 
 Report Genus tạo ngày 28/10, lần tổng hợp đã có 5 attribute giữ flop (D-042). LEC và GLS chạy ngày 30/10 trên netlist của lần tổng hợp đó.
 
-Bảng số LEC 2199/0/68 nằm trong log `syn/out_core/lec.txt` trên server. Log này chưa copy về, sẽ bổ sung sau.
+Bảng số LEC 2199/0/68 nằm trong log đầy đủ [`lec/lec.txt`](lec/lec.txt), copy từ `syn/out_core/lec.txt` trên server.
 
 ## Danh sách file
 
@@ -37,6 +37,7 @@ Bảng số LEC 2199/0/68 nằm trong log `syn/out_core/lec.txt` trên server. L
 | --- | --- |
 | `lec_verification.rpt` | Verification report. Compare Results ghi ABORT do 68 điểm abort, không có Non-equivalent |
 | `lec_unmapped.rpt` | Điểm không map, là latch ICG unreachable |
+| `lec.txt` | Log đầy đủ của `make lec-core`: mapping key point, bảng Compared points (2199 Equivalent, 68 Abort), thời gian chạy |
 
 `gls/` (Xcelium 24.03, chọn 2 log trong 49 bài):
 
