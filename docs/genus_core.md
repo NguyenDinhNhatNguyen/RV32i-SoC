@@ -169,7 +169,7 @@ Genus chạy ngày 28/10 (đã có 5 attribute giữ flop). LEC và GLS chạy n
 - 68 điểm abort là DFF thuộc khối nhân và chia 32×32. Không chứng minh được vì thiếu analyze datapath của Conformal_Ultra. GLS ở trên kiểm chức năng của các phép M thay cho phần này.
 - LEC chạy khoảng 53 phút.
 - Để LEC map 1:1, `synth_core.tcl` giữ mọi flop (tắt gộp flop, bỏ flop hằng và flop không có tải) và dofile thêm các flatten option (D-042).
-- Đường găng trong lần Genus `soc_top` của Phát ngày 29/10: 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`, `appendix/synth_soc/reports/synthesis/timing.rpt`).
+- Đường găng trong lần Genus `soc_top` của Phát ngày 29/10: 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`, `appendix/synth_soc/reports/synthesis/timing.rpt`). Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ ngày 30/10 (`docs/sta_results.md` mục 4) cho thấy Genus vẫn đạt setup tới 6 ns (khoảng 167 MHz). Ở 8 ns, đường găng chuyển sang bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây.
 
 ## 7. Lưu ý trên server
 

@@ -143,7 +143,7 @@ Môi trường: WSL (Ubuntu), Yosys 0.33 (git sha1 2584903a060), OpenSTA 2.3.1, 
 
 Số GPDK45, khác thư viện với các bảng ở trên nên không so trực tiếp.
 
-- **Đường găng trong `soc_top`** (Genus, lần chạy của Phát ngày 29/10): 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`. Slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là đường so sánh nhánh rồi chuyển hướng PC, không phải đường `ex_trap` → `ex_go` của việc 2. Slack dương nên chưa cần áp patch của việc 2.
+- **Đường găng trong `soc_top`** (Genus, lần chạy của Phát ngày 29/10): 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`. Slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ ngày 30/10 (`docs/sta_results.md` mục 4) cho thấy Genus vẫn đạt setup tới 6 ns (khoảng 167 MHz). Ở 8 ns, đường găng chuyển sang bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây. Đây là đường so sánh nhánh rồi chuyển hướng PC, không phải đường `ex_trap` → `ex_go` của việc 2. Slack dương nên chưa cần áp patch của việc 2.
 - **LEC** (Conformal 24.1, không Ultra, 30/10): 2199 Equivalent, 0 Non-equivalent, 68 Abort. Các điểm abort là DFF thuộc khối nhân và chia 32×32. Mapping đủ: 2163 DFF ở golden bằng ở revised, cộng 58 latch ICG unreachable.
 - **GLS** (Xcelium 24.03, 30/10): 49/49 PASS (rv32ui và rv32um) trên netlist Genus kèm SDF, clock 20 ns.
 - Cách chạy và các sửa cho server: `docs/genus_core.md` mục 6 và 7, D-042.
