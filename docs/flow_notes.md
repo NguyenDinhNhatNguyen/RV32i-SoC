@@ -36,6 +36,7 @@ Từng bước riêng:
 | `make lec-accel` | Conformal theo `lec/accel_rtl2gate.do` | `syn/out_accel/lec.txt` |
 | `make gls-accel` | Xcelium chạy `tb_accel_wrapper.v` trên netlist, không SDF | `syn/out_accel/gls/xrun.log` |
 | `make pnr-accel` | Innovus theo `pnr/scripts/run_all.tcl` | `pnr/out_accel/`, database `DBS/*.enc` trong `pnr/run_accel/` |
+| `make pnr-soc` | Innovus cho `soc_top`, floorplan theo `pnr/scripts/soc_floorplan.tcl`. Chạy sau `make synth-soc` | `pnr/out_soc/`, database trong `pnr/run_soc/` |
 
 Tổng hợp thử từng khối của SoC (STA-02), mỗi khối một lần chạy Genus riêng:
 
@@ -134,17 +135,20 @@ Database lưu theo tên Lab: `DBS/floorplan.enc`, `DBS/placement.enc`, `DBS/cts.
 
 ## 4. Lưu kết quả vào repo
 
-Chỉ copy report, không copy netlist, SPEF, SDF hay database:
+Chỉ copy report văn bản. Netlist, SPEF, SDF, GDS và database dựng từ thư viện GPDK45 của trường, không được đưa lên repo công khai:
 
 ```bash
-mkdir -p appendix/synth_accel appendix/pnr_accel
+mkdir -p appendix/synth_accel appendix/pnr_accel appendix/pnr_soc
 cp -r syn/out_accel/reports/* appendix/synth_accel/
 cp -r pnr/out_accel/reports/* appendix/pnr_accel/
-git status --short          # không có .lib .lef .gds .spef .sdf
+cp -r pnr/out_soc/reports/*   appendix/pnr_soc/
+git status --short          # không có .lib .lef .gds .spef .sdf, không có *_netlist.v, *_pnr.v
 git add appendix && git commit -m "Add accelerator synthesis and P&R reports" && git push
 ```
 
-Không bao giờ copy `.lib`, `.lef`, `.gds`, file SRAM macro hay file nào của GPDK45 ra khỏi server.
+- Không bao giờ copy `.lib`, `.lef`, `.gds`, file SRAM macro hay file nào của GPDK45 ra khỏi server.
+- Không dùng `git add -f`. `.gitignore` chặn các file trên ở mọi thư mục, kể cả `appendix/`. Lệnh `-f` bỏ qua luật này. Đây là cách GDS, SPEF và netlist của `soc_top` lọt lên repo ngày 29/10 (đã xoá ngày 31/10).
+- Ảnh chụp layout (PNG) đưa vào `docs/figures/` được, vì chỉ là ảnh màn hình.
 
 ## 5. Bài học buổi 21/10
 

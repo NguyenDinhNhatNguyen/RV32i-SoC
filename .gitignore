@@ -83,6 +83,31 @@ Thumbs.db
 *~
 .idea/
 
-# Bắt buộc Git phải theo dõi mọi thứ trong thư mục appendix
+# Track every report copied into appendix/, even names matched above (*.log, *.cmd...)
 !appendix/
 !appendix/**
+
+# Always blocked, also inside appendix/. These rules must stay last because the last
+# matching rule wins. Never use "git add -f" on flow outputs.
+*.lib
+*.lef
+*.gds
+*.gds2
+*.oas
+*.db
+*.ldb
+*.cdb
+*.cdl
+*.spi
+*.qrc
+*.tch
+*.capTbl
+*.spef
+*.spef.gz
+*.sdf
+*.sdf.gz
+*_netlist.v
+*_pnr.v
+*_pnr_pg.v
+*.enc
+*.enc.dat/
