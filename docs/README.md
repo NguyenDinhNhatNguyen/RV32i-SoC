@@ -32,6 +32,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `macro_notes.md` | SRAM macro qua từng bước flow |
 | `genus_core.md` | Genus, Conformal, GLS cho `rv32_core` ở trường, quét chu kỳ tìm F_max |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
+| `pnr_soc_status.md` | Theo dõi các việc PnR của `soc_top` |
 
 ## Kiểm chứng và đánh giá
 

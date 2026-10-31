@@ -20,10 +20,9 @@ set QRC_TECH  {}                           ;# The Lab qrc/gpdk045.tch is unreada
 set GDS_MAP   $PDK_DIR/streamOut.map
 set CELL_GDS  {}                           ;# Cell library GDS: not found by HT-01. Empty means the GDS holds only Innovus geometry
 
-# SRAM macro (needed for soc_top). HT-01 (21/10): sram_2k_macro 80 x 100 um with LEF, .lib and .v,
-# no GDS (not required, lecturer 22/10).
-# Leave empty for the accelerator. For soc_top set:
-#   SRAM_LEF $PDK_DIR/lef/sram_2k_macro.lef, SRAM_LIB_SLOW and SRAM_LIB_FAST $PDK_DIR/lib/sram_2k_macro.lib
+# SRAM macro for soc_top. HT-01 (21/10): sram_2k_macro 80 x 100 um with LEF, .lib and .v,
+# no GDS (not required, lecturer 22/10). Also read by sta/scripts/sta_soc.tcl.
+# run_all.tcl clears these three variables when TOP=accel_wrapper.
 set SRAM_LEF       $PDK_DIR/lef/sram_2k_macro.lef
 set SRAM_LIB_SLOW  $PDK_DIR/lib/sram_2k_macro.lib
 set SRAM_LIB_FAST  $PDK_DIR/lib/sram_2k_macro.lib

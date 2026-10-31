@@ -1,15 +1,20 @@
 # soc_floorplan.tcl - floorplan, SRAM macro placement, pin plan and power plan for soc_top (PD-02).
-# Source after init_design and globalNetConnect, before placement (PD-03 will call it from the SoC script).
-# Numbers and reasoning: docs/pd02_floorplan.md. NOT RUN ON THE SERVER YET: first check in PD-03.
+# Called by run_all.tcl when TOP=soc_top (make pnr-soc), after init_design and globalNetConnect.
+# Numbers and reasoning: docs/pd02_floorplan.md.
 #
-# Layout: 4 IMEM macros in one row at the top edge, 4 DMEM macros at the bottom edge, logic in the middle band.
+# Layout: 4 IMEM macros in one row at the top edge, 4 DMEM macros at the bottom edge,
+# logic in the middle band.
 # Signal pins on the left and right edges (the top and bottom edges hold macros).
 # Needs: try_cmd (as in run_all.tcl) and the config.tcl variables (PWR_NET, GND_NET, CORE_SITE).
 
 # ---- Parameters ----------------------------------------------------------------------
-set CORE_W     524.0      ;# um, updated via estimate_die.py for soc_top (area 116,757 um^2, util 60%)
-set CORE_H     523.3      ;# um, updated via estimate_die.py for soc_top (area 116,757 um^2, util 60%)
-set IO_GAP     15.0       ;# Core-to-die margin. 10.0 um is the minimum required by estimate_die.p  but 15.0 um is retained here to ensure ample clearance for power rings and signal breakouts.
+# Core size from estimate_die.py with the standard cell area only (macros are added by the
+# script): 53 408 um2 (Genus keep-flop netlist 30/10, total 117 408 um2 minus 8 x 8000 um2 of
+# macro) at 70% density. The 29/10 run used 524 x 523 um because the total area with macros
+# was given as --std-area, which counted the macros twice.
+set CORE_W     394.0      ;# um
+set CORE_H     395.0
+set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
 set HALO       5.0
@@ -18,12 +23,13 @@ set MAC_GAP    [expr {2*$HALO}]   ;# Gap between 2 neighbouring macros = 2 halos
 # in the scripts/macro_info.sh output. Bottom row R0, top row mirrored on X (MX).
 set IMEM_ORIENT MX
 set DMEM_ORIENT R0
-# Metal layers of the ring around each macro: pick from the macro VDD/VSS pin layers (macro_info.sh section 2)
+# Metal layers of the ring around each macro: pick from the macro VDD/VSS pin layers
+# (macro_info.sh section 2)
 set BLK_RING_H Metal6
 set BLK_RING_V Metal5
 
 # ---- Floorplan with a fixed core size ------------------------------------------------
-floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP	
+floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP
 
 # ---- Macro placement -----------------------------------------------------------------
 # Find macros by cell name, split IMEM and DMEM by instance name (u_imem, u_dmem in soc_top)
@@ -31,7 +37,11 @@ set macros [lsort [dbGet [dbGet -p2 top.insts.cell.name sram_2k_macro].name]]
 set imem {}
 set dmem {}
 foreach m $macros {
-    if {[string match *u_imem* $m]} { lappend imem $m } elseif {[string match *u_dmem* $m]} { lappend dmem $m }
+    if {[string match *u_imem* $m]} {
+        lappend imem $m
+    } elseif {[string match *u_dmem* $m]} {
+        lappend dmem $m
+    }
 }
 puts "PD-02: [llength $macros] macro, IMEM [llength $imem], DMEM [llength $dmem]"
 
@@ -71,4 +81,4 @@ addStripe -nets [list $PWR_NET $GND_NET] -layer Metal7 -direction horizontal \
           -width 1.5 -spacing 1.0 -set_to_set_distance 30.0 -start_offset 10.0
 try_cmd {sroute -connect {blockPin} -nets [list $PWR_NET $GND_NET] -blockPinTarget {nearestTarget}}
 sroute -connect {corePin} -layerChangeRange {Metal1 Metal8} -nets [list $PWR_NET $GND_NET]
-try_cmd {verifyGeometry}
+# run_all.tcl runs verifyGeometry right after this file

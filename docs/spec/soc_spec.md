@@ -88,6 +88,14 @@ Kết quả HT-01 (21/10): trên server có macro `sram_2k_macro`.
 - Doc kế hoạch: 0x0000_0000 (đầu IMEM).
 - `rv32_core`: mặc định `RESET_PC = 0x0001_0000` (boot ROM).
 - **Chốt:** giữ 0x0001_0000 như lõi (`SOC_BOOT_BASE` trong `rtl/bus/soc_map.vh`). RTL-08 đã có boot ROM nhỏ để nạp IMEM. Trong mô phỏng, tham số `RESET_PC` đặt lại 0x0000_0000 để chạy thẳng chương trình nạp bằng `$readmemh`.
+- **Chân strap `gpio_i[0]`** (D-039, `docs/boot.md` mục 2): boot ROM đọc chân này ngay sau reset.
+
+| `gpio_i[0]` | Hành vi |
+| --- | --- |
+| 0 | Nhảy thẳng về đầu IMEM (0x0000_0000), không đụng UART |
+| 1 | Chờ bootloader UART tối đa `TIMEOUT_CYCLES`. Nạp xong hoặc hết giờ thì nhảy về 0x0000_0000 |
+
+Board cần jumper kéo `gpio_i[0]` lên 1 khi muốn nạp chương trình. Sau khi boot, chân này dùng như GPIO bình thường. Bản build không có GPIO đọc chân bị lỗi bus, trap về nhánh nhảy IMEM, giống strap 0.
 
 ### 7.2 Dung lượng IMEM và DMEM
 

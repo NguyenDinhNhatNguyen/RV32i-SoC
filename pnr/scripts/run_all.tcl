@@ -1,6 +1,8 @@
-# run_all.tcl - Innovus end-to-end trial on the accelerator (PD-01).
+# run_all.tcl - Innovus end-to-end flow for the accelerator (PD-01) and soc_top (PD-03 onward).
 # Commands follow the Lab 02-05 syntax (floorPlan, addRing, ccopt_design...).
-# Run from the repo root on the server (after make synth-accel): make pnr-accel
+# Run from the repo root on the server:
+#   make pnr-accel   (after make synth-accel)   TOP=accel_wrapper, the default
+#   make pnr-soc     (after make synth-soc)     TOP=soc_top, floorplan from soc_floorplan.tcl
 # Each step saves DBS/<step>.enc as in the Labs, for restoreDesign when debugging.
 # Route/signoff (Route, Check and Report, Output files) is not in Lab 05 yet: compare with the
 # routing Lab later.
@@ -8,10 +10,22 @@
 set REPO [file normalize [file dirname [info script]]/../..]
 source $REPO/pnr/scripts/config.tcl
 
-set TOP        soc_top
-set NETLIST    $REPO/syn/out_soc/${TOP}_netlist.v
-set DESIGN_SDC $REPO/syn/out_soc/${TOP}_synth.sdc
-set OUT        $REPO/pnr/out_soc
+set TOP [expr {[info exists ::env(TOP)] ? $::env(TOP) : "accel_wrapper"}]
+if {$TOP eq "soc_top"} {
+    set SUB out_soc
+} elseif {$TOP eq "accel_wrapper"} {
+    set SUB out_accel
+    # The accelerator has no SRAM macro. config.tcl keeps the SRAM paths for soc_top and Tempus.
+    set SRAM_LEF      {}
+    set SRAM_LIB_SLOW {}
+    set SRAM_LIB_FAST {}
+} else {
+    puts "ERROR: unknown TOP=$TOP, use accel_wrapper or soc_top"
+    exit 1
+}
+set NETLIST    $REPO/syn/$SUB/${TOP}_netlist.v
+set DESIGN_SDC $REPO/syn/$SUB/${TOP}_synth.sdc
+set OUT        $REPO/pnr/$SUB
 set RPT        $OUT/reports
 file mkdir $OUT $RPT DBS
 
@@ -46,25 +60,31 @@ globalNetConnect $GND_NET -type pgpin -pin VSS -inst *
 globalNetConnect $PWR_NET -type tiehi -inst *
 globalNetConnect $GND_NET -type tielo -inst *
 
-# Floorplan + pin (Lab 02)
-floorPlan -site $CORE_SITE -r 1.0 $UTIL $IO_GAP $IO_GAP $IO_GAP $IO_GAP
-# Double-height cells (BUFX2...) are banned instead of adding CoreSiteDouble rows, see DONT_USE_CELLS
-# in config.tcl
-foreach c $DONT_USE_CELLS { try_cmd {setDontUse $c true} }
-#editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
-#editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
-#editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3
-# With SRAM (soc_top): placeInstance <macro> x y R0 -fixed and addHaloToBlock 5 5 5 5 <macro>
+# Banned cells, set before any optimization. BUFX2 is double height (DONT_USE_CELLS) and
+# CLKBUFX2 breaks the pin spacing rule (Lab 04). Banning CLKBUFX2 only before CTS let
+# place_opt_design insert 1220 of them as data buffers on 29/10.
+foreach c [concat $DONT_USE_CELLS $CTS_DONT_USE] { try_cmd {setDontUse $c true} }
 
-# Power plan (Lab 03)
-addRing -nets [list $PWR_NET $GND_NET] -type core_rings -follow core \
-        -layer {top Metal8 bottom Metal8 left Metal7 right Metal7} \
-        -width 2.0 -spacing 1.0 -offset 1.5
-addStripe -nets [list $PWR_NET $GND_NET] -layer Metal8 -direction vertical \
-          -width 1.5 -spacing 1.0 -set_to_set_distance $STRIPE_P -start_offset 10.0
-addStripe -nets [list $PWR_NET $GND_NET] -layer Metal7 -direction horizontal \
-          -width 1.5 -spacing 1.0 -set_to_set_distance $STRIPE_P -start_offset 10.0
-sroute -connect {corePin} -layerChangeRange {Metal1 Metal8} -nets [list $PWR_NET $GND_NET]
+if {$TOP eq "soc_top"} {
+    # Fixed core size, 8 SRAM macros, pin plan and power plan (PD-02)
+    source $REPO/pnr/scripts/soc_floorplan.tcl
+} else {
+    # Floorplan + pin (Lab 02)
+    floorPlan -site $CORE_SITE -r 1.0 $UTIL $IO_GAP $IO_GAP $IO_GAP $IO_GAP
+    editPin -pin {clk rst_n s_valid s_we s_addr* s_wstrb*} -edge 0 -spreadType SIDE -layer 3
+    editPin -pin {s_wdata*}                                -edge 1 -spreadType SIDE -layer 2
+    editPin -pin {s_rdata* s_ready irq}                    -edge 2 -spreadType SIDE -layer 3
+
+    # Power plan (Lab 03)
+    addRing -nets [list $PWR_NET $GND_NET] -type core_rings -follow core \
+            -layer {top Metal8 bottom Metal8 left Metal7 right Metal7} \
+            -width 2.0 -spacing 1.0 -offset 1.5
+    addStripe -nets [list $PWR_NET $GND_NET] -layer Metal8 -direction vertical \
+              -width 1.5 -spacing 1.0 -set_to_set_distance $STRIPE_P -start_offset 10.0
+    addStripe -nets [list $PWR_NET $GND_NET] -layer Metal7 -direction horizontal \
+              -width 1.5 -spacing 1.0 -set_to_set_distance $STRIPE_P -start_offset 10.0
+    sroute -connect {corePin} -layerChangeRange {Metal1 Metal8} -nets [list $PWR_NET $GND_NET]
+}
 try_cmd {verifyGeometry -report $RPT/pdn_geometry.rpt}       ;# Must be 0 violations (Innovus 21.1 has no -type power)
 saveDesign DBS/floorplan.enc
 
@@ -79,8 +99,7 @@ try_cmd {reportCongestion -overflow > $RPT/placement_congestion.rpt}           ;
 try_cmd {timeDesign -preCTS -expandedViews -outDir $RPT/prects}
 saveDesign DBS/placement.enc
 
-# CTS (Lab 05)
-foreach c $CTS_DONT_USE { try_cmd {setDontUse $c true} }
+# CTS (Lab 05). CTS_DONT_USE is already banned right after init_design.
 try_cmd {set_ccopt_property buffer_cells     $CTS_BUFFERS}
 try_cmd {set_ccopt_property inverter_cells   $CTS_INVERTERS}
 try_cmd {set_ccopt_property target_skew      $SKEW}
@@ -135,5 +154,6 @@ if {$GDS_MAP ne ""} {
     }
 }
 
-puts "Innovus done. Copy $RPT to appendix/pnr_accel/ for the appendix."
+puts "Innovus done. Copy only the text reports in $RPT to appendix/pnr_${SUB}/,
+      never the netlist, SPEF, SDF or GDS in $OUT."
 exit

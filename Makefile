@@ -5,7 +5,7 @@ VVP      ?= vvp
 ACCEL_RTL = rtl/accel/pe.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v
 ACCEL_TB  = tb/unit/tb_accel_wrapper.v
 
-.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel gls-accel pnr-accel check-server clean
+.PHONY: help sim-accel sim-accel-apb wave-accel lint-accel synth-accel lec-accel gls-accel pnr-accel pnr-soc check-server clean
 
 help:
 	@echo "make sim-accel     - simulate the accelerator wrapper (Icarus, at home)"
@@ -17,6 +17,7 @@ help:
 	@echo "make lec-accel     - Conformal compares RTL with the netlist after make synth-accel (server)"
 	@echo "make gls-accel     - Xcelium gate-level sim of the netlist with the 40-multiply testbench (server)"
 	@echo "make pnr-accel     - Innovus trial run on the accelerator (server)"
+	@echo "make pnr-soc       - Innovus on soc_top with soc_floorplan.tcl, after make synth-soc (server)"
 	@echo "make lint-core     - lint the RV32I core with Verilator, 0 warnings"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
@@ -83,8 +84,18 @@ gls-accel:
 
 pnr-accel:
 	rm -f pnr/out_accel/accel_wrapper_pnr.v
-	cd pnr && mkdir -p run_accel && cd run_accel && rm -f innovus.log* innovus.cmd* && innovus -batch -files ../scripts/run_all.tcl -log innovus.log
+	cd pnr && mkdir -p run_accel && cd run_accel && rm -f innovus.log* innovus.cmd* && \
+	  TOP=accel_wrapper innovus -batch -files ../scripts/run_all.tcl -log innovus.log
 	@test -f pnr/out_accel/accel_wrapper_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_accel/innovus.log"; exit 1; }
+
+# Outputs (netlist, SPEF, SDF, GDS) stay in pnr/out_soc and are never committed.
+# Copy only pnr/out_soc/reports into appendix/pnr_soc.
+pnr-soc:
+	@test -f syn/out_soc/soc_top_netlist.v || { echo "ERROR: no netlist yet, run make synth-soc first"; exit 1; }
+	rm -f pnr/out_soc/soc_top_pnr.v
+	cd pnr && mkdir -p run_soc && cd run_soc && rm -f innovus.log* innovus.cmd* && \
+	  TOP=soc_top innovus -batch -files ../scripts/run_all.tcl -log innovus.log
+	@test -f pnr/out_soc/soc_top_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_soc/innovus.log"; exit 1; }
 
 clean:
 	rm -rf tb/unit/out syn/run* pnr/run*
