@@ -147,7 +147,7 @@ git add appendix && git commit -m "Add accelerator synthesis and P&R reports" &&
 ```
 
 - Không bao giờ copy `.lib`, `.lef`, `.gds`, file SRAM macro hay file nào của GPDK45 ra khỏi server.
-- Không dùng `git add -f`. `.gitignore` chặn các file trên ở mọi thư mục, kể cả `appendix/`. Lệnh `-f` bỏ qua luật này. Đây là cách GDS, SPEF và netlist của `soc_top` lọt lên repo ngày 29/10 (đã xoá ngày 31/10).
+- Không dùng `git add -f`. `.gitignore` chặn các file trên ở mọi thư mục, kể cả `appendix/`. Lệnh `-f` bỏ qua luật này. Đây là cách GDS, SPEF và netlist của `soc_top` lọt lên repo ngày 29/10 (đã xoá khỏi repo và lịch sử ngày 31/10).
 - Ảnh chụp layout (PNG) đưa vào `docs/figures/` được, vì chỉ là ảnh màn hình.
 
 ## 5. Bài học buổi 21/10

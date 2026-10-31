@@ -6,7 +6,7 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 
 | # | Vấn đề | Trạng thái | Đã làm hoặc còn lại |
 | --- | --- | --- | --- |
-| 1 | GDS, SPEF và netlist sau PnR của `soc_top` bị đưa lên repo công khai (commit 29/10) | Xong 31/10 | Nhóm chọn xoá file khỏi repo, không viết lại lịch sử. `.gitignore` chặn các file này ở mọi thư mục kể cả `appendix/`. Xem mục 2 |
+| 1 | GDS, SPEF và netlist sau PnR của `soc_top` bị đưa lên repo công khai (commit 29/10) | Xong 31/10 | Đã xoá khỏi repo và khỏi lịch sử Git. `.gitignore` chặn các file này ở mọi thư mục kể cả `appendix/`. Xem mục 2 |
 | 2 | Netlist `soc_top` đã đổi sau lần PnR 29/10 (bản giữ flop cho LEC, sắp có bản buffer mạng reset) | Chờ server | Phát chạy lại `make synth-soc`, rồi `make pnr-soc` với netlist mới |
 | 3 | `run_all.tcl` chưa gọi `soc_floorplan.tcl`, macro do Innovus tự đặt | Xong 31/10 | `make pnr-soc` chạy `run_all.tcl` với `TOP=soc_top` và gọi `soc_floorplan.tcl` |
 | 4 | 1220 cell `CLKBUFX2` trong netlist PnR | Xong 31/10 | `CLKBUFX2` bị cấm ngay sau `init_design`, trước mọi bước tối ưu. Còn 11 cell từ Genus: Phát thêm `CLKBUFX2` vào danh sách cấm của `synth_soc.tcl` thì hết hẳn |
@@ -22,9 +22,20 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 
 Nhóm thống nhất giữ repo công khai, sửa `.gitignore` và xoá file dựng từ PDK:
 
-- Đã xoá `pnr/out_soc/soc_top.gds`, `soc_top.spef`, `soc_top_pnr.v` khỏi repo. Lịch sử Git không viết lại, nên mã commit của mọi người giữ nguyên và chỉ cần `git pull` như bình thường.
-- Hạn chế: 3 file vẫn còn trong lịch sử (commit 576960e ngày 29/10), ai mở commit đó trên GitHub vẫn tải được. Muốn xoá hẳn thì phải viết lại lịch sử (`git filter-repo`) và mọi người clone lại. Hoặc chuyển repo sang private.
-- `.gitignore` giờ chặn ở mọi thư mục: thư viện (`.lib`, `.lef`, `.gds`, `.cdl`...), SPEF, SDF, `*_netlist.v`, `*_pnr.v`, `*_pnr_pg.v`, database Innovus. Mấy dòng này nằm cuối file nên `!appendix/**` không mở lại được. Không dùng `git add -f` cho output của flow.
+- Xoá `pnr/out_soc/soc_top.gds`, `soc_top.spef`, `soc_top_pnr.v` khỏi repo, rồi xoá khỏi lịch sử bằng `git filter-repo` (chỉ viết lại các commit từ 29/10 chiều trở đi) và force push `main`, `feat/nhan-core-signoff`.
+- Commit trước 16:04 ngày 29/10 giữ nguyên mã. 19 commit sau đó đổi mã nhưng giữ nguyên nội dung, tác giả, ngày và message. Commit chỉ chứa 3 file kia (`576960e`) không còn.
+- Repo trên GitHub từ khoảng 16 MB còn 2 MB.
+
+Ai còn bản clone cũ (máy nhà hoặc server) chạy một lần:
+
+```sh
+git fetch origin
+git reset --hard origin/main
+```
+
+Không push từ bản clone cũ chưa reset, vì như vậy GDS sẽ quay lại GitHub.
+
+`.gitignore` giờ chặn ở mọi thư mục: thư viện (`.lib`, `.lef`, `.gds`, `.cdl`...), SPEF, SDF, `*_netlist.v`, `*_pnr.v`, `*_pnr_pg.v`, database Innovus. Mấy dòng này nằm cuối file nên `!appendix/**` không mở lại được. Không dùng `git add -f` cho output của flow.
 
 ## 3. Việc cho buổi lên trường tới
 
