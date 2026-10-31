@@ -1089,7 +1089,7 @@ synth-blocks:
 # syn/run_soc/genus.log. The netlist feeds pnr/scripts/soc_floorplan.tcl (PD-02, PD-03).
 #   make synth-soc                 CG=1 (CG=0 for the baseline, rename syn/out_soc first),
 #                                  PERIOD=20 ns (replaces SOC_PERIOD of soc.sdc for this run)
-#   make synth-soc-sweep           PERIODS="20 18 16 15 14", WNS and F_max table (STA-03)
+#   make synth-soc-sweep           PERIODS="6 5.5 5 4.5", WNS and F_max table (STA-03)
 #   make sta-soc                   Tempus on syn/out_soc: setup, hold, recovery, removal (STA-03)
 #                                  SPEF=<file> NETLIST=<file> for the routed design (STA-05)
 #   make sta-soc-nangate           AT HOME: Yosys + OpenSTA with Nangate45 and soc.sdc, trends

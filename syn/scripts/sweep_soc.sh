@@ -2,7 +2,8 @@
 # sweep_soc.sh - runs synth_soc.tcl at several clock periods to find F_max of soc_top (STA-03,
 # server only). Called by make synth-soc-sweep, same idea as sweep_core.sh for rv32_core.
 #
-#   PERIODS="20 18 16 15 14"   periods in ns (default). 20 ns gave +2.18 ns slack on 29/10
+#   PERIODS="6 5.5 5 4.5"      periods in ns (default), around the F_max found on 30-31/10
+#                              (5 ns met, 4 ns failed, docs/sta_results.md section 4)
 #   CG                         passed to synth_soc.tcl as in make synth-soc
 #
 # Each run goes to syn/out_soc_sweep/p<period>/ (Genus log in syn/run_soc_sweep/p<period>/).
@@ -12,7 +13,7 @@ set -u
 
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$REPO" || exit 1
-PERIODS=${PERIODS:-20 18 16 15 14}
+PERIODS=${PERIODS:-6 5.5 5 4.5}
 SWEEP_OUT=syn/out_soc_sweep
 SWEEP_RUN=syn/run_soc_sweep
 

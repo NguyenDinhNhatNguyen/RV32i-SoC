@@ -468,7 +468,7 @@ Lịch sử số liệu (cùng flow, khác phiên bản, không so trực tiếp
 
 Điền bằng `scripts/ppa_table.py` từ report trong `appendix/` (STA-04). Mọi ô [CHỜ GENUS] là số chưa có.
 
-Đã có từ lần Genus `soc_top` của Phát ngày 29/10: đường găng dài 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là đường so sánh nhánh rồi chuyển hướng PC. Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ ngày 30/10 (`docs/sta_results.md` mục 4) cho thấy Genus vẫn đạt setup tới 6 ns (khoảng 167 MHz). Ở 8 ns, đường găng chuyển sang bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây. Số này là của cả SoC sau tổng hợp, chưa phải số của lõi đứng riêng hay sau route, nên chưa điền vào bảng.
+Đã có từ lần Genus `soc_top` của Phát ngày 29/10: đường găng dài 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở chu kỳ 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`). Đây là đường so sánh nhánh rồi chuyển hướng PC. Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ 30–31/10 (`docs/sta_results.md` mục 4) cho F_max sau tổng hợp khoảng 200 MHz: 5 ns đạt, 4 ns thiếu 0,69 ns. Đường găng vẫn từ macro qua so sánh nhánh tới `if_pc_q`, riêng ở 8 ns là bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây. Số này là của cả SoC sau tổng hợp, chưa phải số của lõi đứng riêng hay sau route, nên chưa điền vào bảng.
 
 | Chỉ số | ENABLE_M=0 | ENABLE_M=1 |
 | --- | --- | --- |

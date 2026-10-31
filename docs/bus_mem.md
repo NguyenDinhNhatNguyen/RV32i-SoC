@@ -70,13 +70,13 @@ Cầu trả err mà không tạo giao dịch APB khi: địa chỉ không thuộ
 - Mặc định phương án C (spec SoC mục 7.2): IMEM 16 KB, DMEM 16 KB, mỗi vùng 4 macro. Đổi bằng `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong `soc_map.vh` (0 = 1 macro 4 KB, 1 = 8 KB, 2 = 16 KB). Nhớ sửa `fw/common/link.ld` và `tb/core/core_tb_map.vh` cho khớp.
 - Bit địa chỉ cao chọn macro. Chỉ macro được chọn có `CEN = 0`, các macro khác tắt để tiết kiệm công suất. Mux chọn Q dùng bit chọn đã chốt ở chu kỳ đọc.
 - SB/SH: đọc-sửa-ghi trong 2 chu kỳ (spec SoC mục 7.3). Đọc và SW vẫn 1 chu kỳ.
-- `rsp_rdata = 0` với lệnh ghi, vì Q của macro sau chu kỳ ghi chưa biết.
+- `rsp_rdata = 0` với lệnh ghi, vì sau chu kỳ ghi Q của macro giữ giá trị cũ chứ không phải dữ liệu vừa ghi (mục 6).
 - IMEM: bus được ưu tiên hơn lấy lệnh, IF dừng 1 chu kỳ. Lấy lệnh ở boot ROM không bị bus chặn.
 - Boot ROM 1 KB ở 0x0001_0000, reset vector mặc định của core (spec SoC mục 7.1). Nội dung là bootloader UART của Nhân (`fw/boot/boot.S`), sinh vào `boot_rom_init.vh` bằng `scripts/gen_boot_rom.py` (`make boot-gen`), giữ định dạng `8'hNN: word = 32'hXXXXXXXX;`. Chân `gpio_i[0] = 0` thì nhảy thẳng về IMEM, bằng 1 thì nạp chương trình qua UART (`docs/boot.md`).
 
 ### 4.3 Các điểm spec SoC mục 7 mà RTL đang theo
 
-RTL làm theo đề xuất của mục 7. Nhóm chưa chốt nên phần nào đổi được đều là tham số.
+Nhóm đã chốt cả 5 điểm ngày 25/10 (SP-01), đúng như RTL. Bảng dưới ghi chỗ cần đổi nếu sau này chọn khác.
 
 | Điểm | RTL hiện tại | Đổi thế nào nếu nhóm chọn khác |
 | --- | --- | --- |

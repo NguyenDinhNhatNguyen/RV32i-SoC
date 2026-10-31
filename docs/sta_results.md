@@ -1,100 +1,90 @@
 # Kết quả STA của SoC
 
-Bảng tóm tắt các lần chạy STA của `soc_top`, mỗi lần một dòng, để dễ so sánh và theo dõi việc đóng timing (STA-01 đến STA-06). Chỉ ghi con số và đường dẫn tới report gốc. Giải thích SDC ở `docs/soc_top.md` mục 4.7, report gốc của server ở `appendix/`.
+Bảng tóm tắt các lần chạy STA của `soc_top` (STA-01 đến STA-06). Chỉ ghi con số và đường dẫn tới report gốc trong `appendix/`. Giải thích SDC ở `docs/soc_top.md` mục 4.7.
 
-Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho report. Số liệu ở nhà (Nangate45, Yosys, OpenSTA) chỉ để xem xu hướng, không đưa vào report.
+Số liệu ở trường (GPDK45, Genus, Tempus) là số chính thức cho report. Số liệu ở nhà (Nangate45, Yosys, OpenSTA) chỉ để xem xu hướng.
 
 ## Cách ghi
 
-- Slack tính bằng ns. WNS là slack xấu nhất, TNS là tổng các slack âm (0 khi không có vi phạm).
-- Setup và hold là nhóm `clk` (đường từ flop, cổng vào tới flop, cổng ra). Recovery và removal là nhóm đường reset bất đồng bộ.
-- Unconstrained là số endpoint thiếu ràng buộc. Tiêu chí của Lab là 0.
-- Diện tích là cell chuẩn, chưa tính 8 macro SRAM, tính bằng µm².
-- Thêm dòng mới ở cuối bảng, không sửa dòng cũ. Kết quả sai thì ghi thêm dòng mới và giải thích ở cột Ghi chú.
+- Slack tính bằng ns. WNS là slack xấu nhất, TNS là tổng các slack âm.
+- Setup và hold là nhóm `clk`. Recovery và removal là nhóm đường reset bất đồng bộ.
+- Diện tích là cell chuẩn, chưa tính 8 macro SRAM (64 000 µm²), trừ khi ghi rõ.
+- Mỗi lần chạy có giữ report một dòng, thêm ở cuối bảng.
 
 ## 1. Ở trường (chính thức)
 
-| Ngày | Bước | Tool, thư viện, corner | Netlist | SDC, chu kỳ | Setup WNS / TNS | Hold WNS / TNS | Recovery WNS | Removal WNS | Unconstrained | Diện tích | Report gốc | Ghi chú |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 29/10 | Genus `soc_top` (chạy sớm cho PD-02, PD-03) | Genus 21.10-p002_1, slow 0,9 V 125 °C, macro typical | `make synth-soc`, CG=1, `ENABLE_DMA = 0`, BTB 8 entry | `soc.sdc`, 20 ns | +2,179 / 0 | Chưa kiểm | Chưa kiểm | Chưa kiểm | 0 | 52 757 (116 757 gồm 8 macro) | `appendix/synth_soc/` | Xem dưới bảng |
-| 30/10 | Tempus trên netlist Genus 20 ns (chạy lại, giống 29/10) | Tempus 23.14, slow cho setup và recovery, fast cho hold và removal, macro typical | `make synth-soc`, 3574 flop | `soc.sdc`, 20 ns | +2,192 / 0 | -0,148 | -23,567 | +6,765 | 0 (Genus) | 52 757 | Không giữ report (đã ghi đè bằng lần chạy sau) | Xem dưới bảng |
-| 30/10 | Genus giữ flop cho LEC, rồi Tempus | Genus 21.10-p002_1 và Tempus 23.14, corner như trên | `make synth-soc` sau commit giữ flop, 3663 flop, 115 ICG | `soc.sdc`, 20 ns | Genus +2,040, Tempus +2,071 / 0 | -0,147 / -43,291 (1080 đường) | -25,261 / -46 972 (3512 đường) | +7,022 | 0 (Genus) | 53 408 (117 408 gồm 8 macro) | `appendix/synth_soc_keepflop/`, `appendix/sta_soc/` | Xem dưới bảng |
-| 31/10 | Genus có `set_max_transition`, `set_max_fanout`, rồi Tempus | Genus 21.10-p002_1 và Tempus 23.14, corner như trên | `make synth-soc`, 3663 flop, 115 ICG, 17 825 cell | `soc.sdc` (mục 7), 20 ns | Genus +2,193, Tempus +2,239 / 0 | -0,147 | -25,248 | +7,099 | 0 (Genus) | 53 567 (117 567 gồm 8 macro) | Không giữ report | Các net fanout lớn khác được buffer (thêm 173 cell). `rst_n_sync` vẫn lái 3162 chân vì Genus coi chân reset bất đồng bộ là ideal (`ideal_seq_async_pins`). `synth_soc.tcl` đặt thuộc tính này về `false` từ 31/10 |
+Chung cho mọi dòng: Genus 21.10, Tempus 23.14, cell chuẩn corner slow 0,9 V 125 °C cho setup và recovery, fast cho hold và removal. `sram_2k_macro.lib` chỉ có corner typical nên đường qua macro hơi lạc quan. Chu kỳ 20 ns, `ENABLE_DMA = 0`, BTB 8 entry. Unconstrained bằng 0 ở mọi lần.
 
-Ghi chú lần chạy 29/10 (`soc_top`):
-- Đạt: 8 macro, 0 scan flop, 0 latch, 3574 flop, 112 ICG, 0 unresolved, 0 assign sau tổng hợp. `design_rules.rpt` không báo vi phạm max transition hay max capacitance. Đính chính 30/10: điều này không có nghĩa mạng reset đã được buffer. Netlist có `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` tới khoảng 3125 chân, không có buffer nào, và Tempus báo recovery −23,567 ns trên mạng này. Đã thêm `set_max_transition` và `set_max_fanout` vào `soc.sdc` ngày 30/10, chờ chạy lại Genus và Tempus.
-- Đường găng: từ CLK của macro IMEM qua bộ cộng của ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, dài 17,57 ns. Đúng đường dự đoán ở `docs/spec/core.md` mục 4.5 và `docs/timing_core.md`.
-- `sram_2k_macro.lib` chỉ có corner typical (1,0 V, 25 °C), còn cell chuẩn ở corner slow (0,9 V, 125 °C). Đường qua macro vì vậy hơi lạc quan.
-- Timing của macro theo `.lib` (không đổi theo slew): CLK→Q 1,20 ns (slew ra 0,10 ns), setup `CEN` và `WEN` 0,40 ns, `A` 0,35 ns, `D` 0,30 ns, hold mọi chân vào 0,20 ns, độ rộng xung CLK tối thiểu 0,45 ns, slew vào tối đa 0,25 ns.
-- Lint timing chỉ báo 1 mục: false path từ `rst_n` "no effect", vì Genus không tính đường vào chân reset bất đồng bộ. Exception vẫn giữ cho Tempus và Innovus.
-- Genus không kiểm hold, recovery và removal. Ba số này lấy bằng Tempus ở STA-03.
+| Ngày | Netlist | Flop / ICG | Setup | Hold WNS (số đường) | Recovery | Removal | Diện tích | Report gốc |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 29/10 | Genus đầu tiên | 3574 / 112 | +2,179 | Chưa kiểm | Chưa kiểm | Chưa kiểm | 52 757 | `appendix/synth_soc/` |
+| 30/10 | Giữ flop cho LEC | 3663 / 115 | +2,071 | -0,147 (1080) | -25,261 | +7,022 | 53 408 | `appendix/synth_soc_keepflop/`, `appendix/sta_soc/` |
+| 31/10 | Mạng reset có buffer, cấm `CLKBUFX2`, giao cho PnR | 3663 / 115 | +2,392 | -0,147 (1081) | +18,292 | +0,006 | 53 889 | `appendix/synth_soc_reset/`, `appendix/sta_soc_reset/` |
 
-Ghi chú lần chạy 30/10 (Tempus, STA-03):
-- Setup: đường găng giống Genus (macro IMEM → ALU → `u_core.if_pc_q_reg[31]`), Tempus và Genus chênh dưới 0,03 ns.
-- Recovery vi phạm ở gần như mọi chân reset (3512 trên 3518). `u_rst_sync_q_reg` (DFFRHQX1) lái thẳng net `rst_n_sync` mà không có buffer, CK→Q khoảng 23 ns. Genus không chèn buffer cho mạng này vì SDC chưa có giới hạn transition và fanout. Đã thêm `set_max_transition 0.5` và `set_max_fanout 32` vào `soc.sdc` (30/10). OpenSTA ở nhà xác nhận giới hạn mới bắt đúng net này (fanout 3428, vượt 32). Lần chạy 31/10 cho thấy cần thêm `ideal_seq_async_pins false` (xem dòng 31/10). Removal dương chỉ vì reset đến rất trễ, phải kiểm lại sau khi sửa.
-- Hold vi phạm 1080 đường, xấu nhất -0,147 ns ở chân `CEN` của macro IMEM (từ `u_core.if_pc_q_reg`). Trước CTS clock còn lý tưởng nên đây là chuyện thường gặp, Innovus phải sửa hold sau CTS (PD-06, kiểm lại ở STA-05).
-- Giữ flop (D-042, như `synth_core.tcl`): thêm 89 flop và 3 ICG, diện tích +0,56%, setup giảm 0,14 ns. Netlist này là bản Phúc dùng cho LEC và Nguyên dùng cho PnR tới.
-- Tempus `check_timing` báo 242 endpoint unconstrained, mỗi chân đếm 2 lần (view setup và hold), đều vô hại: chân `SE` của 115 cell clock gating (nối cố định vì không có scan), chân `RN` của 2 flop `reset_sync` (false path `rst_n`) và của 4 flop hằng được giữ lại (`wb_cause_q`, `rr_q`, `hold_mst_q`, `apb_slot_q`). 6 flop này cũng là 6 điểm "không kiểm" trong coverage. 70 cổng không có driving cell vì SDC dùng `set_input_transition`.
-- Trước layout chưa có SPEF nên Tempus không tính delay dây.
+Setup ở dòng 29/10 là số của Genus, hai dòng sau là số của Tempus. Genus và Tempus chênh dưới 0,04 ns.
+
+Ghi chú:
+- Đường găng setup: từ CLK của macro IMEM qua bộ cộng ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, đúng như dự đoán ở `docs/spec/core.md` mục 4.5.
+- Mạng reset: Genus mặc định coi chân set/reset bất đồng bộ là ideal (`ideal_seq_async_pins`), nên ở lần 29/10 và 30/10 flop `u_rst_sync_q_reg` lái thẳng khoảng 3500 chân, recovery âm khoảng 25 ns. Từ 31/10, `soc.sdc` có `set_max_transition 0.5`, `set_max_fanout 32` và `synth_soc.tcl` đặt `ideal_seq_async_pins false`. Flop chỉ còn lái 7 cell đảo đầu cây buffer.
+- Removal 31/10 chỉ dư 6 ps (chân `RN` của `u_imem.rom_sel_q_reg`). Phải kiểm lại sau CTS và sau route (STA-05).
+- Hold vi phạm ở chân `CEN` của macro IMEM và các cặp flop nối thẳng, vì trước CTS clock còn lý tưởng. Innovus sửa bằng `optDesign -postCTS -hold`.
+- Giữ flop (như `synth_core.tcl`, D-042) thêm 89 flop, diện tích +0,56%.
+- Tempus báo 242 endpoint unconstrained, đều vô hại: chân `SE` của cell clock gating (nối cố định vì không có scan) và chân `RN` của 6 flop (2 flop `reset_sync` do false path `rst_n`, 4 flop hằng được giữ lại). Mỗi chân đếm 2 lần (view setup và hold).
+- Genus lint chỉ báo false path từ `rst_n` "no effect", vì Genus không tính đường vào chân reset bất đồng bộ. Exception vẫn có tác dụng trong Tempus.
 
 ## 2. Ở nhà (chỉ xem xu hướng)
 
-| Ngày | Bước | Tool, thư viện | Netlist | SDC, chu kỳ | Setup WNS / TNS | Hold WNS / TNS | Recovery WNS | Removal WNS / TNS | Unconstrained | Diện tích | Ghi chú |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 26/10 | STA-01 | OpenSTA 3.1, Nangate45 typical | Yosys 0.70 (`syn/yosys/synth_nangate.tcl`), macro SRAM hộp đen, `ENABLE_DMA = 0` | `soc.sdc`, 20 ns | +14,994 / 0 | +0,004 / 0 | +4,909 | -2,561 / -7 465 | 0 | 51 955 | Xem dưới bảng |
-| 29/10 | Chuẩn bị STA-03 (`make sta-soc-nangate`) | OpenSTA 3.1, Nangate45 typical | Yosys 0.70 (`syn/yosys/synth_nangate.tcl`), macro SRAM hộp đen, `ENABLE_DMA = 0`, BTB 8 entry | `soc.sdc`, 20 ns | +14,994 / 0 | +0,004 / 0 | +2,279 | -2,983 / -10 221 | 0 | 56 719 | Diện tích tăng 4 764 µm² so với 26/10 do BTB 8 entry (bật mặc định từ 27/10). Mạng reset chưa buffer nay lái 3428 chân nên recovery giảm, removal âm hơn, cùng nguyên nhân như 26/10. Đường setup xấu nhất là `gpio_i` → flop vì đường qua macro không được tính |
+OpenSTA 3.1 với Nangate45 typical, netlist Yosys (`make sta-soc-nangate`), macro SRAM là hộp đen nên đường qua macro không được tính. Chu kỳ 20 ns.
 
-Ghi chú lần chạy 26/10 (STA-01):
-- Mục đích là kiểm `soc.sdc`: OpenSTA đọc không lỗi, `check_setup -verbose` không báo gì. Nhóm `clk` có 3127 endpoint, nhóm reset có 2917 endpoint.
-- Removal âm ở cả 2917 chân reset là do netlist ở nhà, không phải do SDC. Một flop của `reset_sync` lái thẳng 2917 chân reset, Yosys không chèn buffer nên slew lên 11,75 ns và thời gian removal bị ngoại suy thành 14,9 ns. Dự đoán "Genus sẽ chèn buffer" là sai (xem ghi chú lần chạy 29/10 ở mục 1). Innovus thì có chèn buffer khi PnR.
-- Setup tốt vì đường qua macro SRAM chưa được tính (ở nhà macro không có `.lib`). Đây lại là các đường găng dự kiến (`docs/spec/core.md` mục 4.5), nên số setup ở nhà lạc quan hơn thật.
-- Tổng hợp mất khoảng 11 phút. Lần này làm tay. Từ STA-03 chạy bằng `make sta-soc-nangate STA_PERIOD=<ns>` (`syn/yosys/sta_soc_nangate.tcl`).
+| Ngày | Netlist | Setup | Hold | Recovery | Removal | Diện tích |
+| --- | --- | --- | --- | --- | --- | --- |
+| 26/10 | Kiểm `soc.sdc` (STA-01) | +14,994 | +0,004 | +4,909 | -2,561 | 51 955 |
+| 29/10 | BTB 8 entry | +14,994 | +0,004 | +2,279 | -2,983 | 56 719 |
+
+Removal âm vì Yosys không buffer mạng reset (cùng nguyên nhân như mục 1). Setup tốt vì đường găng qua macro không được tính.
 
 ## 3. Tổng hợp từng khối trên Genus (STA-02, ở trường)
 
-Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), cách chạy ở `docs/flow_notes.md` mục 2. Mỗi khối một dòng, lấy số từ `syn/out_blocks/<khối>/reports/` và `summary.txt`. Diện tích của `imem_port`, `sram_wrap` gồm cả macro SRAM. Lõi `rv32_core` dùng flow riêng của Nhân (`make synth-core`, `docs/genus_core.md`), không ghi ở bảng này.
+Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), clock gating bật, chu kỳ 20 ns. Lõi `rv32_core` dùng flow riêng của Nhân (`make synth-core`, `docs/genus_core.md`). Diện tích của `imem_port`, `sram_wrap` gồm cả macro.
 
-| Ngày | Khối | Clock gating | Diện tích (µm²) | Flop | Scan flop | ICG | Latch | Setup WNS (ns) | Unconstrained | Report gốc | Ghi chú |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 29/10 | `sys_bus` | Có | 585,2 | 3 | 0 | 0 | 0 | +9,562 | 0 | `appendix/synth_blocks/sys_bus/` |  |
-| 29/10 | `apb_bridge` | Có | 1 435,0 | 94 | 0 | 4 | 0 | +13,713 | 0 | `appendix/synth_blocks/apb_bridge/` |  |
-| 29/10 | `dma_apb` | Có | 2 318,8 | 191 | 0 | 7 | 0 | +9,524 | 0 | `appendix/synth_blocks/dma_apb/` | Trong `soc_top` đang tắt (`ENABLE_DMA = 0`) |
-| 29/10 | `imem_port` | Có | 33 649,8 | 38 | 0 | 1 | 0 | +10,044 | 0 | `appendix/synth_blocks/imem_port/` | Gồm 4 macro (32 000), logic 1 649,8 |
-| 29/10 | `sram_wrap` | Có | 32 725,5 | 5 | 0 | 0 | 0 | +10,556 | 0 | `appendix/synth_blocks/sram_wrap/` | Gồm 4 macro (32 000), logic 725,5 |
-| 29/10 | `timer_apb` | Có | 2 110,1 | 130 | 0 | 3 | 0 | +9,728 | 0 | `appendix/synth_blocks/timer_apb/` |  |
-| 29/10 | `uart_apb` | Có | 2 165,9 | 223 | 0 | 28 | 0 | +9,321 | 0 | `appendix/synth_blocks/uart_apb/` |  |
-| 29/10 | `gpio_apb` | Có | 1 293,1 | 128 | 0 | 2 | 0 | +9,968 | 0 | `appendix/synth_blocks/gpio_apb/` |  |
-| 29/10 | `irqc_apb` | Có | 105,0 | 6 | 0 | 1 | 0 | +10,125 | 0 | `appendix/synth_blocks/irqc_apb/` |  |
-| 29/10 | `accel_apb` | Có | 15 283,3 | 792 | 0 | 14 | 0 | +9,209 | 0 | `appendix/synth_blocks/accel_apb/` |  |
+| Ngày | Khối | Diện tích (µm²) | Flop | ICG | Setup WNS (ns) | Ghi chú |
+| --- | --- | --- | --- | --- | --- | --- |
+| 29/10 | `sys_bus` | 585,2 | 3 | 0 | +9,562 | |
+| 29/10 | `apb_bridge` | 1 435,0 | 94 | 4 | +13,713 | |
+| 29/10 | `dma_apb` | 2 318,8 | 191 | 7 | +9,524 | Trong `soc_top` đang tắt |
+| 29/10 | `imem_port` | 33 649,8 | 38 | 1 | +10,044 | 4 macro, logic 1 649,8 |
+| 29/10 | `sram_wrap` | 32 725,5 | 5 | 0 | +10,556 | 4 macro, logic 725,5 |
+| 29/10 | `timer_apb` | 2 110,1 | 130 | 3 | +9,728 | |
+| 29/10 | `uart_apb` | 2 165,9 | 223 | 28 | +9,321 | |
+| 29/10 | `gpio_apb` | 1 293,1 | 128 | 2 | +9,968 | |
+| 29/10 | `irqc_apb` | 105,0 | 6 | 1 | +10,125 | |
+| 29/10 | `accel_apb` | 15 283,3 | 792 | 14 | +9,209 | |
+| 29/10 | `sram_wrap1` | 8 298,6 | 3 | 0 | +10,556 | 1 macro, để luyện flow macro |
 
-| 29/10 | `sram_wrap1` | Có | 8 298,6 | 3 | 0 | 0 | 0 | +10,556 | 0 | `appendix/synth_blocks/sram_wrap1/` | `sram_wrap` với 1 macro (`BANK_W = 0`), để luyện flow macro. Logic 298,6 |
-
-Tiêu chí: Scan flop = 0, Latch = 0, Unconstrained = 0, Setup WNS >= 0 ở 20 ns.
-
-Ghi chú lần chạy 29/10 (STA-02): cả 10 khối đạt tiêu chí. Lint timing của mỗi khối báo 2 mục không ảnh hưởng timing: false path từ cổng reset "no effect" (như `soc_top`), và cổng reset thiếu driving cell (SDC sinh ra chỉ gán cho các cổng vào khác). Mục thứ hai đã sửa trong `synth_block.tcl` sau lần chạy này.
-
-Lần chạy đầu điền vào các dòng có sẵn. Các lần sau (ví dụ chạy lại sau khi sửa RTL) thêm dòng mới ở cuối bảng.
-
-Chạy lại 30/10 (sau khi thêm driving cell cho cổng reset, chưa có giữ flop): số liệu 10 khối giống hệt bảng trên, lint timing không còn báo cổng thiếu driver. Report trong `appendix/synth_blocks/` là của lần chạy này. `sram_wrap1` không chạy lại.
+Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
 
 ## 4. Quét chu kỳ trên Genus (STA-03, ở trường)
 
-Chạy bằng `make synth-soc-sweep` ngày 30/10, netlist trước khi có giữ flop. Dòng 20 ns lấy từ lần chạy 29/10. F_max = 1 / (chu kỳ - WNS), chỉ là setup sau tổng hợp: chưa có delay dây, skew clock, và macro dùng `.lib` typical. Report ở `appendix/synth_soc_sweep/p<chu kỳ>/`.
+`make synth-soc-sweep`. Đây là setup sau tổng hợp: chưa có delay dây, skew clock, macro dùng `.lib` typical. Report ở `appendix/synth_soc_sweep/p<chu kỳ>/`.
 
-| Chu kỳ (ns) | Tần số (MHz) | WNS | Diện tích (µm²) | Flop | Đường găng |
-| --- | --- | --- | --- | --- | --- |
-| 20 | 50 | +2,179 ns | 116 757 | 3574 | Macro IMEM → ALU → `if_pc_q` |
-| 18 | 56 | +0,632 ns | 116 738 | 3574 | |
-| 16 | 63 | +0,273 ns | 116 758 | 3574 | |
-| 14 | 71 | +0,027 ns | 116 877 | 3574 | |
-| 13 | 77 | +3,5 ps | 117 044 | 3571 | |
-| 12 | 83 | +1,9 ps | 117 164 | 3572 | |
-| 11 | 91 | +0,5 ps | 117 317 | 3572 | |
-| 10 | 100 | +6,3 ps | 117 293 | 3572 | |
-| 8 | 125 | +0,2 ps | 118 560 | 3574 | Macro IMEM → bộ nhân `u_muldiv.p_hi_q` |
-| 6 | 167 | +0,3 ps | 119 789 | 3575 | Macro IMEM → `if_pc_q` |
+| Chu kỳ (ns) | Tần số (MHz) | WNS | Diện tích gồm macro (µm²) | Đường găng |
+| --- | --- | --- | --- | --- |
+| 20 | 50 | +2,179 ns | 116 757 | IMEM → ALU → `if_pc_q` |
+| 18 | 56 | +0,632 ns | 116 738 | |
+| 16 | 63 | +0,273 ns | 116 758 | |
+| 14 | 71 | +0,027 ns | 116 877 | |
+| 13 | 77 | +3,5 ps | 117 044 | |
+| 12 | 83 | +1,9 ps | 117 164 | |
+| 11 | 91 | +0,5 ps | 117 317 | |
+| 10 | 100 | +6,3 ps | 117 293 | |
+| 8 | 125 | +0,2 ps | 118 560 | IMEM → bộ nhân `u_muldiv` |
+| 6 | 167 | +0,3 ps | 119 789 | IMEM → `if_pc_q` |
+| 5 | 200 | 0 (0 đường vi phạm) | 124 406 | DMEM → `if_pc_q` |
+| 4 | 250 | -0,693 ns | 130 738 | IMEM → `if_pc_q` |
 
-Ghi chú lần quét 30/10:
-- Genus đạt setup ở mọi chu kỳ tới 6 ns, giới hạn sau tổng hợp nằm dưới 6 ns. Từ 14 ns trở xuống WNS luôn sát 0 vì Genus chỉ tối ưu vừa đủ.
-- Diện tích tăng 2,6% ở 6 ns so với 20 ns.
-- Chưa chốt tần số. Cần sửa mạng reset (recovery), chạy Tempus ở chu kỳ chọn, và quét lại sau review 8/11 (BTB, `ENABLE_DMA`, SPI và PWM).
+Từ 20 tới 6 ns là netlist 29–30/10 (trước khi giữ flop). 5 và 4 ns là netlist cuối 31/10.
+
+Kết luận:
+- **F_max sau tổng hợp khoảng 200 MHz.** Đường găng luôn nằm trong lõi, từ macro qua so sánh nhánh tới `if_pc_q`.
+- Diện tích tăng chậm tới 10 ns (+0,46%), rồi tăng nhanh: +5,5% ở 5 ns, +10,9% ở 4 ns. Tần số chốt ở STA-04 nên để dư nhiều so với 200 MHz.
+- Còn lại: quét lại trên RTL đã freeze sau review 8/11 (BTB, `ENABLE_DMA`, SPI và PWM), chạy Tempus ở chu kỳ chọn.

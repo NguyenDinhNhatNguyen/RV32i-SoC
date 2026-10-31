@@ -51,8 +51,9 @@ set_input_delay -clock clk 0.0 [get_ports rst_n]
 
 # 7. Design rules (30/10). Without these limits Genus left rst_n_sync, driven by one X1 flop
 # of reset_sync, unbuffered on about 3500 reset pins: CK->Q about 23 ns and recovery -25 ns in
-# Tempus (docs/sta_results.md). With a limit Genus has to build a buffer tree for every high
-# fanout net, the reset net included. 0.5 ns is well below the period and above the 0.15 ns
+# Tempus (docs/sta_results.md). With a limit Genus buffers every high fanout net. The reset
+# net also needs ideal_seq_async_pins false in synth_soc.tcl (31/10), otherwise Genus treats
+# async reset pins as ideal and skips it. 0.5 ns is well below the period and above the 0.15 ns
 # clock target used by CTS. Innovus and Tempus check the same limits.
 set_max_transition 0.5 [current_design]
 set_max_fanout     32  [current_design]

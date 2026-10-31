@@ -7,9 +7,9 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 | # | Vấn đề | Trạng thái | Đã làm hoặc còn lại |
 | --- | --- | --- | --- |
 | 1 | GDS, SPEF và netlist sau PnR của `soc_top` bị đưa lên repo công khai (commit 29/10) | Xong 31/10 | Đã xoá khỏi repo và khỏi lịch sử Git. `.gitignore` chặn các file này ở mọi thư mục kể cả `appendix/`. Xem mục 2 |
-| 2 | Netlist `soc_top` đã đổi sau lần PnR 29/10 (bản giữ flop cho LEC, sắp có bản buffer mạng reset) | Chờ server | Phát chạy lại `make synth-soc`, rồi `make pnr-soc` với netlist mới |
+| 2 | Netlist `soc_top` đã đổi sau lần PnR 29/10 (bản giữ flop cho LEC, sắp có bản buffer mạng reset) | Chờ server | Phát đã chạy lại `make synth-soc` ngày 31/10: giữ flop, mạng reset có buffer, 0 `CLKBUFX2` (`docs/sta_results.md` mục 1). Còn `make pnr-soc` với netlist này |
 | 3 | `run_all.tcl` chưa gọi `soc_floorplan.tcl`, macro do Innovus tự đặt | Xong 31/10 | `make pnr-soc` chạy `run_all.tcl` với `TOP=soc_top` và gọi `soc_floorplan.tcl` |
-| 4 | 1220 cell `CLKBUFX2` trong netlist PnR | Xong 31/10 | `CLKBUFX2` bị cấm ngay sau `init_design`, trước mọi bước tối ưu. Còn 11 cell từ Genus: Phát thêm `CLKBUFX2` vào danh sách cấm của `synth_soc.tcl` thì hết hẳn |
+| 4 | 1220 cell `CLKBUFX2` trong netlist PnR | Xong 31/10 | `CLKBUFX2` bị cấm ngay sau `init_design`, trước mọi bước tối ưu. 11 cell còn lại từ Genus đã hết từ 31/10, vì `CLKBUFX2` có trong `DONT_USE_CELLS` của `config.tcl` |
 | 5 | `run_all.tcl` bị đổi cứng sang `soc_top`, `make pnr-accel` hỏng | Xong 31/10 | Chọn khối bằng biến `TOP`. `make pnr-accel` dùng `TOP=accel_wrapper` như cũ |
 | 6 | Hold trước CTS: 1080 đường vi phạm, xấu nhất −0,147 ns ở chân CEN của macro IMEM | Chờ server | Trước CTS clock còn lý tưởng nên hold chưa có ý nghĩa. `run_all.tcl` đã có `optDesign -postCTS -hold` và `optDesign -postRoute -setup -hold`. Lần chạy tới kiểm `postcts_hold` và `postroute_hold` phải WNS ≥ 0 |
 | 7 | Chưa có report timing, DRC của `soc_top` trong repo. Ảnh layout có 5 dấu X trắng | Chờ server | `make save-pnr-soc` chép report văn bản vào `appendix/pnr_soc/` (bỏ qua netlist, SPEF, GDS). Mở `DBS/route.enc`, xem Violation Browser để biết 5 dấu X là gì |
@@ -39,7 +39,7 @@ Không push từ bản clone cũ chưa reset, vì như vậy GDS sẽ quay lại
 
 ## 3. Việc cho buổi lên trường tới
 
-1. Phát: `make synth-soc` (bản giữ flop, có buffer mạng reset). Nên thêm `CLKBUFX2` vào danh sách cấm của Genus.
+1. Phát: `make synth-soc` (bản giữ flop, có buffer mạng reset, cấm `CLKBUFX2`). Đã xong 31/10, netlist ở `syn/out_soc/` trên server.
 2. Nguyên: `make pnr-soc`. Cuối lệnh in `pnr/out_soc/reports/pd_checks.rpt`, kiểm:
    - `BUFX2 instances: 0` và `CLKBUFX2 instances: 0`.
    - 8 dòng `Macro ...`: 4 IMEM ở hàng trên, 4 DMEM ở hàng dưới, đúng hướng in trong log (`grep PD-02 pnr/run_soc/innovus.log`).

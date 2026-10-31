@@ -135,14 +135,7 @@ Xem recovery và removal:
 - Tempus, Innovus: `report_timing -check_type recovery` và `-check_type removal`.
 - OpenSTA: `report_checks -path_group asynchronous` (OpenSTA 3.1 bật sẵn kiểm này).
 
-Kiểm thử ở nhà (26/10). Tổng hợp `soc_top` bằng flow Nangate45 của Nhân (`syn/yosys/synth_nangate.tcl`, macro SRAM để hộp đen, khoảng 11 phút), rồi chạy OpenSTA với `soc.sdc`:
-- OpenSTA đọc `soc.sdc` không lỗi. `check_setup -verbose` không báo gì: không còn cổng thiếu delay, không có endpoint thiếu ràng buộc.
-- Recovery và removal được kiểm trên 2917 chân reset (nhóm `asynchronous`). Recovery đạt, slack 4,91 ns.
-- Removal báo âm (-2,56 ns). Đây là do netlist ở nhà, không phải do SDC: Yosys không chèn buffer cho mạng `rst_n_sync`, một flop lái thẳng 2917 chân nên slew lên 11,75 ns và thư viện ngoại suy thời gian removal thành 14,9 ns. Dự đoán ban đầu là Genus sẽ chèn buffer, nhưng lần chạy ở trường cho thấy Genus không chèn (xem lưu ý ngay dưới). Innovus thì có dựng cây buffer khi PnR. Kết quả chính thức lấy từ Genus và Tempus (STA-02, STA-05).
-- Setup và hold của nhóm `clk` đều đạt ở 20 ns. Đường qua macro SRAM chưa được tính vì ở nhà macro không có `.lib`.
-- Số liệu Nangate45 chỉ để xem xu hướng, không dùng cho report.
-
-Lưu ý cho STA-02 và PD: mạng `rst_n_sync` có fanout khoảng 2900. Cần xem `report_timing -check_type recovery/removal` và max transition của mạng này sau Genus và sau CTS. Đính chính 30/10: `design_rules.rpt` của Genus (29/10) không báo vi phạm, nhưng netlist vẫn để `u_rst_sync_q_reg` lái thẳng khoảng 3125 chân. Tempus trước layout báo recovery −23,567 ns (CK→Q 22,98 ns). Ngày 30/10 thêm `set_max_transition 0.5` và `set_max_fanout 32` vào `soc.sdc` (mục 7 của file). Lần chạy 31/10 cho thấy chưa đủ: Genus buffer các net khác nhưng vẫn để `rst_n_sync` lái 3162 chân, vì mặc định nó coi chân set/reset bất đồng bộ là ideal (thuộc tính `ideal_seq_async_pins` của design). Từ 31/10 `synth_soc.tcl` đặt thuộc tính này về `false`. Chờ chạy lại Genus và Tempus ở trường để kiểm recovery và removal.
+Kết quả kiểm SDC (OpenSTA ở nhà 26/10, Genus và Tempus ở trường 29–31/10) ghi ở `docs/sta_results.md`. Tóm tắt: 0 endpoint thiếu ràng buộc. Mạng reset `rst_n_sync` (fanout khoảng 3500) chỉ được Genus buffer khi có `set_max_fanout` trong SDC và `ideal_seq_async_pins false` trong `synth_soc.tcl` (31/10). Khi đó recovery +18,3 ns, removal +0,006 ns. Removal rất sát, phải kiểm lại sau CTS.
 
 ## 5. Kiểm chứng ở nhà
 
@@ -188,5 +181,5 @@ Kết quả ngày 26/10 (sau khi thêm DMA). `fw-soc` dựng M0W0 với `ENABLE_
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - Bật `ENABLE_DMA` mặc định hay không: nhóm quyết ở review 8/11 (Tầng 2).
-- Genus `soc_top` đạt ngày 29/10 (`docs/sta_results.md` mục 1). Còn recovery và removal của mạng reset, kiểm bằng Tempus (STA-03).
+- Removal của mạng reset chỉ dư 6 ps trước layout (31/10, `docs/sta_results.md` mục 1). Kiểm lại sau CTS và sau route (STA-05).
 - Trên server: GLS với `sram_2k_macro.v` thật.

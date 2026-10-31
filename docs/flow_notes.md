@@ -56,7 +56,7 @@ make synth-block B=sram_wrap1                    # sram_wrap với 1 macro, đ�
 | Giữ flop | Tắt gộp flop, bỏ flop hằng và flop không có tải như `synth_core.tcl` (D-042), để LEC của Phúc map 1:1 với RTL. Có từ 30/10, các lần chạy trước chưa có |
 | Kết quả | `syn/out_blocks/<khối>/` (netlist, SDC, `reports/`, `summary.txt`), tổng hợp ở `syn/out_blocks/summary.txt`, log ở `syn/run_blocks/<khối>/genus.log` |
 
-Tiêu chí giống mục 3 (0 unresolved, 0 latch, 0 unconstrained endpoint, slack >= 0 ở 20 ns), thêm 0 scan flop. Copy `syn/out_blocks/` vào `appendix/synth_blocks/` và ghi số vào `docs/sta_results.md` mục 3.
+Tiêu chí giống mục 3 (0 unresolved, 0 latch, 0 unconstrained endpoint, slack >= 0 ở 20 ns), thêm 0 scan flop. Copy `reports/` và `summary.txt` của từng khối vào `appendix/synth_blocks/` (không copy netlist, SDF) và ghi số vào `docs/sta_results.md` mục 3.
 
 Tổng hợp cả `soc_top` với `syn/constraints/soc.sdc`, lấy netlist cho `pnr/scripts/soc_floorplan.tcl` (PD-02, PD-03):
 
@@ -72,12 +72,12 @@ make synth-soc > synth_soc.txt 2>&1 &
 | Mạng reset | `ideal_seq_async_pins false` trên design (31/10), để Genus buffer `rst_n_sync` theo `set_max_fanout` của `soc.sdc` |
 | Kết quả | `syn/out_soc/` (`soc_top_netlist.v`, `soc_top_synth.sdc`, `soc_top.sdf`, `reports/`, `summary.txt`), log ở `syn/run_soc/genus.log` |
 
-Tiêu chí giống `synth-blocks`. Copy `syn/out_soc/` vào `appendix/synth_soc/` và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow. Hold và removal trên mạng reset kiểm bằng Tempus (STA-03).
+Tiêu chí giống `synth-blocks`. Copy `reports/` và `summary.txt` của `syn/out_soc/` vào `appendix/` (không copy netlist, SDF) và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow, hold, recovery và removal kiểm bằng Tempus.
 
 STA-03: quét chu kỳ tìm F_max, rồi chạy Tempus trên netlist Genus:
 
 ```bash
-make synth-soc-sweep > sweep_soc.txt 2>&1 &      # PERIODS="20 18 16 15 14" (mặc định)
+make synth-soc-sweep > sweep_soc.txt 2>&1 &      # PERIODS="6 5.5 5 4.5" (mặc định, quanh F_max)
 make synth-soc PERIOD=15                         # một chu kỳ, ghi vào syn/out_soc/
 make sta-soc                                     # Tempus trên syn/out_soc/
 ```
@@ -86,12 +86,12 @@ make sta-soc                                     # Tempus trên syn/out_soc/
 | --- | --- |
 | Chu kỳ | `synth_soc.tcl` thay dòng `set SOC_PERIOD` của `soc.sdc` bằng `PERIOD`, input và output delay max đổi theo (24% và 20% chu kỳ). SDC thật của mỗi lần chạy là `soc_run.sdc` trong thư mục kết quả |
 | Kết quả quét | `syn/out_soc_sweep/p<chu kỳ>/` và bảng `syn/out_soc_sweep/summary.md` (WNS, chu kỳ nhỏ nhất, F_max ước lượng, diện tích). F_max = 1 / (chu kỳ - WNS), chỉ là ước lượng từ đường xấu nhất |
-| Tempus | `sta/scripts/sta_soc.tcl`, corner theo `pnr/scripts/mmmc.view`: slow cho setup và recovery, fast cho hold và removal. Report ở `sta/run_soc/pre/`, tóm tắt ở `summary.txt`. Chưa chạy lần nào trên server |
+| Tempus | `sta/scripts/sta_soc.tcl`, corner theo `pnr/scripts/mmmc.view`: slow cho setup và recovery, fast cho hold và removal. Report ở `sta/run_soc/pre/`, tóm tắt ở `summary.txt`. Đã chạy trên server 30–31/10 (Tempus 23.14) |
 | Sau route (STA-05) | `make sta-soc SPEF=<file> NETLIST=<file>`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/` |
 
 Ở nhà xem xu hướng trước bằng `make sta-soc-nangate STA_PERIOD=<ns>` (Yosys, Nangate45, OpenSTA với `soc.sdc`, macro SRAM là hộp đen nên đường qua macro không được tính). Lần đầu tổng hợp khoảng 11 phút, các lần sau chỉ chạy lại OpenSTA. Số ở nhà ghi vào `docs/sta_results.md` mục 2, không đưa vào report.
 
-Trước layout chưa có SPEF nên Tempus không tính delay dây, số lạc quan. Ghi mỗi chu kỳ một dòng vào `docs/sta_results.md` mục 1 và copy report vào `appendix/`.
+Trước layout chưa có SPEF nên Tempus không tính delay dây, số lạc quan. Kết quả quét ghi vào `docs/sta_results.md` mục 4, Tempus ghi vào mục 1, report văn bản copy vào `appendix/`.
 
 Xem layout và chụp hình cho report:
 

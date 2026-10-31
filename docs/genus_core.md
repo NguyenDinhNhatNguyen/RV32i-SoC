@@ -20,8 +20,8 @@ Chủ: Nhân. Tổng hợp, LEC và GLS cho lõi RV32I đứng riêng, để l�
 ### Ràng buộc `syn/constraints/core.sdc`
 
 - Các cổng `if_*` nối tới IMEM macro qua `imem_port`, các cổng `d_*` nối tới DMEM macro và ngoại vi qua bus.
-- Delay của macro không co theo chu kỳ nên là số tuyệt đối: `SRAM_CQ` 1,2 ns (CLK→Q), `SRAM_SU` 0,4 ns (setup xấu nhất, ở `CEN` và `WEN`), `BUS_D` 0,5 ns (decode và mux của bus).
-- `SRAM_CQ` và `SRAM_SU` đọc từ `sram_2k_macro.lib` trên server ngày 29/10 (`docs/sta_results.md` mục 1). File `.lib` chỉ có corner typical nên hai số này hơi lạc quan so với corner slow.
+- Delay của macro không co theo chu kỳ nên là số tuyệt đối: `SRAM_CQ` (CLK→Q), `SRAM_SU` (setup xấu nhất, ở `CEN` và `WEN`), `BUS_D` 0,5 ns (decode và mux của bus).
+- `SRAM_CQ` và `SRAM_SU` lấy từ `sram_2k_macro.lib` trên server ngày 29/10, giá trị ở đầu `syn/constraints/core.sdc`. Không chép thêm số của thư viện vào docs vì repo công khai. File `.lib` chỉ có corner typical nên hai số này hơi lạc quan so với corner slow.
 - Tín hiệu đến từ flop trong SoC (grant, ready, ngắt, `mtime_i`, `rst_n`) giữ tỉ lệ Lab 01: input 24%, output 20% chu kỳ.
 - `rst_n` không phải false path. Trong `soc_top` nó ra từ flop của `reset_sync`, nên được kiểm recovery và removal như `soc.sdc`.
 
@@ -169,7 +169,7 @@ Genus chạy ngày 28/10 (đã có 5 attribute giữ flop). LEC và GLS chạy n
 - 68 điểm abort là DFF thuộc khối nhân và chia 32×32. Không chứng minh được vì thiếu analyze datapath của Conformal_Ultra. GLS ở trên kiểm chức năng của các phép M thay cho phần này.
 - LEC chạy khoảng 53 phút.
 - Để LEC map 1:1, `synth_core.tcl` giữ mọi flop (tắt gộp flop, bỏ flop hằng và flop không có tải) và dofile thêm các flatten option (D-042).
-- Đường găng trong lần Genus `soc_top` của Phát ngày 29/10: 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`, `appendix/synth_soc/reports/synthesis/timing.rpt`). Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ ngày 30/10 (`docs/sta_results.md` mục 4) cho thấy Genus vẫn đạt setup tới 6 ns (khoảng 167 MHz). Ở 8 ns, đường găng chuyển sang bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây.
+- Đường găng trong lần Genus `soc_top` của Phát ngày 29/10: 17,57 ns, từ CLK của macro IMEM qua ALU tới `if_pc_q[31]`, slack +2,18 ns ở 20 ns, F_max khoảng 57 MHz (`docs/sta_results.md`, `appendix/synth_soc/reports/synthesis/timing.rpt`). Đây là số khi Genus chỉ cần đạt 20 ns. Lần quét chu kỳ 30–31/10 (`docs/sta_results.md` mục 4) cho F_max sau tổng hợp khoảng 200 MHz: 5 ns đạt, 4 ns thiếu 0,69 ns. Đường găng vẫn từ macro qua so sánh nhánh tới `if_pc_q`, riêng ở 8 ns là bộ nhân `u_muldiv`. Đều là số sau tổng hợp, chưa có delay dây.
 
 ## 7. Lưu ý trên server
 
