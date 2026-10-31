@@ -13,3 +13,4 @@
 | `ppa_table.py` | Gom số PPA từ report Genus, Innovus | Bất kỳ |
 | `check_server.sh` | Ghi lại tool và PDK trên server (HT-01) | Server trường |
 | `macro_info.sh` | Tóm tắt SRAM macro, không copy file thư viện | Server trường |
+| `save_reports.sh` | Chép report văn bản vào `appendix/`, bỏ qua netlist, SPEF, GDS (`make save-pnr-soc`) | Server trường |

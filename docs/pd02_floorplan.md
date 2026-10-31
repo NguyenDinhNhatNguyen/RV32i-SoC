@@ -54,7 +54,7 @@ Lệnh: `python3 pnr/scripts/estimate_die.py --std-area 53408 --macro 80x100 --u
         cạnh dưới
 ```
 
-- Mỗi hàng 4 macro sát cạnh, cố định trước placement. Hàng trên lật trục X để chân quay xuống dải logic. Hướng cụ thể chọn lại sau khi có output `scripts/macro_info.sh` (chân macro nằm ở cạnh nào).
+- Mỗi hàng 4 macro sát cạnh, cố định trước placement. Chân tín hiệu của macro phải quay vào dải logic. `soc_floorplan.tcl` đọc LEF trong Innovus để biết chân nằm ở cạnh trên hay dưới rồi tự chọn `R0` hoặc `MX` cho từng hàng, in kết quả ra log (dòng `PD-02: macro signal pins ...`).
 - Khe giữa 2 macro cạnh nhau là 10 µm (2 halo).
 - Hàng cell chuẩn dưới macro bị cắt (`cutRow`).
 

@@ -138,10 +138,10 @@ Database lưu theo tên Lab: `DBS/floorplan.enc`, `DBS/placement.enc`, `DBS/cts.
 Chỉ copy report văn bản. Netlist, SPEF, SDF, GDS và database dựng từ thư viện GPDK45 của trường, không được đưa lên repo công khai:
 
 ```bash
-mkdir -p appendix/synth_accel appendix/pnr_accel appendix/pnr_soc
+mkdir -p appendix/synth_accel
 cp -r syn/out_accel/reports/* appendix/synth_accel/
-cp -r pnr/out_accel/reports/* appendix/pnr_accel/
-cp -r pnr/out_soc/reports/*   appendix/pnr_soc/
+make save-pnr-accel         # chỉ chép report văn bản của PnR vào appendix/pnr_accel
+make save-pnr-soc           # như trên cho soc_top, vào appendix/pnr_soc
 git status --short          # không có .lib .lef .gds .spef .sdf, không có *_netlist.v, *_pnr.v
 git add appendix && git commit -m "Add accelerator synthesis and P&R reports" && git push
 ```

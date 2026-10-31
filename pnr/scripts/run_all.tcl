@@ -127,6 +127,38 @@ try_mode {setNanoRouteMode -route_with_timing_driven true -route_with_si_driven 
 routeDesign
 try_cmd {setDelayCalMode -SIAware true}
 optDesign -postRoute -setup -hold
+# Quick checks before filler, written to reports/pd_checks.rpt (see docs/pnr_soc_status.md):
+# banned cells must be 0, macros must sit where soc_floorplan.tcl put them, and the standard
+# cell density shows whether the core size is right.
+proc pd_checks {file banned} {
+    set fp [open $file w]
+    puts $fp "Core box (um): [dbGet top.fPlan.coreBox]"
+    puts $fp "Die box (um) : [dbGet top.fPlan.box]"
+    foreach c $banned {
+        puts $fp "$c instances: [llength [dbGet -e top.insts.cell.name $c]] (must be 0)"
+    }
+    set mac_area 0.0
+    set std_area 0.0
+    foreach inst [dbGet top.insts] {
+        set a [expr {[dbGet $inst.box_sizex] * [dbGet $inst.box_sizey]}]
+        if {[dbGet $inst.cell.baseClass] eq "block"} {
+            set mac_area [expr {$mac_area + $a}]
+            puts $fp "Macro [dbGet $inst.name] at [dbGet $inst.pt] [dbGet $inst.orient]"
+        } else {
+            set std_area [expr {$std_area + $a}]
+        }
+    }
+    set core [lindex [dbGet top.fPlan.coreBox] 0]
+    lassign $core cx0 cy0 cx1 cy1
+    set core_area [expr {($cx1 - $cx0) * ($cy1 - $cy0)}]
+    puts $fp [format "Standard cell area %.0f um2, macro area %.0f um2, core %.0f um2" \
+                  $std_area $mac_area $core_area]
+    puts $fp [format "Standard cell density outside macros: %.1f%%" \
+                  [expr {100.0 * $std_area / ($core_area - $mac_area)}]]
+    close $fp
+}
+try_cmd {pd_checks $RPT/pd_checks.rpt [concat $DONT_USE_CELLS $CTS_DONT_USE]}
+
 try_cmd {addFiller -cell [dbGet [dbGet -p head.libCells.name FILL*].name] -prefix FILLER}
 saveDesign DBS/route.enc
 

@@ -19,14 +19,44 @@ set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
 set HALO       5.0
 set MAC_GAP    [expr {2*$HALO}]   ;# Gap between 2 neighbouring macros = 2 halos
-# Orientation: macro pins must face the logic band in the middle. Pick again from the pin edge
-# in the scripts/macro_info.sh output. Bottom row R0, top row mirrored on X (MX).
+# Orientation: macro signal pins must face the logic band in the middle. The defaults assume
+# pins on the top edge of the macro (bottom row R0, top row mirrored on X). The block below
+# reads the real pin edge from the LEF and overrides them.
 set IMEM_ORIENT MX
 set DMEM_ORIENT R0
-# Metal layers of the ring around each macro: pick from the macro VDD/VSS pin layers
-# (macro_info.sh section 2)
+# Metal layers of the ring around each macro: pick from the macro VDD/VSS pin layers, which
+# are printed below and in scripts/macro_info.sh section 2
 set BLK_RING_H Metal6
 set BLK_RING_V Metal5
+
+# ---- Macro orientation from the LEF -------------------------------------------------
+# Returns bottom, top or side: where the signal pins of the macro sit in the R0 view,
+# from the average y of their shapes.
+proc macro_pin_side {cell_name} {
+    set cell [dbGet -p head.libCells.name $cell_name]
+    if {$cell eq "" || $cell eq "0x0"} { return unknown }
+    set h [dbGet $cell.size_y]
+    set ys {}
+    foreach r [dbGet $cell.terms.pins.allShapes.shapes.rect] {
+        lassign $r x0 y0 x1 y1
+        lappend ys [expr {($y0 + $y1) / 2.0}]
+    }
+    if {[llength $ys] == 0} { return unknown }
+    set avg [expr {[tcl::mathop::+ {*}$ys] / [llength $ys]}]
+    if {$avg < $h / 3.0} { return bottom }
+    if {$avg > 2.0 * $h / 3.0} { return top }
+    return side
+}
+if {[catch {macro_pin_side sram_2k_macro} pin_side]} { set pin_side unknown }
+switch -- $pin_side {
+    bottom { set IMEM_ORIENT R0 ; set DMEM_ORIENT MX }
+    top    { set IMEM_ORIENT MX ; set DMEM_ORIENT R0 }
+}
+puts "PD-02: macro signal pins on the $pin_side edge, IMEM $IMEM_ORIENT, DMEM $DMEM_ORIENT"
+set mac_cell [dbGet -p head.libCells.name sram_2k_macro]
+if {![catch {dbGet $mac_cell.pgTerms.pins.allShapes.layer.name} pg]} {
+    puts "PD-02: macro VDD/VSS pin layers [lsort -unique $pg], ring layers $BLK_RING_H/$BLK_RING_V"
+}
 
 # ---- Floorplan with a fixed core size ------------------------------------------------
 floorPlan -site $CORE_SITE -s $CORE_W $CORE_H $IO_GAP $IO_GAP $IO_GAP $IO_GAP
