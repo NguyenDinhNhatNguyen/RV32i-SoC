@@ -30,7 +30,9 @@ set SRAM_LIB_FAST  $PDK_DIR/lib/sram_2k_macro.lib
 # Double-height cells (SITE CoreSiteDouble) in gsclib045: BUFX2 and the low-power cells
 # (switch, isolation, level shifter). The floorplan has only CoreSite rows, so BUFX2 is banned in
 # both Genus and Innovus, otherwise Innovus places them illegally (IMPSP-365, 368 cells on 21/10).
-set DONT_USE_CELLS {BUFX2}
+# CLKBUFX2 (also in CTS_DONT_USE below) is banned in Genus too since 31/10: the Genus netlist of
+# soc_top had 11 CLKBUFX2 used as data buffers (docs/pnr_soc_status.md item 4).
+set DONT_USE_CELLS {BUFX2 CLKBUFX2}
 
 set PWR_NET   VDD
 set GND_NET   VSS

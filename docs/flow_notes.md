@@ -69,6 +69,7 @@ make synth-soc > synth_soc.txt 2>&1 &
 | Tham số | Mặc định của `soc_top`: `ENABLE_M = 1`, `ENABLE_WFI_SLEEP = 1`, `ENABLE_DMA = 0`, lõi có BTB 8 entry |
 | SRAM macro | Đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib`. Netlist phải có đúng 8 macro, khác 8 là `ERROR` |
 | Cấm scan flop, giữ flop | Như `synth-blocks` |
+| Mạng reset | `ideal_seq_async_pins false` trên design (31/10), để Genus buffer `rst_n_sync` theo `set_max_fanout` của `soc.sdc` |
 | Kết quả | `syn/out_soc/` (`soc_top_netlist.v`, `soc_top_synth.sdc`, `soc_top.sdf`, `reports/`, `summary.txt`), log ở `syn/run_soc/genus.log` |
 
 Tiêu chí giống `synth-blocks`. Copy `syn/out_soc/` vào `appendix/synth_soc/` và ghi một dòng vào `docs/sta_results.md` mục 1. Genus chỉ kiểm setup ở corner slow. Hold và removal trên mạng reset kiểm bằng Tempus (STA-03).
@@ -156,7 +157,7 @@ git add appendix && git commit -m "Add accelerator synthesis and P&R reports" &&
 - `lp_insert_clock_gating` phải đặt trước `elaborate`. Lệnh `remove_assigns` đã bỏ, dùng thuộc tính cùng tên.
 - Dofile LEC do Genus sinh đòi Conformal_Ultra nên không chạy được. Dùng `lec/accel_rtl2gate.do` (mẫu `run_lec_cg.do` của Lab 1) với `set flatten model -gated_clock` và `set compare effort high`.
 - Thư viện fast tên `fast_vdd1v0_basicCells.lib` (C hoa). File `qrc/gpdk045.tch` của Lab không đọc được.
-- `BUFX2` của gsclib045 là cell cao gấp đôi, phải cấm ở cả Genus và Innovus.
+- `BUFX2` của gsclib045 là cell cao gấp đôi, phải cấm ở cả Genus và Innovus. Từ 31/10 `DONT_USE_CELLS` trong `pnr/scripts/config.tcl` có thêm `CLKBUFX2`, nên Genus cũng không dùng cell này làm buffer dữ liệu.
 - Innovus 21.1 đổi tên nhiều tuỳ chọn (`setPlaceMode -place_...`, `add_ndr`, `verifyGeometry` không có `-type`).
 - Genus và Innovus không ghi đè log mà tạo `genus.log1`, `genus.log2`. `make` đã xoá log cũ trước mỗi lần chạy.
 

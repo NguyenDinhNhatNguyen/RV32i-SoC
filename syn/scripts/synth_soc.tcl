@@ -72,6 +72,13 @@ if {$CG && [catch {set_db [get_db designs] .lp_clock_gating_min_flops 4} msg]} {
     puts "WARNING: could not set lp_clock_gating_min_flops ($msg), using the Genus default"
 }
 
+# Async set/reset pins are ideal by default, so Genus ignored set_max_fanout on rst_n_sync and
+# left it unbuffered on about 3160 reset pins (31/10 run, recovery -25 ns). Turn that off so the
+# reset net gets a buffer tree like any other high fanout net.
+if {[catch {set_db [get_db designs] .ideal_seq_async_pins false} msg]} {
+    puts "WARNING: could not set ideal_seq_async_pins ($msg), the reset net may stay unbuffered"
+}
+
 # Pre-synthesis checks (Quality Gate 1)
 check_design -unresolved > $AUDIT/pre_syn_unresolved.rpt     ;# Must be 0 unresolved
 check_design -all        > $AUDIT/pre_syn_design_lint.rpt    ;# 0 latch, 0 loop, 0 multi-driven
