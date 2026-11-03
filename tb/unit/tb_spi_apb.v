@@ -1,0 +1,184 @@
+`timescale 1ns/1ps
+// Testbench tự kiểm tra cho khối spi_apb (RTL-13)
+// In ra "PASS: ..." nếu tất cả các bài test đều đúng.
+
+module tb_spi_apb;
+    reg         PCLK = 1'b0;
+    reg         PRESETn = 1'b0;
+    
+    // Tín hiệu Bus cho DUT 1 (Mở SPI)
+    reg         PSEL = 1'b0;
+    reg         PENABLE = 1'b0;
+    reg         PWRITE = 1'b0;
+    reg  [11:0] PADDR = 12'd0;
+    reg  [31:0] PWDATA = 32'd0;
+    wire [31:0] PRDATA;
+    wire        PREADY;
+    wire        PSLVERR;
+    wire        sclk;
+    wire        mosi;
+    wire        cs_n;
+    
+    // Nối chập Loopback: MOSI nối thẳng vào MISO để test tự động
+    wire        miso = mosi; 
+
+    // Khởi tạo DUT 1: Bật tính năng SPI
+    spi_apb #(.ENABLE_SPI(1)) dut1 (
+        .PCLK(PCLK), .PRESETn(PRESETn), .PSEL(PSEL), .PENABLE(PENABLE),
+        .PWRITE(PWRITE), .PADDR(PADDR), .PWDATA(PWDATA), .PRDATA(PRDATA),
+        .PREADY(PREADY), .PSLVERR(PSLVERR),
+        .sclk(sclk), .mosi(mosi), .miso(miso), .cs_n(cs_n)
+    );
+
+    // Tín hiệu Bus cho DUT 2 (Tắt SPI - Dummy Logic)
+    reg         PSEL2 = 1'b0;
+    wire [31:0] PRDATA2;
+    wire        PREADY2;
+    wire        PSLVERR2;
+    wire        sclk2, mosi2, cs_n2;
+
+    // Khởi tạo DUT 2: Tắt tính năng SPI để test tiết kiệm diện tích
+    spi_apb #(.ENABLE_SPI(0)) dut2 (
+        .PCLK(PCLK), .PRESETn(PRESETn), .PSEL(PSEL2), .PENABLE(PENABLE),
+        .PWRITE(PWRITE), .PADDR(PADDR), .PWDATA(PWDATA), .PRDATA(PRDATA2),
+        .PREADY(PREADY2), .PSLVERR(PSLVERR2),
+        .sclk(sclk2), .mosi(mosi2), .miso(1'b0), .cs_n(cs_n2)
+    );
+
+    localparam HALF = 10; // 50 MHz
+    always #HALF PCLK = ~PCLK;
+
+    localparam A_DATA = 12'h000, A_STATUS = 12'h004, A_CTRL = 12'h008;
+
+    integer errors = 0;
+    reg [31:0] rd;
+    reg        err_seen;
+    
+    task check;
+        input        cond;
+        input [8*60-1:0] tag;
+        begin
+            if (!cond) begin
+                errors = errors + 1;
+                $display("FAIL: %0s (t=%0t)", tag, $time);
+            end
+        end
+    endtask
+
+    task apb_write;
+        input [11:0] a;
+        input [31:0] d;
+        begin
+            @(negedge PCLK); PSEL = 1; PWRITE = 1; PADDR = a; PWDATA = d; PENABLE = 0;
+            @(negedge PCLK); PENABLE = 1;
+            #(HALF-2) err_seen = PSLVERR;
+            @(negedge PCLK); PSEL = 0; PENABLE = 0; PWRITE = 0;
+        end
+    endtask
+
+    task apb_read;
+        input [11:0] a;
+        begin
+            @(negedge PCLK); PSEL = 1; PWRITE = 0; PADDR = a; PENABLE = 0;
+            @(negedge PCLK); PENABLE = 1;
+            #(HALF-2) rd = PRDATA; err_seen = PSLVERR;
+            @(negedge PCLK); PSEL = 0; PENABLE = 0;
+        end
+    endtask
+
+    task wait_clks;
+        input integer n;
+        integer w;
+        begin
+            for (w = 0; w < n; w = w + 1) @(posedge PCLK);
+        end
+    endtask
+
+    // Hàm hỏi vòng (polling) kiểm tra cờ BUSY
+    task wait_busy;
+        integer timeout;
+        begin
+            timeout = 0;
+            rd = 32'd1;
+            // Chờ cho đến khi bit BUSY [0] về 0
+            while (rd[0] == 1'b1 && timeout < 1000) begin
+                apb_read(A_STATUS);
+                timeout = timeout + 1;
+            end
+            check(timeout < 1000, "Wait for BUSY=0 Timeout");
+        end
+    endtask
+
+    initial begin
+        #500000;
+        $display("FAIL: timeout");
+        $finish;
+    end
+
+    initial begin
+        $dumpfile("tb/unit/out/spi_apb.vcd");
+        $dumpvars(0, tb_spi_apb);
+
+        // ---- 1. Khởi động Reset ----
+        wait_clks(3);
+        PRESETn = 1;
+        wait_clks(2);
+        
+        check(sclk === 1'b0, "Reset: sclk = 0 (CPOL=0 default)");
+        check(cs_n === 1'b1, "Reset: cs_n = 1 (Not selected)");
+        apb_read(A_STATUS); check(rd === 32'd0 && !err_seen, "Reset: BUSY = 0");
+        apb_read(A_CTRL);   check(rd === 32'd1 && !err_seen, "Reset: CTRL = 1 (cs_n=1)");
+
+        // ---- 2. Cấu hình SPI Mode 0: DIV = 2, CPHA = 0, CPOL = 0, CS_N = 0 ----
+        apb_write(A_CTRL, {16'd0, 8'd2, 5'd0, 1'b0, 1'b0, 1'b0});
+        check(!err_seen, "Write CTRL: OK");
+        apb_read(A_CTRL);
+        check(rd[15:8] == 8'd2 && rd[2] == 1'b0 && rd[0] == 1'b0, "Read CTRL: DIV=2, CS_N=0");
+        check(cs_n === 1'b0, "SPI CS_N is asserted (0)");
+
+        // ---- 3. Truyền byte 0xA5 trong Mode 0 ----
+        apb_write(A_DATA, 32'hA5);
+        wait_busy(); // Đợi truyền xong
+        apb_read(A_DATA);
+        check(rd === 32'hA5, "RX Data = 0xA5 (Loopback match Mode 0)");
+
+        // ---- 4. Cấu hình SPI Mode 3: DIV = 1, CPHA = 1, CPOL = 1, CS_N = 0 ----
+        apb_write(A_CTRL, {16'd0, 8'd1, 5'd0, 1'b1, 1'b1, 1'b0});
+        wait_clks(2);
+        check(sclk === 1'b1, "CPOL=1: sclk idles at 1");
+        
+        // Truyền byte 0x5A trong Mode 3
+        apb_write(A_DATA, 32'h5A);
+        wait_busy(); // Đợi truyền xong
+        apb_read(A_DATA);
+        check(rd === 32'h5A, "RX Data = 0x5A (Loopback match Mode 3)");
+
+        // ---- 5. Kéo CS_N lên mức 1 (Kết thúc truyền với Slave) ----
+        apb_write(A_CTRL, {16'd0, 8'd1, 5'd0, 1'b1, 1'b1, 1'b1});
+        wait_clks(2);
+        check(cs_n === 1'b1, "SPI CS_N is de-asserted (1)");
+
+        // ---- 6. Bẫy lỗi PSLVERR (Cố ghi vào địa chỉ không tồn tại) ----
+        apb_write(12'h00C, 32'hFFFF);
+        check(err_seen === 1'b1, "Write unmapped addr -> PSLVERR");
+        apb_read(12'h00C);
+        check(err_seen === 1'b1 && rd === 32'd0, "Read unmapped addr -> PSLVERR & 0");
+
+        // ---- 7. Kiểm tra chế độ vô hiệu hoá ENABLE_SPI = 0 (DUT 2) ----
+        @(negedge PCLK); PSEL2 = 1; PWRITE = 0; PADDR = A_CTRL; PENABLE = 0;
+        @(negedge PCLK); PENABLE = 1;
+        #(HALF-2)
+        check(PSLVERR2 === 1'b1, "DUT2 (Disabled): Access -> PSLVERR");
+        check(cs_n2 === 1'b1, "DUT2 (Disabled): cs_n always 1");
+        check(sclk2 === 1'b0, "DUT2 (Disabled): sclk always 0");
+        @(negedge PCLK); PSEL2 = 0; PENABLE = 0;
+
+        // ---- Tổng kết ----
+        if (errors == 0)
+            $display("PASS: spi_apb - APB R/W, CPOL/CPHA, TX/RX Loopback, PSLVERR, Dummy Logic OK!");
+        else
+            $display("FAIL: spi_apb - %0d lỗi phát hiện", errors);
+            
+        $finish;
+    end
+endmodule
