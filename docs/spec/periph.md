@@ -130,3 +130,22 @@ Chỉ có khi `soc_top` dựng với `ENABLE_DMA = 1`. Khi đó DMA là master t
 - Lỗi bus khi đọc hoặc ghi dừng DMA với ERR = 1 và DONE = 1. Các word trước lỗi đã được chép.
 - `irq = DONE & IRQ_EN`, qua 1 flop, vào IRQC bit 4. Phần mềm xoá bằng cách ghi 1 vào bit DONE của STATUS.
 - Quy trình: ghi SRC, DST, LEN, ghi CTRL = 1 (hoặc 3 nếu dùng ngắt), chờ DONE hoặc ngắt, đọc ERR, ghi STATUS = 2 để xoá DONE.
+
+## 8. SPI (Serial Peripheral Interface)
+Base Address: `0x2000_3000`
+
+| Offset | Tên thanh ghi | R/W | Mô tả chi tiết |
+|--------|---------------|-----|----------------|
+| `0x00` | `SPI_DATA`    | R/W | Thanh ghi dữ liệu (TX/RX buffer) |
+| `0x04` | `SPI_CTRL`    | R/W | Thanh ghi điều khiển (Kích hoạt, CPOL, CPHA, Cờ ngắt) |
+| `0x08` | `SPI_STATUS`  | R   | Thanh ghi trạng thái (Busy, TX Empty, RX Full) |
+| `0x0C` | `SPI_CLKDIV`  | R/W | Bộ chia tần số clock cho SPI |
+
+## 9. PWM (Pulse Width Modulation)
+Base Address: `0x2000_5000`
+
+| Offset | Tên thanh ghi | R/W | Mô tả chi tiết |
+|--------|---------------|-----|----------------|
+| `0x00` | `PWM_CTRL`    | R/W | Thanh ghi điều khiển (Bật/tắt PWM) |
+| `0x04` | `PWM_PERIOD`  | R/W | Cấu hình tổng chu kỳ (Period) của xung |
+| `0x08` | `PWM_DUTY`    | R/W | Cấu hình thời gian mức cao (Duty Cycle) |
