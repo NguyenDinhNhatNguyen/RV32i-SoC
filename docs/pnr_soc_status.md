@@ -1,6 +1,6 @@
 # Theo dõi PnR `soc_top`
 
-Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 31/10. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
+Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 04/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
 
 ## 1. Tình trạng từng mục
 
@@ -11,7 +11,7 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 | 3 | `run_all.tcl` chưa gọi `soc_floorplan.tcl`, macro do Innovus tự đặt | Xong 31/10 | `make pnr-soc` chạy `run_all.tcl` với `TOP=soc_top` và gọi `soc_floorplan.tcl` |
 | 4 | 1220 cell `CLKBUFX2` trong netlist PnR | Xong 31/10 | `CLKBUFX2` bị cấm ngay sau `init_design`, trước mọi bước tối ưu. 11 cell còn lại từ Genus đã hết từ 31/10, vì `CLKBUFX2` có trong `DONT_USE_CELLS` của `config.tcl` |
 | 5 | `run_all.tcl` bị đổi cứng sang `soc_top`, `make pnr-accel` hỏng | Xong 31/10 | Chọn khối bằng biến `TOP`. `make pnr-accel` dùng `TOP=accel_wrapper` như cũ |
-| 6 | Hold trước CTS: 1080 đường vi phạm, xấu nhất −0,147 ns ở chân CEN của macro IMEM | Chờ server | Trước CTS clock còn lý tưởng nên hold chưa có ý nghĩa. `run_all.tcl` đã có `optDesign -postCTS -hold` và `optDesign -postRoute -setup -hold`. Lần chạy tới kiểm `postcts_hold` và `postroute_hold` phải WNS ≥ 0 |
+| 6 | Hold trước CTS: 1081 đường vi phạm, xấu nhất −0,147 ns ở chân CEN của macro IMEM. Removal trước layout chỉ dư 6 ps (Tempus 31/10) | Chờ server | `run_all.tcl` sửa hold sau CTS và sau route, với biên `holdTargetSlack 0.020` (04/11). Recovery, removal có report riêng (`postcts_async/`, `postroute_async/`) và worst slack 4 loại ghi ở `reports/slack_summary.txt`. Lần chạy tới cả 4 phải ≥ 0 |
 | 7 | Chưa có report timing, DRC của `soc_top` trong repo. Ảnh layout có 5 dấu X trắng | Chờ server | `make save-pnr-soc` chép report văn bản vào `appendix/pnr_soc/` (bỏ qua netlist, SPEF, GDS). Mở `DBS/route.enc`, xem Violation Browser để biết 5 dấu X là gì |
 | 8 | Diện tích logic thật 53 408 µm², lõi tính theo số cũ | Xong 31/10 | Lõi đúng là 394 × 395 µm ở mật độ 70%. Lõi 524 × 523 µm của lần 29/10 tính sai (nhập tổng có cả macro vào `--std-area`) |
 | 9 | `appendix/macro_check/sram_2k_macro_20261030.txt` còn trên server | Chờ server | Commit file này ở buổi tới. Hướng macro không còn phụ thuộc file này: `soc_floorplan.tcl` tự đọc cạnh có chân tín hiệu từ LEF (31/10). Log Innovus in lớp chân VDD/VSS để kiểm lớp ring |
@@ -44,5 +44,10 @@ Không push từ bản clone cũ chưa reset, vì như vậy GDS sẽ quay lại
    - `BUFX2 instances: 0` và `CLKBUFX2 instances: 0`.
    - 8 dòng `Macro ...`: 4 IMEM ở hàng trên, 4 DMEM ở hàng dưới, đúng hướng in trong log (`grep PD-02 pnr/run_soc/innovus.log`).
    - Mật độ cell chuẩn khoảng 70%.
-   - Thêm: hold sau CTS và sau route WNS ≥ 0 (`postcts_hold`, `postroute_hold`), DRC, connectivity, antenna 0 lỗi.
+   - `cat pnr/out_soc/reports/slack_summary.txt`: setup, hold, recovery, removal sau CTS và sau route đều ≥ 0. Removal là chỗ dễ âm nhất.
+   - DRC, connectivity, antenna 0 lỗi.
 3. `make save-pnr-soc` và `make save-pnr-accel` (report PD-01 lần 29/10), commit `appendix/pnr_soc`, `appendix/pnr_accel`, `appendix/macro_check/`. Không commit gì trong `pnr/out_soc/`.
+4. Gửi Phát đường dẫn cho Tempus sau layout (STA-05). Server dùng chung một tài khoản nên Phát đọc thẳng, không cần copy:
+   - Netlist sau route: `~/RV32i-SoC/pnr/out_soc/soc_top_pnr.v`
+   - SPEF: `~/RV32i-SoC/pnr/out_soc/soc_top.spef` (corner `rc_typ`)
+   - SDF cho GLS của Hiếu: `~/RV32i-SoC/pnr/out_soc/soc_top.sdf`

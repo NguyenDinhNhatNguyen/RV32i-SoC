@@ -22,7 +22,7 @@ Kết quả HT-01 (21/10) nằm ở `appendix/server_check/`. Chạy lại khi c
 ## 2. Chạy cả flow accelerator
 
 ```bash
-cd ~/rv32i-soc && git pull
+cd ~/RV32i-SoC && git pull
 ( make synth-accel && make lec-accel && make gls-accel && make pnr-accel ) > full_run.txt 2>&1 &
 grep -E 'Genus done|Compare Results|PASS|Innovus done|ERROR' full_run.txt   # xem tiến độ
 ```
