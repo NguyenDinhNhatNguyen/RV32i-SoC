@@ -2,6 +2,7 @@
 //   0x00 PERIOD  RW  Chu kỳ PWM (tính bằng số xung nhịp)
 //   0x04 DUTY    RW  Thời gian mức cao (phải nhỏ hơn PERIOD)
 //   0x08 CTRL    RW  Bit 0: 1 = Enable phát PWM, 0 = Tạm dừng
+`timescale 1ns/1ps
 module pwm_apb #(
     parameter ENABLE_PWM = 1
 ) (
@@ -46,6 +47,7 @@ module pwm_apb #(
                         10'd0: period <= PWDATA;
                         10'd1: duty   <= PWDATA;
                         10'd2: enable <= PWDATA[0];
+                        default: ;
                     endcase
                 end
             end

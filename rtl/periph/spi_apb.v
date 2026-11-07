@@ -1,4 +1,5 @@
 // spi_apb.v - SPI Master APB3 slave (RTL-13)
+`timescale 1ns/1ps
 module spi_apb #(
     parameter ENABLE_SPI = 1
 ) (
@@ -47,12 +48,12 @@ module spi_apb #(
             // Xử lý ghi thanh ghi (APB Write)
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
-                    ctrl_div  <= 8'd0;
+                    ctrl_div  <= 16'd0;
                     ctrl_cpha <= 1'b0;
                     ctrl_cpol <= 1'b0;
                     ctrl_cs_n <= 1'b1; // Mặc định không chọn Slave (Active-Low)
                 end else if (wr_ctrl) begin
-                    ctrl_div  <= PWDATA[15:8];
+                    ctrl_div  <= {8'd0, PWDATA[15:8]};
                     ctrl_cpha <= PWDATA[2];
                     ctrl_cpol <= PWDATA[1];
                     ctrl_cs_n <= PWDATA[0];
@@ -109,13 +110,16 @@ module spi_apb #(
             assign mosi = tx_data[bit_cnt];
             assign sclk = spi_clk_reg;
 
+            // PWDATA[31:16] is not used by any register, ctrl_div[15:8] is always 0
+            wire unused_ok = &{1'b0, PWDATA[31:16]};
+
             // Đọc thanh ghi (APB Read)
             always @(*) begin
                 if (!addr_ok) PRDATA = 32'd0;
                 else case (widx)
                     10'd0:   PRDATA = {24'd0, rx_data};
                     10'd1:   PRDATA = {31'd0, busy};
-                    10'd2:   PRDATA = {16'd0, ctrl_div, 5'd0, ctrl_cpha, ctrl_cpol, ctrl_cs_n};
+                    10'd2:   PRDATA = {16'd0, ctrl_div[7:0], 5'd0, ctrl_cpha, ctrl_cpol, ctrl_cs_n};
                     default: PRDATA = 32'd0;
                 endcase
             end

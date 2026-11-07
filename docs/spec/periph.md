@@ -107,8 +107,11 @@ Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì 
 | `gpio_oe` | ra | 32 | 1 khi chân là ngõ ra |
 | `uart_rx` | vào | 1 | UART nhận |
 | `uart_tx` | ra | 1 | UART phát |
+| `spi_sclk`, `spi_mosi`, `spi_cs_n` | ra | 1 mỗi chân | SPI master (mục 8) |
+| `spi_miso` | vào | 1 | SPI nhận |
+| `pwm_o` | ra | 1 | Ngõ ra PWM (mục 9) |
 
-Tổng 100 chân tín hiệu. Vị trí chân trên die: `pnr/scripts/soc_floorplan.tcl` (cạnh trái và phải).
+Tổng 105 chân tín hiệu. Vị trí chân trên die: `pnr/scripts/soc_floorplan.tcl` (cạnh trái và phải).
 
 ## 7. DMA (`rtl/bus/dma_apb.v`, 0x4000_0000, RTL-15, Tầng 2)
 
@@ -131,21 +134,28 @@ Chỉ có khi `soc_top` dựng với `ENABLE_DMA = 1`. Khi đó DMA là master t
 - `irq = DONE & IRQ_EN`, qua 1 flop, vào IRQC bit 4. Phần mềm xoá bằng cách ghi 1 vào bit DONE của STATUS.
 - Quy trình: ghi SRC, DST, LEN, ghi CTRL = 1 (hoặc 3 nếu dùng ngắt), chờ DONE hoặc ngắt, đọc ERR, ghi STATUS = 2 để xoá DONE.
 
-## 8. SPI (Serial Peripheral Interface)
-Base Address: `0x2000_3000`
+## 8. SPI (`rtl/periph/spi_apb.v`, 0x2000_3000, RTL-13)
 
-| Offset | Tên thanh ghi | R/W | Mô tả chi tiết |
-|--------|---------------|-----|----------------|
-| `0x00` | `SPI_DATA`    | R/W | Thanh ghi dữ liệu (TX/RX buffer) |
-| `0x04` | `SPI_CTRL`    | R/W | Thanh ghi điều khiển (Kích hoạt, CPOL, CPHA, Cờ ngắt) |
-| `0x08` | `SPI_STATUS`  | R   | Thanh ghi trạng thái (Busy, TX Empty, RX Full) |
-| `0x0C` | `SPI_CLKDIV`  | R/W | Bộ chia tần số clock cho SPI |
+SPI master, khung 8 bit, gửi bit cao trước. Truy cập theo word, offset khác trả PSLVERR. Bản đồ thanh ghi theo RTL (chốt 07/11).
 
-## 9. PWM (Pulse Width Modulation)
-Base Address: `0x2000_5000`
+| Offset | Tên | R/W | Ý nghĩa |
+| --- | --- | --- | --- |
+| `0x00` | `DATA` | R/W | Ghi: byte [7:0] cần gửi, bắt đầu truyền ngay. Đọc: byte nhận được ở lần truyền gần nhất |
+| `0x04` | `STATUS` | R | Bit 0 `BUSY`: 1 khi đang truyền. Ghi vào đây không có tác dụng |
+| `0x08` | `CTRL` | R/W | [15:8] bộ chia clock (`sclk` đổi mức sau mỗi `DIV + 1` chu kỳ), [2] CPHA, [1] CPOL, [0] `cs_n` (phần mềm tự kéo xuống). Reset `0x1` |
 
-| Offset | Tên thanh ghi | R/W | Mô tả chi tiết |
-|--------|---------------|-----|----------------|
-| `0x00` | `PWM_CTRL`    | R/W | Thanh ghi điều khiển (Bật/tắt PWM) |
-| `0x04` | `PWM_PERIOD`  | R/W | Cấu hình tổng chu kỳ (Period) của xung |
-| `0x08` | `PWM_DUTY`    | R/W | Cấu hình thời gian mức cao (Duty Cycle) |
+- Phần mềm ghi `CTRL` để chọn chế độ và kéo `cs_n` xuống, ghi `DATA`, đợi `BUSY = 0`, đọc `DATA`.
+- Không có ngắt, IRQC bit 3 (`SOC_IRQ_SPI`) nối 0.
+- `tb_soc` nối `spi_mosi` vòng về `spi_miso`, `fw/tests/soc/spi_pwm.S` kiểm chế độ 0 và chế độ 3.
+
+## 9. PWM (`rtl/periph/pwm_apb.v`, 0x2000_5000, RTL-13)
+
+Truy cập theo word, offset khác trả PSLVERR. Bản đồ thanh ghi theo RTL (chốt 07/11).
+
+| Offset | Tên | R/W | Ý nghĩa |
+| --- | --- | --- | --- |
+| `0x00` | `PERIOD` | R/W | Chu kỳ PWM, tính bằng số chu kỳ clock. Reset 0 |
+| `0x04` | `DUTY` | R/W | Số chu kỳ mức cao trong một chu kỳ PWM. `DUTY = 0` luôn thấp, `DUTY ≥ PERIOD` luôn cao. Reset 0 |
+| `0x08` | `CTRL` | R/W | Bit 0 `EN`: 1 = phát PWM. `EN = 0` hoặc `PERIOD = 0` thì `pwm_o = 0`. Reset 0 |
+
+- `tb_soc` nối `pwm_o` vào chân `gpio_i[15]`, `spi_pwm.S` đọc lại qua GPIO `DATA_IN`.

@@ -97,8 +97,8 @@ TEST_CODE_BEGIN
     EXPECT_TRAP(12, 7, 0x00010000, sw a0, 0(a5))
     li   a5, 0x10004000
     EXPECT_TRAP(13, 7, 0x10004000, sw a0, 0(a5))        // ngay sau DMEM 16 KB
-    li   a5, 0x20003000
-    EXPECT_TRAP(14, 5, 0x20003000, lw a0, 0(a5))        // SPI slot is disabled
+    li   a5, 0x20004000
+    EXPECT_TRAP(14, 5, 0x20004000, lw a0, 0(a5))        // I2C slot is disabled (no RTL yet)
     li   a5, 0x30000400
     EXPECT_TRAP(15, 5, 0x30000400, lw a0, 0(a5))        // accel_apb PSLVERR
     EXPECT_TRAP(16, 7, 0x30000300, sw a0, 0x300(s0))    // ghi C_BUF: PSLVERR

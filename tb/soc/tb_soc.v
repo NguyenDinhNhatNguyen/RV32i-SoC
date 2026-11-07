@@ -13,6 +13,9 @@
 // GPIO pads: a pin with gpio_oe = 1 reads back its own gpio_o, the others read PAD_IN.
 // UART: uart_tx loops back to uart_rx. The tb 8N1 decoder samples uart_tx with the
 // UART's current BAUDDIV, prints characters to the log and catches start/stop bit errors.
+// SPI: spi_mosi loops back to spi_miso, so a transfer reads back the byte it sent.
+// PWM: pwm_o drives the pad of gpio_i[15] (PAD_IN bit 15 is 0, so with the PWM off the pad
+// reads 0 as before). Firmware samples the PWM output through GPIO DATA_IN.
 //
 // Result rules, as in tb_core:
 //   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1
@@ -40,8 +43,10 @@ module tb_soc;
 
     wire [31:0] gpio_i, gpio_o, gpio_oe;
     wire        uart_tx;
+    wire        spi_sclk, spi_mosi, spi_cs_n, pwm_o;
+    wire [31:0] pad = PAD_IN | {16'd0, pwm_o, 15'd0};
 
-    assign gpio_i = (gpio_oe & gpio_o) | (~gpio_oe & PAD_IN);
+    assign gpio_i = (gpio_oe & gpio_o) | (~gpio_oe & pad);
 
     soc_top #(
         .ENABLE_M         (ENABLE_M),
@@ -54,7 +59,12 @@ module tb_soc;
         .gpio_o  (gpio_o),
         .gpio_oe (gpio_oe),
         .uart_rx (uart_tx),             // Loopback
-        .uart_tx (uart_tx)
+        .uart_tx (uart_tx),
+        .spi_sclk(spi_sclk),
+        .spi_mosi(spi_mosi),
+        .spi_miso(spi_mosi),            // Loopback
+        .spi_cs_n(spi_cs_n),
+        .pwm_o   (pwm_o)
     );
 
     // ---------------------------------------------------------- memory load

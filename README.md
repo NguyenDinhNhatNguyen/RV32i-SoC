@@ -49,7 +49,7 @@ Cách làm việc với Git và quy trình commit: [CONTRIBUTING.md](CONTRIBUTIN
 | --- | --- | --- |
 | [`rtl/core`](rtl/core) | Lõi RV32I | Nhân |
 | [`rtl/bus`](rtl/bus), [`rtl/mem`](rtl/mem) | Interconnect, wrapper SRAM, soc_top | Phát |
-| [`rtl/periph`](rtl/periph) | Timer, UART, GPIO (sau này SPI, PWM, I2C) | Phúc |
+| [`rtl/periph`](rtl/periph) | Timer, UART, GPIO, SPI, PWM (I2C chưa có RTL) | Phúc |
 | [`rtl/accel`](rtl/accel) | Lõi Lab 2 và wrapper accelerator | Nguyên |
 | [`tb`](tb) | Testbench khối, lõi và mức SoC | Hiếu (+ chủ khối) |
 | [`fw`](fw) | Firmware, linker script, crt0, benchmark | Hiếu |

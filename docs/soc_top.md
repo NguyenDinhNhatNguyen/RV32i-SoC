@@ -13,6 +13,7 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 | `tb/soc/tb_soc.v` | Testbench mức SoC, chỉ nối chân của chip |
 | `fw/tests/soc/soc.S` | Test Timer, ngắt, WFI, UART, GPIO, accelerator, IRQC, truy cập sai |
 | `fw/tests/soc/dma.S` | Test DMA trong SoC (chỉ chạy với `ENABLE_DMA = 1`) |
+| `fw/tests/soc/spi_pwm.S` | Test SPI và PWM trong SoC (RTL-13) |
 | `scripts/soc_run.sh` | Chạy một bài trên `tb_soc`, gọi từ `make fw-soc` |
 | `syn/constraints/soc.sdc` | SDC v1 của `soc_top` (STA-01), dùng chung Genus, Innovus, Tempus và OpenSTA |
 
@@ -24,8 +25,10 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 | `rst_n` | in | Reset ngoài, tích cực thấp, bất đồng bộ |
 | `gpio_i[31:0]`, `gpio_o[31:0]`, `gpio_oe[31:0]` | in, out, out | GPIO. `gpio_oe = 1` là ngõ ra, pad 3 trạng thái nối ở mức chip |
 | `uart_rx`, `uart_tx` | in, out | UART 8N1, mặc định 115200 baud ở 50 MHz (`BAUDDIV = 27`) |
+| `spi_sclk`, `spi_mosi`, `spi_cs_n`, `spi_miso` | out, out, out, in | SPI master (RTL-13), `spi_cs_n` mặc định 1 |
+| `pwm_o` | out | PWM (RTL-13) |
 
-Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
+Tổng cộng 105 chân tín hiệu (thêm 5 chân SPI, PWM từ 07/11). Đây là danh sách cho pin plan (PD-02).
 
 ## 3. Sơ đồ nối
 
@@ -38,6 +41,8 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
                                  └─► apb_bridge ─┬─ khe 0 timer_apb ── irq_timer, irq_software, mtime ─► core
                                                  ├─ khe 1 uart_apb ─── uart_rx/tx, irq ─► IRQC bit 0
                                                  ├─ khe 2 gpio_apb ─── gpio_i/o/oe
+                                                 ├─ khe 3 spi_apb ──── spi_sclk/mosi/miso/cs_n (ENABLE_SPI = 1)
+                                                 ├─ khe 5 pwm_apb ──── pwm_o (ENABLE_PWM = 1)
                                                  ├─ khe 6 irqc_apb ─── irq ─► irq_external của core
                                                  ├─ khe 7 accel_apb ── irq ─► IRQC bit 1
                                                  └─ khe 8 dma_apb ──── irq ─► IRQC bit 4 (ENABLE_DMA = 1)
@@ -69,19 +74,22 @@ Tổng cộng 100 chân tín hiệu. Đây là danh sách cho pin plan (PD-02).
 | 0 | Timer | Đã nối |
 | 1 | UART | Đã nối (RTL-10) |
 | 2 | GPIO | Đã nối, `W = 32` |
-| 3, 4, 5 | SPI, I2C, PWM | Chưa có RTL (Tầng 1, 2) |
+| 3 | SPI | Đã nối khi `ENABLE_SPI = 1` (RTL-13, mặc định). Không có ngắt nên IRQC bit 3 vẫn nối 0 |
+| 4 | I2C | Chưa có RTL (`rtl/periph/i2c_apb.v` đang rỗng), Tầng 2 |
+| 5 | PWM | Đã nối khi `ENABLE_PWM = 1` (RTL-13, mặc định) |
 | 6 | IRQC | Đã nối (RTL-11) |
 | 7 | Accelerator | Đã nối qua `accel_apb` |
 | 8 | DMA | Đã nối khi `ENABLE_DMA = 1` (RTL-15). Với `ENABLE_DMA = 0` khe trả err |
 
-Khe chưa có RTL có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB.
+Khe chưa có RTL hoặc bị tắt bằng tham số có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB. Khi tắt SPI hay PWM, `soc_top` không khởi tạo khối mà tự nối khe về trạng thái rảnh và giữ chân ra ở mức nghỉ (`spi_cs_n = 1`, các chân khác 0), như cách làm với DMA.
 
-Thêm một khối mới vào `soc_top`, ví dụ SPI (làm giống cách đã nối UART, IRQC):
+Thêm một khối mới vào `soc_top`, ví dụ I2C (làm giống cách đã nối SPI, PWM):
 
-1. Khởi tạo khối, nối `psel[SOC_APB_SPI]`, `penable`, `pwrite`, `paddr`, `pwdata`.
+1. Khởi tạo khối, nối `psel[SOC_APB_I2C]`, `penable`, `pwrite`, `paddr`, `pwdata`.
 2. Nối `prdata`, `pready`, `pslverr` của khe vào chỗ đang gán giá trị rảnh.
-3. Thêm bit `SOC_APB_SPI` vào `APB_EN`.
-4. Nếu khối có ngắt: nối vào `irq_src[SOC_IRQ_SPI]` thay cho giá trị 0.
+3. Thêm bit `SOC_APB_I2C` vào `APB_EN`.
+4. Nếu khối có ngắt: nối vào `irq_src` (cần thêm bit trong `soc_map.vh`).
+5. Thêm chân mới vào `soc.sdc` (IO delay) và báo Nguyên cập nhật pin plan.
 
 ### 4.4 Tham số
 
@@ -90,6 +98,8 @@ Thêm một khối mới vào `soc_top`, ví dụ SPI (làm giống cách đã n
 | `ENABLE_M` | 1 | RV32M (đã pass rv32um, RTL-12) |
 | `ENABLE_WFI_SLEEP` | 1 | WFI cho core ngủ thật |
 | `ENABLE_DMA` | 0 | DMA và master thứ 2 của `sys_bus` (RTL-15, Tầng 2). Để 0 cho tới khi review 8/11 mở Tầng 2 |
+| `ENABLE_SPI` | 1 | SPI master ở khe 3 (RTL-13, Tầng 1) |
+| `ENABLE_PWM` | 1 | PWM ở khe 5 (RTL-13, Tầng 1) |
 | `GPIO_W` | 32 | Số chân GPIO. `gpio_apb` chỉ lint sạch với 32 |
 
 Kích thước IMEM, DMEM lấy từ `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong `rtl/bus/soc_map.vh`.
@@ -141,7 +151,7 @@ Kết quả kiểm SDC (OpenSTA ở nhà 26/10, Genus và Tempus ở trường 2
 
 ```sh
 scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 8 cấu hình ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA
-scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, riscv-tests trên soc_top
+scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, spi_pwm.S, riscv-tests trên soc_top
 ```
 
 Kết quả ngày 26/10 (sau khi thêm DMA). `fw-soc` dựng M0W0 với `ENABLE_DMA = 0` và M1W1 với `ENABLE_DMA = 1`, nên cả hai cách đều được chạy:
