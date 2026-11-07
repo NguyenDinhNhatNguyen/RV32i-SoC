@@ -11,7 +11,9 @@
 //   - Slave side: the request is held while ready = 0 (rule 1), no new request while a
 //     response is pending, at most 1 request pending on the whole bus, and unmapped
 //     addresses reach no slave and get err in the very next cycle.
-//   - N_MASTER = 2: both masters are served (round-robin).
+//   - N_MASTER = 2: both masters are served. Round-robin order: when both masters wait and
+//     no request is held at a slave, the master accepted last must not win again, so a
+//     fixed-priority arbiter fails.
 // Plusargs: +seed=<n> +n=<requests per master> +stall=<% ready = 0> +delay=<max delay>
 
 module tb_sys_bus;
@@ -198,6 +200,8 @@ module tb_sys_bus;
     integer       issued [0:NM-1];
     integer       accepted [0:NM-1];
     integer       n_err_unm = 0, n_err_apb = 0, n_rd = 0, n_wr = 0, n_b2b = 0;
+    integer       rr_last = 0;     // Master accepted last, sys_bus resets rr_q to 0
+    integer       n_rr = 0;        // Acceptances checked for round-robin order
     reg  [31:0]   a;
     reg  [1:0]    w;
     reg           unm_now;
@@ -249,6 +253,17 @@ module tb_sys_bus;
                     end
                 end
             end
+            // Round-robin order. sw_q != 0 means a request was held at a slave last cycle,
+            // then the bus must keep that grant (rule 1) and the order is not checked.
+            for (m = 0; m < NM; m = m + 1)
+                if (macc_q[m]) begin
+                    if (NM == 2 && m_req_valid == {NM{1'b1}} && sw_q == 3'b000) begin
+                        n_rr = n_rr + 1;
+                        if (m == rr_last)
+                            fail("round-robin: the master accepted last won again");
+                    end
+                    rr_last = m;
+                end
         end
     end
 
@@ -322,9 +337,11 @@ module tb_sys_bus;
         end
         if (n_err_unm == 0 || n_err_apb == 0 || n_rd == 0 || n_wr == 0 || n_b2b == 0)
             fail("missing transaction type");
+        if (NM == 2 && n_rr == 0)
+            fail("round-robin order was never checked");
         if (errors == 0)
-            $display("PASS: tb_sys_bus N_MASTER=%0d: %0d requests (%0d reads, %0d writes, %0d unmapped err, %0d APB err), %0d requests accepted in a response cycle, %0d cycles (seed %0d)",
-                     NM, total, n_rd, n_wr, n_err_unm, n_err_apb, n_b2b, cycle, seed0);
+            $display("PASS: tb_sys_bus N_MASTER=%0d: %0d requests (%0d reads, %0d writes, %0d unmapped err, %0d APB err), %0d requests accepted in a response cycle, %0d round-robin checks, %0d cycles (seed %0d)",
+                     NM, total, n_rd, n_wr, n_err_unm, n_err_apb, n_b2b, n_rr, cycle, seed0);
         else
             $display("FAIL: tb_sys_bus N_MASTER=%0d: %0d loi (seed %0d)", NM, errors, seed0);
         $finish;

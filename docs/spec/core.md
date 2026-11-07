@@ -49,7 +49,7 @@ Hình sinh từ `docs/figures/core_microarch.py`. Muốn sửa thì đổi toạ
 1. Từ WB: trap, MRET, FENCE.I → huỷ lệnh ở EX (kể cả yêu cầu bus của nó trong cùng chu kỳ), PC ← đích.
 2. Từ EX: branch/JAL/JALR nhảy → huỷ lệnh đang lấy. Mặc định đoán không nhảy.
 
-Dự đoán nhánh (`ENABLE_BTB`, mặc định 1 là BTB 8 entry, chờ review 8/11, chi tiết ở `docs/btb_eval.md`): `ENABLE_BTB=1` thêm BTB `rv32_btb` tra ở IF, `ENABLE_BTB=2` đoán tĩnh nhánh lùi nhảy. EX vẫn quyết định nhánh và chỉ chuyển hướng khi đoán sai (lại PC+4 hoặc tới đích), phạt 1 chu kỳ như cũ. Với `ENABLE_BTB=0` logic giống hệt bản trước (đã chứng minh bằng Yosys).
+Dự đoán nhánh (`ENABLE_BTB`, mặc định 1 là BTB 8 entry, đã chốt bật 07/11, chi tiết ở `docs/btb_eval.md`): `ENABLE_BTB=1` thêm BTB `rv32_btb` tra ở IF, `ENABLE_BTB=2` đoán tĩnh nhánh lùi nhảy. EX vẫn quyết định nhánh và chỉ chuyển hướng khi đoán sai (lại PC+4 hoặc tới đích), phạt 1 chu kỳ như cũ. Với `ENABLE_BTB=0` logic giống hệt bản trước (đã chứng minh bằng Yosys).
 
 ### 4.5 Hazard và forwarding
 

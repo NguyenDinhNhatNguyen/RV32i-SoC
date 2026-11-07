@@ -23,8 +23,9 @@
 // irq_external comes from the IRQC interrupt controller (RTL-11, slot 6), which gathers the
 // UART, accelerator and DMA irq lines (bit map SOC_IRQ_* in soc_map.vh).
 //
-// ENABLE_DMA = 1 (RTL-15, tier 2) adds the DMA: sys_bus gets a second master with round-robin
-// arbitration, the DMA config registers sit in APB slot 8 and its irq goes to IRQC bit 4.
+// ENABLE_DMA = 1 (RTL-15, tier 2, default since 07/11) adds the DMA: sys_bus gets a second
+// master with round-robin arbitration, the DMA config registers sit in APB slot 8 and its
+// irq goes to IRQC bit 4.
 // With ENABLE_DMA = 0 the bus has one master and slot 8 returns err.
 //
 // SPI (RTL-13, slot 3) and PWM (RTL-13, slot 5) are on by default. With ENABLE_SPI = 0 or
@@ -37,7 +38,7 @@
 module soc_top #(
     parameter ENABLE_M         = 1,     // RV32M passes rv32um (RTL-12)
     parameter ENABLE_WFI_SLEEP = 1,
-    parameter ENABLE_DMA       = 0,     // Tier 2, opened only after the 8/11 review
+    parameter ENABLE_DMA       = 1,     // RTL-15, tier 2, settled on 07/11
     parameter ENABLE_SPI       = 1,     // RTL-13, tier 1
     parameter ENABLE_PWM       = 1,     // RTL-13, tier 1
     parameter GPIO_W           = 32     // gpio_apb is lint clean only with W = 32

@@ -32,7 +32,7 @@ module tb_soc;
 
     parameter ENABLE_M         = 1;
     parameter ENABLE_WFI_SLEEP = 1;
-    parameter ENABLE_DMA       = 0;
+    parameter ENABLE_DMA       = 1;     // Same default as soc_top
     localparam BANK_W          = 2;     // Matches SOC_IMEM_BANK_W, SOC_DMEM_BANK_W and link.ld
     localparam WORDS           = 1024 << BANK_W;
     localparam [31:0] PAD_IN   = 32'hA5C3_0F96;

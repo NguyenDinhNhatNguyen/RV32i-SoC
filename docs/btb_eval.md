@@ -1,6 +1,6 @@
 # Thử nghiệm dự đoán nhánh cho rv32_core
 
-Chủ: Nhân. Đã merge vào main, mặc định `ENABLE_BTB=1`. Chốt bật hay tắt ở buổi review 8/11.
+Chủ: Nhân. Đã merge vào main, mặc định `ENABLE_BTB=1`. Nhóm đã chốt bật BTB 8 entry ngày 07/11 (RTL-18).
 Quyết định ghi ở `docs/core_decisions.md` (D-041).
 
 ## 1. Tóm tắt
@@ -10,7 +10,7 @@ Quyết định ghi ở `docs/core_decisions.md` (D-041).
   - (a) `ENABLE_BTB=2`: đoán tĩnh, nhánh lùi và JAL coi là nhảy.
   - (b) `ENABLE_BTB=1`: BTB 8 hoặc 16 entry, bộ đếm 2 bit, tra ở IF.
 - Hai phương án tăng hiệu năng 7 đến 11 %. BTB 8 entry thêm khoảng 4 400 µm² (Nangate45, +15 % core có RV32M). Phương án tĩnh gần như không tốn diện tích nhưng nối tổ hợp ngõ ra IMEM vào địa chỉ IMEM.
-- **Đề xuất:** bật BTB 8 entry (`ENABLE_BTB=1`) cho bản nộp, chốt trước khi chạy Genus (STA-03 từ 9/11). Không dùng phương án tĩnh. Lý do ở mục 5.
+- **Đã chốt (07/11):** bật BTB 8 entry (`ENABLE_BTB=1`) cho bản nộp, chốt trước khi chạy Genus (STA-03 từ 9/11). Không dùng phương án tĩnh. Lý do ở mục 5.
 - `ENABLE_BTB=0` giống hệt RTL trước đây về logic: Yosys chứng minh tương đương (mục 4.1).
 
 ## 2. Thiết kế
@@ -143,12 +143,12 @@ Yosys `equiv_make`, `equiv_simple -seq 2`, `equiv_induct -seq 2` so `rv32_core` 
 
 ## 5. Đề xuất
 
-**Bật BTB 8 entry (`ENABLE_BTB=1`, `BTB_ENTRIES=8`) cho bản nộp. Chốt ở buổi review 8/11, trước khi chạy Genus (STA-03 từ 9/11).**
+**Bật BTB 8 entry (`ENABLE_BTB=1`, `BTB_ENTRIES=8`) cho bản nộp. Đã chốt ngày 07/11 (RTL-18), trước khi chạy Genus (STA-03 từ 9/11).**
 
 - Dự đoán nhánh là một điểm cộng nhóm đã chọn (`docs/spec/requirements.md`, mở rộng lõi), cùng nhóm với tối ưu CPI. BTB 8 entry tăng CoreMark/MHz và DMIPS/MHz 7 đến 10 % trên `soc_top`.
-- Lần chạy Genus `soc_top` đầu tiên ở trường (29/10, `docs/sta_results.md`) đã dùng BTB 8 entry và đạt 20 ns. Chốt BTB ở review 8/11 thì giữ được cấu hình này cho STA-03, không tốn thêm vòng flow nào. Nếu review chọn tắt BTB thì phải chạy lại flow.
+- Lần chạy Genus `soc_top` đầu tiên ở trường (29/10, `docs/sta_results.md`) đã dùng BTB 8 entry và đạt 20 ns. Chốt BTB trước STA-03 nên giữ được cấu hình này, không tốn thêm vòng flow nào.
 - BTB 8 entry thêm khoảng 4 400 µm² (+15 % core có RV32M, flow nhà), khoảng 480 flop. So với cả SoC (SRAM macro, accelerator) thì nhỏ. Timing ở 50 MHz còn dư nhiều, `if_addr_o` vẫn ra từ flop nên không đổi quy tắc thiết kế của core.
-- BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, toàn bộ test PASS với `ENABLE_BTB=1` (mục 7). `ENABLE_BTB=0` vẫn giống hệt RTL cũ (mục 4.1), nên nếu review không đồng ý thì chỉ cần đổi lại một define.
+- BTB đã kiểm chứng đủ: `tb_rv32_btb` so với mô hình, toàn bộ test PASS với `ENABLE_BTB=1` (mục 7). `ENABLE_BTB=0` vẫn giống hệt RTL cũ (mục 4.1), nên nếu sau này phải tắt thì chỉ cần đổi lại một define.
 - BTB 16 entry tốn gấp đôi diện tích BTB 8 để lời thêm khoảng 1 %. Không đáng.
 - Phương án tĩnh rẻ về diện tích và nhanh nhất ở Dhrystone. Nhưng nó nối tổ hợp ngõ ra IMEM vào địa chỉ IMEM, phá quy tắc thiết kế của core và làm khó floorplan, SDC. Không dùng.
 - Muốn thêm hiệu năng sau này thì bước rẻ nhất là ngăn xếp địa chỉ trả về (RAS) 2 đến 4 entry cho `ret`. JALR đang chiếm khoảng 1/3 số lần đoán sai còn lại ở Dhrystone.
@@ -166,7 +166,7 @@ make sta-core-nangate              # diện tích và timing mọi cấu hình
 - `BTB` và `BTB_N` đổi mặc định của `rv32_core` qua `-D` cho mọi bản dịch Icarus và Verilator (`tb_core`, `tb_soc`, `tb_boot`, `lint-soc`).
 - File `.vvp` không ghi lại cấu hình. Khi `BTB`/`BTB_N` khác lần chạy trước (lưu ở `tb/core/out/btb.cfg`), Makefile xoá mọi `.vvp` trong `tb/core/out`, `tb/soc/out`, `tb/boot/out`. Đừng chạy hai cấu hình cùng lúc trên một bản checkout.
 - Log có thêm dòng `BENCH branch` (tb_core) và `BENCH soc region <k> branch` (`scripts/bench_soc_mon.v`): số nhánh, số nhảy, JAL, JALR, số lần chuyển hướng và tỉ lệ đoán đúng.
-- Flow Cadence đọc `rv32_defs.vh` nên tự dùng BTB 8 entry. Nếu review không đồng ý thì đổi `RV_ENABLE_BTB_DEFAULT` về 0 trong `rv32_defs.vh`, hoặc thêm define đó khi đọc RTL trong Genus. Không cần sửa `soc_top`.
+- Flow Cadence đọc `rv32_defs.vh` nên tự dùng BTB 8 entry. Nếu sau này phải tắt thì đổi `RV_ENABLE_BTB_DEFAULT` về 0 trong `rv32_defs.vh`, hoặc thêm define đó khi đọc RTL trong Genus. Không cần sửa `soc_top`.
 
 ## 7. Kiểm chứng
 

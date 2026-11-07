@@ -66,7 +66,7 @@ make synth-soc > synth_soc.txt 2>&1 &
 
 | Mục | Nội dung |
 | --- | --- |
-| Tham số | Mặc định của `soc_top`: `ENABLE_M = 1`, `ENABLE_WFI_SLEEP = 1`, `ENABLE_DMA = 0`, lõi có BTB 8 entry |
+| Tham số | Mặc định của `soc_top`: `ENABLE_M = 1`, `ENABLE_WFI_SLEEP = 1`, `ENABLE_DMA = 1`, lõi có BTB 8 entry |
 | SRAM macro | Đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib`. Netlist phải có đúng 8 macro, khác 8 là `ERROR` |
 | Cấm scan flop, giữ flop | Như `synth-blocks` |
 | Mạng reset | `ideal_seq_async_pins false` trên design (31/10), để Genus buffer `rst_n_sync` theo `set_max_fanout` của `soc.sdc` |

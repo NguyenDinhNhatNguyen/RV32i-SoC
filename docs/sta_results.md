@@ -40,6 +40,8 @@ OpenSTA 3.1 với Nangate45 typical, netlist Yosys (`make sta-soc-nangate`), mac
 | --- | --- | --- | --- | --- | --- | --- |
 | 26/10 | Kiểm `soc.sdc` (STA-01) | +14,994 | +0,004 | +4,909 | -2,561 | 51 955 |
 | 29/10 | BTB 8 entry | +14,994 | +0,004 | +2,279 | -2,983 | 56 719 |
+| 07/11 | Có SPI, PWM | +14,925 | +0,004 | +1,517 | -3,105 | 58 648 |
+| 07/11 | Có SPI, PWM, DMA bật mặc định | +14,880 | +0,004 | +0,529 | -3,264 | 60 426 |
 
 Removal âm vì Yosys không buffer mạng reset (cùng nguyên nhân như mục 1). Setup tốt vì đường găng qua macro không được tính.
 
@@ -51,7 +53,7 @@ Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), clock gating 
 | --- | --- | --- | --- | --- | --- | --- |
 | 29/10 | `sys_bus` | 585,2 | 3 | 0 | +9,562 | |
 | 29/10 | `apb_bridge` | 1 435,0 | 94 | 4 | +13,713 | |
-| 29/10 | `dma_apb` | 2 318,8 | 191 | 7 | +9,524 | Trong `soc_top` đang tắt |
+| 29/10 | `dma_apb` | 2 318,8 | 191 | 7 | +9,524 | Bật mặc định trong `soc_top` từ 07/11 |
 | 29/10 | `imem_port` | 33 649,8 | 38 | 1 | +10,044 | 4 macro, logic 1 649,8 |
 | 29/10 | `sram_wrap` | 32 725,5 | 5 | 0 | +10,556 | 4 macro, logic 725,5 |
 | 29/10 | `timer_apb` | 2 110,1 | 130 | 3 | +9,728 | |
@@ -87,4 +89,4 @@ Từ 20 tới 6 ns là netlist 29–30/10 (trước khi giữ flop). 5 và 4 ns 
 Kết luận:
 - **F_max sau tổng hợp khoảng 200 MHz.** Đường găng luôn nằm trong lõi, từ macro qua so sánh nhánh tới `if_pc_q`.
 - Diện tích tăng chậm tới 10 ns (+0,46%), rồi tăng nhanh: +5,5% ở 5 ns, +10,9% ở 4 ns. Tần số chốt ở STA-04 nên để dư nhiều so với 200 MHz.
-- Còn lại: quét lại trên RTL đã freeze sau review 8/11 (BTB, `ENABLE_DMA`, SPI và PWM), chạy Tempus ở chu kỳ chọn.
+- Còn lại: quét lại trên RTL đã freeze sau review 8/11 (có SPI, PWM, DMA và BTB 8 entry), chạy Tempus ở chu kỳ chọn.
