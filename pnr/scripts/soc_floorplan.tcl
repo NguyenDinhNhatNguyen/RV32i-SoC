@@ -9,12 +9,13 @@
 
 # ---- Parameters ----------------------------------------------------------------------
 # Core size from estimate_die.py with the standard cell area only (macros are added by the
-# script) at 70% density: 55 700 um2 = 53 900 um2 (Genus 31/10, buffered reset) plus about
-# 1800 um2 for SPI and PWM (added 07/11, Yosys Nangate45 scaled like uart_apb). The 29/10 run
+# script) at 70% density: 58 000 um2 = 53 900 um2 (Genus 31/10, buffered reset) plus about
+# 1800 um2 for SPI and PWM (added 07/11, Yosys Nangate45 scaled like uart_apb) plus about
+# 2300 um2 for the DMA (on by default since 07/11, Genus dma_apb block 29/10). The 29/10 run
 # used 524 x 523 um because the total area with macros was given as --std-area, which counted
 # the macros twice.
-set CORE_W     397.0      ;# um
-set CORE_H     400.1
+set CORE_W     402.0      ;# um
+set CORE_H     403.6
 set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0

@@ -59,7 +59,13 @@ module tb_boot;
         .gpio_o  (gpio_o),
         .gpio_oe (gpio_oe),
         .uart_rx (host_tx),
-        .uart_tx (uart_tx)
+        .uart_tx (uart_tx),
+        // SPI and PWM are not used by the bootloader: spi_miso is tied low, outputs stay open
+        .spi_sclk (),
+        .spi_mosi (),
+        .spi_miso (1'b0),
+        .spi_cs_n (),
+        .pwm_o    ()
     );
 
     // ---------------------------------------------------------- IMEM preload
