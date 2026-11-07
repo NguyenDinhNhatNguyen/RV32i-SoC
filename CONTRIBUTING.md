@@ -1,4 +1,4 @@
-# Làm việc với Git
+# Quy trình làm việc của nhóm
 
 Quy trình chung của nhóm khi sửa code và đẩy lên GitHub.
 
@@ -30,6 +30,24 @@ git commit -m "Add ..."     # 5. tiếng Anh, câu mệnh lệnh
 git pull                    # 6. lấy thay đổi của người khác, commit của mình nằm trên cùng
 git push                    # 7. đẩy lên
 ```
+
+## Kiểm RTL trước khi đánh "Xong" trên Sheet
+
+Người làm RTL tự kiểm khối của mình trước, rồi DV và PD mới kiểm lại sau.
+
+1. `git pull` để có bản mới nhất.
+2. Chạy lệnh theo khối mình sửa, trong WSL, tại thư mục repo:
+
+   | Khối | Lệnh |
+   | --- | --- |
+   | Core | `scripts/eda.sh run "make lint-core unit-core fw-core isa-core"` |
+   | Bus, bộ nhớ, `soc_top` | `scripts/eda.sh run "make lint-bus lint-soc unit-bus fw-bus fw-soc"` |
+   | Ngoại vi | `scripts/eda.sh run "make lint-soc unit-periph fw-soc"` |
+   | Bootloader | `scripts/eda.sh run "make sim-boot"` |
+   | Accelerator | `scripts/eda.sh check` |
+
+3. Đạt khi lint không có dòng `%Warning`, mọi test ra `0 failed` hoặc `PASS`. Khối mới thì thêm testbench của nó vào target tương ứng trong Makefile (ví dụ `PERIPH_UNIT_TBS` của `make unit-periph`), để lần sau cả nhóm chạy được.
+4. Ghi vào cột "Bằng chứng" trên Sheet: lệnh đã chạy, kết quả, và commit dạng `abc1234 "Tên commit"`.
 
 ## Khi gặp sự cố
 

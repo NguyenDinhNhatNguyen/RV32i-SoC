@@ -42,7 +42,7 @@ scripts/eda.sh run "make lint-bus unit-bus fw-bus lint-soc fw-soc"  # bus và So
 scripts/eda.sh run "make help"                                   # danh sách target
 ```
 
-Cách làm việc với Git và quy trình commit: [CONTRIBUTING.md](CONTRIBUTING.md).
+Cách làm việc với Git, quy trình commit và cách tự kiểm RTL trước khi đánh "Xong" trên Sheet: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Cấu trúc thư mục
 
