@@ -16,14 +16,15 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 
 Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
 
-## Trạng thái (31/10)
+## Trạng thái (07/11)
 
 | Phần | Kết quả |
 | --- | --- |
-| Lõi RV32IM | riscv-tests 472/472, test assembly 96/96 |
-| Bus, SoC | fw-bus 124/124, fw-soc 127/127 |
+| Lõi RV32IM | riscv-tests 472/472, test assembly 112/112, unit 11/11. GLS có SDF 49/49, LEC 0 non-equivalent |
+| Bus, SoC | fw-bus 124/124, fw-soc 129/129 (có SPI, PWM), bootloader `sim-boot` PASS, lint 0 warning |
+| Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM đã ghép vào `soc_top`. I2C chưa có RTL trên main |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
-| SoC qua Cadence | Genus và Tempus đạt 20 ns, mạng reset có buffer (31/10). F_max sau tổng hợp khoảng 200 MHz (`docs/sta_results.md`). PnR với netlist mới đang chờ (`docs/pnr_soc_status.md`) |
+| SoC qua Cadence | Genus và Tempus đạt 20 ns, mạng reset có buffer (31/10). F_max sau tổng hợp khoảng 200 MHz (`docs/sta_results.md`). Script PnR đã có chân SPI, PWM, đang chờ netlist mới (`docs/pnr_soc_status.md`) |
 
 ## Bắt đầu nhanh
 
