@@ -918,9 +918,11 @@ clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
 
 # ---------------------------------------------------------------------------
-# Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb.
+# Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb,
+# RTL-13 spi_apb, pwm_apb.
 # Unit tests for VER-02. Runs at home (Icarus). Results in tb/unit/out/periph (ignored).
-#   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb (TB=tb_uart_apb runs one)
+#   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb, tb_spi_apb,
+#                                  tb_pwm_apb (TB=tb_uart_apb runs one)
 #   make unit-periph PLUSARGS="+seed=7"
 #   make lint-periph               Verilator -Wall on each module in rtl/periph on its own, 0 warnings
 #                                  (lint-soc also lints them inside soc_top)
@@ -929,7 +931,7 @@ PERIPH_RTL      := $(wildcard rtl/periph/*.v)
 PERIPH_OUT      := tb/unit/out/periph
 PERIPH_IVFLAGS  := -g2012 -Wall
 PERIPH_VLFLAGS  := --lint-only -Wall -y rtl/periph
-PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb
+PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb tb_spi_apb tb_pwm_apb
 ifneq ($(TB),)
 PERIPH_UNIT_TBS := $(filter $(TB),$(PERIPH_UNIT_TBS))
 endif
