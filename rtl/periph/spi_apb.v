@@ -45,13 +45,13 @@ module spi_apb #(
             assign PSLVERR = access & ~addr_ok;
             assign cs_n    = ctrl_cs_n;
 
-            // Xử lý ghi thanh ghi (APB Write)
+            // Handle register write (APB Write)
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
                     ctrl_div  <= 16'd0;
                     ctrl_cpha <= 1'b0;
                     ctrl_cpol <= 1'b0;
-                    ctrl_cs_n <= 1'b1; // Mặc định không chọn Slave (Active-Low)
+                    ctrl_cs_n <= 1'b1; // Default unselected Slave (Active-Low)
                 end else if (wr_ctrl) begin
                     ctrl_div  <= {8'd0, PWDATA[15:8]};
                     ctrl_cpha <= PWDATA[2];
@@ -60,7 +60,7 @@ module spi_apb #(
                 end
             end
 
-            // Trạng thái FSM SPI
+            // SPI FSM State
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
                     busy        <= 1'b0;
@@ -72,7 +72,7 @@ module spi_apb #(
                     rx_data     <= 8'd0;
                 end else begin
                     if (!busy) begin
-                        spi_clk_reg <= ctrl_cpol; // Rảnh: sclk giữ theo CPOL
+                        spi_clk_reg <= ctrl_cpol; // Idle: sclk held according to CPOL
                         if (wr_data) begin
                             tx_data <= PWDATA[7:0];
                             busy    <= 1'b1;
@@ -83,18 +83,18 @@ module spi_apb #(
                     end else begin
                         if (clk_cnt == 16'd0) begin
                             clk_cnt <= ctrl_div;
-                            spi_clk_reg <= ~spi_clk_reg; // Đảo trạng thái sclk
+                            spi_clk_reg <= ~spi_clk_reg; // Toggle sclk state
                             phase <= ~phase;
 
-                            // Lấy mẫu (Sample) MISO
+                            // Sample MISO
                             if ((!ctrl_cpha && phase == 1'b0) || (ctrl_cpha && phase == 1'b1)) begin
                                 rx_data[bit_cnt] <= miso;
                             end
 
-                            // Dịch bit (Shift) MOSI
+                            // Shift MOSI bit
                             if (phase == 1'b1) begin
                                 if (bit_cnt == 3'd0) begin
-                                    busy <= 1'b0; // Hoàn tất 8 bit
+                                    busy <= 1'b0; // Complete 8 bits
                                 end else begin
                                     bit_cnt <= bit_cnt - 3'd1;
                                 end
@@ -106,14 +106,11 @@ module spi_apb #(
                 end
             end
 
-            // MOSI xuất dữ liệu (Thay đổi theo CPHA và Phase)
+            // MOSI data output (Changes according to CPHA and Phase)
             assign mosi = tx_data[bit_cnt];
             assign sclk = spi_clk_reg;
 
-            // PWDATA[31:16] is not used by any register, ctrl_div[15:8] is always 0
-            wire unused_ok = &{1'b0, PWDATA[31:16]};
-
-            // Đọc thanh ghi (APB Read)
+            // Read register (APB Read)
             always @(*) begin
                 if (!addr_ok) PRDATA = 32'd0;
                 else case (widx)
