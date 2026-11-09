@@ -1,12 +1,12 @@
 `timescale 1ns/1ps
-// Testbench tự kiểm tra cho khối i2c_apb (RTL-14)
-// In ra "PASS: ..." nếu tất cả các bài test đều đúng.
+// Self-checking testbench for i2c_apb block (RTL-14)
+// Prints "PASS: ..." if all test cases pass successfully.
 
 module tb_i2c_apb;
     reg         PCLK = 1'b0;
     reg         PRESETn = 1'b0;
     
-    // Tín hiệu Bus cho DUT 1 (Mở I2C)
+    // Bus signals for DUT 1 (Enabled I2C)
     reg         PSEL = 1'b0;
     reg         PENABLE = 1'b0;
     reg         PWRITE = 1'b0;
@@ -19,7 +19,7 @@ module tb_i2c_apb;
     wire        scl_o, scl_oe, sda_o, sda_oe;
     wire        scl_i, sda_i;
 
-    // Giả lập cơ chế Open-Drain và điện trở kéo lên (Pull-up)
+    // Open-Drain mechanism and pull-up resistor emulation
     tri1 scl_line;
     tri1 sda_line;
     
@@ -29,11 +29,11 @@ module tb_i2c_apb;
     assign scl_i = scl_line;
     assign sda_i = sda_line;
 
-    // Tín hiệu do Dummy Slave điều khiển
+    // Signals driven by Dummy Slave
     reg slave_sda = 1'bz;
     assign sda_line = slave_sda;
 
-    // Khởi tạo DUT 1
+    // Instantiate DUT 1
     i2c_apb #(.ENABLE_I2C(1)) dut1 (
         .PCLK(PCLK), .PRESETn(PRESETn), .PSEL(PSEL), .PENABLE(PENABLE),
         .PWRITE(PWRITE), .PADDR(PADDR), .PWDATA(PWDATA), .PRDATA(PRDATA),
@@ -118,15 +118,6 @@ module tb_i2c_apb;
         end
     endtask
 
-	task wait_scl_low;
-    begin
-        @(negedge scl_line); // Đợi SCL bị kéo xuống 0
-        // Tránh bắt nhầm các xung nhiễu cực ngắn
-        #1;
-        while(scl_line !== 1'b0) @(negedge scl_line); 
-    end
-endtask
-
     initial begin
         #1000000;
         $display("FAIL: timeout");
@@ -145,73 +136,67 @@ endtask
         check(scl_line === 1'b1, "Reset: SCL High-Z (Pull-up)");
         check(sda_line === 1'b1, "Reset: SDA High-Z (Pull-up)");
 
-        // ---- 2. Cấu hình I2C DIV ----
-        // Cấu hình DIV = 4 để chạy nhanh mô phỏng
+        // ---- 2. Configure I2C DIV ----
+        // Configure DIV = 4 to speed up simulation
         apb_write(A_CTRL, 32'd4);
         apb_read(A_CTRL);
         check(rd == 32'd4, "Write/Read CTRL DIV = 4");
 
-	// ---- 3. Master truyền 1 Byte (Kèm lệnh START) + Slave ACK ----
-    fork
-        begin
-            apb_write(A_DATA, 32'hA5);
-            apb_write(A_CMD, 32'h09); // Bắt đầu phát START
-            wait_busy();
-        end
-        begin
-            // Tính toán thời gian tuyệt đối dựa trên cấu hình:
-            // APB Write mất 3 chu kỳ PCLK (30ns) = 30ns
-            // FSM vào pha START: mất 4 pha (mỗi pha 20ns) = 80ns
-            // Truyền 8 bit data: 8 * 80ns = 640ns
-            // Tổng thời gian chờ đến lúc FSM nhả SDA để đọc ACK: 30 + 80 + 640 = 750ns
-            
-            #750; // Chờ đúng thời gian Master truyền xong
-            
-            // Bây giờ là đầu nhịp ACK, Master chuẩn bị kéo SCL lên
-            slave_sda = 1'b0; // Kéo SDA xuống để báo ACK
-            
-            // Nhịp ACK kéo dài 80ns, ta giữ SDA trong 80ns rồi nhả ra
-            #80;
-            slave_sda = 1'bz;
-        end
-    join
-
-    // ---- 4. Master đọc 1 Byte + Gửi Master ACK ----
-    fork
-        begin
-            apb_write(A_CMD, 32'h04); // Bắt đầu đọc
-            wait_busy();
-        end
-        begin
-            // APB Write mất 30ns, FSM chuyển trạng thái chuẩn bị mất thêm khoảng 20ns
-            // Tổng cộng trễ 50ns trước khi bắt đầu đọc bit đầu tiên
-            #50;
-            
-            // Mỗi chu kỳ SCL (1 bit) dài 80ns
-            slave_sda = 1'b0; #80; // Bit 7 (0)
-            slave_sda = 1'b0; #80; // Bit 6 (0)
-            slave_sda = 1'b1; #80; // Bit 5 (1)
-            slave_sda = 1'b1; #80; // Bit 4 (1)
-            slave_sda = 1'b1; #80; // Bit 3 (1)
-            slave_sda = 1'b1; #80; // Bit 2 (1)
-            slave_sda = 1'b0; #80; // Bit 1 (0)
-            slave_sda = 1'b0; #80; // Bit 0 (0)
-            
-            // Xong 8 bit, đến nhịp ACK từ Master, Slave phải nhả đường truyền
-            slave_sda = 1'bz; 
-        end
-    join
+        // ---- 3. Master transmits 1 Byte (with START command) + Slave ACK ----
+        fork
+            // Thread 1: APB Master writes command
+            begin
+                apb_write(A_DATA, 32'hA5); // Data 10100101
+                apb_write(A_CMD, 32'h09);  // CMD: WRITE(Bit 3) + START(Bit 0) = 0x09
+                wait_busy();
+            end
+            // Thread 2: Dummy Slave receives and responds with ACK
+            begin
+                repeat(9) @(negedge scl_line); // Wait for 9 SCL falling edges (1 start + 8 bits)
+                slave_sda = 1'b0;              // Pull SDA down to logic 0 (ACK)
+                @(negedge scl_line);           // Release at the 9th clock
+                slave_sda = 1'bz;
+            end
+        join
         
-        // ---- 5. Gửi lệnh STOP ----
+        apb_read(A_CMD);
+        check(rd[1] == 1'b0, "TX: Slave ACK_IN is 0 (ACK received)");
+
+        // ---- 4. Master Reads 1 Byte + Sends Master ACK ----
+        fork
+            // Thread 1: APB Master issues READ command
+            begin
+                apb_write(A_CMD, 32'h04); // CMD: READ(Bit 2) = 1, ACK_OUT(Bit 4) = 0
+                wait_busy();
+            end
+            // Thread 2: Dummy Slave sends 0x3C (00111100)
+            begin
+                // SCL is already LOW from previous ACK cycle, place Bit 7 immediately
+                slave_sda = 1'b0; // Bit 7
+                @(negedge scl_line); slave_sda = 1'b0; // Bit 6
+                @(negedge scl_line); slave_sda = 1'b1; // Bit 5
+                @(negedge scl_line); slave_sda = 1'b1; // Bit 4
+                @(negedge scl_line); slave_sda = 1'b1; // Bit 3
+                @(negedge scl_line); slave_sda = 1'b1; // Bit 2
+                @(negedge scl_line); slave_sda = 1'b0; // Bit 1
+                @(negedge scl_line); slave_sda = 1'b0; // Bit 0
+                @(negedge scl_line); slave_sda = 1'bz; // Release SDA for Master ACK
+            end
+        join
+        
+        apb_read(A_DATA);
+        check(rd == 32'h3C, "RX: Data read matches Slave (0x3C)");
+        
+        // ---- 5. Send STOP command ----
         apb_write(A_CMD, 32'h02); // CMD: STOP(Bit 1) = 1
         wait_busy();
         check(scl_line === 1'b1 && sda_line === 1'b1, "STOP condition generated (SCL/SDA High)");
 
-        // ---- 6. Bẫy lỗi PSLVERR ----
+        // ---- 6. PSLVERR Trap ----
         apb_write(12'h00C, 32'hFFFF);
         check(err_seen === 1'b1, "Write unmapped addr -> PSLVERR");
 
-        // ---- 7. Kiểm tra DUT 2 (ENABLE_I2C = 0) ----
+        // ---- 7. Check DUT 2 (ENABLE_I2C = 0) ----
         @(negedge PCLK); PSEL2 = 1; PWRITE = 1; PADDR = A_CMD; PENABLE = 0; PWDATA = 32'h09;
         @(negedge PCLK); PENABLE = 1;
         #(HALF-2)
@@ -219,11 +204,11 @@ endtask
         check(scl_oe2 === 1'b0 && sda_oe2 === 1'b0, "DUT2: Output disables correctly");
         @(negedge PCLK); PSEL2 = 0; PENABLE = 0;
 
-        // ---- Kết luận ----
+        // ---- Conclusion ----
         if (errors == 0)
             $display("PASS: i2c_apb - Open-Drain TX/RX, START/STOP, ACK, FSM, Dummy Logic OK!");
         else
-            $display("FAIL: i2c_apb - %0d lỗi phát hiện", errors);
+            $display("FAIL: i2c_apb - %0d errors detected", errors);
             
         $finish;
     end

@@ -1,7 +1,4 @@
 // pwm_apb.v - PWM APB3 slave (RTL-13)
-//   0x00 PERIOD  RW  Chu kỳ PWM (tính bằng số xung nhịp)
-//   0x04 DUTY    RW  Thời gian mức cao (phải nhỏ hơn PERIOD)
-//   0x08 CTRL    RW  Bit 0: 1 = Enable phát PWM, 0 = Tạm dừng
 module pwm_apb #(
     parameter ENABLE_PWM = 1
 ) (
@@ -12,7 +9,7 @@ module pwm_apb #(
     input  wire        PWRITE,
     input  wire [11:0] PADDR,
     input  wire [31:0] PWDATA,
-    output reg  [31:0] PRDATA,
+    output wire [31:0] PRDATA, 
     output wire        PREADY,
     output wire        PSLVERR,
     output wire        pwm_out
@@ -35,7 +32,7 @@ module pwm_apb #(
             assign PREADY  = 1'b1;
             assign PSLVERR = access & ~addr_ok;
 
-            // Xử lý ghi thanh ghi APB
+            // Handle APB register write
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
                     period <= 32'd0;
@@ -50,7 +47,7 @@ module pwm_apb #(
                 end
             end
 
-            // Xử lý bộ đếm và phát xung PWM
+            // Handle counter and PWM generation
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
                     counter <= 32'd0;
@@ -61,7 +58,6 @@ module pwm_apb #(
                     end else begin
                         counter <= counter + 1;
                     end
-                    // Nếu duty = 0, chân pwm_reg sẽ luôn ở mức thấp
                     pwm_reg <= (counter < duty) ? 1'b1 : 1'b0;
                 end else begin
                     counter <= 32'd0;
@@ -71,23 +67,18 @@ module pwm_apb #(
 
             assign pwm_out = pwm_reg;
 
-            // Xử lý đọc thanh ghi APB
-            always @(*) begin
-                if (!addr_ok) PRDATA = 32'd0;
-                else case (widx)
-                    10'd0:   PRDATA = period;
-                    10'd1:   PRDATA = duty;
-                    10'd2:   PRDATA = {31'd0, enable};
-                    default: PRDATA = 32'd0;
-                endcase
-            end
+            // Handle APB register read using assign
+            assign PRDATA = (!addr_ok) ? 32'd0 :
+                            (widx == 10'd0) ? period :
+                            (widx == 10'd1) ? duty :
+                            (widx == 10'd2) ? {31'd0, enable} : 32'd0;
 
         end else begin : gen_no_pwm
-            // Dummy logic khi PWM bị disable cấu hình
+            // Dummy logic when PWM configuration is disabled
             assign PREADY  = 1'b1;
-            assign PSLVERR = (PSEL & PENABLE); // Báo lỗi nếu CPU cố truy cập
+            assign PSLVERR = (PSEL & PENABLE);
             assign pwm_out = 1'b0;
-            always @(PSEL or PENABLE or PADDR) PRDATA = 32'd0;
+            assign PRDATA  = 32'd0; 
         end
     endgenerate
 
