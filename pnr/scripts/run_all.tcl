@@ -117,9 +117,37 @@ ccopt_design
 try_cmd {report_ccopt_clock_trees -file $RPT/cts_clock_trees.rpt}   ; # skew <= 80 ps, latency < 0.8 ns
 try_cmd {report_ccopt_skew_groups -file $RPT/cts_skew_groups.rpt}
 optDesign -postCTS
+# Fix hold with a small margin instead of exactly 0 ps. Removal on the reset tree had only 6 ps
+# left before layout (Tempus 31/10, docs/sta_results.md), and pre-CTS hold had 1081 violations.
+try_cmd {setOptMode -holdTargetSlack 0.020}
 optDesign -postCTS -hold
 try_cmd {timeDesign -postCTS       -outDir $RPT/postcts_setup}
 try_cmd {timeDesign -postCTS -hold -outDir $RPT/postcts_hold}
+
+# timeDesign does not list recovery and removal on their own. Write them like
+# sta/scripts/sta_soc.tcl does, and one summary line per stage in slack_summary.txt.
+proc worst_slack {type} {
+    set s "n/a"
+    catch {
+        set p [report_timing -check_type $type -max_paths 1 -collection]
+        set s [get_property $p slack]
+    }
+    return $s
+}
+proc slack_reports {rpt stage} {
+    file mkdir $rpt/$stage
+    foreach t {recovery removal} {
+        catch {report_timing -check_type $t -max_paths 10 > $rpt/$stage/$t.rpt}
+    }
+    set line "stage=$stage"
+    foreach t {setup hold recovery removal} { append line " ${t}_ns=[worst_slack $t]" }
+    set fp [open $rpt/slack_summary.txt a]
+    puts $fp $line
+    close $fp
+    puts "PD: $line"
+}
+file delete -force $RPT/slack_summary.txt
+try_cmd {slack_reports $RPT postcts_async}
 saveDesign DBS/cts.enc
 
 # Route
@@ -168,6 +196,7 @@ try_cmd {verifyConnectivity -report $RPT/connectivity.rpt}
 if {[catch {verifyProcessAntenna -reportfile $RPT/antenna.rpt}]} { try_cmd {verifyProcessAntenna -report $RPT/antenna.rpt} }
 try_cmd {timeDesign -postRoute       -outDir $RPT/postroute_setup}
 try_cmd {timeDesign -postRoute -hold -outDir $RPT/postroute_hold}
+try_cmd {slack_reports $RPT postroute_async}
 try_cmd {reportGateCount -outfile $RPT/area.rpt}
 try_cmd {report_power -outfile $RPT/power.rpt}
 try_cmd {summaryReport -outdir $RPT/summary}

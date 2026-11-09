@@ -20,6 +20,7 @@ help:
 	@echo "make pnr-soc       - Innovus on soc_top with soc_floorplan.tcl, after make synth-soc (server)"
 	@echo "make save-pnr-soc  - copy only the text reports of pnr-soc into appendix/pnr_soc (also save-pnr-accel)"
 	@echo "make lint-core     - lint the RV32I core with Verilator, 0 warnings"
+	@echo "make lint-all      - every lint target (accel, core, bus, periph, soc), run after each merge"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -917,24 +918,44 @@ clean-bus:
 	rm -rf $(BUS_OUT) $(BUS_SOC_OUT)
 
 # ---------------------------------------------------------------------------
-# Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb.
+# Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb,
+# RTL-13 spi_apb, pwm_apb.
 # Unit tests for VER-02. Runs at home (Icarus). Results in tb/unit/out/periph (ignored).
-#   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb (TB=tb_uart_apb runs one)
+#   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb, tb_spi_apb,
+#                                  tb_pwm_apb (TB=tb_uart_apb runs one)
 #   make unit-periph PLUSARGS="+seed=7"
-# The peripherals are linted inside soc_top by make lint-soc.
+#   make lint-periph               Verilator -Wall on each module in rtl/periph on its own, 0 warnings
+#                                  (lint-soc also lints them inside soc_top)
 # ---------------------------------------------------------------------------
 PERIPH_RTL      := $(wildcard rtl/periph/*.v)
 PERIPH_OUT      := tb/unit/out/periph
 PERIPH_IVFLAGS  := -g2012 -Wall
-PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb
+PERIPH_VLFLAGS  := --lint-only -Wall -y rtl/periph
+PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb tb_spi_apb tb_pwm_apb
 ifneq ($(TB),)
 PERIPH_UNIT_TBS := $(filter $(TB),$(PERIPH_UNIT_TBS))
 endif
 
-unit-periph: SHELL := /bin/bash
-unit-periph: .SHELLFLAGS := -o pipefail -c
+lint-periph unit-periph: SHELL := /bin/bash
+lint-periph unit-periph: .SHELLFLAGS := -o pipefail -c
 
-.PHONY: unit-periph clean-periph
+.PHONY: lint-periph unit-periph clean-periph
+
+# Default parameters only. gpio_apb is lint clean only with W = 32 (see soc_top.v).
+# An empty file (RTL not pushed yet) is listed as SKIP, not linted.
+lint-periph:
+	@fail=0; \
+	for f in $(PERIPH_RTL); do \
+	  m=$$(basename $$f .v); \
+	  if [ ! -s $$f ]; then \
+	    echo "  [SKIP] lint $$m (empty file)"; \
+	  elif $(VERILATOR) $(PERIPH_VLFLAGS) --top-module $$m $$f; then \
+	    echo "  [ OK ] lint $$m"; \
+	  else \
+	    echo "  [FAIL] lint $$m"; fail=1; \
+	  fi; \
+	done; \
+	if [ $$fail = 0 ]; then echo "LINT-PERIPH PASS"; else echo "LINT-PERIPH FAIL"; exit 1; fi
 
 # Same pass rule as unit-bus: the log has a line starting with PASS and no FAIL line.
 # A TB name that matches nothing fails instead of passing with 0 runs.
@@ -1039,6 +1060,26 @@ fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
 
 clean-soc:
 	rm -rf $(SOC_OUT)
+
+# ---------------------------------------------------------------------------
+# Lint of the whole RTL (Hieu, VER-03). Run in the team Docker image after every merge
+# into main and log the result in docs/lint_status.md.
+#   make lint-all                  lint-accel, lint-core, lint-bus, lint-periph, lint-soc,
+#                                  keeps going after a failure and prints one line per target
+# ---------------------------------------------------------------------------
+LINT_ALL_TARGETS := lint-accel lint-core lint-bus lint-periph lint-soc
+
+.PHONY: lint-all
+
+lint-all:
+	@fail=0; sum=""; \
+	for t in $(LINT_ALL_TARGETS); do \
+	  echo "===== $$t"; \
+	  if $(MAKE) --no-print-directory $$t; then sum="$$sum  [ OK ] $$t\n"; \
+	  else sum="$$sum  [FAIL] $$t\n"; fail=1; fi; \
+	done; \
+	echo "===== summary ($$($(VERILATOR) --version))"; printf "$$sum"; \
+	if [ $$fail = 0 ]; then echo "LINT-ALL PASS"; else echo "LINT-ALL FAIL"; exit 1; fi
 
 # ---------------------------------------------------------------------------
 # Genus trial synthesis of each SoC block (Phat, STA-02). Runs ON THE SCHOOL SERVER only.

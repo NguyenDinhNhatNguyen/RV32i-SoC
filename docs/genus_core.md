@@ -32,7 +32,7 @@ Chạy theo thứ tự, từ thư mục repo. Mỗi bước in một dòng kết
 ### Bước 0. Cập nhật repo
 
 ```bash
-cd ~/rv32i-soc && git pull
+cd ~/RV32i-SoC && git pull
 git submodule update --init fw/riscv-tests    # để gls-core lấy danh sách test
 ```
 

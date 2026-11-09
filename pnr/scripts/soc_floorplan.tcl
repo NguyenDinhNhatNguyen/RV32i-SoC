@@ -9,11 +9,13 @@
 
 # ---- Parameters ----------------------------------------------------------------------
 # Core size from estimate_die.py with the standard cell area only (macros are added by the
-# script): 53 408 um2 (Genus keep-flop netlist 30/10, total 117 408 um2 minus 8 x 8000 um2 of
-# macro) at 70% density. The 29/10 run used 524 x 523 um because the total area with macros
-# was given as --std-area, which counted the macros twice.
-set CORE_W     394.0      ;# um
-set CORE_H     395.0
+# script) at 70% density: 58 000 um2 = 53 900 um2 (Genus 31/10, buffered reset) plus about
+# 1800 um2 for SPI and PWM (added 07/11, Yosys Nangate45 scaled like uart_apb) plus about
+# 2300 um2 for the DMA (on by default since 07/11, Genus dma_apb block 29/10). The 29/10 run
+# used 524 x 523 um because the total area with macros was given as --std-area, which counted
+# the macros twice.
+set CORE_W     402.0      ;# um
+set CORE_H     403.6
 set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
@@ -92,8 +94,10 @@ foreach m $macros { try_cmd {addHaloToBlock $HALO $HALO $HALO $HALO $m} }
 try_cmd {cutRow}            ;# Remove standard cell rows under the macros and halos
 
 # ---- Pin plan -------------------------------------------------------------------------
-# Left (edge 0): clock, reset, UART, GPIO inputs. Right (edge 2): GPIO outputs and output enables.
-editPin -pin {clk rst_n uart_rx uart_tx gpio_i*} -edge 0 -spreadType CENTER -spacing 4 -layer 3
+# Left (edge 0): clock, reset, UART, SPI, PWM, GPIO inputs (41 pins).
+# Right (edge 2): GPIO outputs and output enables (64 pins).
+editPin -pin {clk rst_n uart_rx uart_tx spi_sclk spi_mosi spi_miso spi_cs_n pwm_o gpio_i*} \
+        -edge 0 -spreadType CENTER -spacing 4 -layer 3
 editPin -pin {gpio_o* gpio_oe*}                  -edge 2 -spreadType CENTER -spacing 4 -layer 3
 
 # ---- Power plan -----------------------------------------------------------------------

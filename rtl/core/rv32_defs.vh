@@ -194,7 +194,7 @@
 `define RV_RESET_PC_DEFAULT        32'h0001_0000   // boot ROM
 // Branch prediction (docs/btb_eval.md, D-041). Defaults for rv32_core, so a simulation or
 // synthesis of soc_top can change them with -D without a soc_top parameter. The default is
-// the 8-entry BTB proposed for the tape-out build (to be confirmed at the 8/11 review).
+// the 8-entry BTB, settled on 07/11 for the tape-out build.
 `ifndef RV_ENABLE_BTB_DEFAULT
 `define RV_ENABLE_BTB_DEFAULT      1               // 0 none, 1 BTB, 2 static backward taken
 `endif

@@ -5,7 +5,7 @@
 # SYN_OUT=<dir> (default syn/out_soc). make synth-soc-sweep sets PERIOD and SYN_OUT (STA-03).
 # The netlist and SDC are the input of soc_floorplan.tcl (PD-02, PD-03, docs/pd02_floorplan.md).
 #
-# Parameters are the soc_top defaults: ENABLE_M=1, ENABLE_WFI_SLEEP=1, ENABLE_DMA=0, and the
+# Parameters are the soc_top defaults: ENABLE_M=1, ENABLE_WFI_SLEEP=1, ENABLE_DMA=1, and the
 # core picks ENABLE_BTB=1 and RESET_PC = boot ROM. 8 sram_2k_macro (4 IMEM, 4 DMEM) stay as
 # black boxes with timing from sram_2k_macro.lib.
 #
@@ -57,7 +57,7 @@ foreach n $DONT_USE_CELLS {
 # Clock gating must be enabled before elaborate, otherwise Genus ignores it (POPT-104)
 if {$CG} { set_db lp_insert_clock_gating true }
 
-# Same file set as SOC_RTL in the Makefile (dma_apb is read but not elaborated with ENABLE_DMA=0)
+# Same file set as SOC_RTL in the Makefile (dma_apb is elaborated with the default ENABLE_DMA=1)
 set RTL [concat \
     [lsort [glob -directory $REPO/rtl/core rv32_*.v]] \
     [lsort [glob -directory $REPO/rtl/bus *.v]] \

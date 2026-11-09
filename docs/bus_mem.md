@@ -89,23 +89,24 @@ Nhóm đã chốt cả 5 điểm ngày 25/10 (SP-01), đúng như RTL. Bảng d�
 ## 5. Kiểm chứng ở nhà
 
 ```sh
-scripts/eda.sh run "make lint-bus"   # Verilator -Wall, 11 cấu hình, 0 warning
-scripts/eda.sh run "make unit-bus"   # 7 lần chạy unit test
+scripts/eda.sh run "make lint-bus"   # Verilator -Wall, 13 cấu hình, 0 warning
+scripts/eda.sh run "make unit-bus"   # 8 lần chạy unit test
 scripts/eda.sh run "make fw-bus"     # core trên bus thật, cần submodule riscv-tests
 ```
 
-Kết quả ngày 22/10:
+Kết quả ngày 07/11 (main `fc60aff` cộng phần bật DMA và test round-robin):
 
 | Lệnh | Kết quả |
 | --- | --- |
-| `make lint-bus` | 0 warning: `sys_bus` với N_MASTER = 1, 2, 4, `sram_array`, `sram_wrap`, `imem_port` với BANK_W = 0, 2, `apb_bridge`, `boot_rom` |
-| `make unit-bus` | 7/7 PASS |
+| `make lint-bus` | 0 warning: `sys_bus` với N_MASTER = 1, 2, 4, `sram_array`, `sram_wrap`, `imem_port` với BANK_W = 0, 2, `apb_bridge`, `boot_rom`, `dma_apb`, `reset_sync` |
+| `make unit-bus` | 8/8 PASS, gồm `tb_dma_apb` và phần kiểm round-robin của `tb_sys_bus` |
 | `make fw-bus` | 124/124 PASS: `smoke`, `hazard`, `bus`, rv32ui, rv32mi (M0W0 và M1W1), rv32um (M1W1) |
 | Yosys `synth` | Không cảnh báo, không latch |
 
 Unit test kiểm tra:
 
 - `tb_sys_bus`: 2 master, slave có wait state và trễ ngẫu nhiên, so dữ liệu và err với tham chiếu. Kiểm tra luật 1 và luật 3 ở cả phía master lẫn slave, địa chỉ không ánh xạ không tới slave nào và có err ở chu kỳ sau.
+- `tb_sys_bus` kiểm thứ tự round-robin (07/11): khi cả 2 master cùng chờ và không có yêu cầu đang giữ ở slave, master vừa được nhận không được thắng tiếp. Mỗi lần chạy kiểm khoảng 3 500 lần. Cấy lỗi đổi trọng tài thành ưu tiên cố định (master 0 hoặc master 1 luôn thắng) thì test FAIL ở cả hai.
 - `tb_apb_bridge`: slave có wait state và PSLVERR, khe tắt, truy cập không đủ word, giao thức APB3 (one-hot, SETUP rồi ACCESS, tín hiệu giữ nguyên khi PREADY = 0). Chạy một phép nhân ma trận trên `accel_apb` thật.
 - `tb_sram_wrap`: đọc/ghi word, half, byte so với tham chiếu, đúng 1 wait state cho SB/SH, cổng đọc ưu tiên thấp.
 - `tb_imem_port`: lấy lệnh ở IMEM, boot ROM, địa chỉ lỗi xen với bus dữ liệu ghi IMEM.

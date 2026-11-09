@@ -9,6 +9,8 @@
 //                                └─► apb_bridge ─┬─ slot 0 timer_apb
 //                                                ├─ slot 1 uart_apb
 //                                                ├─ slot 2 gpio_apb
+//                                                ├─ slot 3 spi_apb  (ENABLE_SPI = 1)
+//                                                ├─ slot 5 pwm_apb  (ENABLE_PWM = 1)
 //                                                ├─ slot 6 irqc_apb
 //                                                ├─ slot 7 accel_apb
 //                                                └─ slot 8 dma_apb (ENABLE_DMA = 1)
@@ -21,19 +23,24 @@
 // irq_external comes from the IRQC interrupt controller (RTL-11, slot 6), which gathers the
 // UART, accelerator and DMA irq lines (bit map SOC_IRQ_* in soc_map.vh).
 //
-// ENABLE_DMA = 1 (RTL-15, tier 2) adds the DMA: sys_bus gets a second master with round-robin
-// arbitration, the DMA config registers sit in APB slot 8 and its irq goes to IRQC bit 4.
+// ENABLE_DMA = 1 (RTL-15, tier 2, default since 07/11) adds the DMA: sys_bus gets a second
+// master with round-robin arbitration, the DMA config registers sit in APB slot 8 and its
+// irq goes to IRQC bit 4.
 // With ENABLE_DMA = 0 the bus has one master and slot 8 returns err.
 //
-// APB slots without RTL yet: SPI (3), I2C (4), PWM (5). Their APB_EN bit
-// is 0, so apb_bridge returns err for every access to them.
+// SPI (RTL-13, slot 3) and PWM (RTL-13, slot 5) are on by default. With ENABLE_SPI = 0 or
+// ENABLE_PWM = 0 the slot gets APB_EN = 0 (apb_bridge returns err) and its pins idle.
+// SPI has no interrupt output, so IRQC bit 3 stays 0.
+// I2C (slot 4) has no RTL yet: APB_EN = 0, so apb_bridge returns err for every access.
 // To add a block: connect the slot's PSEL/PRDATA/PREADY/PSLVERR and set its APB_EN bit.
 `include "soc_map.vh"
 
 module soc_top #(
     parameter ENABLE_M         = 1,     // RV32M passes rv32um (RTL-12)
     parameter ENABLE_WFI_SLEEP = 1,
-    parameter ENABLE_DMA       = 0,     // Tier 2, opened only after the 8/11 review
+    parameter ENABLE_DMA       = 1,     // RTL-15, tier 2, settled on 07/11
+    parameter ENABLE_SPI       = 1,     // RTL-13, tier 1
+    parameter ENABLE_PWM       = 1,     // RTL-13, tier 1
     parameter GPIO_W           = 32     // gpio_apb is lint clean only with W = 32
 ) (
     input  wire              clk,
@@ -44,7 +51,14 @@ module soc_top #(
     output wire [GPIO_W-1:0] gpio_oe,   // 1 = the pin is an output, pads are added at chip level
 
     input  wire              uart_rx,   // UART 8N1, 115200 baud at 50 MHz by default
-    output wire              uart_tx
+    output wire              uart_tx,
+
+    output wire              spi_sclk,  // SPI master, mode set by CPOL/CPHA in SPI CTRL
+    output wire              spi_mosi,
+    input  wire              spi_miso,
+    output wire              spi_cs_n,  // Driven by SPI CTRL bit 0, idles high
+
+    output wire              pwm_o
 );
 
     localparam NS = `SOC_APB_N;
@@ -53,6 +67,8 @@ module soc_top #(
                                  (9'b1 << `SOC_APB_GPIO)  |
                                  (9'b1 << `SOC_APB_IRQC)  |
                                  (9'b1 << `SOC_APB_ACCEL) |
+                                 ((ENABLE_SPI != 0) ? (9'b1 << `SOC_APB_SPI) : 9'b0) |
+                                 ((ENABLE_PWM != 0) ? (9'b1 << `SOC_APB_PWM) : 9'b0) |
                                  ((ENABLE_DMA != 0) ? (9'b1 << `SOC_APB_DMA) : 9'b0);
     localparam NM = (ENABLE_DMA != 0) ? 2 : 1;     // sys_bus masters: 0 core, 1 DMA
 
@@ -366,21 +382,71 @@ module soc_top #(
         end
     endgenerate
 
-    // Slots without RTL: never selected (APB_EN = 0), tied to idle values
-    assign prdata [`SOC_APB_SPI*32 +: 32]  = 32'h0;
-    assign pready [`SOC_APB_SPI]           = 1'b1;
-    assign pslverr[`SOC_APB_SPI]           = 1'b0;
+    // Slot 3: SPI master (RTL-13), only with ENABLE_SPI = 1
+    generate
+        if (ENABLE_SPI != 0) begin : g_spi
+            spi_apb u_spi (
+                .PCLK    (clk),
+                .PRESETn (rst_n_sync),
+                .PSEL    (psel[`SOC_APB_SPI]),
+                .PENABLE (penable),
+                .PWRITE  (pwrite),
+                .PADDR   (paddr),
+                .PWDATA  (pwdata),
+                .PRDATA  (prdata[`SOC_APB_SPI*32 +: 32]),
+                .PREADY  (pready[`SOC_APB_SPI]),
+                .PSLVERR (pslverr[`SOC_APB_SPI]),
+                .sclk    (spi_sclk),
+                .mosi    (spi_mosi),
+                .miso    (spi_miso),
+                .cs_n    (spi_cs_n)
+            );
+        end else begin : g_no_spi
+            // Never selected (APB_EN = 0), tied to idle values
+            assign prdata [`SOC_APB_SPI*32 +: 32] = 32'h0;
+            assign pready [`SOC_APB_SPI]          = 1'b1;
+            assign pslverr[`SOC_APB_SPI]          = 1'b0;
+            assign spi_sclk = 1'b0;
+            assign spi_mosi = 1'b0;
+            assign spi_cs_n = 1'b1;
+            wire unused_spi = &{1'b0, psel[`SOC_APB_SPI], spi_miso};
+        end
+    endgenerate
+
+    // Slot 5: PWM (RTL-13), only with ENABLE_PWM = 1
+    generate
+        if (ENABLE_PWM != 0) begin : g_pwm
+            pwm_apb u_pwm (
+                .PCLK    (clk),
+                .PRESETn (rst_n_sync),
+                .PSEL    (psel[`SOC_APB_PWM]),
+                .PENABLE (penable),
+                .PWRITE  (pwrite),
+                .PADDR   (paddr),
+                .PWDATA  (pwdata),
+                .PRDATA  (prdata[`SOC_APB_PWM*32 +: 32]),
+                .PREADY  (pready[`SOC_APB_PWM]),
+                .PSLVERR (pslverr[`SOC_APB_PWM]),
+                .pwm_out (pwm_o)
+            );
+        end else begin : g_no_pwm
+            // Never selected (APB_EN = 0), tied to idle values
+            assign prdata [`SOC_APB_PWM*32 +: 32] = 32'h0;
+            assign pready [`SOC_APB_PWM]          = 1'b1;
+            assign pslverr[`SOC_APB_PWM]          = 1'b0;
+            assign pwm_o = 1'b0;
+            wire unused_pwm = psel[`SOC_APB_PWM];
+        end
+    endgenerate
+
+    // Slot 4 has no RTL: never selected (APB_EN = 0), tied to idle values
     assign prdata [`SOC_APB_I2C*32 +: 32]  = 32'h0;
     assign pready [`SOC_APB_I2C]           = 1'b1;
     assign pslverr[`SOC_APB_I2C]           = 1'b0;
-    assign prdata [`SOC_APB_PWM*32 +: 32]  = 32'h0;
-    assign pready [`SOC_APB_PWM]           = 1'b1;
-    assign pslverr[`SOC_APB_PWM]           = 1'b0;
 
-    // Unused: PSEL of empty slots, core_sleep (IMEM is already off because if_req = 0
+    // Unused: PSEL of the empty slot, core_sleep (IMEM is already off because if_req = 0
     // while asleep)
-    wire unused_ok = &{1'b0, psel[`SOC_APB_SPI], psel[`SOC_APB_I2C],
-                       psel[`SOC_APB_PWM], core_sleep};
+    wire unused_ok = &{1'b0, psel[`SOC_APB_I2C], core_sleep};
 
 endmodule
 

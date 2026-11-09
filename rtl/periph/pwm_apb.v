@@ -43,6 +43,7 @@ module pwm_apb #(
                         10'd0: period <= PWDATA;
                         10'd1: duty   <= PWDATA;
                         10'd2: enable <= PWDATA[0];
+                        default: ;
                     endcase
                 end
             end
