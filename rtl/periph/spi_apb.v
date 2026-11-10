@@ -31,6 +31,7 @@ module spi_apb #(
             reg [15:0] clk_cnt;
             reg [2:0]  bit_cnt;
             reg        spi_clk_reg;
+            reg        mosi_reg;       // Bit on mosi, changes only on the driving edge
             reg        phase; // 0 = Leading edge, 1 = Trailing edge
 
             wire [9:0] widx    = PADDR[11:2];
@@ -70,11 +71,13 @@ module spi_apb #(
                     phase       <= 1'b0;
                     tx_data     <= 8'd0;
                     rx_data     <= 8'd0;
+                    mosi_reg    <= 1'b0;
                 end else begin
                     if (!busy) begin
                         spi_clk_reg <= ctrl_cpol; // Idle: sclk held according to CPOL
                         if (wr_data) begin
                             tx_data <= PWDATA[7:0];
+                            mosi_reg <= PWDATA[7];  // MSB is ready before the first edge
                             busy    <= 1'b1;
                             clk_cnt <= ctrl_div;
                             bit_cnt <= 3'd7;      // MSB first
@@ -91,7 +94,16 @@ module spi_apb #(
                                 rx_data[bit_cnt] <= miso;
                             end
 
-                            // Shift MOSI bit
+                            // Drive MOSI on the edge that is not the sampling edge.
+                            // CPHA = 0: next bit on the trailing edge.
+                            // CPHA = 1: current bit on the leading edge, so it is stable at
+                            // the trailing (sampling) edge.
+                            if (!ctrl_cpha && phase == 1'b1 && bit_cnt != 3'd0)
+                                mosi_reg <= tx_data[bit_cnt - 3'd1];
+                            if (ctrl_cpha && phase == 1'b0)
+                                mosi_reg <= tx_data[bit_cnt];
+
+                            // Next bit after the trailing edge
                             if (phase == 1'b1) begin
                                 if (bit_cnt == 3'd0) begin
                                     busy <= 1'b0; // Complete 8 bits
@@ -106,9 +118,11 @@ module spi_apb #(
                 end
             end
 
-            // MOSI data output (Changes according to CPHA and Phase)
-            assign mosi = tx_data[bit_cnt];
+            assign mosi = mosi_reg;
             assign sclk = spi_clk_reg;
+
+            // PWDATA[31:16] is not used by any register, ctrl_div[15:8] is always 0
+            wire unused_ok = &{1'b0, PWDATA[31:16]};
 
             // Read register (APB Read)
             always @(*) begin

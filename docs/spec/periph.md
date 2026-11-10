@@ -110,8 +110,10 @@ Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì 
 | `spi_sclk`, `spi_mosi`, `spi_cs_n` | ra | 1 mỗi chân | SPI master (mục 8) |
 | `spi_miso` | vào | 1 | SPI nhận |
 | `pwm_o` | ra | 1 | Ngõ ra PWM (mục 9) |
+| `i2c_scl_i`, `i2c_sda_i` | vào | 1 mỗi chân | Mức thật trên đường dây I2C (mục 10) |
+| `i2c_scl_oe`, `i2c_sda_oe` | ra | 1 mỗi chân | 1 = pad kéo đường dây xuống 0, 0 = nhả (điện trở kéo lên ở ngoài) |
 
-Tổng 105 chân tín hiệu. Vị trí chân trên die: `pnr/scripts/soc_floorplan.tcl` (cạnh trái và phải).
+Tổng 109 chân tín hiệu. Vị trí chân trên die: `pnr/scripts/soc_floorplan.tcl` (cạnh trái và phải).
 
 ## 7. DMA (`rtl/bus/dma_apb.v`, 0x4000_0000, RTL-15, Tầng 2)
 
@@ -146,7 +148,8 @@ SPI master, khung 8 bit, gửi bit cao trước. Truy cập theo word, offset kh
 
 - Phần mềm ghi `CTRL` để chọn chế độ và kéo `cs_n` xuống, ghi `DATA`, đợi `BUSY = 0`, đọc `DATA`.
 - Không có ngắt, IRQC bit 3 (`SOC_IRQ_SPI`) nối 0.
-- `tb_soc` nối `spi_mosi` vòng về `spi_miso`, `fw/tests/soc/spi_pwm.S` kiểm chế độ 0 và chế độ 3.
+- `mosi` lấy từ flop. CPHA = 0: bit đầu có sẵn trước sườn đầu, bit sau đổi ở sườn sau, slave lấy mẫu ở sườn đầu. CPHA = 1: bit đổi ở sườn đầu, slave lấy mẫu ở sườn sau (sửa 10/11, trước đó `mosi` đổi đúng ở sườn lấy mẫu). `spi_apb` lấy mẫu `miso` ở cùng sườn với slave.
+- `tb_soc` nối `spi_mosi` vòng về `spi_miso`, `fw/tests/soc/spi_pwm.S` kiểm đủ 4 chế độ. `tb/unit/tb_spi_apb.v` kiểm thêm `mosi` không đổi ở sườn lấy mẫu, ở cả 4 chế độ.
 
 ## 9. PWM (`rtl/periph/pwm_apb.v`, 0x2000_5000, RTL-13)
 
@@ -159,3 +162,19 @@ Truy cập theo word, offset khác trả PSLVERR. Bản đồ thanh ghi theo RTL
 | `0x08` | `CTRL` | R/W | Bit 0 `EN`: 1 = phát PWM. `EN = 0` hoặc `PERIOD = 0` thì `pwm_o = 0`. Reset 0 |
 
 - `tb_soc` nối `pwm_o` vào chân `gpio_i[15]`, `spi_pwm.S` đọc lại qua GPIO `DATA_IN`.
+
+## 10. I2C (`rtl/periph/i2c_apb.v`, 0x2000_4000, RTL-14, Tầng 2)
+
+I2C master, open drain, gửi bit cao trước. Truy cập theo word, offset khác trả PSLVERR. Bản đồ thanh ghi theo RTL (10/11).
+
+| Offset | Tên | R/W | Ý nghĩa |
+| --- | --- | --- | --- |
+| `0x00` | `DATA` | R/W | Ghi: byte [7:0] cần gửi (địa chỉ hoặc dữ liệu). Đọc: byte nhận ở lệnh `READ` gần nhất. Ghi khi đang bận bị bỏ qua |
+| `0x04` | `CMD` / `STATUS` | R/W | Ghi (lệnh): [0] `START`, [1] `STOP`, [2] `READ`, [3] `WRITE`, [4] `ACK_OUT` (bit master gửi sau byte đọc, 1 = NACK). Đọc (trạng thái): [0] `BUSY`, [1] `ACK_IN` (bit slave trả sau byte ghi, 0 = ACK). Reset đọc ra `0x2` |
+| `0x08` | `CTRL` | R/W | [15:0] bộ chia clock: mỗi bước của SCL dài `DIV + 1` chu kỳ, 1 bit SCL gồm 4 bước. Ghi khi đang bận bị bỏ qua. Reset 0 |
+
+- Một lệnh có thể gộp nhiều bit, chạy theo thứ tự `START`, rồi `WRITE` hoặc `READ`, rồi `STOP`. Ví dụ ghi một byte có START là `0x09`, đọc byte cuối kèm NACK và STOP là `0x16`.
+- `START` khi bus đang bận (sau ACK, SCL thấp) là repeated START: nhả SDA, nâng SCL, rồi kéo SDA xuống (sửa 10/11).
+- Phần mềm ghi `DATA`, ghi `CMD`, đợi `BUSY = 0`, đọc `ACK_IN` hoặc `DATA`.
+- Không có clock stretching (`scl_i` không dùng) và không có ngắt.
+- `tb/models/i2c_slave_model.v` là slave mô phỏng ở địa chỉ 0x50. `tb_i2c_apb` và `fw/tests/soc/i2c.S` dùng nó để kiểm ghi, đọc có repeated START, ACK, NACK và sai địa chỉ.

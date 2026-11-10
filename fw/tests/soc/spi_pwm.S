@@ -1,7 +1,8 @@
 // spi_pwm.S - tests SPI (slot 3) and PWM (slot 5) of soc_top (RTL-13) on tb/soc/tb_soc.v.
 // Register map as in rtl/periph/spi_apb.v and pwm_apb.v (docs/spec/periph.md sections 8, 9).
-//   - SPI: reset values, CTRL read back, two transfers (mode 0 and mode 3) through the tb
-//     loopback spi_mosi -> spi_miso, so DATA reads back the byte that was sent.
+//   - SPI: reset values, CTRL read back, one transfer in each mode (0, 3, 1, 2) through the
+//     tb loopback spi_mosi -> spi_miso, so DATA reads back the byte that was sent. The mosi
+//     timing against sclk is checked in tb/unit/tb_spi_apb.v.
 //   - PWM: reset values, the output is sampled through GPIO DATA_IN bit 15 (tb pad):
 //     DUTY = 0 stays low, DUTY = PERIOD stays high, DUTY = 3 of 8 toggles, disable goes low.
 //   - Unknown offsets and byte accesses become access faults.
@@ -75,6 +76,14 @@ TEST_CODE_BEGIN
     CHECK(64, a0, 0x206)
     SPI_XFER(65, 0x3C)
     CHECK(65, a0, 0x3C)
+    li   a0, 0x104                      // Divider 1, CPHA = 1 (mode 1), cs_n = 0
+    sw   a0, S_CTRL(s0)
+    SPI_XFER(80, 0x96)
+    CHECK(80, a0, 0x96)
+    li   a0, 0x102                      // Divider 1, CPOL = 1 (mode 2), cs_n = 0
+    sw   a0, S_CTRL(s0)
+    SPI_XFER(81, 0x69)
+    CHECK(81, a0, 0x69)
     li   a0, 1                          // Release cs_n
     sw   a0, S_CTRL(s0)
     lw   a0, S_CTRL(s0)

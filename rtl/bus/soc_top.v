@@ -10,6 +10,7 @@
 //                                                ├─ slot 1 uart_apb
 //                                                ├─ slot 2 gpio_apb
 //                                                ├─ slot 3 spi_apb  (ENABLE_SPI = 1)
+//                                                ├─ slot 4 i2c_apb  (ENABLE_I2C = 1)
 //                                                ├─ slot 5 pwm_apb  (ENABLE_PWM = 1)
 //                                                ├─ slot 6 irqc_apb
 //                                                ├─ slot 7 accel_apb
@@ -31,7 +32,9 @@
 // SPI (RTL-13, slot 3) and PWM (RTL-13, slot 5) are on by default. With ENABLE_SPI = 0 or
 // ENABLE_PWM = 0 the slot gets APB_EN = 0 (apb_bridge returns err) and its pins idle.
 // SPI has no interrupt output, so IRQC bit 3 stays 0.
-// I2C (slot 4) has no RTL yet: APB_EN = 0, so apb_bridge returns err for every access.
+// I2C (RTL-14, slot 4, tier 2) is on by default, ENABLE_I2C = 0 works the same way as SPI.
+// Its pins are open drain: the pad pulls SCL or SDA low while i2c_*_oe = 1 and releases
+// the line otherwise (external pull-up). There is no clock stretching and no interrupt.
 // To add a block: connect the slot's PSEL/PRDATA/PREADY/PSLVERR and set its APB_EN bit.
 `include "soc_map.vh"
 
@@ -41,6 +44,7 @@ module soc_top #(
     parameter ENABLE_DMA       = 1,     // RTL-15, tier 2, settled on 07/11
     parameter ENABLE_SPI       = 1,     // RTL-13, tier 1
     parameter ENABLE_PWM       = 1,     // RTL-13, tier 1
+    parameter ENABLE_I2C       = 1,     // RTL-14, tier 2
     parameter GPIO_W           = 32     // gpio_apb is lint clean only with W = 32
 ) (
     input  wire              clk,
@@ -58,7 +62,12 @@ module soc_top #(
     input  wire              spi_miso,
     output wire              spi_cs_n,  // Driven by SPI CTRL bit 0, idles high
 
-    output wire              pwm_o
+    output wire              pwm_o,
+
+    input  wire              i2c_scl_i, // I2C master, open drain: line level from the pad
+    output wire              i2c_scl_oe,// 1 = pull the line low, 0 = release (pull-up)
+    input  wire              i2c_sda_i,
+    output wire              i2c_sda_oe
 );
 
     localparam NS = `SOC_APB_N;
@@ -69,6 +78,7 @@ module soc_top #(
                                  (9'b1 << `SOC_APB_ACCEL) |
                                  ((ENABLE_SPI != 0) ? (9'b1 << `SOC_APB_SPI) : 9'b0) |
                                  ((ENABLE_PWM != 0) ? (9'b1 << `SOC_APB_PWM) : 9'b0) |
+                                 ((ENABLE_I2C != 0) ? (9'b1 << `SOC_APB_I2C) : 9'b0) |
                                  ((ENABLE_DMA != 0) ? (9'b1 << `SOC_APB_DMA) : 9'b0);
     localparam NM = (ENABLE_DMA != 0) ? 2 : 1;     // sys_bus masters: 0 core, 1 DMA
 
@@ -439,14 +449,42 @@ module soc_top #(
         end
     endgenerate
 
-    // Slot 4 has no RTL: never selected (APB_EN = 0), tied to idle values
-    assign prdata [`SOC_APB_I2C*32 +: 32]  = 32'h0;
-    assign pready [`SOC_APB_I2C]           = 1'b1;
-    assign pslverr[`SOC_APB_I2C]           = 1'b0;
+    // Slot 4: I2C master (RTL-14), only with ENABLE_I2C = 1
+    generate
+        if (ENABLE_I2C != 0) begin : g_i2c
+            wire scl_o, sda_o;          // Always 0 in i2c_apb (open drain), the pad drives 0
+            i2c_apb u_i2c (
+                .PCLK    (clk),
+                .PRESETn (rst_n_sync),
+                .PSEL    (psel[`SOC_APB_I2C]),
+                .PENABLE (penable),
+                .PWRITE  (pwrite),
+                .PADDR   (paddr),
+                .PWDATA  (pwdata),
+                .PRDATA  (prdata[`SOC_APB_I2C*32 +: 32]),
+                .PREADY  (pready[`SOC_APB_I2C]),
+                .PSLVERR (pslverr[`SOC_APB_I2C]),
+                .scl_i   (i2c_scl_i),
+                .scl_o   (scl_o),
+                .scl_oe  (i2c_scl_oe),
+                .sda_i   (i2c_sda_i),
+                .sda_o   (sda_o),
+                .sda_oe  (i2c_sda_oe)
+            );
+            wire unused_i2c = &{1'b0, scl_o, sda_o};
+        end else begin : g_no_i2c
+            // Never selected (APB_EN = 0), tied to idle values, both lines released
+            assign prdata [`SOC_APB_I2C*32 +: 32] = 32'h0;
+            assign pready [`SOC_APB_I2C]          = 1'b1;
+            assign pslverr[`SOC_APB_I2C]          = 1'b0;
+            assign i2c_scl_oe = 1'b0;
+            assign i2c_sda_oe = 1'b0;
+            wire unused_i2c = &{1'b0, psel[`SOC_APB_I2C], i2c_scl_i, i2c_sda_i};
+        end
+    endgenerate
 
-    // Unused: PSEL of the empty slot, core_sleep (IMEM is already off because if_req = 0
-    // while asleep)
-    wire unused_ok = &{1'b0, psel[`SOC_APB_I2C], core_sleep};
+    // Unused: core_sleep (IMEM is already off because if_req = 0 while asleep)
+    wire unused_ok = &{1'b0, core_sleep};
 
 endmodule
 

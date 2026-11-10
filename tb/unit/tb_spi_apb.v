@@ -108,6 +108,35 @@ module tb_spi_apb;
         end
     endtask
 
+    // Edge monitor for every mode. A slave samples mosi on the leading sclk edge when
+    // CPHA = 0 and on the trailing edge when CPHA = 1, so after the sampling edge sclk equals
+    // ~(CPOL ^ CPHA). mosi must not change in the same time step as that edge (hold time).
+    // The check waits 1 ns so every update of that time step has happened.
+    realtime t_mosi = -1.0;
+    realtime t_edge;
+    integer  n_samp = 0;            // Sampling edges seen during transfers
+    integer  n_hold = 0;            // mosi changed on a sampling edge
+    // busy, CPOL, CPHA as they were before the PCLK edge that moves sclk (busy drops on the
+    // last edge of a transfer)
+    reg      mon_busy = 1'b0, mon_cpol = 1'b0, mon_cpha = 1'b0;
+    always @(negedge PCLK) begin
+        mon_busy = dut1.gen_spi.busy;
+        mon_cpol = dut1.gen_spi.ctrl_cpol;
+        mon_cpha = dut1.gen_spi.ctrl_cpha;
+    end
+    always @(mosi) t_mosi = $realtime;
+    always @(sclk)
+        if (mon_busy === 1'b1 && sclk === ~(mon_cpol ^ mon_cpha)) begin
+            t_edge = $realtime;
+            n_samp = n_samp + 1;
+            #1;
+            if (t_mosi == t_edge) begin
+                n_hold = n_hold + 1;
+                $display("FAIL: mosi changed on the sampling edge (CPOL=%0d CPHA=%0d, t=%0t)",
+                         mon_cpol, mon_cpha, $time);
+            end
+        end
+
     initial begin
         #500000;
         $display("FAIL: timeout");
@@ -171,39 +200,14 @@ module tb_spi_apb;
         apb_read(A_DATA);
         check(rd === 32'h5A, "RX Data = 0x5A (Loopback match Mode 3)");
 
-        // ---- 7. Sampling Phase & Edge Alignment Verification ----
-        // Leader feedback: Verify MOSI phase vs SCLK edges
-        // Mode 0 (CPOL=0, CPHA=0): Data is driven on negedge, sampled on posedge.
-        // Therefore, MOSI is ONLY allowed to change when SCLK is LOW.
-        apb_write(A_CTRL, {16'd0, 8'd2, 5'd0, 1'b0, 1'b0, 1'b0}); // Set Mode 0
-        
-        fork
-            // Thread 1: Transmit 0x55 (01010101) to force alternating bits and MOSI toggles
-            begin
-                apb_write(A_DATA, 32'h55);
-                wait_busy();
-            end
-            
-            // Thread 2: Strict Phase/Edge Monitor
-            begin
-                integer phase_errors;
-                phase_errors = 0;
-                
-                // Monitor for the duration of the transfer
-                // 0x55 (01010101) will cause MOSI to toggle exactly 7 times
-                repeat(7) begin 
-                    @(mosi); // Trigger exactly at the picosecond MOSI changes state
-                    
-                    // In Mode 0, if MOSI changes state while SCLK is HIGH (during the sampling window)
-                    // it is a critical phase violation.
-                    if (sclk === 1'b1) begin
-                        phase_errors = phase_errors + 1;
-                        $display("PHASE ERROR: MOSI changed while SCLK was HIGH at %0t", $time);
-                    end
-                end
-                check(phase_errors == 0, "Edge Alignment: MOSI changes correctly only on driving edge");
-            end
-        join
+        // ---- 7. Mode 0 with alternating bits, so mosi toggles on every bit ----
+        apb_write(A_CTRL, {16'd0, 8'd2, 5'd0, 1'b0, 1'b0, 1'b0});
+        apb_write(A_DATA, 32'h55);
+        wait_busy();
+        apb_read(A_DATA);
+        check(rd === 32'h55, "RX Data = 0x55 (Loopback match Mode 0)");
+        check(n_samp == 5 * 8, "Edge monitor: 8 sampling edges per transfer");
+        check(n_hold == 0, "Edge monitor: mosi never changes on a sampling edge");
 
         // ---- 8. De-assert CS_N (End transmission) ----
         apb_write(A_CTRL, {16'd0, 8'd1, 5'd0, 1'b1, 1'b1, 1'b1});
@@ -227,7 +231,8 @@ module tb_spi_apb;
 
         // ---- Conclusion ----
         if (errors == 0)
-            $display("PASS: spi_apb - APB R/W, CPOL/CPHA Modes 0-3, Sampling Phase, TX/RX Loopback, PSLVERR OK!");
+            $display("PASS: spi_apb - APB R/W, CPOL/CPHA modes 0-3, %0s",
+                     "mosi hold on every sampling edge, TX/RX loopback, PSLVERR");
         else
             $display("FAIL: spi_apb - %0d errors detected", errors);
             

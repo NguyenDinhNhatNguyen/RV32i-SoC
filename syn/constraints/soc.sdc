@@ -1,8 +1,9 @@
 # soc.sdc - SDC v1 for soc_top (STA-01).
 # Shared by Genus, Innovus and Tempus at school and by OpenSTA at home, so it only uses
 # commands all four accept (no remove_from_collection, no library cell names).
-# Ports of soc_top: clk, rst_n, gpio_i[31:0], uart_rx, spi_miso, gpio_o[31:0], gpio_oe[31:0],
-# uart_tx, spi_sclk, spi_mosi, spi_cs_n, pwm_o.
+# Ports of soc_top: clk, rst_n, gpio_i[31:0], uart_rx, spi_miso, i2c_scl_i, i2c_sda_i,
+# gpio_o[31:0], gpio_oe[31:0], uart_tx, spi_sclk, spi_mosi, spi_cs_n, pwm_o, i2c_scl_oe,
+# i2c_sda_oe.
 # Details and reasons: docs/soc_top.md section 4.7.
 
 # 1. Clock: one clock domain, 50 MHz minimum (20 ns), 50% duty cycle.
@@ -25,20 +26,25 @@ set_clock_transition 0.08 [get_clocks clk]
 # synchronizer flop is constrained and no endpoint is left unconstrained.
 # spi_miso comes back from the SPI slave in step with spi_sclk, which spi_apb makes from clk,
 # so it is a normal synchronous input (sampled in rx_data without a synchronizer).
-set in_ports [get_ports {gpio_i[*] uart_rx spi_miso}]
+# i2c_sda_i is the same: i2c_apb makes SCL from clk and samples SDA in the middle of the SCL
+# high time, at least one SCL tick after the line settled. i2c_scl_i is read by nobody (no
+# clock stretching), it gets the input delay only so it is not left unconstrained.
+set in_ports [get_ports {gpio_i[*] uart_rx spi_miso i2c_scl_i i2c_sda_i}]
 set_input_delay  -clock clk -max [expr {0.24 * $SOC_PERIOD}] $in_ports
 set_input_delay  -clock clk -min 0.3 $in_ports
 
 # 4. Output delays, 20% of the period for max (4.0 ns at 20 ns) and 0.2 ns for min (Lab 01 ratio).
-# Every output comes from a flop (gpio_apb data_out and dir, uart_apb uart_txd, spi_apb sclk
-# and cs_n, pwm_apb pwm_out), except spi_mosi, a mux of the SPI TX register by bit count.
-set out_ports [get_ports {gpio_o[*] gpio_oe[*] uart_tx spi_sclk spi_mosi spi_cs_n pwm_o}]
+# Every output comes from a flop (gpio_apb data_out and dir, uart_apb uart_txd, spi_apb sclk,
+# mosi and cs_n, pwm_apb pwm_out), the I2C output enables through one inverter (i2c_apb
+# scl_reg, sda_reg).
+set out_ports [get_ports {gpio_o[*] gpio_oe[*] uart_tx spi_sclk spi_mosi spi_cs_n pwm_o \
+                          i2c_scl_oe i2c_sda_oe}]
 set_output_delay -clock clk -max [expr {0.20 * $SOC_PERIOD}] $out_ports
 set_output_delay -clock clk -min 0.2 $out_ports
 
 # 5. Input slew and output load. set_input_transition replaces the Lab set_driving_cell so
 # the file names no library cell and works with GPDK45 and the home Nangate45 library alike.
-set_input_transition 0.1 [get_ports {rst_n gpio_i[*] uart_rx spi_miso}]
+set_input_transition 0.1 [get_ports {rst_n gpio_i[*] uart_rx spi_miso i2c_scl_i i2c_sda_i}]
 set_load -pin_load 0.05 $out_ports
 
 # 6. Asynchronous reset (docs/spec/soc_spec.md section 1).

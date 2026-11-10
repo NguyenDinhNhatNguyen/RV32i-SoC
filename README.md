@@ -21,10 +21,10 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 | Phần | Kết quả |
 | --- | --- |
 | Lõi RV32IM | riscv-tests 472/472, test assembly 112/112, unit 11/11. GLS có SDF 49/49, LEC 0 non-equivalent |
-| Bus, SoC | fw-bus 124/124, fw-soc 129/129 (có SPI, PWM), bootloader `sim-boot` PASS, lint 0 warning |
-| Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM đã ghép vào `soc_top`. I2C chưa có RTL trên main |
+| Bus, SoC | fw-bus 124/124, fw-soc 131/131 (có SPI, PWM, I2C), bootloader `sim-boot` PASS, lint 0 warning |
+| Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM, I2C đã ghép vào `soc_top` (I2C từ 10/11) |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
-| SoC qua Cadence | Genus và Tempus đạt 20 ns, mạng reset có buffer (31/10). F_max sau tổng hợp khoảng 200 MHz (`docs/sta_results.md`). Script PnR đã có chân SPI, PWM, đang chờ netlist mới (`docs/pnr_soc_status.md`) |
+| SoC qua Cadence | Genus và Tempus đạt 20 ns, mạng reset có buffer (31/10). F_max sau tổng hợp khoảng 200 MHz (`docs/sta_results.md`). Script PnR đã có chân SPI, PWM, I2C, đang chờ netlist mới (`docs/pnr_soc_status.md`) |
 
 ## Bắt đầu nhanh
 
@@ -50,7 +50,7 @@ Cách làm việc với Git, quy trình commit và cách tự kiểm RTL trướ
 | --- | --- | --- |
 | [`rtl/core`](rtl/core) | Lõi RV32I | Nhân |
 | [`rtl/bus`](rtl/bus), [`rtl/mem`](rtl/mem) | Interconnect, wrapper SRAM, soc_top | Phát |
-| [`rtl/periph`](rtl/periph) | Timer, UART, GPIO, SPI, PWM (I2C chưa có RTL) | Phúc |
+| [`rtl/periph`](rtl/periph) | Timer, UART, GPIO, SPI, PWM, I2C | Phúc |
 | [`rtl/accel`](rtl/accel) | Lõi Lab 2 và wrapper accelerator | Nguyên |
 | [`tb`](tb) | Testbench khối, lõi và mức SoC | Hiếu (+ chủ khối) |
 | [`fw`](fw) | Firmware, linker script, crt0, benchmark | Hiếu |

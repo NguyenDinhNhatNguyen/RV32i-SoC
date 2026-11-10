@@ -4,8 +4,8 @@
 //   - Read the accelerator INFO, run a 4x4 matrix multiply on it, compare with precomputed results.
 //   - Two back-to-back APB reads, clear DONE.
 //   - Bus errors become access faults with the right mcause and mtval: unmapped address,
-//     boot ROM read from the data bus, beyond DMEM, a disabled APB slot, accelerator PSLVERR,
-//     byte/half access to APB.
+//     boot ROM read from the data bus, beyond DMEM, an APB address with no slot,
+//     accelerator PSLVERR, byte/half access to APB.
 //   - Print "bus ok" over the fake UART with sw.
 //
 // The trap handler records mcause -> s2, mepc -> s3, mtval -> s4, increments s5,
@@ -96,12 +96,12 @@ TEST_CODE_BEGIN
     EXPECT_TRAP(11, 5, 0x00010000, lw a0, 0(a5))        // Only the fetch port reads the boot ROM
     EXPECT_TRAP(12, 7, 0x00010000, sw a0, 0(a5))
     li   a5, 0x10004000
-    EXPECT_TRAP(13, 7, 0x10004000, sw a0, 0(a5))        // ngay sau DMEM 16 KB
-    li   a5, 0x20004000
-    EXPECT_TRAP(14, 5, 0x20004000, lw a0, 0(a5))        // I2C slot is disabled (no RTL yet)
+    EXPECT_TRAP(13, 7, 0x10004000, sw a0, 0(a5))        // Right after the 16 KB DMEM
+    li   a5, 0x20007000
+    EXPECT_TRAP(14, 5, 0x20007000, lw a0, 0(a5))        // No APB slot at 0x2000_7000
     li   a5, 0x30000400
     EXPECT_TRAP(15, 5, 0x30000400, lw a0, 0(a5))        // accel_apb PSLVERR
-    EXPECT_TRAP(16, 7, 0x30000300, sw a0, 0x300(s0))    // ghi C_BUF: PSLVERR
+    EXPECT_TRAP(16, 7, 0x30000300, sw a0, 0x300(s0))    // Write to C_BUF: PSLVERR
     li   a5, UART
     EXPECT_TRAP(17, 7, 0x20001000, sb a0, 0(a5))        // APB is word access only
     EXPECT_TRAP(18, 5, 0x20001002, lhu a0, 2(a5))

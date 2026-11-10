@@ -31,11 +31,12 @@ Lưu ý: Yosys trong image Docker của nhóm không nhận `abc -fast` trong `s
 | Ước lượng 25/10: 51 714 µm², mật độ 70% | 391 × 392 µm | 421 × 422 µm = 0,178 mm² |
 | 31/10: 53 408 µm², mật độ 70% | 394 × 395 µm | 424 × 425 µm = 0,180 mm² |
 | 07/11: 55 700 µm² (có SPI, PWM), mật độ 70% | 397 × 400 µm | 427 × 430 µm = 0,184 mm² |
-| **Chọn (07/11):** 58 000 µm² (có SPI, PWM, DMA), mật độ 70% | **402 × 404 µm** | **432 × 434 µm = 0,187 mm²** |
+| 07/11: 58 000 µm² (có SPI, PWM, DMA), mật độ 70% | 402 × 404 µm | 432 × 434 µm = 0,187 mm² |
+| **Chọn (10/11):** 59 400 µm² (có SPI, PWM, DMA, I2C), mật độ 70% | **405 × 405 µm** | **435 × 435 µm = 0,189 mm²** |
 
-Lệnh: `python3 pnr/scripts/estimate_die.py --std-area 58000 --macro 80x100 --util 0.70`, lặp `--macro 80x100` đủ 8 lần.
+Lệnh: `python3 pnr/scripts/estimate_die.py --std-area 59400 --macro 80x100 --util 0.70`, lặp `--macro 80x100` đủ 8 lần.
 
-58 000 µm² = 53 900 µm² (Genus 31/10, reset có buffer, `docs/sta_results.md`) cộng khoảng 1 800 µm² cho SPI và PWM ghép vào ngày 07/11, cộng khoảng 2 300 µm² cho DMA bật mặc định cùng ngày (khối `dma_apb` trên Genus 29/10 là 2 318,8 µm², `appendix/synth_blocks`). Số SPI, PWM lấy từ Yosys Nangate45 (526 và 1 092 µm²), nhân tỉ lệ GPDK45/Nangate45 của `uart_apb` (2 166 / 1 954). Khi Phát có diện tích Genus mới thì so lại, `pd_checks.rpt` cũng in mật độ thật sau PnR.
+59 400 µm² = 53 900 µm² (Genus 31/10, reset có buffer, `docs/sta_results.md`) cộng khoảng 1 800 µm² cho SPI và PWM ghép vào ngày 07/11, cộng khoảng 2 300 µm² cho DMA bật mặc định cùng ngày (khối `dma_apb` trên Genus 29/10 là 2 318,8 µm², `appendix/synth_blocks`). Ngày 10/11 cộng thêm khoảng 500 µm² cho trọng tài 2 master của `sys_bus` và 850 µm² cho I2C (Yosys Nangate45 lần lượt 195 và 726 µm², nhân lên cho GPDK45). Số SPI, PWM lấy từ Yosys Nangate45 (526 và 1 092 µm²), nhân tỉ lệ GPDK45/Nangate45 của `uart_apb` (2 166 / 1 954). Khi Phát có diện tích Genus mới thì so lại, `pd_checks.rpt` cũng in mật độ thật sau PnR.
 
 `--std-area` chỉ nhận diện tích cell chuẩn, script tự cộng macro và halo. Lần PnR 29/10 dùng lõi 524 × 523 µm vì đã nhập tổng 116 757 µm² (có cả macro), nên macro bị tính hai lần và lõi to gấp 1,76 lần cần thiết.
 
@@ -44,7 +45,7 @@ Lệnh: `python3 pnr/scripts/estimate_die.py --std-area 58000 --macro 80x100 --u
 ```text
         cạnh trên
   ┌──────────────────────────┐
-  │ IMEM0 IMEM1 IMEM2 IMEM3  │  4 × (80 + 10) = 360 µm < 402 µm
+  │ IMEM0 IMEM1 IMEM2 IMEM3  │  4 × (80 + 10) = 360 µm < 405 µm
   │                          │
  trái    logic (core, bus,    phải
  clk,     ngoại vi, accel)    gpio_o
@@ -65,10 +66,10 @@ Lệnh: `python3 pnr/scripts/estimate_die.py --std-area 58000 --macro 80x100 --u
 
 | Cạnh | Chân | Số chân | Chiều dài cần (cách 4 µm) |
 | --- | --- | --- | --- |
-| Trái | `clk`, `rst_n`, `uart_rx`, `uart_tx`, `spi_sclk`, `spi_mosi`, `spi_miso`, `spi_cs_n`, `pwm_o`, `gpio_i[31:0]` | 41 | 164 µm |
+| Trái | `clk`, `rst_n`, `uart_rx`, `uart_tx`, `spi_sclk`, `spi_mosi`, `spi_miso`, `spi_cs_n`, `pwm_o`, `i2c_scl_i`, `i2c_scl_oe`, `i2c_sda_i`, `i2c_sda_oe`, `gpio_i[31:0]` | 45 | 180 µm |
 | Phải | `gpio_o[31:0]`, `gpio_oe[31:0]` | 64 | 256 µm |
 
-Tổng 105 chân (5 chân SPI, PWM thêm ngày 07/11). Cạnh trên và dưới không đặt chân vì đã có macro. Cả hai cạnh dọc dài 400 µm, đủ chỗ.
+Tổng 109 chân (5 chân SPI, PWM thêm ngày 07/11, 4 chân I2C ngày 10/11). Cạnh trên và dưới không đặt chân vì đã có macro. Cả hai cạnh dọc dài 405 µm, đủ chỗ.
 
 ## 5. Power plan
 
@@ -80,7 +81,7 @@ Tổng 105 chân (5 chân SPI, PWM thêm ngày 07/11). Cạnh trên và dưới 
 Lần chạy 29/10 (`make pnr-accel` sửa tạm thành `soc_top`) đã place và route được `soc_top` với 8 macro, nhưng `run_all.tcl` chưa gọi script này nên Innovus tự đặt macro. Sửa ngày 31/10:
 
 - `make pnr-soc` chạy `run_all.tcl` với `TOP=soc_top` và gọi `soc_floorplan.tcl`. `make pnr-accel` chạy lại được như cũ.
-- Lõi 394 × 395 µm thay cho 524 × 523 µm (07/11 nới thành 397 × 400 µm cho SPI, PWM, rồi 402 × 404 µm khi bật DMA).
+- Lõi 394 × 395 µm thay cho 524 × 523 µm (07/11 nới thành 397 × 400 µm cho SPI, PWM, rồi 402 × 404 µm khi bật DMA, 405 × 405 µm ngày 10/11 khi có I2C).
 - `CLKBUFX2` bị cấm ngay sau `init_design`. Lần 29/10 chỉ cấm trước CTS nên tối ưu placement chèn 1220 cell này làm buffer dữ liệu.
 
 | Việc | Vì sao chưa xong | Khi nào |

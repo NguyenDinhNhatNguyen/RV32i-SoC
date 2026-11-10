@@ -14,6 +14,8 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 | `fw/tests/soc/soc.S` | Test Timer, ngắt, WFI, UART, GPIO, accelerator, IRQC, truy cập sai |
 | `fw/tests/soc/dma.S` | Test DMA trong SoC (chỉ chạy với `ENABLE_DMA = 1`) |
 | `fw/tests/soc/spi_pwm.S` | Test SPI và PWM trong SoC (RTL-13) |
+| `fw/tests/soc/i2c.S` | Test I2C trong SoC qua slave mô phỏng (RTL-14) |
+| `tb/models/i2c_slave_model.v` | I2C slave mô phỏng địa chỉ 0x50, dùng cho `tb_soc` và `tb_i2c_apb` |
 | `scripts/soc_run.sh` | Chạy một bài trên `tb_soc`, gọi từ `make fw-soc` |
 | `syn/constraints/soc.sdc` | SDC v1 của `soc_top` (STA-01), dùng chung Genus, Innovus, Tempus và OpenSTA |
 
@@ -27,8 +29,9 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 | `uart_rx`, `uart_tx` | in, out | UART 8N1, mặc định 115200 baud ở 50 MHz (`BAUDDIV = 27`) |
 | `spi_sclk`, `spi_mosi`, `spi_cs_n`, `spi_miso` | out, out, out, in | SPI master (RTL-13), `spi_cs_n` mặc định 1 |
 | `pwm_o` | out | PWM (RTL-13) |
+| `i2c_scl_i`, `i2c_scl_oe`, `i2c_sda_i`, `i2c_sda_oe` | in, out, in, out | I2C master (RTL-14), open drain. `*_oe = 1` thì pad kéo đường dây xuống 0, `*_oe = 0` thì nhả cho điện trở kéo lên. `*_i` là mức thật trên đường dây |
 
-Tổng cộng 105 chân tín hiệu (thêm 5 chân SPI, PWM từ 07/11). Đây là danh sách cho pin plan (PD-02).
+Tổng cộng 109 chân tín hiệu (thêm 5 chân SPI, PWM ngày 07/11 và 4 chân I2C ngày 10/11). Đây là danh sách cho pin plan (PD-02).
 
 ## 3. Sơ đồ nối
 
@@ -75,19 +78,19 @@ Tổng cộng 105 chân tín hiệu (thêm 5 chân SPI, PWM từ 07/11). Đây l
 | 1 | UART | Đã nối (RTL-10) |
 | 2 | GPIO | Đã nối, `W = 32` |
 | 3 | SPI | Đã nối khi `ENABLE_SPI = 1` (RTL-13, mặc định). Không có ngắt nên IRQC bit 3 vẫn nối 0 |
-| 4 | I2C | Chưa có RTL (`rtl/periph/i2c_apb.v` đang rỗng), Tầng 2 |
+| 4 | I2C | Đã nối khi `ENABLE_I2C = 1` (RTL-14, Tầng 2, mặc định từ 10/11). Không có ngắt, không có clock stretching |
 | 5 | PWM | Đã nối khi `ENABLE_PWM = 1` (RTL-13, mặc định) |
 | 6 | IRQC | Đã nối (RTL-11) |
 | 7 | Accelerator | Đã nối qua `accel_apb` |
 | 8 | DMA | Đã nối khi `ENABLE_DMA = 1` (RTL-15). Với `ENABLE_DMA = 0` khe trả err |
 
-Khe chưa có RTL hoặc bị tắt bằng tham số có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB. Khi tắt SPI hay PWM, `soc_top` không khởi tạo khối mà tự nối khe về trạng thái rảnh và giữ chân ra ở mức nghỉ (`spi_cs_n = 1`, các chân khác 0), như cách làm với DMA.
+Khe chưa có RTL hoặc bị tắt bằng tham số có bit `APB_EN = 0` nên `apb_bridge` trả err mà không tạo giao dịch APB. Khi tắt SPI, PWM hay I2C, `soc_top` không khởi tạo khối mà tự nối khe về trạng thái rảnh và giữ chân ra ở mức nghỉ (`spi_cs_n = 1`, I2C nhả cả hai đường dây, các chân khác 0), như cách làm với DMA.
 
-Thêm một khối mới vào `soc_top`, ví dụ I2C (làm giống cách đã nối SPI, PWM):
+Từ 10/11 cả 9 khe đều đã có khối. Muốn thêm khối mới thì phải thêm khe trong `soc_map.vh` và `apb_bridge`, rồi làm giống cách đã nối SPI, PWM, I2C:
 
-1. Khởi tạo khối, nối `psel[SOC_APB_I2C]`, `penable`, `pwrite`, `paddr`, `pwdata`.
-2. Nối `prdata`, `pready`, `pslverr` của khe vào chỗ đang gán giá trị rảnh.
-3. Thêm bit `SOC_APB_I2C` vào `APB_EN`.
+1. Khởi tạo khối, nối `psel[SOC_APB_<khe>]`, `penable`, `pwrite`, `paddr`, `pwdata`.
+2. Nối `prdata`, `pready`, `pslverr` của khe.
+3. Thêm bit của khe vào `APB_EN`, bọc bằng tham số `ENABLE_<khối>`.
 4. Nếu khối có ngắt: nối vào `irq_src` (cần thêm bit trong `soc_map.vh`).
 5. Thêm chân mới vào `soc.sdc` (IO delay) và báo Nguyên cập nhật pin plan.
 
@@ -100,6 +103,7 @@ Thêm một khối mới vào `soc_top`, ví dụ I2C (làm giống cách đã n
 | `ENABLE_DMA` | 1 | DMA và master thứ 2 của `sys_bus` (RTL-15, Tầng 2). Bật mặc định từ 07/11 |
 | `ENABLE_SPI` | 1 | SPI master ở khe 3 (RTL-13, Tầng 1) |
 | `ENABLE_PWM` | 1 | PWM ở khe 5 (RTL-13, Tầng 1) |
+| `ENABLE_I2C` | 1 | I2C master ở khe 4 (RTL-14, Tầng 2). Bật mặc định từ 10/11 |
 | `GPIO_W` | 32 | Số chân GPIO. `gpio_apb` chỉ lint sạch với 32 |
 
 Kích thước IMEM, DMEM lấy từ `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong `rtl/bus/soc_map.vh`.
@@ -120,6 +124,18 @@ Kích thước IMEM, DMEM lấy từ `SOC_IMEM_BANK_W`, `SOC_DMEM_BANK_W` trong 
 | `rtl/periph/gpio_apb.v` | Thêm dòng trống cuối file | Verilator báo `EOFNEWLINE`, lint của `soc_top` FAIL |
 | `rtl/periph/uart_apb.v`, `uart_fifo.v` | Thêm `` `timescale 1ns/1ps `` | Verilator báo `TIMESCALEMOD` vì các file khác đều có, lint của `soc_top` FAIL. `tb_uart_apb` vẫn PASS |
 
+Ngày 10/11 khi ghép I2C, Phát sửa thêm trên file của Phúc (RTL-13, RTL-14):
+
+| File | Sửa | Lý do |
+| --- | --- | --- |
+| `rtl/periph/spi_apb.v` | Thêm lại dây `unused_ok` cho `PWDATA[31:16]` | Lúc merge main (13c3ea2) dây này bị mất, `lint-soc` FAIL cả 8 cấu hình |
+| `rtl/periph/spi_apb.v` | MOSI lấy từ flop `mosi_reg`. CPHA = 1: đổi bit ở sườn đầu. CPHA = 0: như cũ | Trước đó MOSI đổi đúng ở sườn lấy mẫu khi CPHA = 1 (mode 1, 3), slave thật bị vi phạm hold. Loopback không thấy lỗi này |
+| `rtl/periph/i2c_apb.v` | START nhả SDA, nâng SCL rồi mới kéo SDA xuống | Bản cũ kéo SDA xuống lúc SCL đang thấp, nên repeated START sau ACK không hợp lệ |
+| `rtl/periph/i2c_apb.v` | Thêm `default` cho `case (state)`, dây `unused_ok` cho `PWDATA[31:16]`, `scl_i` | 3 warning lint |
+| `tb/unit/tb_spi_apb.v` | Bộ theo dõi sườn chạy ở cả 4 mode: MOSI không được đổi cùng lúc với sườn lấy mẫu | Bản cũ chỉ kiểm mode 0. Thay `mosi_reg` bằng MOSI cũ thì test FAIL ở mode 1 và 3 |
+| `tb/unit/tb_i2c_apb.v` | Viết lại với `tb/models/i2c_slave_model.v`: kiểm byte thật trên bus, ACK, NACK, repeated START, sai địa chỉ | Bản cũ chỉ đếm sườn SCL. Với RTL cũ test mới FAIL ở repeated START |
+| `tb/unit/tb_pwm_apb.v` | Dịch comment sang tiếng Anh | Quy ước của repo |
+
 IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-11, theo khuôn `gpio_apb` và thanh ghi đã chốt ở `soc_spec.md` mục 5. Gán bit theo macro `SOC_IRQ_*` thêm vào `soc_map.vh`. `tb_irqc_apb` chưa có target Makefile, giống các testbench Timer, GPIO, UART (VER-02).
 
 ### 4.7 Ràng buộc thời gian (SDC v1, STA-01)
@@ -131,8 +147,8 @@ File `syn/constraints/soc.sdc`. Mỗi ràng buộc có chú thích lý do ngay t
 | Clock `clk` | Chu kỳ 20 ns (50 MHz), duty 50% | Một miền clock. Chu kỳ là biến `SOC_PERIOD`, đổi số này thì input và output delay max đổi theo (STA-03) |
 | Uncertainty | Setup 0,15 ns, hold 0,08 ns | Giống Lab 01 và `accel.sdc` |
 | Clock transition | 0,08 ns | Chỉ dùng trước CTS, sau CTS tool dùng clock thật |
-| Input delay | Max 4,8 ns, min 0,3 ns cho `gpio_i[*]`, `uart_rx` | Max bằng 24% chu kỳ như Lab. Hai chân này bất đồng bộ, đi thẳng vào bộ đồng bộ 2 flop |
-| Output delay | Max 4,0 ns, min 0,2 ns cho `gpio_o[*]`, `gpio_oe[*]`, `uart_tx` | Max bằng 20% chu kỳ. Mọi ngõ ra đều lấy từ flop |
+| Input delay | Max 4,8 ns, min 0,3 ns cho `gpio_i[*]`, `uart_rx`, `spi_miso`, `i2c_scl_i`, `i2c_sda_i` | Max bằng 24% chu kỳ như Lab. `gpio_i`, `uart_rx` bất đồng bộ, đi thẳng vào bộ đồng bộ 2 flop. `spi_miso`, `i2c_sda_i` về theo clock do chính SoC tạo nên là ngõ vào đồng bộ. `i2c_scl_i` không ai đọc (không có clock stretching), chỉ ràng buộc để không bị sót |
+| Output delay | Max 4,0 ns, min 0,2 ns cho `gpio_o[*]`, `gpio_oe[*]`, `uart_tx`, các chân SPI, `pwm_o`, `i2c_scl_oe`, `i2c_sda_oe` | Max bằng 20% chu kỳ. Mọi ngõ ra đều lấy từ flop (`i2c_*_oe` qua 1 cổng đảo) |
 | Input slew, output load | `set_input_transition 0,1`, `set_load -pin_load 0,05` | Không ghi tên cell thư viện, để chạy được cả GPDK45 lẫn Nangate45 |
 | Reset | `set_false_path -from rst_n`, kèm input delay 0 | `rst_n` chỉ vào 2 flop của `u_rst`. Đường deassert từ `u_rst` tới chân reset các flop là đường thường, tool kiểm recovery và removal |
 | Design rules | `set_max_transition 0.5`, `set_max_fanout 32` cho cả thiết kế | Thêm 30/10 để Genus buffer các net fanout lớn. Riêng mạng reset còn cần `ideal_seq_async_pins false` trong `synth_soc.tcl` (31/10), xem lưu ý dưới mục này |
@@ -154,12 +170,12 @@ scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 8 cấu hình ENABLE_M x
 scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, spi_pwm.S, riscv-tests trên soc_top
 ```
 
-Kết quả ngày 07/11 (DMA bật mặc định). `fw-soc` dựng M0W0 với `ENABLE_DMA = 0` và M1W1 với `ENABLE_DMA = 1`, nên cả hai cách đều được chạy:
+Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 với `ENABLE_DMA = 0` và M1W1 với `ENABLE_DMA = 1`, nên cả hai cách đều được chạy:
 
 | Lệnh | Kết quả |
 | --- | --- |
 | `make lint-soc` | 0 warning ở cả 8 cấu hình |
-| `make fw-soc` | 129/129 PASS: `smoke`, `hazard`, `soc`, `bus`, `spi_pwm`, rv32ui, rv32mi (M0W0 và M1W1), rv32um và `dma` (M1W1) |
+| `make fw-soc` | 131/131 PASS: `smoke`, `hazard`, `soc`, `bus`, `spi_pwm`, `i2c`, rv32ui, rv32mi (M0W0 và M1W1), rv32um và `dma` (M1W1) |
 | `make unit-bus` | 8/8 PASS, gồm `tb_dma_apb` và phần kiểm round-robin của `tb_sys_bus` |
 | `make sim-boot` | PASS, `tb_boot` dùng mặc định của `soc_top` nên có DMA |
 | `make sta-soc-nangate` | Yosys không latch, đủ 8 macro, 0 unconstrained. Diện tích Nangate45 60 426 µm², thêm 1 778 µm² (+3,0%) so với bản chưa bật DMA (`docs/sta_results.md` mục 2) |
@@ -186,10 +202,13 @@ Kết quả ngày 07/11 (DMA bật mặc định). `fw-soc` dựng M0W0 với `E
 
 Đã cấy thử 15 lỗi vào DMA và phần nối DMA (phát yêu cầu khi chưa có ready, phát yêu cầu khi còn chờ phản hồi, sai số word, không tăng địa chỉ, bỏ qua lỗi đọc, cho ghi khi bận, START không xoá ERR, `LEN = 0` vẫn chạy, `irq` bỏ qua `IRQ_EN`, `be` thiếu byte, không giữ `wdata`, ghi 1 để xoá sai bit, tắt khe DMA, hở ngắt DMA, hở `err` của master DMA). Bắt được cả 15.
 
+Đã cấy thử 4 lỗi vào phần nối I2C (10/11): đổi chỗ `i2c_scl_oe` và `i2c_sda_oe`, `i2c_sda_i` treo mức 1, hở `i2c_scl_oe`, tắt khe I2C. `i2c.S` bắt được cả 4.
+
 Đã cấy thử 22 lỗi vào bản sao `soc_top`, `reset_sync` và `irqc_apb`: mtime nối 0, hở `irq_timer`, hở `irq_software`, tắt khe GPIO, hở `gpio_i`, Timer nhận nhầm PSEL của GPIO, tắt khe accelerator, tắt khe UART, hở `uart_rx`, hở `uart_tx`, UART nhận nhầm PSEL của GPIO, reset chỉ 1 flop, reset assert đồng bộ, core dùng reset chưa đồng bộ, tắt khe IRQC, hở `irq_external`, hở bit accelerator, hở bit UART, đổi chỗ bit UART và accelerator, IRQC bỏ qua `ENABLE`, cho ghi `PENDING`, `ENABLE` reset về 1. `tb_soc` bắt được cả 22.
 
 ## 6. Còn lại
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
+- I2C chưa có clock stretching (`i2c_scl_i` không dùng) và chưa có ngắt. Slave nào kéo dài SCL sẽ bị sai.
 - Removal của mạng reset chỉ dư 6 ps trước layout (31/10, `docs/sta_results.md` mục 1). Kiểm lại sau CTS và sau route (STA-05).
 - Trên server: GLS với `sram_2k_macro.v` thật.

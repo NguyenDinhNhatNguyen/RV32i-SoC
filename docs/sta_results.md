@@ -42,6 +42,7 @@ OpenSTA 3.1 với Nangate45 typical, netlist Yosys (`make sta-soc-nangate`), mac
 | 29/10 | BTB 8 entry | +14,994 | +0,004 | +2,279 | -2,983 | 56 719 |
 | 07/11 | Có SPI, PWM | +14,925 | +0,004 | +1,517 | -3,105 | 58 648 |
 | 07/11 | Có SPI, PWM, DMA bật mặc định | +14,880 | +0,004 | +0,529 | -3,264 | 60 426 |
+| 10/11 | Có SPI, PWM, DMA, I2C (4 chân mới) | +14,897 | +0,004 | +0,157 | -3,324 | 61 561 |
 
 Removal âm vì Yosys không buffer mạng reset (cùng nguyên nhân như mục 1). Setup tốt vì đường găng qua macro không được tính.
 

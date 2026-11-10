@@ -435,12 +435,14 @@ SOC_BENCH_RUNS := $(foreach b,$(SOC_BENCH_LIST),$(b)_rv32i@M0W1 $(b)_rv32im@M1W1
 SOC_BENCH_RTL  := $(wildcard rtl/core/*.v rtl/bus/*.v rtl/mem/*.v rtl/periph/*.v rtl/accel/*.v)
 
 $(SOC_BENCH_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v scripts/bench_soc_mon.v $(SOC_BENCH_RTL) \
-                               tb/models/sram_2k_macro.v rtl/core/rv32_defs.vh rtl/bus/soc_map.vh \
+                               tb/models/sram_2k_macro.v tb/models/i2c_slave_model.v \
+                               rtl/core/rv32_defs.vh rtl/bus/soc_map.vh \
                                rtl/mem/boot_rom_init.vh
 	@mkdir -p $(@D)
 	$(IVERILOG) -g2012 -Irtl/bus -Irtl/mem -Irtl/core -s tb_soc -s bench_soc_mon \
 	  -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) \
-	  -o $@ $(SOC_BENCH_RTL) tb/models/sram_2k_macro.v tb/soc/tb_soc.v scripts/bench_soc_mon.v
+	  -o $@ $(SOC_BENCH_RTL) tb/models/sram_2k_macro.v tb/models/i2c_slave_model.v \
+	  tb/soc/tb_soc.v scripts/bench_soc_mon.v
 
 $(eval $(call bench_elf_rules,$(SOC_BENCH_OUT),-DBENCH_SOC))
 
@@ -919,10 +921,10 @@ clean-bus:
 
 # ---------------------------------------------------------------------------
 # Peripherals (Phuc): RTL-04 timer_apb, gpio_apb, RTL-10 uart_apb, RTL-11 irqc_apb,
-# RTL-13 spi_apb, pwm_apb.
+# RTL-13 spi_apb, pwm_apb, RTL-14 i2c_apb.
 # Unit tests for VER-02. Runs at home (Icarus). Results in tb/unit/out/periph (ignored).
 #   make unit-periph               tb_timer_apb, tb_gpio_apb, tb_uart_apb, tb_irqc_apb, tb_spi_apb,
-#                                  tb_pwm_apb (TB=tb_uart_apb runs one)
+#                                  tb_pwm_apb, tb_i2c_apb (TB=tb_uart_apb runs one)
 #   make unit-periph PLUSARGS="+seed=7"
 #   make lint-periph               Verilator -Wall on each module in rtl/periph on its own, 0 warnings
 #                                  (lint-soc also lints them inside soc_top)
@@ -931,7 +933,8 @@ PERIPH_RTL      := $(wildcard rtl/periph/*.v)
 PERIPH_OUT      := tb/unit/out/periph
 PERIPH_IVFLAGS  := -g2012 -Wall
 PERIPH_VLFLAGS  := --lint-only -Wall -y rtl/periph
-PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb tb_spi_apb tb_pwm_apb
+PERIPH_MODELS   := tb/models/i2c_slave_model.v
+PERIPH_UNIT_TBS := tb_timer_apb tb_gpio_apb tb_uart_apb tb_irqc_apb tb_spi_apb tb_pwm_apb tb_i2c_apb
 ifneq ($(TB),)
 PERIPH_UNIT_TBS := $(filter $(TB),$(PERIPH_UNIT_TBS))
 endif
@@ -964,7 +967,7 @@ unit-periph:
 	for tb in $(PERIPH_UNIT_TBS); do \
 	  log=$(PERIPH_OUT)/$$tb.log; \
 	  if $(IVERILOG) $(PERIPH_IVFLAGS) -s $$tb -o $(PERIPH_OUT)/$$tb.vvp \
-	       $(PERIPH_RTL) tb/unit/$$tb.v > $$log 2>&1 && \
+	       $(PERIPH_RTL) $(PERIPH_MODELS) tb/unit/$$tb.v > $$log 2>&1 && \
 	     $(VVP) -n $(PERIPH_OUT)/$$tb.vvp $(PLUSARGS) >> $$log 2>&1 && \
 	     grep -q '^PASS' $$log && ! grep -q '^FAIL' $$log; then \
 	    pass=$$((pass+1)); echo "  $$(grep '^PASS' $$log | tail -n 1)"; \
@@ -1040,11 +1043,12 @@ $(SOC_OWN_OUT)/%.elf: fw/tests/soc/%.S fw/tests/asm/test_macros.h fw/common/link
 $(SOC_OWN_OUT)/%.tohost: $(SOC_OWN_OUT)/%.elf scripts/elf2hex.py tb/core/core_tb_map.vh
 	@$(PYTHON) scripts/elf2hex.py $< --imem $(SOC_OWN_OUT)/$*.imem.hex --dmem $(SOC_OWN_OUT)/$*.dmem.hex > $@
 
-$(SOC_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v $(SOC_RTL) $(BUS_MODELS) rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
+$(SOC_OUT)/tb_soc_%.vvp: tb/soc/tb_soc.v $(SOC_RTL) $(BUS_MODELS) tb/models/i2c_slave_model.v \
+                         rtl/core/rv32_defs.vh rtl/bus/soc_map.vh
 	@mkdir -p $(@D)
 	$(IVERILOG) $(BUS_IVFLAGS) -Irtl/core -s tb_soc -Ptb_soc.ENABLE_M=$(call core_cfg_m,$*) \
 	  -Ptb_soc.ENABLE_WFI_SLEEP=$(call core_cfg_w,$*) -Ptb_soc.ENABLE_DMA=$(call soc_cfg_d,$*) \
-	  -o $@ $(SOC_RTL) $(BUS_MODELS) tb/soc/tb_soc.v
+	  -o $@ $(SOC_RTL) $(BUS_MODELS) tb/models/i2c_slave_model.v tb/soc/tb_soc.v
 
 fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
         $(foreach t,$(SOC_FW_TESTS),$(CORE_FW_OUT)/$(t).tohost) \

@@ -128,10 +128,15 @@ module i2c_apb #(
                                 tick_cnt <= tick_cnt + 2'd1;
                                 
                                 case (state)
+                                    // Release SDA, raise SCL, then pull SDA low while SCL is
+                                    // high. Works from an idle bus and as a repeated START
+                                    // after an ACK (SCL low).
                                     START: begin
-                                        if (tick_cnt == 2'd0) sda_reg <= 1'b0;
-                                        if (tick_cnt == 2'd1) scl_reg <= 1'b0;
+                                        if (tick_cnt == 2'd0) sda_reg <= 1'b1;
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd2) sda_reg <= 1'b0;
                                         if (tick_cnt == 2'd3) begin
+                                            scl_reg <= 1'b0;
                                             if (op_write) state <= WRITE;
                                             else if (op_read) state <= READ;
                                             else state <= IDLE;
@@ -194,12 +199,17 @@ module i2c_apb #(
                                         if (tick_cnt == 2'd2) sda_reg <= 1'b1;
                                         if (tick_cnt == 2'd3) state <= IDLE;
                                     end
+
+                                    default: state <= IDLE;
                                 endcase
                             end
                         end
                     end
                 end
             end
+
+            // No clock stretching: scl_i is not read. CTRL uses PWDATA[15:0] only.
+            wire unused_ok = &{1'b0, PWDATA[31:16], scl_i};
 
             assign scl_o  = 1'b0; 
             assign scl_oe = ~scl_reg; 

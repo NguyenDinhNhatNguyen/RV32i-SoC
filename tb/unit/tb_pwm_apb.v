@@ -46,7 +46,7 @@ module tb_pwm_apb;
     integer errors = 0;
     reg [31:0] rd;
     reg        err_seen;
-    integer    i; // Biến dùng cho vòng lặp kiểm tra tuyệt đối
+    integer    i; // Loop counter of the cycle-exact check
 
     task check;
         input        cond;
@@ -123,21 +123,21 @@ module tb_pwm_apb;
         // ---- 3. Measure PWM Output (Period = 10, Duty = 4) ----
         apb_write(A_CTRL, 32'd1); // Enable PWM
         
-        // Bắt chính xác sườn lên đầu tiên của xung PWM
+        // Wait for the first rising edge of the PWM output
         @(posedge pwm_out);
         
-        // Dịch chuyển thời gian vào CHÍNH GIỮA chu kỳ (negedge PCLK)
-        // Điều này giúp việc lấy mẫu miễn nhiễm 100% với các lỗi đụng độ sườn xung!
+        // Move to the middle of the cycle (negedge PCLK)
+        // so sampling never races with the clock edge
         #(HALF);
         
-        // Kiểm tra đối chiếu cứng (Hard-check) đúng 10 chu kỳ liên tiếp
+        // Check the output on 10 cycles in a row
         for (i = 0; i < 10; i = i + 1) begin
             if (i < 4) begin
                 check(pwm_out === 1'b1, "PWM Cycle High (Duty)");
             end else begin
                 check(pwm_out === 1'b0, "PWM Cycle Low");
             end
-            // Nhảy đến điểm chính giữa của chu kỳ tiếp theo
+            // Go to the middle of the next cycle
             #(HALF*2); 
         end
 

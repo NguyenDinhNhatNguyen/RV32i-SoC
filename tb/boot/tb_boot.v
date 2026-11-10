@@ -60,12 +60,17 @@ module tb_boot;
         .gpio_oe (gpio_oe),
         .uart_rx (host_tx),
         .uart_tx (uart_tx),
-        // SPI and PWM are not used by the bootloader: spi_miso is tied low, outputs stay open
-        .spi_sclk (),
-        .spi_mosi (),
-        .spi_miso (1'b0),
-        .spi_cs_n (),
-        .pwm_o    ()
+        // SPI, PWM and I2C are not used by the bootloader: spi_miso is tied low, the I2C
+        // lines read high (released bus with pull-ups), outputs stay open
+        .spi_sclk   (),
+        .spi_mosi   (),
+        .spi_miso   (1'b0),
+        .spi_cs_n   (),
+        .pwm_o      (),
+        .i2c_scl_i  (1'b1),
+        .i2c_scl_oe (),
+        .i2c_sda_i  (1'b1),
+        .i2c_sda_oe ()
     );
 
     // ---------------------------------------------------------- IMEM preload

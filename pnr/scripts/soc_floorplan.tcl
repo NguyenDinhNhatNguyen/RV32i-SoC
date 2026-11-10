@@ -9,13 +9,15 @@
 
 # ---- Parameters ----------------------------------------------------------------------
 # Core size from estimate_die.py with the standard cell area only (macros are added by the
-# script) at 70% density: 58 000 um2 = 53 900 um2 (Genus 31/10, buffered reset) plus about
+# script) at 70% density: 59 400 um2 = 53 900 um2 (Genus 31/10, buffered reset) plus about
 # 1800 um2 for SPI and PWM (added 07/11, Yosys Nangate45 scaled like uart_apb) plus about
-# 2300 um2 for the DMA (on by default since 07/11, Genus dma_apb block 29/10). The 29/10 run
+# 2300 um2 for the DMA (on by default since 07/11, Genus dma_apb block 29/10) plus about
+# 500 um2 for the 2-master sys_bus arbiter and 850 um2 for I2C (10/11, Yosys Nangate45
+# 195 and 726 um2, scaled up). The 29/10 run
 # used 524 x 523 um because the total area with macros was given as --std-area, which counted
 # the macros twice.
-set CORE_W     402.0      ;# um
-set CORE_H     403.6
+set CORE_W     405.0      ;# um
+set CORE_H     405.3
 set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0
@@ -94,9 +96,10 @@ foreach m $macros { try_cmd {addHaloToBlock $HALO $HALO $HALO $HALO $m} }
 try_cmd {cutRow}            ;# Remove standard cell rows under the macros and halos
 
 # ---- Pin plan -------------------------------------------------------------------------
-# Left (edge 0): clock, reset, UART, SPI, PWM, GPIO inputs (41 pins).
+# Left (edge 0): clock, reset, UART, SPI, PWM, I2C, GPIO inputs (45 pins).
 # Right (edge 2): GPIO outputs and output enables (64 pins).
-editPin -pin {clk rst_n uart_rx uart_tx spi_sclk spi_mosi spi_miso spi_cs_n pwm_o gpio_i*} \
+editPin -pin {clk rst_n uart_rx uart_tx spi_sclk spi_mosi spi_miso spi_cs_n pwm_o \
+              i2c_scl_i i2c_scl_oe i2c_sda_i i2c_sda_oe gpio_i*} \
         -edge 0 -spreadType CENTER -spacing 4 -layer 3
 editPin -pin {gpio_o* gpio_oe*}                  -edge 2 -spreadType CENTER -spacing 4 -layer 3
 

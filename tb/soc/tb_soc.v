@@ -16,6 +16,9 @@
 // SPI: spi_mosi loops back to spi_miso, so a transfer reads back the byte it sent.
 // PWM: pwm_o drives the pad of gpio_i[15] (PAD_IN bit 15 is 0, so with the PWM off the pad
 // reads 0 as before). Firmware samples the PWM output through GPIO DATA_IN.
+// I2C: open-drain SCL and SDA with pull-ups, i2c_*_oe = 1 pulls a line low. The slave is
+// tb/models/i2c_slave_model.v at address 0x50. A swapped or dead pin breaks the frames that
+// fw/tests/soc/i2c.S checks.
 //
 // Result rules, as in tb_core:
 //   - Write to tohost: 1 = PASS, another odd value = FAIL, error code = value >> 1
@@ -46,6 +49,18 @@ module tb_soc;
     wire        spi_sclk, spi_mosi, spi_cs_n, pwm_o;
     wire [31:0] pad = PAD_IN | {16'd0, pwm_o, 15'd0};
 
+    wire        i2c_scl_oe, i2c_sda_oe, i2c_slave_pull;
+    tri1        i2c_scl, i2c_sda;
+    assign i2c_scl = i2c_scl_oe     ? 1'b0 : 1'bz;
+    assign i2c_sda = i2c_sda_oe     ? 1'b0 : 1'bz;
+    assign i2c_sda = i2c_slave_pull ? 1'b0 : 1'bz;
+
+    i2c_slave_model #(.ADDR(7'h50)) u_i2c_slave (
+        .scl      (i2c_scl),
+        .sda      (i2c_sda),
+        .sda_pull (i2c_slave_pull)
+    );
+
     assign gpio_i = (gpio_oe & gpio_o) | (~gpio_oe & pad);
 
     soc_top #(
@@ -64,7 +79,11 @@ module tb_soc;
         .spi_mosi(spi_mosi),
         .spi_miso(spi_mosi),            // Loopback
         .spi_cs_n(spi_cs_n),
-        .pwm_o   (pwm_o)
+        .pwm_o   (pwm_o),
+        .i2c_scl_i (i2c_scl),
+        .i2c_scl_oe(i2c_scl_oe),
+        .i2c_sda_i (i2c_sda),
+        .i2c_sda_oe(i2c_sda_oe)
     );
 
     // ---------------------------------------------------------- memory load
