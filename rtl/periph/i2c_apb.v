@@ -1,5 +1,6 @@
 // i2c_apb.v - I2C Master APB3 slave (RTL-14)
-// Operates on Open-Drain mechanism: Logic 1 = High-Z (Pulled up by external resistor)
+`timescale 1ns/1ps
+
 module i2c_apb #(
     parameter ENABLE_I2C = 1
 ) (
@@ -10,11 +11,9 @@ module i2c_apb #(
     input  wire        PWRITE,
     input  wire [11:0] PADDR,
     input  wire [31:0] PWDATA,
-    output reg  [31:0] PRDATA,
+    output wire [31:0] PRDATA, // Wire for assign
     output wire        PREADY,
     output wire        PSLVERR,
-    
-    // I2C Open-Drain signals
     input  wire        scl_i,
     output wire        scl_o,
     output wire        scl_oe,
@@ -27,8 +26,6 @@ module i2c_apb #(
         if (ENABLE_I2C) begin : gen_i2c
             reg [7:0]  tx_data, rx_data;
             reg [15:0] ctrl_div;
-            
-            // FSM Commands
             reg cmd_start, cmd_stop, cmd_read, cmd_write, ack_out;
             reg busy, ack_in;
 
@@ -44,7 +41,6 @@ module i2c_apb #(
             assign PREADY  = 1'b1;
             assign PSLVERR = access & ~addr_ok;
 
-            // Handle APB Write
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
                     ctrl_div  <= 16'd0;
@@ -55,8 +51,13 @@ module i2c_apb #(
                     cmd_write <= 1'b0;
                     ack_out   <= 1'b0;
                 end else begin
-                    // Automatically clear command flags when FSM starts processing (busy = 1)
-                    if (busy) begin
+                    if (wr_ok && wr_cmd) begin
+                        cmd_start <= PWDATA[0];
+                        cmd_stop  <= PWDATA[1];
+                        cmd_read  <= PWDATA[2];
+                        cmd_write <= PWDATA[3];
+                        ack_out   <= PWDATA[4];
+                    end else if (busy) begin
                         cmd_start <= 1'b0;
                         cmd_stop  <= 1'b0;
                         cmd_read  <= 1'b0;
@@ -64,33 +65,24 @@ module i2c_apb #(
                     end else if (wr_ok) begin
                         if (wr_data) tx_data <= PWDATA[7:0];
                         if (wr_ctrl) ctrl_div <= PWDATA[15:0];
-                        if (wr_cmd) begin
-                            cmd_start <= PWDATA[0];
-                            cmd_stop  <= PWDATA[1];
-                            cmd_read  <= PWDATA[2];
-                            cmd_write <= PWDATA[3];
-                            ack_out   <= PWDATA[4];
-                        end
                     end
                 end
             end
 
-            // I2C FSM States
             localparam [3:0] IDLE  = 4'd0,
                              START = 4'd1,
                              WRITE = 4'd2,
                              READ  = 4'd3,
-                             ACK_W = 4'd4, // Wait for ACK from Slave during Write
-                             ACK_R = 4'd5, // Send ACK to Slave during Read
+                             ACK_W = 4'd4, 
+                             ACK_R = 4'd5, 
                              STOP  = 4'd6;
 
             reg [3:0]  state;
             reg [15:0] clk_cnt;
-            reg [1:0]  tick_cnt; // Divide 1 SCL clock period into 4 phases (Low, Rise, High, Fall)
+            reg [1:0]  tick_cnt; 
             reg [2:0]  bit_cnt;
             reg        scl_reg, sda_reg;
-
-            wire tick = (clk_cnt == 16'd0);
+            reg        op_write, op_read, op_stop;
 
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
@@ -99,121 +91,125 @@ module i2c_apb #(
                     tick_cnt <= 2'd0;
                     bit_cnt  <= 3'd7;
                     busy     <= 1'b0;
-                    ack_in   <= 1'b1; // Default NACK
+                    ack_in   <= 1'b1; 
                     rx_data  <= 8'd0;
                     scl_reg  <= 1'b1;
                     sda_reg  <= 1'b1;
+                    op_write <= 1'b0;
+                    op_read  <= 1'b0;
+                    op_stop  <= 1'b0;
                 end else begin
-                    // Baud rate generator for I2C
                     if (state == IDLE && !cmd_start && !cmd_stop && !cmd_read && !cmd_write) begin
-                        busy <= 1'b0;
+                        busy     <= 1'b0;
+                        clk_cnt  <= 16'd0;
+                        tick_cnt <= 2'd0; 
+                        bit_cnt  <= 3'd7; 
                     end else begin
                         busy <= 1'b1;
-                        if (clk_cnt != 16'd0) begin
-                            clk_cnt <= clk_cnt - 16'd1;
+                        
+                        if (state == IDLE) begin
+                            op_write <= cmd_write;
+                            op_read  <= cmd_read;
+                            op_stop  <= cmd_stop;
+
+                            clk_cnt  <= 16'd0; // Trigger exactly on next PCLK
+                            tick_cnt <= 2'd0;  // Reset phase perfectly
+                            bit_cnt  <= 3'd7;
+
+                            if (cmd_start) state <= START;
+                            else if (cmd_write) state <= WRITE;
+                            else if (cmd_read) state <= READ;
+                            else if (cmd_stop) state <= STOP;
                         end else begin
-                            clk_cnt <= ctrl_div;
-                            tick_cnt <= tick_cnt + 2'd1;
-                            
-                            case (state)
-                                IDLE: begin
-                                    if (cmd_start) state <= START;
-                                    else if (cmd_write) state <= WRITE;
-                                    else if (cmd_read) state <= READ;
-                                    else if (cmd_stop) state <= STOP;
-                                end
+                            if (clk_cnt != 16'd0) begin
+                                clk_cnt <= clk_cnt - 16'd1;
+                            end else begin
+                                clk_cnt <= ctrl_div;
+                                tick_cnt <= tick_cnt + 2'd1;
                                 
-                                START: begin
-                                    // Generate START condition: SDA pulled low while SCL is high
-                                    if (tick_cnt == 2'd0) sda_reg <= 1'b0;
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b0;
-                                    if (tick_cnt == 2'd3) begin
-                                        if (cmd_write) state <= WRITE;
-                                        else if (cmd_read) state <= READ;
-                                        else state <= IDLE;
-                                    end
-                                end
-
-                                WRITE: begin
-                                    if (tick_cnt == 2'd0) sda_reg <= tx_data[bit_cnt];
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b1;
-                                    if (tick_cnt == 2'd3) begin
-                                        scl_reg <= 1'b0;
-                                        if (bit_cnt == 3'd0) begin
-                                            bit_cnt <= 3'd7;
-                                            state <= ACK_W;
-                                        end else begin
-                                            bit_cnt <= bit_cnt - 3'd1;
+                                case (state)
+                                    START: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= 1'b0;
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b0;
+                                        if (tick_cnt == 2'd3) begin
+                                            if (op_write) state <= WRITE;
+                                            else if (op_read) state <= READ;
+                                            else state <= IDLE;
                                         end
                                     end
-                                end
 
-                                READ: begin
-                                    if (tick_cnt == 2'd0) sda_reg <= 1'b1; // Release SDA for Slave to transmit
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b1;
-                                    if (tick_cnt == 2'd2) rx_data[bit_cnt] <= sda_i; // Sample
-                                    if (tick_cnt == 2'd3) begin
-                                        scl_reg <= 1'b0;
-                                        if (bit_cnt == 3'd0) begin
-                                            bit_cnt <= 3'd7;
-                                            state <= ACK_R;
-                                        end else begin
-                                            bit_cnt <= bit_cnt - 3'd1;
+                                    WRITE: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= tx_data[bit_cnt];
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd3) begin
+                                            scl_reg <= 1'b0;
+                                            if (bit_cnt == 3'd0) begin
+                                                state <= ACK_W;
+                                                bit_cnt <= 3'd7;
+                                            end else begin
+                                                bit_cnt <= bit_cnt - 3'd1;
+                                            end
                                         end
                                     end
-                                end
 
-                                ACK_W: begin
-                                    if (tick_cnt == 2'd0) sda_reg <= 1'b1; // Release SDA to wait for Slave ACK
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b1;
-                                    if (tick_cnt == 2'd2) ack_in <= sda_i; // Read response
-                                    if (tick_cnt == 2'd3) begin
-                                        scl_reg <= 1'b0;
-                                        if (cmd_stop) state <= STOP;
-                                        else state <= IDLE;
+                                    READ: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= 1'b1; 
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd2) rx_data[bit_cnt] <= sda_i; 
+                                        if (tick_cnt == 2'd3) begin
+                                            scl_reg <= 1'b0;
+                                            if (bit_cnt == 3'd0) begin
+                                                state <= ACK_R;
+                                                bit_cnt <= 3'd7;
+                                            end else begin
+                                                bit_cnt <= bit_cnt - 3'd1;
+                                            end
+                                        end
                                     end
-                                end
 
-                                ACK_R: begin
-                                    if (tick_cnt == 2'd0) sda_reg <= ack_out; // Send ACK/NACK
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b1;
-                                    if (tick_cnt == 2'd3) begin
-                                        scl_reg <= 1'b0;
-                                        if (cmd_stop) state <= STOP;
-                                        else state <= IDLE;
+                                    ACK_W: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= 1'b1; 
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd2) ack_in <= sda_i; 
+                                        if (tick_cnt == 2'd3) begin
+                                            scl_reg <= 1'b0;
+                                            if (op_stop) state <= STOP;
+                                            else state <= IDLE;
+                                        end
                                     end
-                                end
 
-                                STOP: begin
-                                    // Generate STOP condition: SDA pulled high while SCL is high
-                                    if (tick_cnt == 2'd0) sda_reg <= 1'b0;
-                                    if (tick_cnt == 2'd1) scl_reg <= 1'b1;
-                                    if (tick_cnt == 2'd2) sda_reg <= 1'b1;
-                                    if (tick_cnt == 2'd3) state <= IDLE;
-                                end
-                            endcase
+                                    ACK_R: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= ack_out; 
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd3) begin
+                                            scl_reg <= 1'b0;
+                                            if (op_stop) state <= STOP;
+                                            else state <= IDLE;
+                                        end
+                                    end
+
+                                    STOP: begin
+                                        if (tick_cnt == 2'd0) sda_reg <= 1'b0;
+                                        if (tick_cnt == 2'd1) scl_reg <= 1'b1;
+                                        if (tick_cnt == 2'd2) sda_reg <= 1'b1;
+                                        if (tick_cnt == 2'd3) state <= IDLE;
+                                    end
+                                endcase
+                            end
                         end
                     end
                 end
             end
 
-            // Open-Drain logic
-            assign scl_o  = 1'b0; // When Low is needed, output logic 0
-            assign scl_oe = ~scl_reg; // OE=1 when reg=0 (pull low), OE=0 when reg=1 (High-Z)
-            
+            assign scl_o  = 1'b0; 
+            assign scl_oe = ~scl_reg; 
             assign sda_o  = 1'b0; 
             assign sda_oe = ~sda_reg;
 
-            // Handle APB Read
-            always @(*) begin
-                if (!addr_ok) PRDATA = 32'd0;
-                else case (widx)
-                    10'd0:   PRDATA = {24'd0, rx_data};
-                    10'd1:   PRDATA = {30'd0, ack_in, busy};
-                    10'd2:   PRDATA = {16'd0, ctrl_div};
-                    default: PRDATA = 32'd0;
-                endcase
-            end
+            assign PRDATA = (!addr_ok) ? 32'd0 :
+                            (widx == 10'd0) ? {24'd0, rx_data} :
+                            (widx == 10'd1) ? {30'd0, ack_in, busy} :
+                            (widx == 10'd2) ? {16'd0, ctrl_div} : 32'd0;
 
         end else begin : gen_no_i2c
             assign PREADY  = 1'b1;
@@ -222,7 +218,7 @@ module i2c_apb #(
             assign scl_oe  = 1'b0;
             assign sda_o   = 1'b0;
             assign sda_oe  = 1'b0;
-            always @(*) PRDATA = 32'd0;
+            assign PRDATA  = 32'd0;
         end
     endgenerate
 
