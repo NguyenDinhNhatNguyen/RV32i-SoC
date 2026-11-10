@@ -983,8 +983,8 @@ clean-periph:
 # ---------------------------------------------------------------------------
 # SoC (Phat): RTL-09 rtl/bus/soc_top.v, rtl/bus/reset_sync.v, RTL-15 rtl/bus/dma_apb.v.
 # Docs: docs/soc_top.md. Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
-#   make lint-soc                  Verilator -Wall on soc_top (ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA),
-#                                  0 warnings
+#   make lint-soc                  Verilator -Wall on soc_top (ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA,
+#                                  plus one build with SPI, PWM, I2C and DMA off), 0 warnings
 #   make fw-soc                    soc_top runs smoke, hazard, soc.S, bus.S, dma.S and riscv-tests
 #                                  (T=soc runs one). M1W1 is built with ENABLE_DMA=1, M0W0 without
 # ---------------------------------------------------------------------------
@@ -994,6 +994,9 @@ SOC_VLFLAGS := --lint-only -Wall -Irtl/bus -Irtl/mem -Irtl/core \
                -y rtl/bus -y rtl/mem -y rtl/core -y rtl/periph -y rtl/accel -y tb/models
 SOC_LINT_CFGS := M0W0 M0W1 M1W0 M1W1
 SOC_LINT_DMA  := 0 1
+# One more build with every optional APB block off, so the disabled branches stay lint clean
+SOC_LINT_MIN  := -GENABLE_M=1 -GENABLE_WFI_SLEEP=1 -GENABLE_DMA=0 -GENABLE_SPI=0 -GENABLE_PWM=0 \
+                 -GENABLE_I2C=0
 
 lint-soc fw-soc: SHELL := /bin/bash
 lint-soc fw-soc: .SHELLFLAGS := -o pipefail -c
@@ -1011,6 +1014,11 @@ lint-soc:
 	    echo "  [FAIL] lint soc_top ($$c, ENABLE_DMA=$$d)"; fail=1; \
 	  fi; \
 	done; done; \
+	if $(VERILATOR) $(SOC_VLFLAGS) --top-module soc_top $(SOC_LINT_MIN) rtl/bus/soc_top.v; then \
+	  echo "  [ OK ] lint soc_top (M1W1, SPI, PWM, I2C and DMA off)"; \
+	else \
+	  echo "  [FAIL] lint soc_top (M1W1, SPI, PWM, I2C and DMA off)"; fail=1; \
+	fi; \
 	if [ $$fail = 0 ]; then echo "LINT-SOC PASS"; else echo "LINT-SOC FAIL"; exit 1; fi
 
 # Assembly tests that do not use the tb_core control block, the SoC tests in

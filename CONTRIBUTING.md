@@ -42,7 +42,7 @@ Người làm RTL tự kiểm khối của mình trước, rồi DV và PD mới
    | --- | --- |
    | Core | `scripts/eda.sh run "make lint-core unit-core fw-core isa-core"` |
    | Bus, bộ nhớ, `soc_top` | `scripts/eda.sh run "make lint-bus lint-soc unit-bus fw-bus fw-soc"` |
-   | Ngoại vi | `scripts/eda.sh run "make lint-soc unit-periph fw-soc"` |
+   | Ngoại vi | `scripts/eda.sh run "make lint-periph lint-soc unit-periph fw-soc"` |
    | Bootloader | `scripts/eda.sh run "make sim-boot"` |
    | Accelerator | `scripts/eda.sh check` |
 

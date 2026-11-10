@@ -10,7 +10,7 @@ module spi_apb #(
     input  wire        PWRITE,
     input  wire [11:0] PADDR,
     input  wire [31:0] PWDATA,
-    output reg  [31:0] PRDATA,
+    output wire [31:0] PRDATA,
     output wire        PREADY,
     output wire        PSLVERR,
     // SPI signals
@@ -124,14 +124,17 @@ module spi_apb #(
             // PWDATA[31:16] is not used by any register, ctrl_div[15:8] is always 0
             wire unused_ok = &{1'b0, PWDATA[31:16]};
 
-            // Read register (APB Read)
+            // Read register (APB Read), prdata_r is combinational
+            reg [31:0] prdata_r;
+            assign PRDATA = prdata_r;
             always @(*) begin
-                if (!addr_ok) PRDATA = 32'd0;
+                if (!addr_ok) prdata_r = 32'd0;
                 else case (widx)
-                    10'd0:   PRDATA = {24'd0, rx_data};
-                    10'd1:   PRDATA = {31'd0, busy};
-                    10'd2:   PRDATA = {16'd0, ctrl_div[7:0], 5'd0, ctrl_cpha, ctrl_cpol, ctrl_cs_n};
-                    default: PRDATA = 32'd0;
+                    10'd0:   prdata_r = {24'd0, rx_data};
+                    10'd1:   prdata_r = {31'd0, busy};
+                    10'd2:   prdata_r = {16'd0, ctrl_div[7:0], 5'd0,
+                                         ctrl_cpha, ctrl_cpol, ctrl_cs_n};
+                    default: prdata_r = 32'd0;
                 endcase
             end
 
@@ -141,7 +144,7 @@ module spi_apb #(
             assign sclk    = 1'b0;
             assign mosi    = 1'b0;
             assign cs_n    = 1'b1;
-            always @(*) PRDATA = 32'd0;
+            assign PRDATA  = 32'd0;
         end
     endgenerate
 
