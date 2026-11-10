@@ -1,4 +1,5 @@
 // pwm_apb.v - PWM APB3 slave (RTL-13)
+`timescale 1ns/1ps
 module pwm_apb #(
     parameter ENABLE_PWM = 1
 ) (

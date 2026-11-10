@@ -1,4 +1,5 @@
 // spi_apb.v - SPI Master APB3 slave (RTL-13)
+`timescale 1ns/1ps
 module spi_apb #(
     parameter ENABLE_SPI = 1
 ) (
