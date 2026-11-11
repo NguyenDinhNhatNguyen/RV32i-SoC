@@ -166,19 +166,19 @@ Kết quả kiểm SDC (OpenSTA ở nhà 26/10, Genus và Tempus ở trường 2
 ## 5. Kiểm chứng ở nhà
 
 ```sh
-scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 8 cấu hình ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA
-scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, spi_pwm.S, riscv-tests trên soc_top
+scripts/eda.sh run "make lint-soc"   # Verilator -Wall, 8 cấu hình ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA và 1 cấu hình tắt SPI, PWM, I2C, DMA
+scripts/eda.sh run "make fw-soc"     # smoke, hazard, soc.S, bus.S, dma.S, spi_pwm.S, i2c.S, riscv-tests trên soc_top
 ```
 
 Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 với `ENABLE_DMA = 0` và M1W1 với `ENABLE_DMA = 1`, nên cả hai cách đều được chạy:
 
 | Lệnh | Kết quả |
 | --- | --- |
-| `make lint-soc` | 0 warning ở cả 8 cấu hình |
+| `make lint-soc` | 0 warning ở cả 9 cấu hình (8 tổ hợp `ENABLE_M` x `ENABLE_WFI_SLEEP` x `ENABLE_DMA` và 1 cấu hình tắt SPI, PWM, I2C, DMA) |
 | `make fw-soc` | 131/131 PASS: `smoke`, `hazard`, `soc`, `bus`, `spi_pwm`, `i2c`, rv32ui, rv32mi (M0W0 và M1W1), rv32um và `dma` (M1W1) |
 | `make unit-bus` | 8/8 PASS, gồm `tb_dma_apb` và phần kiểm round-robin của `tb_sys_bus` |
 | `make sim-boot` | PASS, `tb_boot` dùng mặc định của `soc_top` nên có DMA |
-| `make sta-soc-nangate` | Yosys không latch, đủ 8 macro, 0 unconstrained. Diện tích Nangate45 60 426 µm², thêm 1 778 µm² (+3,0%) so với bản chưa bật DMA (`docs/sta_results.md` mục 2) |
+| `make sta-soc-nangate` | Yosys không latch, đủ 8 macro, 0 unconstrained. Diện tích Nangate45 61 561 µm² khi có I2C (07/11 chưa có I2C là 60 426 µm², thêm 1 778 µm² tức +3,0% so với bản chưa bật DMA, `docs/sta_results.md` mục 2) |
 | Test khác | `fw-bus` 124/124, `lint-all`, `eda.sh check` vẫn PASS |
 
 `tb_soc` kiểm bộ đồng bộ reset trước khi chạy chương trình: nhả reset giữa chu kỳ thì `rst_n_sync` lên 1 đúng ở cạnh thứ hai, kéo reset xuống giữa chu kỳ thì `rst_n_sync` xuống 0 ngay.
