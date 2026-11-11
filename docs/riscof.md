@@ -56,6 +56,8 @@ riscv64-unknown-elf-gcc 13.2.0, Icarus Verilog 12.0, riscv-arch-test 3.10.0.
 
 `make arch-core` mất khoảng 3 phút. `make arch-core-dut`: 118/118 PASS (55 + 63).
 
+Chạy lại 11/11 với toolchain mới của container (GCC 16.1, binutils 2.47): `make arch-core-dut` 118/118 PASS sau khi `scripts/arch_run.sh` dịch với `-mno-relax`. Không có cờ này, binutils 2.47 chèn lệnh nén `c.nop` ở các `.align` của `arch_test.h` và 88 test gặp illegal instruction. `make arch-core` (so với Spike) chưa chạy lại vì container không có RISCOF.
+
 Lần chạy đầu (cùng ngày) có 2 test lệch ở cả hai cấu hình, đã sửa:
 
 - `privilege/ebreak`: core ghi mtval = 0, Spike ghi PC của lệnh EBREAK. Đã đổi core ghi PC (D-035 trong `docs/core_decisions.md`).

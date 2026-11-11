@@ -40,7 +40,9 @@ fail() {
     exit 1
 }
 
-"$prefix-gcc" -march=$march -mabi=ilp32 -static -mcmodel=medany -fvisibility=hidden \
+# -mno-relax: with relaxation on, binutils 2.47 pads the ".option rvc" .align of arch_test.h
+# with a 2-byte c.nop even at an aligned address, and the core (no C extension) traps on it
+"$prefix-gcc" -march=$march -mabi=ilp32 -static -mcmodel=medany -fvisibility=hidden -mno-relax \
     -nostdlib -nostartfiles -T "$env_dir/link.ld" -I "$env_dir" -I "$suite_env" \
     -DXLEN=32 "${defs[@]}" -o my.elf "$src" > tb.log 2>&1 || fail "compile"
 

@@ -35,7 +35,7 @@ Chạy `bash scripts/macro_info.sh` và dán output vào chat. Script trả lờ
 - Wrapper SRAM chuyển giao diện bus (`docs/spec/core.md` mục 5.1) sang chân macro: đảo `CEN`, `WEN` (tích cực thấp), cắt địa chỉ word `A[9:0]`.
 - Không có ghi theo byte: `SB`, `SH` phải đọc, sửa, ghi (spec SoC mục 7.3).
 - Nhiều macro cho một vùng (ví dụ 16 KB = 4 macro): bit địa chỉ cao chọn macro, chỉ macro được chọn có `CEN=0`. Mux chọn `Q` phải dùng bit chọn **đã chốt ở chu kỳ trước**, vì `Q` ra ở chu kỳ sau.
-- `tb/models/sram_1rw_model.v` hiện khác macro thật: sâu 4096, `ce`/`we` tích cực cao, có byte enable. Cần thêm một model ở nhà có **đúng tên và chân** của `sram_2k_macro` để testbench chạy được cả ở nhà lẫn với model thật trên server.
+- `tb/models/sram_2k_macro.v` là model ở nhà có **đúng tên và chân** của macro thật, dùng cho `tb_core_bus`, `tb_soc`, `tb_boot` và unit test bộ nhớ. Trên server thay bằng model thật. `tb/models/sram_1rw_model.v` (sâu 4096, `ce`/`we` tích cực cao, có byte enable) chỉ dùng cho `tb_core`.
 
 ### 3.2 Genus
 
@@ -85,4 +85,4 @@ Còn hỏi:
 
 ## 5. Thử trước trên một khối nhỏ
 
-Giống PD-01 với accelerator: dựng wrapper SRAM với 1 macro, chạy Genus, LEC, Innovus trên server để luyện đủ các bước 3.2 đến 3.7 trước khi ghép cả SoC. Cần RTL-08 của Phát. Genus cho bản 1 macro: `make synth-block B=sram_wrap1` (kết quả ở `syn/out_blocks/sram_wrap1/`).
+Giống PD-01 với accelerator: dựng wrapper SRAM với 1 macro, chạy Genus, LEC, Innovus trên server để luyện đủ các bước 3.2 đến 3.7 trước khi ghép cả SoC. RTL-08 đã có. Genus cho bản 1 macro (đã chạy 29/10, `docs/sta_results.md` mục 3): `make synth-block B=sram_wrap1` (kết quả ở `syn/out_blocks/sram_wrap1/`).

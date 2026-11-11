@@ -377,15 +377,17 @@ core_map       = $(shell awk '/CORE_TB_$(1) /{print $$3}' tb/core/core_tb_map.vh
 define bench_elf_rules
 .PRECIOUS: $(1)/dhrystone_%.elf $(1)/coremark_%.elf
 
-# The original Dhrystone code is K&R style, so warnings are off (-w). dhrystone_main.c
-# renames main to dhry_main, and dhry_wrap.c calls it and checks the results.
+# The original Dhrystone code is K&R style, so warnings are off (-w) and the language is
+# gnu89: GCC 14 and newer reject implicit declarations in later standards, and GCC 15 and
+# newer default to C23. dhrystone_main.c renames main to dhry_main, and dhry_wrap.c calls it
+# and checks the results.
 $(1)/dhrystone_%.elf: $$(BENCH_COMMON) $$(BENCH_DHRY_C) $$(BENCH_DHRY)/dhrystone_main.c \
                       $$(wildcard fw/bench/dhrystone/*.h) fw/bench/common/bench.h fw/common/link.ld
 	@mkdir -p $$(@D)
 	@test -f $$(BENCH_DHRY)/dhrystone.h || { echo "ERROR: submodule missing, run: git submodule update --init --recursive"; exit 1; }
-	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w \
+	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w -std=gnu89 \
 	  -Dmain=dhry_main -c -o $$(@D)/dhrystone_main_$$*.o $$(BENCH_DHRY)/dhrystone_main.c
-	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w \
+	$$(RV_PREFIX)-gcc $$(call bench_march,$$*) $$(BENCH_CFLAGS) $(2) -Ifw/bench/dhrystone -I$$(BENCH_DHRY) -w -std=gnu89 \
 	  $$(BENCH_LDFLAGS) -o $$@ $$(BENCH_COMMON) $$(BENCH_DHRY_C) $$(@D)/dhrystone_main_$$*.o -lgcc
 
 $(1)/coremark_%.elf: $$(BENCH_COMMON) $$(BENCH_CM_SRC) fw/bench/coremark/core_portme.h \

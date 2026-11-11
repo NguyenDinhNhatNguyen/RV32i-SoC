@@ -6,7 +6,7 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 
 | File | Nội dung |
 | --- | --- |
-| `rtl/bus/soc_top.v` | Top của SoC: core, bus, bộ nhớ, Timer, UART, GPIO, IRQC, accelerator |
+| `rtl/bus/soc_top.v` | Top của SoC: core, bus, bộ nhớ, Timer, UART, GPIO, SPI, I2C, PWM, IRQC, accelerator, DMA |
 | `rtl/bus/reset_sync.v` | Bộ đồng bộ reset 2 flop |
 | `rtl/bus/dma_apb.v` | DMA chép word (RTL-15), cổng cấu hình APB ở khe 8 và cổng master 1 của `sys_bus` |
 | `tb/unit/tb_dma_apb.v` | Unit test DMA, chạy trong `make unit-bus` |
@@ -45,6 +45,7 @@ Tổng cộng 109 chân tín hiệu (thêm 5 chân SPI, PWM ngày 07/11 và 4 ch
                                                  ├─ khe 1 uart_apb ─── uart_rx/tx, irq ─► IRQC bit 0
                                                  ├─ khe 2 gpio_apb ─── gpio_i/o/oe
                                                  ├─ khe 3 spi_apb ──── spi_sclk/mosi/miso/cs_n (ENABLE_SPI = 1)
+                                                 ├─ khe 4 i2c_apb ──── i2c_scl_i/oe, i2c_sda_i/oe (ENABLE_I2C = 1)
                                                  ├─ khe 5 pwm_apb ──── pwm_o (ENABLE_PWM = 1)
                                                  ├─ khe 6 irqc_apb ─── irq ─► irq_external của core
                                                  ├─ khe 7 accel_apb ── irq ─► IRQC bit 1
@@ -135,8 +136,9 @@ Ngày 10/11 khi ghép I2C, Phát sửa thêm trên file của Phúc (RTL-13, RTL
 | `tb/unit/tb_spi_apb.v` | Bộ theo dõi sườn chạy ở cả 4 mode: MOSI không được đổi cùng lúc với sườn lấy mẫu | Bản cũ chỉ kiểm mode 0. Thay `mosi_reg` bằng MOSI cũ thì test FAIL ở mode 1 và 3 |
 | `tb/unit/tb_i2c_apb.v` | Viết lại với `tb/models/i2c_slave_model.v`: kiểm byte thật trên bus, ACK, NACK, repeated START, sai địa chỉ | Bản cũ chỉ đếm sườn SCL. Với RTL cũ test mới FAIL ở repeated START |
 | `tb/unit/tb_pwm_apb.v` | Dịch comment sang tiếng Anh | Quy ước của repo |
+| `rtl/periph/spi_apb.v` (11/11) | `PRDATA` thành `wire`, gán bằng `assign` ở cả hai nhánh `generate` | Nhánh `ENABLE_SPI = 0` dùng `always @(*)` không có tín hiệu kích, mô phỏng ra X. Netlist không đổi |
 
-IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-11, theo khuôn `gpio_apb` và thanh ghi đã chốt ở `soc_spec.md` mục 5. Gán bit theo macro `SOC_IRQ_*` thêm vào `soc_map.vh`. `tb_irqc_apb` chưa có target Makefile, giống các testbench Timer, GPIO, UART (VER-02).
+IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-11, theo khuôn `gpio_apb` và thanh ghi đã chốt ở `soc_spec.md` mục 5. Gán bit theo macro `SOC_IRQ_*` thêm vào `soc_map.vh`. `tb_irqc_apb` chạy trong `make unit-periph` cùng các testbench Timer, GPIO, UART (VER-02, từ 27/10).
 
 ### 4.7 Ràng buộc thời gian (SDC v1, STA-01)
 

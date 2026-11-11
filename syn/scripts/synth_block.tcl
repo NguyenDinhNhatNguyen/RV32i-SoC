@@ -18,7 +18,8 @@ set REPO [file normalize [file dirname [info script]]/../..]
 source $REPO/pnr/scripts/config.tcl
 
 # Block table: name {top  files  clock  reset  parameters  uses_sram_macro}
-# Parameters follow the soc_top defaults (one bus master, 16 KB per memory).
+# Parameters are the block defaults (sys_bus with one master, 16 KB per memory). soc_top uses
+# sys_bus with two masters since 07/11, which is covered by make synth-soc.
 # sram_wrap1 is sram_wrap with one macro (BANK_W = 0), a small block to practice the macro flow
 # in Genus, Conformal and Innovus (docs/macro_notes.md section 5). It is not in make synth-blocks.
 set ACCEL [list $REPO/rtl/accel/pe.v $REPO/rtl/accel/accelerator_top.v \

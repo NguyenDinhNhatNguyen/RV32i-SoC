@@ -10,13 +10,15 @@
 ```text
 rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
     └─ dữ liệu ─► sys_bus ─┬─► DMEM (4 macro)
-                           └─► cầu APB ─┬─ Timer, UART, GPIO
-                                        └─ Accelerator 4x4 (Lab 2)
+                           └─► cầu APB ─┬─ Timer, UART, GPIO, IRQC
+                                        ├─ SPI, PWM, I2C
+                                        ├─ Accelerator 4x4 (Lab 2)
+                                        └─ DMA (master thứ 2 của sys_bus)
 ```
 
 Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
 
-## Trạng thái (07/11)
+## Trạng thái (11/11)
 
 | Phần | Kết quả |
 | --- | --- |
