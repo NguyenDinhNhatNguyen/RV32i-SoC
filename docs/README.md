@@ -8,7 +8,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | --- | --- |
 | `spec/requirements.md` | Yêu cầu đề bài và nơi đáp ứng |
 | `spec/soc_spec.md` | Clock, reset, bus, bản đồ địa chỉ, bộ nhớ, ngắt, các quyết định đã chốt |
-| `spec/periph.md` | Thanh ghi Timer, UART, GPIO, IRQC, DMA, boot ROM, chân ngoài của `soc_top` |
+| `spec/periph.md` | Thanh ghi Timer, UART, GPIO, IRQC, DMA, SPI, PWM, I2C, boot ROM, chân ngoài của `soc_top` |
 | `spec/accel.md` | Accelerator nhân ma trận: thanh ghi, firmware, ghép lõi Lab 2 |
 | `spec/core.md` | Lõi RV32I: pipeline, CSR, ngắt, giao diện bus |
 
@@ -40,6 +40,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | --- | --- |
 | `riscv-tests-status.md` | Kết quả riscv-tests và test assembly của lõi |
 | `riscof.md` | riscv-arch-test qua RISCOF |
+| `lint_status.md` | Quy trình lint sau mỗi lần merge, danh sách waiver, bảng kết quả (VER-03) |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
 | `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |
 | `timing_core.md` | Timing ước lượng của lõi (Nangate45, flow nhà) |

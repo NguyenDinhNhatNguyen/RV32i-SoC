@@ -65,9 +65,7 @@ module rv32_core #(
     output wire        core_sleep_o     // Sleeping in WFI, IMEM is not read
 );
 
-    // =======================================================================
     // Pipeline control (declared first because every stage uses it)
-    // =======================================================================
     wire wb_wait;      // WB holds a load/store waiting for its response
     wire ex_wait;      // EX bus request not accepted yet, or the M-unit is busy
     wire pipe_stall = wb_wait | ex_wait;
@@ -80,9 +78,7 @@ module rv32_core #(
     wire        wb_fence_i;      // FENCE.I retires (also flushes the BTB)
     reg         sleep_q;         // Sleeping in WFI
 
-    // =======================================================================
     // IF
-    // =======================================================================
     reg  [31:0] if_pc_q;
     wire        ex_redirect;        // EX redirects IF: a jump not predicted, or a wrong prediction
     wire [31:0] ex_redirect_pc;
@@ -117,9 +113,7 @@ module rv32_core #(
             if_pc_q <= if_addr;     // The static target got no grant, fetch it next cycle
     end
 
-    // =======================================================================
     // EX
-    // =======================================================================
     reg         ex_fetch_q;       // The IMEM output holds a real instruction
     reg  [31:0] ex_pc_q;
     reg         ex_hold_q;        // The instruction sits in the hold register
@@ -489,9 +483,7 @@ module rv32_core #(
                                (ex_wb_sel == `RV_WB_PC4) ? (ex_exc ? ex_target : ex_pc_q + 32'd4) :
                                ex_alu_res;
 
-    // =======================================================================
     // WB
-    // =======================================================================
     reg  [31:0] wb_pc_q;
     reg  [31:0] wb_instr_q;
     reg  [31:0] wb_result_q;      // ALU result / return address / load-store address

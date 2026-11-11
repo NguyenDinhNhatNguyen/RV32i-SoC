@@ -38,6 +38,19 @@ help:
 	@echo "make lec-core      - Conformal compares rv32_core RTL with the netlist (server)"
 	@echo "make gls-core      - Xcelium runs rv32ui and rv32um on the netlist with tb_core (server, SDF=auto)"
 	@echo "make clean-core    - delete core simulation results"
+	@echo "make lint-bus      - lint each module in rtl/bus and rtl/mem with Verilator, 0 warnings"
+	@echo "make unit-bus      - unit tests of sys_bus, apb_bridge, sram_wrap, imem_port, dma_apb (TB=tb_sys_bus)"
+	@echo "make fw-bus        - assembly tests and riscv-tests on the core with sys_bus and SRAM (T=smoke)"
+	@echo "make lint-periph   - lint each module in rtl/periph on its own with Verilator, 0 warnings"
+	@echo "make unit-periph   - unit tests of Timer, GPIO, UART, IRQC, SPI, PWM, I2C (TB=tb_uart_apb)"
+	@echo "make lint-soc      - lint soc_top with Verilator in 9 parameter builds, 0 warnings"
+	@echo "make fw-soc        - assembly tests and riscv-tests on soc_top (T=soc runs one)"
+	@echo "make synth-block   - Genus trial synthesis of one SoC block (server), B=sys_bus"
+	@echo "make synth-blocks  - Genus trial synthesis of every block in SYN_BLOCKS (server)"
+	@echo "make synth-soc     - Genus synthesis of soc_top with soc.sdc (server), CG=0 for the baseline"
+	@echo "make synth-soc-sweep - Genus on soc_top at PERIODS=\"6 5.5 5 4.5\" ns, WNS and F_max table (server)"
+	@echo "make sta-soc       - Tempus STA of soc_top: setup, hold, recovery, removal (server, SPEF= after route)"
+	@echo "make sta-soc-nangate - Yosys + OpenSTA on soc_top with Nangate45 and soc.sdc, trends only (home)"
 
 sim-accel:
 	@mkdir -p tb/unit/out
@@ -985,7 +998,8 @@ clean-periph:
 # Docs: docs/soc_top.md. Runs at home (Icarus, Verilator). Results in tb/soc/out/soc (ignored).
 #   make lint-soc                  Verilator -Wall on soc_top (ENABLE_M x ENABLE_WFI_SLEEP x ENABLE_DMA,
 #                                  plus one build with SPI, PWM, I2C and DMA off), 0 warnings
-#   make fw-soc                    soc_top runs smoke, hazard, soc.S, bus.S, dma.S and riscv-tests
+#   make fw-soc                    soc_top runs smoke, hazard, soc.S, spi_pwm.S, i2c.S, bus.S, dma.S
+#                                  and riscv-tests
 #                                  (T=soc runs one). M1W1 is built with ENABLE_DMA=1, M0W0 without
 # ---------------------------------------------------------------------------
 SOC_RTL     := $(CORE_RTL) $(wildcard rtl/bus/*.v) $(wildcard rtl/mem/*.v) $(wildcard rtl/periph/*.v) $(BUS_ACCEL)
@@ -1105,7 +1119,7 @@ lint-all:
 # Must match the block table in syn/scripts/synth_block.tcl (the table also has sram_wrap1)
 # rv32_core is synthesized by make synth-core (Nhan, docs/genus_core.md), not here
 SYN_BLOCKS := sys_bus apb_bridge dma_apb imem_port sram_wrap \
-              timer_apb uart_apb gpio_apb irqc_apb accel_apb
+              timer_apb uart_apb gpio_apb irqc_apb spi_apb pwm_apb i2c_apb accel_apb
 B ?=
 
 .PHONY: synth-block synth-blocks

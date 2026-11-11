@@ -1,8 +1,6 @@
 `timescale 1ns/1ps
-// ==============================================================================
 // Processing Element (PE) for Systolic Array Matrix Multiplier
 // Precision: 8-bit signed inputs (a_in, b_in), 20-bit accumulator (c_out)
-// ==============================================================================
 
 module pe (
     input  wire        clk,

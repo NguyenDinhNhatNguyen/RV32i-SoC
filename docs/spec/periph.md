@@ -87,7 +87,7 @@ Gán bit nguồn ngắt (macro `SOC_IRQ_*` trong `rtl/bus/soc_map.vh`):
 | 3 | SPI | Chưa có, để 0 |
 | 4 | DMA | `dma_irq` khi `ENABLE_DMA = 1`, ngược lại 0 |
 
-Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI, DMA) thì nối vào bit tương ứng của `irq_src` trong `soc_top`.
+Khe APB 6 đã bật trong `soc_top`. Thêm nguồn mới (GPIO, SPI) thì nối vào bit tương ứng của `irq_src` trong `soc_top`.
 
 ## 5. Boot ROM (`rtl/mem/boot_rom.v`, 0x0001_0000)
 

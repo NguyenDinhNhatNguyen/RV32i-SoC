@@ -1,10 +1,8 @@
 `timescale 1ns/1ps
-// ==============================================================================
 // 4x4 Systolic Array Hardware Accelerator Top Module
 // Course: IC Physical Design (RTL to GDSII)
 // Target Frequency: 150MHz - 250MHz on GPDK 45nm
 // Equivalent Gates: ~15,000 - 25,000 gates
-// ==============================================================================
 
 module accelerator_top (
     input  wire               clk,

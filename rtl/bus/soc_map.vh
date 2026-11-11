@@ -53,7 +53,7 @@
 `define SOC_IRQ_ACCEL       1
 `define SOC_IRQ_GPIO        2               // No source yet, tied to 0
 `define SOC_IRQ_SPI         3               // No source yet, tied to 0
-`define SOC_IRQ_DMA         4               // No source yet, tied to 0
+`define SOC_IRQ_DMA         4               // dma_apb irq, tied to 0 when ENABLE_DMA = 0
 `define SOC_IRQ_N           5
 
 `endif

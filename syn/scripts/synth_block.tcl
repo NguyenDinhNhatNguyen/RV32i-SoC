@@ -39,6 +39,9 @@ set BLOCKS [dict create \
                                  PCLK PRESETn {} 0] \
     gpio_apb   [list gpio_apb   [list $REPO/rtl/periph/gpio_apb.v]  PCLK PRESETn {} 0] \
     irqc_apb   [list irqc_apb   [list $REPO/rtl/periph/irqc_apb.v]  PCLK PRESETn {} 0] \
+    spi_apb    [list spi_apb    [list $REPO/rtl/periph/spi_apb.v]   PCLK PRESETn {} 0] \
+    pwm_apb    [list pwm_apb    [list $REPO/rtl/periph/pwm_apb.v]   PCLK PRESETn {} 0] \
+    i2c_apb    [list i2c_apb    [list $REPO/rtl/periph/i2c_apb.v]   PCLK PRESETn {} 0] \
     accel_apb  [list accel_apb  $ACCEL pclk presetn {} 0] \
 ]
 
