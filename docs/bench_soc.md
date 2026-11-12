@@ -14,9 +14,65 @@ make bench-soc T=dhrystone                # chỉ Dhrystone
 
 Log ở `tb/core/out/bench_soc/<tên>.<cấu hình>.log`. Dòng `BENCH` là kết quả đo. `tb_soc` chạy khoảng 5 000 chu kỳ mỗi giây khi chạy một mình (đo 27/10/2026: Dhrystone rv32i trên `soc_top`, 414 120 chu kỳ trong 79 s, Icarus 12.0 trong WSL). Chạy song song thì chậm hơn, nên CoreMark rv32i (khoảng 2,7 triệu chu kỳ) mất khoảng 9 đến 12 phút.
 
+## Kết quả trên RTL chốt (12/11/2026, VER-06)
+
+Đo lại trên `main` ở commit `6f02f2b`, trước RTL freeze 15/11. So với lần đo 26/10 ở các mục dưới, có hai thay đổi:
+
+- RTL: BTB 8 entry bật mặc định (`ENABLE_BTB=1`, D-041), nhận ngắt ngay sau khi ghi MIE (D-038), `soc_top` có thêm SPI, PWM, I2C và DMA.
+- Công cụ: Docker của nhóm, GCC 16.1 và Icarus 14. Lần trước dùng GCC 13.2 nên chương trình sinh ra khác, số lệnh khác.
+
+Lệnh chạy:
+
+```sh
+scripts/eda.sh run "make bench-core"
+scripts/eda.sh run "make bench-soc"
+```
+
+Cả 10 lần chạy đều PASS. CoreMark tự kiểm CRC đúng, Dhrystone kiểm giá trị cuối đúng, accelerator khớp phần mềm (checksum `52119321`). Output đầy đủ ở `appendix/ver06_bench/`.
+
+Chu kỳ và số lệnh trong vùng đo (`mcycle`, `minstret`):
+
+| Benchmark | Cấu hình | Lệnh | Chu kỳ `tb_core` | CPI `tb_core` | Chu kỳ `soc_top` | CPI `soc_top` | Hiệu năng `soc_top` |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Dhrystone, 500 lần | rv32i, M0W1 | 282 521 | 306 522 | 1,085 | 323 022 | 1,143 | 0,881 DMIPS/MHz |
+| Dhrystone, 500 lần | rv32im, M1W1 | 267 521 | 306 021 | 1,144 | 322 521 | 1,206 | 0,882 DMIPS/MHz |
+| CoreMark, 3 vòng | rv32i, M0W1 | 2 154 015 | 2 376 501 | 1,103 | 2 380 148 | 1,105 | 1,260 CoreMark/MHz |
+| CoreMark, 3 vòng | rv32im, M1W1 | 854 541 | 930 994 | 1,089 | 934 641 | 1,094 | 3,210 CoreMark/MHz |
+
+Trên `tb_core` (bộ nhớ không wait state): Dhrystone 0,928 và 0,930 DMIPS/MHz, CoreMark 1,262 và 3,222 CoreMark/MHz.
+
+Kiểm tra chéo:
+
+- Số lệnh trên `soc_top` bằng đúng `tb_core` ở cả 4 lần chạy, nên chuỗi lệnh giống hệt.
+- Phần chu kỳ chênh bằng đúng số chu kỳ dừng do SB/SH mà `bench_soc_mon` đếm: 16 500 với Dhrystone, 3 647 với CoreMark. Lấy lệnh không bị chặn lần nào, không có truy cập APB trong vùng đo. Giống kết luận ngày 26/10.
+- BTB đoán đúng 63,6 đến 72,8% lệnh nhảy (dòng `branch` trong log). Đây là lý do CPI giảm so với 26/10.
+
+Accelerator 16 × 16 trên `soc_top`:
+
+| Cấu hình | sw | poll | irq | Speedup poll | Speedup irq |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| rv32i, M0W1 | 505 265 | 21 855 | 24 526 | 23,12× | 20,60× |
+| rv32im, M1W1 | 35 218 | 21 896 | 24 502 | 1,61× | 1,44× |
+
+Mỗi phép nhân khối tốn 230 chu kỳ (nạp A, B 35, START tới DONE 23, đọc C 166, xoá DONE 6). Speedup thấp hơn 26/10 một chút vì BTB làm bản phần mềm nhanh hơn nhiều hơn bản accelerator.
+
+Kích thước, so với IMEM và DMEM 16 KB:
+
+| Chương trình | `.text` (IMEM) | DMEM đã dùng, chưa tính stack |
+| --- | ---: | ---: |
+| Dhrystone rv32i | 6 904 B | 12 396 B |
+| Dhrystone rv32im | 6 568 B | 12 396 B |
+| CoreMark rv32i | 15 272 B | 4 492 B |
+| CoreMark rv32im | 14 232 B | 4 492 B |
+| accel_bench rv32i | 5 808 B | 4 440 B |
+
+SRAM đủ cho cả hai benchmark. CoreMark rv32i chỉ còn khoảng 1,1 KB IMEM. Dhrystone còn khoảng 4 KB DMEM cho stack.
+
+Số liệu ở các mục dưới là lần đo 26/10 (GCC 13.2, chưa có BTB). Giữ lại để so sánh, phần giải thích vẫn đúng.
+
 ## Cách đo
 
-- Cùng mã nguồn và cờ dịch với `bench-core` (GCC 13.2, `-O2`). Bản `rv32i` chạy trên `ENABLE_M=0`, bản `rv32im` chạy trên `ENABLE_M=1`, cả hai có `ENABLE_WFI_SLEEP=1`.
+- Cùng mã nguồn và cờ dịch với `bench-core` (GCC 13.2 ngày 26/10, GCC 16.1 từ 12/11, `-O2`). Bản `rv32i` chạy trên `ENABLE_M=0`, bản `rv32im` chạy trên `ENABLE_M=1`, cả hai có `ENABLE_WFI_SLEEP=1`.
 - Thêm `-DBENCH_SOC`: `crt0.S` đặt UART `BAUDDIV = 1` (16 chu kỳ mỗi bit) cho mô phỏng nhanh, và chờ UART gửi hết rồi mới ghi `tohost`. `bench_putchar` chờ khi TX FIFO đầy. Phần in nằm ngoài vùng đo.
 - Chu kỳ và số lệnh lấy từ `mcycle`/`minstret` trong vùng đo, giống `bench-core`.
 - `scripts/bench_soc_mon.v` là module theo dõi biên dịch cùng `tb_soc` (gốc mô phỏng thứ hai, không sửa `tb_soc`). Nó đếm trong vùng đo số chu kỳ bus dữ liệu dừng, số lệnh SB/SH, số chu kỳ lấy lệnh bị chặn và số truy cập APB. Kết quả ở dòng `BENCH soc region`.

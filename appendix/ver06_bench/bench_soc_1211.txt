@@ -1,0 +1,68 @@
+iverilog -g2012 -Irtl/bus -Irtl/mem -Irtl/core -s tb_soc -s bench_soc_mon \
+  -Ptb_soc.ENABLE_M=0 -Ptb_soc.ENABLE_WFI_SLEEP=1 \
+  -o tb/core/out/bench_soc/tb_soc_M0W1.vvp rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_core.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v rtl/bus/apb_bridge.v rtl/bus/dma_apb.v rtl/bus/reset_sync.v rtl/bus/soc_top.v rtl/bus/sys_bus.v rtl/mem/boot_rom.v rtl/mem/imem_port.v rtl/mem/sram_array.v rtl/mem/sram_wrap.v rtl/periph/gpio_apb.v rtl/periph/i2c_apb.v rtl/periph/irqc_apb.v rtl/periph/pwm_apb.v rtl/periph/spi_apb.v rtl/periph/timer_apb.v rtl/periph/uart_apb.v rtl/periph/uart_fifo.v rtl/accel/accel_apb.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v rtl/accel/pe.v tb/models/sram_2k_macro.v tb/models/i2c_slave_model.v \
+  tb/soc/tb_soc.v scripts/bench_soc_mon.v
+iverilog -g2012 -Irtl/bus -Irtl/mem -Irtl/core -s tb_soc -s bench_soc_mon \
+  -Ptb_soc.ENABLE_M=1 -Ptb_soc.ENABLE_WFI_SLEEP=1 \
+  -o tb/core/out/bench_soc/tb_soc_M1W1.vvp rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_core.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v rtl/bus/apb_bridge.v rtl/bus/dma_apb.v rtl/bus/reset_sync.v rtl/bus/soc_top.v rtl/bus/sys_bus.v rtl/mem/boot_rom.v rtl/mem/imem_port.v rtl/mem/sram_array.v rtl/mem/sram_wrap.v rtl/periph/gpio_apb.v rtl/periph/i2c_apb.v rtl/periph/irqc_apb.v rtl/periph/pwm_apb.v rtl/periph/spi_apb.v rtl/periph/timer_apb.v rtl/periph/uart_apb.v rtl/periph/uart_fifo.v rtl/accel/accel_apb.v rtl/accel/accelerator_top.v rtl/accel/accel_wrapper.v rtl/accel/pe.v tb/models/sram_2k_macro.v tb/models/i2c_slave_model.v \
+  tb/soc/tb_soc.v scripts/bench_soc_mon.v
+riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common -DBENCH_SOC -Ifw/bench/coremark -Ifw/coremark -DITERATIONS=3 -DPERFORMANCE_RUN=1 '-DFLAGS_STR="-O2"' -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench_soc/coremark_rv32i.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/coremark/core_list_join.c fw/coremark/core_main.c fw/coremark/core_matrix.c fw/coremark/core_state.c fw/coremark/core_util.c fw/bench/coremark/core_portme.c -lgcc
+riscv64-unknown-elf-gcc -march=rv32im_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common -DBENCH_SOC -Ifw/bench/coremark -Ifw/coremark -DITERATIONS=3 -DPERFORMANCE_RUN=1 '-DFLAGS_STR="-O2"' -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench_soc/coremark_rv32im.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/coremark/core_list_join.c fw/coremark/core_main.c fw/coremark/core_matrix.c fw/coremark/core_state.c fw/coremark/core_util.c fw/bench/coremark/core_portme.c -lgcc
+  dhrystone_rv32i      .text   6904 B, DMEM used  12396 B
+  dhrystone_rv32im     .text   6568 B, DMEM used  12396 B
+  coremark_rv32i       .text  15272 B, DMEM used   4492 B
+  coremark_rv32im      .text  14232 B, DMEM used   4492 B
+  accel_bench_rv32i    .text   5808 B, DMEM used   4440 B
+  accel_bench_rv32im   .text   5420 B, DMEM used   4440 B
+  PASS: accel_bench_rv32im/M1W1 (cycles 162596, instret 117726, CPI 1.381, APB 14573, sleep 512, UART 435 byte, DMA 0 words in 0 busy cycles)
+  PASS: dhrystone_rv32im/M1W1 (cycles 378276, instret 305018, CPI 1.240, APB 7226, sleep 0, UART 273 byte, DMA 0 words in 0 busy cycles)
+  PASS: dhrystone_rv32i/M0W1 (cycles 378953, instret 323526, CPI 1.171, APB 6664, sleep 0, UART 273 byte, DMA 0 words in 0 busy cycles)
+  PASS: accel_bench_rv32i/M0W1 (cycles 639439, instret 582040, CPI 1.099, APB 13669, sleep 512, UART 439 byte, DMA 0 words in 0 busy cycles)
+  PASS: coremark_rv32im/M1W1 (cycles 1040708, instret 922375, CPI 1.128, APB 15203, sleep 0, UART 550 byte, DMA 0 words in 0 busy cycles)
+  PASS: coremark_rv32i/M0W1 (cycles 2495582, instret 2234825, CPI 1.117, APB 14719, sleep 0, UART 574 byte, DMA 0 words in 0 busy cycles)
+  [dhrystone_rv32i on M0W1] dhrystone: cycles 323022, instret 282521, CPI 1.143
+  [dhrystone_rv32i on M0W1] dhrystone: runs 500, cycles/run 646.044, Dhrystone/s/MHz 1547, DMIPS/MHz 0.881
+  [dhrystone_rv32i on M0W1] dhrystone: final values OK
+  [dhrystone_rv32i on M0W1] soc region 1: cycles 323025, data stall 16500 (byte/half store 16500), fetch stall 0, APB 0
+  [dhrystone_rv32i on M0W1] soc region 1 branch: branch 48501 (taken 29500), jal 9502, jalr 8001, redirect 24004, predicted 63.63%
+  [dhrystone_rv32im on M1W1] dhrystone: cycles 322521, instret 267521, CPI 1.206
+  [dhrystone_rv32im on M1W1] dhrystone: runs 500, cycles/run 645.042, Dhrystone/s/MHz 1550, DMIPS/MHz 0.882
+  [dhrystone_rv32im on M1W1] dhrystone: final values OK
+  [dhrystone_rv32im on M1W1] soc region 1: cycles 322524, data stall 16500 (byte/half store 16500), fetch stall 0, APB 0
+  [dhrystone_rv32im on M1W1] soc region 1 branch: branch 43501 (taken 28500), jal 9002, jalr 7501, redirect 21503, predicted 64.16%
+  [coremark_rv32i on M0W1] coremark: cycles 2380148, instret 2154015, CPI 1.105
+  [coremark_rv32i on M0W1] coremark: iterations 3, cycles/iter 793382.667, CoreMark/MHz 1.260
+  [coremark_rv32i on M0W1] soc region 1: cycles 2380151, data stall 3647 (byte/half store 3647), fetch stall 0, APB 0
+  [coremark_rv32i on M0W1] soc region 1 branch: branch 592807 (taken 373178), jal 40828, jalr 34599, redirect 222489, predicted 66.70%
+  [coremark_rv32im on M1W1] coremark: cycles 934641, instret 854541, CPI 1.094
+  [coremark_rv32im on M1W1] coremark: iterations 3, cycles/iter 311547.000, CoreMark/MHz 3.210
+  [coremark_rv32im on M1W1] soc region 1: cycles 934644, data stall 3647 (byte/half store 3647), fetch stall 0, APB 0
+  [coremark_rv32im on M1W1] soc region 1 branch: branch 158119 (taken 92666), jal 12640, jalr 6411, redirect 48268, predicted 72.76%
+  [accel_bench_rv32i on M0W1] accel_sw: cycles 505265, instret 482143, CPI 1.048
+  [accel_bench_rv32i on M0W1] accel_poll: cycles 21855, instret 16740, CPI 1.306
+  [accel_bench_rv32i on M0W1] accel_irq: cycles 24526, instret 18558, CPI 1.322
+  [accel_bench_rv32i on M0W1] accel: speedup poll 23.119
+  [accel_bench_rv32i on M0W1] accel: speedup irq 20.601
+  [accel_bench_rv32i on M0W1] accel: block phases (cycles, each includes 1 csrr): load A+B 35, start to DONE 23, read C 166, clear DONE 6, total 230
+  [accel_bench_rv32i on M0W1] accel: 64 block multiplies, 64 interrupts, checksum 52119321, results OK
+  [accel_bench_rv32i on M0W1] soc region 1: cycles 505268, data stall 0 (byte/half store 0), fetch stall 0, APB 0
+  [accel_bench_rv32i on M0W1] soc region 2: cycles 21858, data stall 1024 (byte/half store 1024), fetch stall 0, APB 1856
+  [accel_bench_rv32i on M0W1] soc region 3: cycles 24529, data stall 1024 (byte/half store 1024), fetch stall 0, APB 1792
+  [accel_bench_rv32i on M0W1] soc region 1 branch: branch 154704 (taken 87263), jal 4097, jalr 4097, redirect 23125, predicted 85.80%
+  [accel_bench_rv32i on M0W1] soc region 2 branch: branch 2916 (taken 2591), jal 17, jalr 17, redirect 382, predicted 87.05%
+  [accel_bench_rv32i on M0W1] soc region 3 branch: branch 2980 (taken 2463), jal 17, jalr 17, redirect 403, predicted 86.63%
+  [accel_bench_rv32im on M1W1] accel_sw: cycles 35218, instret 30847, CPI 1.142
+  [accel_bench_rv32im on M1W1] accel_poll: cycles 21896, instret 16747, CPI 1.307
+  [accel_bench_rv32im on M1W1] accel_irq: cycles 24502, instret 18563, CPI 1.320
+  [accel_bench_rv32im on M1W1] accel: speedup poll 1.608
+  [accel_bench_rv32im on M1W1] accel: speedup irq 1.437
+  [accel_bench_rv32im on M1W1] accel: block phases (cycles, each includes 1 csrr): load A+B 35, start to DONE 23, read C 166, clear DONE 6, total 230
+  [accel_bench_rv32im on M1W1] accel: 64 block multiplies, 64 interrupts, checksum 52119321, results OK
+  [accel_bench_rv32im on M1W1] soc region 1: cycles 35221, data stall 0 (byte/half store 0), fetch stall 0, APB 0
+  [accel_bench_rv32im on M1W1] soc region 2: cycles 21899, data stall 1024 (byte/half store 1024), fetch stall 0, APB 1856
+  [accel_bench_rv32im on M1W1] soc region 3: cycles 24505, data stall 1024 (byte/half store 1024), fetch stall 0, APB 1792
+  [accel_bench_rv32im on M1W1] soc region 1 branch: branch 4368 (taken 4095), jal 1, jalr 1, redirect 278, predicted 93.64%
+  [accel_bench_rv32im on M1W1] soc region 2 branch: branch 2916 (taken 2591), jal 17, jalr 17, redirect 416, predicted 85.90%
+  [accel_bench_rv32im on M1W1] soc region 3 branch: branch 2980 (taken 2463), jal 17, jalr 17, redirect 374, predicted 87.59%
+bench-soc: 0 failed
+soc rc=0

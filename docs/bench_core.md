@@ -24,6 +24,19 @@ Log ở `tb/core/out/bench/<tên>.<cấu hình>.bench.log`. Dòng `BENCH` là k�
 - Dhrystone/s/MHz = số lần chạy × 10^6 / số chu kỳ. DMIPS/MHz = Dhrystone/s/MHz / 1757.
 - CoreMark/MHz = số vòng × 10^6 / số chu kỳ.
 
+## Kết quả mới nhất (12/11/2026, VER-06)
+
+Đo lại trên RTL chốt (BTB 8 entry bật mặc định), GCC 16.1 trong Docker. Bảng đầy đủ, so sánh với `soc_top` và kích thước bộ nhớ ở `docs/bench_soc.md`, mục "Kết quả trên RTL chốt".
+
+| Benchmark | Cấu hình | Chu kỳ đo | Lệnh | CPI | Hiệu năng |
+| --- | --- | ---: | ---: | ---: | --- |
+| Dhrystone, 500 lần | rv32i, ENABLE_M=0 | 306 522 | 282 521 | 1,085 | 0,928 DMIPS/MHz |
+| Dhrystone, 500 lần | rv32im, ENABLE_M=1 | 306 021 | 267 521 | 1,144 | 0,930 DMIPS/MHz |
+| CoreMark, 3 vòng | rv32i, ENABLE_M=0 | 2 376 501 | 2 154 015 | 1,103 | 1,262 CoreMark/MHz |
+| CoreMark, 3 vòng | rv32im, ENABLE_M=1 | 930 994 | 854 541 | 1,089 | 3,222 CoreMark/MHz |
+
+Các mục dưới là lần đo 22/10 (GCC 13.2, chưa có BTB).
+
 ## Kết quả (22/10/2026, commit core 2193cd1)
 
 | Benchmark | Cấu hình | Chu kỳ đo | Lệnh | CPI | Hiệu năng |

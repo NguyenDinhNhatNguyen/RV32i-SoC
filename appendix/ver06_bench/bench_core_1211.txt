@@ -1,0 +1,34 @@
+iverilog -g2012 -Wall -Irtl/core -Itb/core -s tb_core -Ptb_core.ENABLE_M=0 \
+  -Ptb_core.ENABLE_WFI_SLEEP=1 -o tb/core/out/tb_core_M0W1.vvp rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_core.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v tb/models/sram_1rw_model.v tb/core/tb_core.v
+iverilog -g2012 -Wall -Irtl/core -Itb/core -s tb_core -Ptb_core.ENABLE_M=1 \
+  -Ptb_core.ENABLE_WFI_SLEEP=1 -o tb/core/out/tb_core_M1W1.vvp rtl/core/rv32_alu.v rtl/core/rv32_btb.v rtl/core/rv32_core.v rtl/core/rv32_csr.v rtl/core/rv32_decoder.v rtl/core/rv32_imm_gen.v rtl/core/rv32_lsu_align.v rtl/core/rv32_muldiv.v rtl/core/rv32_regfile.v tb/models/sram_1rw_model.v tb/core/tb_core.v
+riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/dhrystone -Ifw/riscv-tests/benchmarks/dhrystone -w -std=gnu89 -Dmain=dhry_main -c -o tb/core/out/bench/dhrystone_main_rv32i.o fw/riscv-tests/benchmarks/dhrystone/dhrystone_main.c
+riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/dhrystone -Ifw/riscv-tests/benchmarks/dhrystone -w -std=gnu89 -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench/dhrystone_rv32i.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/bench/dhrystone/dhry_wrap.c fw/riscv-tests/benchmarks/dhrystone/dhrystone.c tb/core/out/bench/dhrystone_main_rv32i.o -lgcc
+riscv64-unknown-elf-gcc -march=rv32im_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/dhrystone -Ifw/riscv-tests/benchmarks/dhrystone -w -std=gnu89 -Dmain=dhry_main -c -o tb/core/out/bench/dhrystone_main_rv32im.o fw/riscv-tests/benchmarks/dhrystone/dhrystone_main.c
+riscv64-unknown-elf-gcc -march=rv32im_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/dhrystone -Ifw/riscv-tests/benchmarks/dhrystone -w -std=gnu89 -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench/dhrystone_rv32im.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/bench/dhrystone/dhry_wrap.c fw/riscv-tests/benchmarks/dhrystone/dhrystone.c tb/core/out/bench/dhrystone_main_rv32im.o -lgcc
+riscv64-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/coremark -Ifw/coremark -DITERATIONS=3 -DPERFORMANCE_RUN=1 '-DFLAGS_STR="-O2"' -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench/coremark_rv32i.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/coremark/core_list_join.c fw/coremark/core_main.c fw/coremark/core_matrix.c fw/coremark/core_state.c fw/coremark/core_util.c fw/bench/coremark/core_portme.c -lgcc
+riscv64-unknown-elf-gcc -march=rv32im_zicsr -mabi=ilp32 -O2 -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -Ifw/bench/common  -Ifw/bench/coremark -Ifw/coremark -DITERATIONS=3 -DPERFORMANCE_RUN=1 '-DFLAGS_STR="-O2"' -mabi=ilp32 -nostdlib -nostartfiles -static -T fw/common/link.ld -o tb/core/out/bench/coremark_rv32im.elf fw/bench/common/crt0.S fw/bench/common/bench.c fw/coremark/core_list_join.c fw/coremark/core_main.c fw/coremark/core_matrix.c fw/coremark/core_state.c fw/coremark/core_util.c fw/bench/coremark/core_portme.c -lgcc
+  dhrystone_rv32i    .text   6844 B (IMEM 16384 B), DMEM used  12396 B (16384 B)
+  dhrystone_rv32im   .text   6580 B (IMEM 16384 B), DMEM used  12396 B (16384 B)
+  coremark_rv32i     .text  15212 B (IMEM 16384 B), DMEM used   4492 B (16384 B)
+  coremark_rv32im    .text  14244 B (IMEM 16384 B), DMEM used   4492 B (16384 B)
+  PASS: dhrystone_rv32i/M0W1/bench (cycles 328443, instret 303237, CPI 1.083, seed 1)
+  PASS: dhrystone_rv32im/M1W1/bench (cycles 322640, instret 283319, CPI 1.139, seed 1)
+  PASS: coremark_rv32im/M1W1/bench (cycles 955391, instret 877023, CPI 1.089, seed 1)
+  PASS: coremark_rv32i/M0W1/bench (cycles 2412660, instret 2187219, CPI 1.103, seed 1)
+bench-core: 4 passed, 0 failed
+  [dhrystone_rv32i on M0W1] dhrystone: cycles 306522, instret 282521, CPI 1.085
+  [dhrystone_rv32i on M0W1] dhrystone: runs 500, cycles/run 613.044, Dhrystone/s/MHz 1631, DMIPS/MHz 0.928
+  [dhrystone_rv32i on M0W1] dhrystone: final values OK
+  [dhrystone_rv32i on M0W1] branch: branch 48501 (taken 29500), jal 9502, jalr 8001, redirect 24004, predicted 63.63%
+  [dhrystone_rv32im on M1W1] dhrystone: cycles 306021, instret 267521, CPI 1.144
+  [dhrystone_rv32im on M1W1] dhrystone: runs 500, cycles/run 612.042, Dhrystone/s/MHz 1633, DMIPS/MHz 0.930
+  [dhrystone_rv32im on M1W1] dhrystone: final values OK
+  [dhrystone_rv32im on M1W1] branch: branch 43501 (taken 28500), jal 9002, jalr 7501, redirect 21503, predicted 64.16%
+  [coremark_rv32i on M0W1] coremark: cycles 2376501, instret 2154015, CPI 1.103
+  [coremark_rv32i on M0W1] coremark: iterations 3, cycles/iter 792167.000, CoreMark/MHz 1.262
+  [coremark_rv32i on M0W1] branch: branch 592807 (taken 373178), jal 40828, jalr 34599, redirect 222489, predicted 66.70%
+  [coremark_rv32im on M1W1] coremark: cycles 930994, instret 854541, CPI 1.089
+  [coremark_rv32im on M1W1] coremark: iterations 3, cycles/iter 310331.333, CoreMark/MHz 3.222
+  [coremark_rv32im on M1W1] branch: branch 158119 (taken 92666), jal 12640, jalr 6411, redirect 48268, predicted 72.76%
+core rc=0
