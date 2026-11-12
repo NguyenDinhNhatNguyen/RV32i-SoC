@@ -39,7 +39,7 @@ Không push từ bản clone cũ chưa reset, vì như vậy GDS sẽ quay lại
 
 ## 3. Việc cho buổi lên trường tới
 
-1. Phát: `make synth-soc` (bản giữ flop, có buffer mạng reset, cấm `CLKBUFX2`). Đã xong 31/10, netlist ở `syn/out_soc/` trên server.
+1. Phát: `make synth-soc` (bản giữ flop, có buffer mạng reset, cấm `CLKBUFX2`). Chạy lại 12/11 trên commit `eced27a`, có DMA, SPI, PWM, I2C: std cell 58 843 µm² (nhỏ hơn 59 400 µm² dùng để tính lõi), setup +0,529 ns. Netlist ở `syn/out_soc/` trên server.
 2. Nguyên: `make pnr-soc`. Cuối lệnh in `pnr/out_soc/reports/pd_checks.rpt`, kiểm:
    - `BUFX2 instances: 0` và `CLKBUFX2 instances: 0`.
    - 8 dòng `Macro ...`: 4 IMEM ở hàng trên, 4 DMEM ở hàng dưới, đúng hướng in trong log (`grep PD-02 pnr/run_soc/innovus.log`).

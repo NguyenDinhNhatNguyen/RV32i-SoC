@@ -1,0 +1,329 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'i2c_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'i2c_apb'
+
+No empty modules in design 'i2c_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'i2c_apb'
+
+design 'i2c_apb' has the following unloaded port(s)
+port:i2c_apb/PWDATA[31]
+port:i2c_apb/PWDATA[30]
+port:i2c_apb/PWDATA[29]
+port:i2c_apb/PWDATA[28]
+port:i2c_apb/PWDATA[27]
+port:i2c_apb/PWDATA[26]
+port:i2c_apb/PWDATA[25]
+port:i2c_apb/PWDATA[24]
+port:i2c_apb/PWDATA[23]
+port:i2c_apb/PWDATA[22]
+port:i2c_apb/PWDATA[21]
+port:i2c_apb/PWDATA[20]
+port:i2c_apb/PWDATA[19]
+port:i2c_apb/PWDATA[18]
+port:i2c_apb/PWDATA[17]
+port:i2c_apb/PWDATA[16]
+port:i2c_apb/scl_i
+Total number of unloaded ports in design 'i2c_apb' : 17
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'i2c_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[31]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[30]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[29]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[28]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[27]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[26]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[25]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[24]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[23]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[22]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[21]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[20]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[19]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[18]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[17]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PRDATA[16]' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/PREADY' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/scl_o' in design i2c_apb
+Encountered an assign statement at port 'port:i2c_apb/sda_o' in design i2c_apb
+Total number of assign statements in design 'i2c_apb' : 19
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'i2c_apb'
+
+No undriven sequential pin in 'i2c_apb'
+
+No undriven hierarchical pin in 'i2c_apb'
+
+No undriven port in 'i2c_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'i2c_apb'
+
+No multidriven sequential pin in 'i2c_apb'
+
+No multidriven hierarchical pin in 'i2c_apb'
+
+No multidriven ports in 'i2c_apb'
+
+No multidriven unloaded nets in 'i2c_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'i2c_apb'
+
+No constant sequential pin(s) in design 'i2c_apb'
+
+design 'i2c_apb' has the following constant input hierarchical pin(s)
+hpin:i2c_apb/lte_43_65/B[1] 	 (fanout : 2)
+hpin:i2c_apb/lte_43_65/B[0] 	 (fanout : 1)
+hpin:i2c_apb/eq_48_43/B 	 (fanout : 1)
+hpin:i2c_apb/eq_47_43/B 	 (fanout : 1)
+hpin:i2c_apb/eq_49_43/B[1] 	 (fanout : 1)
+hpin:i2c_apb/eq_49_43/B[0] 	 (fanout : 1)
+hpin:i2c_apb/neq_126_41/B 	 (fanout : 1)
+hpin:i2c_apb/sub_127_52/B 	 (fanout : 2)
+hpin:i2c_apb/add_130_54/B 	 (fanout : 2)
+hpin:i2c_apb/sub_157_68/B 	 (fanout : 2)
+hpin:i2c_apb/mux_gen_i2c.cmd_start_64_31/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.cmd_write_64_31/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.cmd_read_64_31/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.cmd_stop_64_31/in_0 	 (fanout : 1)
+hpin:i2c_apb/ctl_gen_i2c.cmd_start_121_33/in_0 	 (fanout : 4)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_0[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_0[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_0[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_2[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_2[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_2[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_3[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_3[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_121_33/in_3[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.tick_cnt_112_35/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.tick_cnt_112_35/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_143_54/in_0[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_143_54/in_0[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_143_54/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_143_54/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_142_49/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_142_49/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_168_57/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_168_57/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_168_57/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_183_49/in_0[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_183_49/in_0[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_183_49/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_183_49/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_193_49/in_0[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_193_49/in_0[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_193_49/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_193_49/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_0[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_2[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_2[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_2[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_3[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_4[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_5[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_5[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_5[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_6[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_6[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.state_132_39/in_6[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_139_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_139_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_201_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_201_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_132_39/in_2 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.sda_reg_132_39/in_3 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_140_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_140_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_151_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_151_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_166_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_166_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_181_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_181_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_191_54/in_0 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_191_54/in_1 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.scl_reg_132_39/in_5 	 (fanout : 1)
+hpin:i2c_apb/ctl_221_30/in_0 	 (fanout : 4)
+hpin:i2c_apb/mux_221_30/in_0[15] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[14] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[13] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[12] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[11] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[10] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[9] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[8] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[7] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[6] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[5] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[4] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[3] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_0[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[15] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[14] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[13] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[12] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[11] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[10] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[9] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_1[8] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[15] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[14] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[13] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[12] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[11] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[10] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[9] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[8] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[7] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[6] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[5] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[4] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[3] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_2[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[15] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[14] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[13] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[12] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[11] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[10] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[9] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[8] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[7] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[6] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[5] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[4] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[3] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_221_30/in_4[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[15] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[14] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[13] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[12] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[11] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[10] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[9] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[8] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[7] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[6] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[5] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[4] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[3] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.clk_cnt_112_35/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_153_57/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_153_57/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_153_57/in_1[0] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_112_35/in_1[2] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_112_35/in_1[1] 	 (fanout : 1)
+hpin:i2c_apb/mux_gen_i2c.bit_cnt_112_35/in_1[0] 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'i2c_apb' : 155
+
+design 'i2c_apb' has the following constant port(s)
+port:i2c_apb/PRDATA[31]
+port:i2c_apb/PRDATA[30]
+port:i2c_apb/PRDATA[29]
+port:i2c_apb/PRDATA[28]
+port:i2c_apb/PRDATA[27]
+port:i2c_apb/PRDATA[26]
+port:i2c_apb/PRDATA[25]
+port:i2c_apb/PRDATA[24]
+port:i2c_apb/PRDATA[23]
+port:i2c_apb/PRDATA[22]
+port:i2c_apb/PRDATA[21]
+port:i2c_apb/PRDATA[20]
+port:i2c_apb/PRDATA[19]
+port:i2c_apb/PRDATA[18]
+port:i2c_apb/PRDATA[17]
+port:i2c_apb/PRDATA[16]
+port:i2c_apb/PREADY
+port:i2c_apb/scl_o
+port:i2c_apb/sda_o
+Total number of constant port(s) in design 'i2c_apb' : 19
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'i2c_apb'
+No preserved sequential instance(s) in design 'i2c_apb'
+No preserved hierarchical instance(s) in design 'i2c_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'i2c_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'i2c_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            17
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     19
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                            19
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)               155
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

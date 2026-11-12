@@ -1,0 +1,243 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'spi_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'spi_apb'
+
+No empty modules in design 'spi_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'spi_apb'
+
+design 'spi_apb' has the following unloaded port(s)
+port:spi_apb/PWDATA[31]
+port:spi_apb/PWDATA[30]
+port:spi_apb/PWDATA[29]
+port:spi_apb/PWDATA[28]
+port:spi_apb/PWDATA[27]
+port:spi_apb/PWDATA[26]
+port:spi_apb/PWDATA[25]
+port:spi_apb/PWDATA[24]
+port:spi_apb/PWDATA[23]
+port:spi_apb/PWDATA[22]
+port:spi_apb/PWDATA[21]
+port:spi_apb/PWDATA[20]
+port:spi_apb/PWDATA[19]
+port:spi_apb/PWDATA[18]
+port:spi_apb/PWDATA[17]
+port:spi_apb/PWDATA[16]
+Total number of unloaded ports in design 'spi_apb' : 16
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'spi_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:spi_apb/PRDATA[31]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[30]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[29]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[28]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[27]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[26]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[25]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[24]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[23]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[22]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[21]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[20]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[19]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[18]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[17]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PRDATA[16]' in design spi_apb
+Encountered an assign statement at port 'port:spi_apb/PREADY' in design spi_apb
+Total number of assign statements in design 'spi_apb' : 17
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'spi_apb'
+
+No undriven sequential pin in 'spi_apb'
+
+No undriven hierarchical pin in 'spi_apb'
+
+No undriven port in 'spi_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'spi_apb'
+
+No multidriven sequential pin in 'spi_apb'
+
+No multidriven hierarchical pin in 'spi_apb'
+
+No multidriven ports in 'spi_apb'
+
+No multidriven unloaded nets in 'spi_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'spi_apb'
+
+No constant sequential pin(s) in design 'spi_apb'
+
+design 'spi_apb' has the following constant input hierarchical pin(s)
+hpin:spi_apb/lte_38_65/B[1] 	 (fanout : 2)
+hpin:spi_apb/lte_38_65/B[0] 	 (fanout : 1)
+hpin:spi_apb/eq_43_43/B[1] 	 (fanout : 1)
+hpin:spi_apb/eq_43_43/B[0] 	 (fanout : 1)
+hpin:spi_apb/eq_42_43/B 	 (fanout : 1)
+hpin:spi_apb/eq_87_37/B 	 (fanout : 1)
+hpin:spi_apb/sub_115_48/B 	 (fanout : 2)
+hpin:spi_apb/sub_102_61/B 	 (fanout : 2)
+hpin:spi_apb/mux_gen_spi.phase_76_25/in_1 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[15] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[14] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[13] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[12] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[11] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[10] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[9] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_0[8] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[15] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[14] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[13] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[12] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[11] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[10] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[9] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[8] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[7] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[6] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[5] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[4] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[3] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[2] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_1[1] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_2[7] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_2[6] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_2[5] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_2[4] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_2[3] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[15] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[14] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[13] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[12] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[11] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[10] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[9] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[8] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[7] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[6] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[5] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[4] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[3] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[2] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[1] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_132_28/in_3[0] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[15] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[14] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[13] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[12] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[11] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[10] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[9] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[8] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[7] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[6] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[5] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[4] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[3] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[2] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[1] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.prdata_r_131_21/in_1[0] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.bit_cnt_76_25/in_1[2] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.bit_cnt_76_25/in_1[1] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.bit_cnt_76_25/in_1[0] 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.busy_76_25/in_0 	 (fanout : 1)
+hpin:spi_apb/mux_gen_spi.busy_76_25/in_1 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'spi_apb' : 74
+
+design 'spi_apb' has the following constant port(s)
+port:spi_apb/PRDATA[31]
+port:spi_apb/PRDATA[30]
+port:spi_apb/PRDATA[29]
+port:spi_apb/PRDATA[28]
+port:spi_apb/PRDATA[27]
+port:spi_apb/PRDATA[26]
+port:spi_apb/PRDATA[25]
+port:spi_apb/PRDATA[24]
+port:spi_apb/PRDATA[23]
+port:spi_apb/PRDATA[22]
+port:spi_apb/PRDATA[21]
+port:spi_apb/PRDATA[20]
+port:spi_apb/PRDATA[19]
+port:spi_apb/PRDATA[18]
+port:spi_apb/PRDATA[17]
+port:spi_apb/PRDATA[16]
+port:spi_apb/PREADY
+Total number of constant port(s) in design 'spi_apb' : 17
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'spi_apb'
+No preserved sequential instance(s) in design 'spi_apb'
+No preserved hierarchical instance(s) in design 'spi_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'spi_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+No logical only instance(s) in design 'spi_apb'
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            16
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     17
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                            17
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                74
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                     0
+
+  Done Checking the design.

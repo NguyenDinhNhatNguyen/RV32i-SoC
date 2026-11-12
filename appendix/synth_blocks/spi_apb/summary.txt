@@ -1,0 +1,1 @@
+block=spi_apb top=spi_apb cg=1 scan_flops=0 flops=58 latches=0 icg=5 wns_ps=9623.9

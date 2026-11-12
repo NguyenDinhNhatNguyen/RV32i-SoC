@@ -1,0 +1,1 @@
+block=pwm_apb top=pwm_apb cg=1 scan_flops=0 flops=98 latches=0 icg=2 wns_ps=9826.7

@@ -11,7 +11,8 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `synth_soc_keepflop/` | Genus `soc_top` giữ mọi flop cho LEC (30/10), mạng reset chưa có buffer |
 | `synth_soc_sweep/` | Quét chu kỳ Genus `soc_top` (STA-03), mỗi chu kỳ một thư mục `p<ns>` |
 | `sta_soc/` | Tempus trước layout của `soc_top` (STA-03): setup, hold, recovery, removal, coverage |
-| `synth_soc_reset/`, `sta_soc_reset/` | Genus và Tempus `soc_top` ngày 31/10, mạng reset có buffer, netlist giao cho PnR |
+| `synth_soc_reset/`, `sta_soc_reset/` | Genus và Tempus `soc_top` ngày 31/10, mạng reset có buffer |
+| `synth_soc_i2c/`, `sta_soc_i2c/` | Genus và Tempus `soc_top` ngày 12/11, có DMA, SPI, PWM, I2C, netlist giao cho PnR |
 | `core_signoff/` | Genus, LEC và GLS cho core `rv32_core` (D-042) |
 | `pnr_accel/` | Innovus cho accelerator: timing từng bước, DRC, connectivity, antenna, công suất |
 
