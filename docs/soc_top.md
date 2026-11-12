@@ -136,6 +136,7 @@ Ngày 10/11 khi ghép I2C, Phát sửa thêm trên file của Phúc (RTL-13, RTL
 | `tb/unit/tb_spi_apb.v` | Bộ theo dõi sườn chạy ở cả 4 mode: MOSI không được đổi cùng lúc với sườn lấy mẫu | Bản cũ chỉ kiểm mode 0. Thay `mosi_reg` bằng MOSI cũ thì test FAIL ở mode 1 và 3 |
 | `tb/unit/tb_i2c_apb.v` | Viết lại với `tb/models/i2c_slave_model.v`: kiểm byte thật trên bus, ACK, NACK, repeated START, sai địa chỉ | Bản cũ chỉ đếm sườn SCL. Với RTL cũ test mới FAIL ở repeated START |
 | `tb/unit/tb_pwm_apb.v` | Dịch comment sang tiếng Anh | Quy ước của repo |
+| `rtl/periph/i2c_apb.v` (12/11) | Đưa `localparam` các trạng thái FSM ra ngoài `generate` | Genus đọc Verilog-2001 nên báo `VLOGPT-9` và không ra netlist (`synth-soc`, `synth-block B=i2c_apb`). Verilator và iverilog chấp nhận nên ở nhà không thấy |
 | `rtl/periph/spi_apb.v` (11/11) | `PRDATA` thành `wire`, gán bằng `assign` ở cả hai nhánh `generate` | Nhánh `ENABLE_SPI = 0` dùng `always @(*)` không có tín hiệu kích, mô phỏng ra X. Netlist không đổi |
 
 IRQC (`rtl/periph/irqc_apb.v`, `tb/unit/tb_irqc_apb.v`) do Phát viết cho RTL-11, theo khuôn `gpio_apb` và thanh ghi đã chốt ở `soc_spec.md` mục 5. Gán bit theo macro `SOC_IRQ_*` thêm vào `soc_map.vh`. `tb_irqc_apb` chạy trong `make unit-periph` cùng các testbench Timer, GPIO, UART (VER-02, từ 27/10).
