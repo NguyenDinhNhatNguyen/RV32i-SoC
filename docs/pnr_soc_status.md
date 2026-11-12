@@ -66,7 +66,7 @@ Netlist `eced27a` (DMA, SPI, PWM, I2C), clock 20 ns, Innovus 21.19, Tempus 23.14
 | CTS | 0 vi phạm transition, skew 0,115 ns (mục tiêu 0,080 ns) |
 | DRC, antenna, PDN | Sạch |
 | Connectivity | 12 cảnh báo IMPVFC-94: dây VDD Metal7 dài 0 ở đầu dải VDD của vành macro, mép trên. Lần 29/10 không có. Chờ Phúc chạy IR drop, sửa ở PD-08 nếu còn sau PD-05 |
-| Fanout | 163 net vượt `set_max_fanout 32` (net clock và net reset). Do SDC của Phát |
+| Fanout | 190 net vượt `set_max_fanout 32`: 27 net clock và 163 net khác (khoảng 61 net cây reset, 102 net dữ liệu). Giữ ràng buộc này vì Genus cần nó để buffer mạng reset (`docs/sta_results.md` mục 1). Max_cap 0, max_tran 3 net (xấu nhất −0,069 ns, ví dụ `n_5552`) cần sửa |
 | Công suất | 1,261 mW, activity mặc định 0,2, chưa phải theo testcase |
 | GDS | Có ghi file. Cảnh báo IMPOGDS-1176: 26 cell rỗng vì map thiếu luật, chưa rõ cell nào |
 

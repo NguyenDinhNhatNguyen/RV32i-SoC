@@ -87,7 +87,8 @@ make sta-soc                                     # Tempus trên syn/out_soc/
 | Chu kỳ | `synth_soc.tcl` thay dòng `set SOC_PERIOD` của `soc.sdc` bằng `PERIOD`, input và output delay max đổi theo (24% và 20% chu kỳ). SDC thật của mỗi lần chạy là `soc_run.sdc` trong thư mục kết quả |
 | Kết quả quét | `syn/out_soc_sweep/p<chu kỳ>/` và bảng `syn/out_soc_sweep/summary.md` (WNS, chu kỳ nhỏ nhất, F_max ước lượng, diện tích). F_max = 1 / (chu kỳ - WNS), chỉ là ước lượng từ đường xấu nhất |
 | Tempus | `sta/scripts/sta_soc.tcl`, corner theo `pnr/scripts/mmmc.view`: slow cho setup và recovery, fast cho hold và removal. Report ở `sta/run_soc/pre/`, tóm tắt ở `summary.txt`. Đã chạy trên server 30–31/10 (Tempus 23.14) |
-| Sau route (STA-05) | `make sta-soc SPEF=<file> NETLIST=<file>`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/` |
+| Sau route (STA-05) | `make sta-soc SPEF=$PWD/pnr/out_soc/soc_top.spef NETLIST=$PWD/pnr/out_soc/soc_top_pnr.v SDC=$PWD/syn/out_soc/soc_top_synth.sdc`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/`. Đường dẫn phải tuyệt đối vì Tempus chạy trong `sta/run_soc/`. SDC là file Genus ghi ra, giống file Innovus đọc |
+| Log Tempus | `sta/run_soc/tempus.log`, stdout và stderr (gồm dòng `ERROR`) ở `sta/run_soc/tempus.out` (từ 12/11) |
 
 Ở nhà xem xu hướng trước bằng `make sta-soc-nangate STA_PERIOD=<ns>` (Yosys, Nangate45, OpenSTA với `soc.sdc`, macro SRAM là hộp đen nên đường qua macro không được tính). Lần đầu tổng hợp khoảng 11 phút, các lần sau chỉ chạy lại OpenSTA. Số ở nhà ghi vào `docs/sta_results.md` mục 2, không đưa vào report.
 

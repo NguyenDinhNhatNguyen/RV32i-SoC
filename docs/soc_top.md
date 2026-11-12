@@ -213,5 +213,5 @@ Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - I2C chưa có clock stretching (`i2c_scl_i` không dùng) và chưa có ngắt. Slave nào kéo dài SCL sẽ bị sai.
-- Removal của mạng reset chỉ dư 6 ps trước layout (31/10, `docs/sta_results.md` mục 1). Kiểm lại sau CTS và sau route (STA-05).
+- Removal của mạng reset dư ít: 28 ps trước layout (12/11, `docs/sta_results.md` mục 1) và 29 ps sau route thử (PD-04, `docs/pnr_soc_status.md` mục 4). Kiểm lại trên layout chính thức (STA-05).
 - Trên server: GLS với `sram_2k_macro.v` thật.

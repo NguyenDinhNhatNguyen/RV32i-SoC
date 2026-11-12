@@ -15,7 +15,7 @@ Hạn nộp report PDF qua Courses: 20/12/2026.
 | Thiết kế vật lý, báo cáo | `pnr/scripts/`, `appendix/pnr*/` | Nguyên |
 | Signoff: timing, trùng khớp, chức năng, luật thiết kế, kết nối, lỗi điện | Tempus, LEC sau layout, GLS có SDF, DRC/LVS/antenna, IR drop/EM | Phát, Phúc, Hiếu, Nguyên |
 | Đánh giá kết quả, so sánh thiết kế tương tự | Bảng PPA, so với PicoRV32/Ibex/SERV | Nhân, Hiếu |
-| Thiết kế CLEAN, đạt chức năng và tần số | Mốc M3 Signoff clean 6/12 | Cả nhóm |
+| Thiết kế CLEAN, đạt chức năng và tần số | Mốc M3 Signoff clean 03/12 | Cả nhóm |
 | Report: mọi bước, kết quả, tối ưu, kết luận, script/report/log ở phụ lục | `appendix/<bước>/` | Hiếu biên tập |
 
 Điểm cộng nhóm chọn: tối ưu PPA (F_max, CPI, power theo testcase, EPI, area, GE, density), mở rộng lõi (ngắt, RV32IM, dự đoán nhánh), accelerator dùng ngắt, ngoại vi SPI/PWM (I2C tầng 2), DMA (tầng 2).

@@ -27,8 +27,8 @@ Setup ở dòng 29/10 là số của Genus, các dòng sau là số của Tempus
 Ghi chú:
 - Đường găng setup: từ CLK của macro IMEM qua bộ cộng ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, đúng như dự đoán ở `docs/spec/core.md` mục 4.5.
 - Mạng reset: Genus mặc định coi chân set/reset bất đồng bộ là ideal (`ideal_seq_async_pins`), nên ở lần 29/10 và 30/10 flop `u_rst_sync_q_reg` lái thẳng khoảng 3500 chân, recovery âm khoảng 25 ns. Từ 31/10, `soc.sdc` có `set_max_transition 0.5`, `set_max_fanout 32` và `synth_soc.tcl` đặt `ideal_seq_async_pins false`. Flop chỉ còn lái 7 cell đảo đầu cây buffer.
-- Removal 31/10 chỉ dư 6 ps (chân `RN` của `u_imem.rom_sel_q_reg`). 12/11 dư 28 ps (chân `RN` của một flop tag trong BTB). Phải kiểm lại sau CTS và sau route (STA-05).
-- 12/11: setup còn +0,529 ns (31/10 là +2,392), cùng đường găng IMEM → ALU → `if_pc_q_reg[31]`. Ở 20 ns Genus chỉ tối ưu tới khi đạt, nên số này không cho biết F_max. F_max phải quét lại (mục 4) sau RTL freeze.
+- Removal 31/10 chỉ dư 6 ps (chân `RN` của `u_imem.rom_sel_q_reg`). 12/11 dư 28 ps (chân `RN` của một flop tag trong BTB). Sau route thử 12/11 (PD-04, Tempus) dư 29 ps, xem `docs/pnr_soc_status.md` mục 4. Kiểm lại trên layout chính thức (STA-05).
+- 12/11: setup còn +0,529 ns (31/10 là +2,392), cùng đường găng IMEM → ALU → `if_pc_q_reg[31]`. Ở 20 ns Genus chỉ tối ưu tới khi đạt, nên số này không cho biết F_max. F_max phải quét lại (mục 4) sau RTL freeze. Sau route thử 12/11 ở 20 ns, setup chỉ còn +0,007 ns (Tempus) và −0,027 ns (Innovus), nên STA-04 tổng hợp ở chu kỳ chặt hơn để layout còn biên.
 - 12/11: 3881/4079 flop (95,2%) qua clock gating. Genus báo 0 vi phạm max_transition, max_capacitance, max_fanout, 0 assign, 0 `CLKBUFX2`.
 - Hold vi phạm ở chân `CEN` của macro IMEM và các cặp flop nối thẳng, vì trước CTS clock còn lý tưởng. Innovus sửa bằng `optDesign -postCTS -hold`.
 - Giữ flop (như `synth_core.tcl`, D-042) thêm 89 flop, diện tích +0,56%.
