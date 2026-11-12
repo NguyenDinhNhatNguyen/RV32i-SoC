@@ -128,23 +128,29 @@ try_cmd {timeDesign -postCTS -hold -outDir $RPT/postcts_hold}
 # sta/scripts/sta_soc.tcl does, and one summary line per stage in slack_summary.txt.
 proc worst_slack {type} {
     set s "n/a"
+    # Hold and removal only report in hold analysis mode (TCLCMD-1045 in setup mode, 12/11)
+    set hold [expr {$type eq "hold" || $type eq "removal"}]
+    if {$hold} { catch {setAnalysisMode -checkType hold} }
     catch {
         set p [report_timing -check_type $type -max_paths 1 -collection]
         set s [get_property $p slack]
     }
+    if {$hold} { catch {setAnalysisMode -checkType setup} }
     return $s
 }
 proc slack_reports {rpt stage} {
     file mkdir $rpt/$stage
-    foreach t {recovery removal} {
-        catch {report_timing -check_type $t -max_paths 10 > $rpt/$stage/$t.rpt}
-    }
+    catch {report_timing -check_type recovery -max_paths 10 > $rpt/$stage/recovery.rpt}
+    catch {setAnalysisMode -checkType hold}
+    catch {report_timing -check_type removal -max_paths 10 > $rpt/$stage/removal.rpt}
+    catch {setAnalysisMode -checkType setup}
     set line "stage=$stage"
     foreach t {setup hold recovery removal} { append line " ${t}_ns=[worst_slack $t]" }
     set fp [open $rpt/slack_summary.txt a]
     puts $fp $line
     close $fp
     puts "PD: $line"
+    if {[string first "n/a" $line] >= 0} { puts "WARNING: $stage has a slack that is n/a" }
 }
 file delete -force $RPT/slack_summary.txt
 try_cmd {slack_reports $RPT postcts_async}
@@ -213,6 +219,8 @@ if {$GDS_MAP ne ""} {
     } else {
         try_cmd {streamOut $OUT/${TOP}.gds -mapFile $GDS_MAP -units 2000 -mode ALL}
     }
+} else {
+    puts "ERROR: GDS_MAP is empty or missing in config.tcl, no GDS was written"
 }
 
 puts "Innovus done. Copy only the text reports in $RPT to appendix/pnr_${SUB}/,

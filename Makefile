@@ -112,6 +112,7 @@ pnr-soc:
 	  TOP=soc_top innovus -batch -files ../scripts/run_all.tcl -log innovus.log
 	@test -f pnr/out_soc/soc_top_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_soc/innovus.log"; exit 1; }
 	@cat pnr/out_soc/reports/pd_checks.rpt 2>/dev/null || true
+	@cat pnr/out_soc/reports/slack_summary.txt 2>/dev/null || true
 
 # Copy only text reports into appendix/, never netlists, SPEF, SDF or GDS
 save-pnr-accel:
