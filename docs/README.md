@@ -41,6 +41,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `riscv-tests-status.md` | Kết quả riscv-tests và test assembly của lõi |
 | `riscof.md` | riscv-arch-test qua RISCOF |
 | `lint_status.md` | Quy trình lint sau mỗi lần merge, danh sách waiver, bảng kết quả (VER-03) |
+| `fw_soc_c.md` | Firmware C trên `soc_top`: UART, GPIO, timer, ngắt, accelerator, rv32um (VER-04) |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
 | `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |
 | `timing_core.md` | Timing ước lượng của lõi (Nangate45, flow nhà) |

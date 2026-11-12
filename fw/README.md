@@ -7,6 +7,7 @@ Firmware RV32I chạy trên mô phỏng, biên dịch bằng riscv gcc trong con
 | `common/` | Linker script (`link.ld` cho SoC, `link_isa.ld` cho riscv-tests) |
 | `tests/asm/` | Test assembly của lõi (hazard, trap, ngắt, WFI, nhân chia) |
 | `tests/bus/`, `tests/soc/` | Test mức bus và toàn SoC |
+| `tests/soc_c/` | Firmware C trên `soc_top` (VER-04, `make fw-soc-c`), `soc_hw.h` là bản đồ thanh ghi ngoại vi |
 | `bench/` | Dhrystone, CoreMark và `crt0.S` |
 | `accel.h` | Thanh ghi và hàm gọi accelerator |
 | `riscv-tests/`, `riscv-arch-test/`, `coremark/` | Submodule, lấy bằng `git submodule update --init --recursive` |

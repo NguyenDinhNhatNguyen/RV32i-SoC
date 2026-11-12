@@ -46,6 +46,7 @@ help:
 	@echo "make unit-periph   - unit tests of Timer, GPIO, UART, IRQC, SPI, PWM, I2C (TB=tb_uart_apb)"
 	@echo "make lint-soc      - lint soc_top with Verilator in 9 parameter builds, 0 warnings"
 	@echo "make fw-soc        - assembly tests and riscv-tests on soc_top (T=soc runs one)"
+	@echo "make fw-soc-c      - C firmware test on soc_top, rv32i and rv32im (VER-04)"
 	@echo "make synth-block   - Genus trial synthesis of one SoC block (server), B=sys_bus"
 	@echo "make synth-blocks  - Genus trial synthesis of every block in SYN_BLOCKS (server)"
 	@echo "make synth-soc     - Genus synthesis of soc_top with soc.sdc (server), CG=0 for the baseline"
@@ -1087,6 +1088,44 @@ fw-soc: $(foreach c,$(SOC_FW_CFGS),$(SOC_OUT)/tb_soc_$(c).vvp) \
 	pass=$$(grep -c '^  PASS' $(SOC_OUT)/fw-soc.summary); \
 	fail=$$(grep -c '^  \[FAIL\]' $(SOC_OUT)/fw-soc.summary); \
 	echo "fw-soc: $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass -gt 0 ]
+
+# C firmware on soc_top (Hieu, VER-04): fw/tests/soc_c/soc_fw.c with fw/bench/common/crt0.S
+# (-DBENCH_SOC) and fw/common/link.ld. UART, GPIO, timer and software interrupts, the
+# accelerator against a C golden model (polling and IRQC), the UART interrupt, and the M
+# extension (rv32im) or the illegal MUL trap (rv32i). Docs: docs/fw_soc_c.md.
+#   make fw-soc-c                  rv32i build on tb_soc M0W0, rv32im build on M1W1
+SOC_C_OUT  := $(SOC_OUT)/fw_c
+SOC_C_SRC  := fw/tests/soc_c/soc_fw.c
+SOC_C_DEPS := $(SOC_C_SRC) fw/tests/soc_c/soc_hw.h fw/accel.h $(BENCH_COMMON) \
+              fw/bench/common/bench.h fw/common/link.ld
+SOC_C_RUNS := soc_fw_rv32i@M0W0 soc_fw_rv32im@M1W1
+
+.PRECIOUS: $(SOC_C_OUT)/soc_fw_%.elf
+$(SOC_C_OUT)/soc_fw_%.elf: $(SOC_C_DEPS)
+	@mkdir -p $(@D)
+	@test -n "$(RV_PREFIX)" || { echo "ERROR: riscv gcc not found"; exit 1; }
+	$(RV_PREFIX)-gcc $(call bench_march,$*) $(BENCH_CFLAGS) -DBENCH_SOC -Ifw -Ifw/tests/soc_c -Wall \
+	  $(BENCH_LDFLAGS) -o $@ $(BENCH_COMMON) $(SOC_C_SRC) -lgcc
+
+$(SOC_C_OUT)/%.tohost: $(SOC_C_OUT)/%.elf scripts/elf2hex.py
+	@$(PYTHON) scripts/elf2hex.py $< --imem $(SOC_C_OUT)/$*.imem.hex --dmem $(SOC_C_OUT)/$*.dmem.hex > $@
+
+.PHONY: fw-soc-c
+fw-soc-c: SHELL := /bin/bash
+fw-soc-c: .SHELLFLAGS := -o pipefail -c
+fw-soc-c: $(SOC_OUT)/tb_soc_M0W0.vvp $(SOC_OUT)/tb_soc_M1W1.vvp \
+          $(foreach r,$(SOC_C_RUNS),$(SOC_C_OUT)/$(firstword $(subst @, ,$(r))).tohost)
+	@printf '%s\n' $(addprefix $(SOC_C_OUT)/,$(SOC_C_RUNS)) | \
+	  PLUSARGS="+timeout=2000000 $(PLUSARGS)" xargs -P $(CORE_JOBS) -n 1 bash scripts/soc_run.sh $(SOC_OUT) \
+	  > $(SOC_C_OUT)/fw-soc-c.summary; \
+	cat $(SOC_C_OUT)/fw-soc-c.summary; \
+	for r in $(SOC_C_RUNS); do \
+	  echo "  [$${r%@*} on $${r#*@}] UART:"; \
+	  grep -o 'soc_fw:.*' $(SOC_OUT)/$${r%@*}.$${r#*@}.log | sed 's/^/    /'; \
+	done; \
+	pass=$$(grep -c '^  PASS' $(SOC_C_OUT)/fw-soc-c.summary); \
+	fail=$$(grep -c '^  \[FAIL\]' $(SOC_C_OUT)/fw-soc-c.summary); \
+	echo "fw-soc-c: $$pass passed, $$fail failed"; [ $$fail = 0 ] && [ $$pass = 2 ]
 
 clean-soc:
 	rm -rf $(SOC_OUT)
