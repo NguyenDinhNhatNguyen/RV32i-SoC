@@ -1,0 +1,37 @@
+Macro sram_2k_macro, read from /home/s23521043/PDK_GPDK45, 2026-10-30 14:14
+
+==== 1. LEF: general ====
+    CLASS BLOCK ;
+    ORIGIN 0.000 0.000 ;
+    FOREIGN sram_2k_macro 0.000 0.000 ;
+    SIZE 80.000 BY 100.000 ;
+    SYMMETRY X Y ;
+
+==== 2. LEF: pins (buses grouped) ====
+  Pin name | direction | use | metal layers
+  VDD | INOUT | POWER | Metal4
+  VSS | INOUT | GROUND | Metal4
+  CLK | INPUT | SIGNAL | Metal3
+  CEN | INPUT | SIGNAL | Metal3
+  WEN | INPUT | SIGNAL | Metal3
+  A[10 bit] | INPUT | SIGNAL | Metal3
+  D[32 bit] | INPUT | SIGNAL | Metal3
+  Q[32 bit] | OUTPUT | SIGNAL | Metal3
+
+==== 3. LEF: obstructions (OBS) per layer ====
+  Metal1: 1 shapes
+  Metal2: 1 shapes
+  Metal3: 1 shapes
+
+==== 4. .lib: corner and area ====
+  library (sram_2k_macro_lib) {
+    nom_process : 1.0;
+    nom_temperature : 25.0;
+    nom_voltage : 1.0;
+      area : 8000.0;
+  Number of macro .lib files in the PDK (usually 1 corner each):
+    /home/s23521043/PDK_GPDK45/lib/sram_2k_macro.lib
+
+==== 5. Quick checks ====
+  Macro GDS: 
+  CDL/SPICE for LVS: 
