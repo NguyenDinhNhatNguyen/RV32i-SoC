@@ -14,3 +14,4 @@
 | `check_server.sh` | Ghi lại tool và PDK trên server (HT-01) | Server trường |
 | `macro_info.sh` | Tóm tắt SRAM macro, không copy file thư viện | Server trường |
 | `save_reports.sh` | Chép report văn bản vào `appendix/`, bỏ qua netlist, SPEF, GDS (`make save-pnr-soc`) | Server trường |
+| `hal_lint.sh` | Lint HAL cho `soc_top`, đếm thông báo theo mức và rule (`make lint-hal`, VER-03) | Server trường |

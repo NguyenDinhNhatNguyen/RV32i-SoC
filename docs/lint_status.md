@@ -31,13 +31,30 @@ Một target lỗi thì các target sau vẫn chạy, cuối cùng in bảng t�
 2. Ghi một dòng FAIL vào bảng dưới, kèm tên khối và mã warning.
 3. Chạy lại sau khi chủ khối sửa xong, ghi thêm một dòng PASS.
 
-Waiver chỉ dùng khi có lý do và phải có comment giải thích ngay cạnh. Hiện có (11/11):
+Waiver chỉ dùng khi có lý do và phải có comment giải thích ngay cạnh. Hiện có (12/11):
 
 - `lint_off UNUSEDSIGNAL`: 2 chỗ trong `accel_wrapper.v` (`s_addr[1:0]` vì chỉ truy cập word, `core_busy`/`core_done` vì wrapper tự đếm LAT).
 - Dây `unused_ok` gom các bit cố ý không dùng: `rv32_regfile.v`, `rv32_btb.v`, `soc_top.v`, `uart_apb.v`, `irqc_apb.v`, `spi_apb.v`, `i2c_apb.v`.
 - `gpio_apb` chỉ lint sạch với `W = 32` (ghi chú ở `soc_top.v`).
 
 Khi thêm waiver mới, cập nhật danh sách này.
+
+## HAL trên server (trước RTL freeze)
+
+HAL là công cụ lint của Cadence, có sẵn trong Xcelium 24.03 trên server. Chạy một lần trước 15/11 để có thêm góc nhìn cho báo cáo. Tiêu chí của nhóm vẫn là 0 warning Verilator, warning HAL chỉ ghi lại và báo chủ khối nếu là lỗi thật.
+
+Trên server, trong thư mục repo:
+
+```sh
+git pull
+make lint-hal
+bash scripts/save_reports.sh lint/run_hal appendix/lint_hal
+```
+
+- `make lint-hal` chạy `xrun -hal` trên `soc_top` (cùng file với `lint-soc`, tham số mặc định), in số thông báo theo mức (`*F`, `*E`, `*W`, `*N`) và theo rule, lưu ở `lint/run_hal/summary.txt`.
+- Lệnh báo lỗi chỉ khi có `*E` hoặc `*F`. Khi đó xem `lint/run_hal/hal.log` và báo chủ khối như mục trên.
+- Nếu báo `no HAL log` thì bản `xrun` này không nhận `-hal`. Thử `hal -help` để xem lệnh HAL riêng và ghi lại vào đây.
+- Lệnh thứ ba copy `summary.txt` và log vào `appendix/lint_hal/` để commit. RTL không chứa gì của PDK nên log commit được.
 
 ## Kết quả
 
@@ -48,3 +65,4 @@ Khi thêm waiver mới, cập nhật danh sách này.
 | 10/11 | `2b7c6bf` | 5.052 | FAIL | `spi_apb` mất dây `unused_ok` khi merge (`lint-soc`), `i2c_apb` có 3 warning (`lint-periph`) |
 | 10/11 | `cba0199` | 5.052 | PASS 5/5 | Phát sửa `spi_apb`, `i2c_apb` và ghép I2C vào `soc_top` |
 | 11/11 | `eb84067` | 5.052 | PASS 5/5 | `lint-soc` thêm cấu hình tắt SPI, PWM, I2C, DMA (9 cấu hình) |
+| 12/11 | `16b790b` | 5.052 | PASS 5/5 | Sau `eced27a` (localparam của `i2c_apb` ra ngoài generate) và `b3c6518`. Waiver không đổi |

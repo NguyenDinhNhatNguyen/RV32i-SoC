@@ -35,6 +35,7 @@ lec/run*/
 sta/run*/
 power/run*/
 gls/run*/
+lint/run*/
 
 # Cadence work files and flow outputs
 xcelium.d/

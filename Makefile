@@ -21,6 +21,7 @@ help:
 	@echo "make save-pnr-soc  - copy only the text reports of pnr-soc into appendix/pnr_soc (also save-pnr-accel)"
 	@echo "make lint-core     - lint the RV32I core with Verilator, 0 warnings"
 	@echo "make lint-all      - every lint target (accel, core, bus, periph, soc), run after each merge"
+	@echo "make lint-hal      - Cadence HAL lint of soc_top (server), summary in lint/run_hal/summary.txt"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -1095,10 +1096,15 @@ clean-soc:
 # into main and log the result in docs/lint_status.md.
 #   make lint-all                  lint-accel, lint-core, lint-bus, lint-periph, lint-soc,
 #                                  keeps going after a failure and prints one line per target
+#   make lint-hal                  Cadence HAL (xrun -hal) on soc_top, SCHOOL SERVER only.
+#                                  Logs and summary.txt in lint/run_hal (ignored)
 # ---------------------------------------------------------------------------
 LINT_ALL_TARGETS := lint-accel lint-core lint-bus lint-periph lint-soc
 
-.PHONY: lint-all
+.PHONY: lint-all lint-hal
+
+lint-hal:
+	@bash scripts/hal_lint.sh
 
 lint-all:
 	@fail=0; sum=""; \
