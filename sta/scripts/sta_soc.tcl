@@ -53,6 +53,7 @@ if {$SPEF ne ""} {
         exit
     }
     read_spef -rc_corner rc_typ $SPEF
+    set_interactive_constraint_modes [all_constraint_modes -active]
     set_propagated_clock [all_clocks]
 }
 
