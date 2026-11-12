@@ -1186,14 +1186,15 @@ synth-soc-sweep:
 	bash syn/scripts/sweep_soc.sh
 
 # Reports in sta/run_soc/pre/ (or sta/run_soc/spef/ with SPEF), log in sta/run_soc/tempus.log.
+# Stdout and stderr go to sta/run_soc/tempus.out, so ERROR lines from the script are kept.
 # < /dev/null so Tempus exits if the script stops midway
 sta-soc:
 	@command -v tempus > /dev/null || \
 	  { echo "ERROR: tempus not found, this target runs on the school server"; exit 1; }
-	mkdir -p sta/run_soc && cd sta/run_soc && rm -f tempus.log* tempus.cmd* && \
-	  tempus -nowin -files ../scripts/sta_soc.tcl -log tempus.log < /dev/null > /dev/null 2>&1 || true
+	mkdir -p sta/run_soc && cd sta/run_soc && rm -f tempus.log* tempus.cmd* tempus.out && \
+	  tempus -nowin -files ../scripts/sta_soc.tcl -log tempus.log < /dev/null > tempus.out 2>&1 || true
 	@f=sta/run_soc/$$( [ -n "$(SPEF)" ] && echo spef || echo pre )/summary.txt; \
-	  test -f $$f || { echo "ERROR: Tempus wrote no summary, see sta/run_soc/tempus.log"; exit 1; }; \
+	  test -f $$f || { echo "ERROR: Tempus wrote no summary, see sta/run_soc/tempus.log and tempus.out"; exit 1; }; \
 	  cat $$f
 
 # Home trend run of the whole soc_top. The 8 SRAM macros are black boxes (no Nangate45 .lib),
