@@ -195,6 +195,8 @@ Cách làm (Innovus 21.19, trong thư mục `pnr/run_soc` hoặc `pnr/run_soc<TA
 
 Ví dụ 13/11: `Bounds` là `(199.540, 232.985) (199.660, 233.310)`, hộp ở trên, mất 9 giây, `verify_drc` từ 1 lỗi về 0.
 
+Mức 0,70 cùng ngày: `Bounds` là `(204.540, 261.830) (204.660, 262.155)`, hộp `{203.0 260.3 206.2 263.7}`, cũng về 0 lỗi. Hai lỗi cùng loại và cùng cỡ (0,12 × 0,325 µm) và đều nằm giữa các dây `FE_OFN` do bước tối ưu thêm, nên nhiều khả năng sẽ lặp lại ở bản chính thức.
+
 Lưu ý:
 
 - Tcl của Innovus không đổi `~` thành thư mục home, nên dùng `$env(HOME)`.
