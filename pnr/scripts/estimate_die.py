@@ -5,7 +5,7 @@ Inputs: standard cell area from the Genus report_area, the SRAM macro size from 
 (printed by check_server.sh), and the target utilization.
 
 Example:
-  python3 pnr/scripts/estimate_die.py --std-area 45000 --macro 120x80 --macro 120x80 --util 0.70
+  python3 pnr/scripts/estimate_die.py --std-area 45000 --macro 80x100 --macro 80x100 --util 0.70
 """
 import argparse
 import math

@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 // accel_apb.v
 // Bridge from an APB3 slave to the valid/ready interface of accel_wrapper.
-// Used when SoC peripherals sit behind an APB3 bridge (as proposed in the plan doc).
+// Used when SoC peripherals sit behind an APB3 bridge.
 // APB3 is word access only, so every write uses all 4 bytes.
 // PSLVERR = 1 for an undefined address inside the accelerator's 4 KB (offset >= 0x400,
 // registers 0x00C-0x0FC) or a write to C_BUF, so the core traps with an access fault

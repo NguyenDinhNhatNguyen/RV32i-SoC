@@ -106,12 +106,12 @@ module tb_accel_wrapper;
                 if (cycles > 100) begin $display("ERROR: timeout"); $finish; end
             end
             if (!irq) begin $display("ERROR: irq not raised on DONE"); errors = errors + 1; end
-            if (rd[0]) begin $display("ERROR: van BUSY khi DONE"); errors = errors + 1; end
+            if (rd[0]) begin $display("ERROR: BUSY still set at DONE"); errors = errors + 1; end
 
             for (i = 0; i < N*N; i = i + 1) begin
                 bus_read(12'h300 + 4*i, rd);
                 if (rd !== G[i]) begin
-                    $display("ERROR test %0d C[%0d][%0d] = %0d, mong doi %0d",
+                    $display("ERROR test %0d C[%0d][%0d] = %0d, expected %0d",
                              t, i/N, i%N, $signed(rd), G[i]);
                     errors = errors + 1;
                 end
@@ -127,7 +127,7 @@ module tb_accel_wrapper;
         end
 
         if (errors == 0) $display("PASS: %0d matrix multiplies %0dx%0d match the golden model", NTEST, N, N);
-        else             $display("FAIL: %0d loi", errors);
+        else             $display("FAIL: %0d errors", errors);
         $finish;
     end
 endmodule

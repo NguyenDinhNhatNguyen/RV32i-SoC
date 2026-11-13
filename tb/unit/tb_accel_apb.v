@@ -60,7 +60,7 @@ module tb_accel_apb;
             for (i = 0; i < N*N; i = i + 1) begin
                 apb(0, 12'h300 + 4*i, 0, r);
                 if (r !== G[i]) begin errors = errors + 1;
-                    $display("ERROR test %0d C[%0d] = %0d, mong doi %0d", t, i, $signed(r), G[i]); end
+                    $display("ERROR test %0d C[%0d] = %0d, expected %0d", t, i, $signed(r), G[i]); end
             end
             apb(1, 12'h004, 32'h2, r);                 // Clear DONE
         end
@@ -72,7 +72,7 @@ module tb_accel_apb;
         apb(0, 12'h008, 0, r); if (err_seen)  begin errors = errors + 1; $display("ERROR: INFO gave a wrong error"); end
 
         if (errors == 0) $display("PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct");
-        else             $display("FAIL: %0d loi", errors);
+        else             $display("FAIL: %0d errors", errors);
         $finish;
     end
 endmodule
