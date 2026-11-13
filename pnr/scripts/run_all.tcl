@@ -195,11 +195,39 @@ proc pd_checks {file banned} {
 }
 try_cmd {pd_checks $RPT/pd_checks.rpt [concat $DONT_USE_CELLS $CTS_DONT_USE]}
 
+# Fix the DRC errors that verify_drc left. ecoRoute -fix_drc without an area missed them on
+# 13/11 (docs/flow_notes.md), so give it one box per error: the Bounds line of drc.rpt plus 1.5 um.
+# Returns the number of boxes, 0 when the report has no Bounds line.
+proc fix_drc_boxes {rpt_in rpt_out} {
+    set fp [open $rpt_in r]
+    set txt [read $fp]
+    close $fp
+    set re {Bounds : \( *([0-9.]+), *([0-9.]+) *\) \( *([0-9.]+), *([0-9.]+) *\)}
+    set n 0
+    foreach {all x0 y0 x1 y1} [regexp -all -inline $re $txt] {
+        if {$n >= 20} {
+            puts "WARNING: more than 20 DRC errors, the rest is left as it is"
+            break
+        }
+        incr n
+        set box [list [expr {$x0 - 1.5}] [expr {$y0 - 1.5}] [expr {$x1 + 1.5}] [expr {$y1 + 1.5}]]
+        try_cmd [list ecoRoute -fix_drc $box]
+    }
+    if {$n > 0} { try_cmd [list verify_drc -report $rpt_out] }
+    return $n
+}
+
 try_cmd {addFiller -cell [dbGet [dbGet -p head.libCells.name FILL*].name] -prefix FILLER}
 saveDesign DBS/route.enc
 
 # Check and Report
 try_cmd {verify_drc -report $RPT/drc.rpt}
+if {[catch {fix_drc_boxes $RPT/drc.rpt $RPT/drc_after_eco.rpt} nfix]} {
+    puts "WARNING: fix_drc_boxes failed: $nfix"
+} elseif {$nfix > 0} {
+    puts "PD: ecoRoute on $nfix DRC box(es), see drc_after_eco.rpt"
+    saveDesign DBS/route_drcfix.enc
+}
 try_cmd {verifyConnectivity -report $RPT/connectivity.rpt}
 if {[catch {verifyProcessAntenna -reportfile $RPT/antenna.rpt}]} { try_cmd {verifyProcessAntenna -report $RPT/antenna.rpt} }
 try_cmd {timeDesign -postRoute       -outDir $RPT/postroute_setup}

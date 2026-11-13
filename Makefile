@@ -117,6 +117,7 @@ pnr-soc:
 	@test -f pnr/out_soc$(TAG)/soc_top_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_soc$(TAG)/innovus.log"; exit 1; }
 	@cat pnr/out_soc$(TAG)/reports/pd_checks.rpt 2>/dev/null || true
 	@cat pnr/out_soc$(TAG)/reports/slack_summary.txt 2>/dev/null || true
+	@grep -i violations pnr/out_soc$(TAG)/reports/drc.rpt pnr/out_soc$(TAG)/reports/drc_after_eco.rpt 2>/dev/null || true
 
 # Copy only text reports into appendix/, never netlists, SPEF, SDF or GDS
 save-pnr-accel:

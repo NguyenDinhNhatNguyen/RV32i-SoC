@@ -180,7 +180,9 @@ Kết quả 21/10 (lõi accelerator cũ): LEC PASS, GLS PASS, DRC, connectivity 
 
 Mức 0,75 chạy ngày 13/11 còn 1 lỗi `MetSpc` ở Metal1 (`drc.rpt`: `SPACING ( ParallelRunLength Spacing )`). `ecoRoute -fix_drc` không kèm vùng không sửa được. Nó chỉ kiểm lại khoảng 54% diện tích và báo 0 lỗi. Phải đưa vào một hộp quanh lỗi để nó kiểm lại 100% diện tích.
 
-Cách làm (Innovus 21.19, trong thư mục `pnr/run_soc` hoặc `pnr/run_soc<TAG>`):
+`run_all.tcl` tự làm bước này sau `verify_drc` (proc `fix_drc_boxes`, kết quả ở `reports/drc_after_eco.rpt`). Chỉ cần làm tay khi `drc_after_eco.rpt` vẫn còn lỗi.
+
+Cách làm tay (Innovus 21.19, trong thư mục `pnr/run_soc` hoặc `pnr/run_soc<TAG>`):
 
 1. Mở `reports/drc.rpt`, lấy dòng `Bounds : ( x0, y0 ) ( x1, y1 )` của lỗi.
 2. Mở Innovus, nạp `DBS/route.enc`, chạy ECO với hộp nới 1 đến 2 µm mỗi phía quanh lỗi, rồi kiểm lại:
