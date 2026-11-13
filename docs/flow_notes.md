@@ -174,6 +174,33 @@ Kết quả 21/10 (lõi accelerator cũ): LEC PASS, GLS PASS, DRC, connectivity 
 | Skew lớn | Dùng CLKBUFX2, hoặc flop không qua clock gating | `setDontUse CLKBUFX2 true` trước `ccopt_design`. Thử giảm `lp_clock_gating_min_flops` |
 | Không tìm thấy PDK | PDK không ở `~/PDK_GPDK45` | `export PDK_DIR=<đường dẫn>` hoặc sửa `pnr/scripts/config.tcl` |
 | Genus không ra netlist | Lỗi khi đọc RTL | Xem `syn/run_accel/genus.log`, tìm dòng `Error` |
+| `verify_drc` còn lỗi sau route | Lỗi khoảng cách nhỏ mà bộ định tuyến không thấy | Xem mục "DRC còn lại" ngay dưới |
+
+### DRC còn lại sau route
+
+Mức 0,75 chạy ngày 13/11 còn 1 lỗi `MetSpc` ở Metal1 (`drc.rpt`: `SPACING ( ParallelRunLength Spacing )`). `ecoRoute -fix_drc` không kèm vùng không sửa được. Nó chỉ kiểm lại khoảng 54% diện tích và báo 0 lỗi. Phải đưa vào một hộp quanh lỗi để nó kiểm lại 100% diện tích.
+
+Cách làm (Innovus 21.19, trong thư mục `pnr/run_soc` hoặc `pnr/run_soc<TAG>`):
+
+1. Mở `reports/drc.rpt`, lấy dòng `Bounds : ( x0, y0 ) ( x1, y1 )` của lỗi.
+2. Mở Innovus, nạp `DBS/route.enc`, chạy ECO với hộp nới 1 đến 2 µm mỗi phía quanh lỗi, rồi kiểm lại:
+
+    ```tcl
+    source DBS/route.enc
+    ecoRoute -fix_drc {198.0 231.5 201.0 234.5}     ;# thay bằng toạ độ lỗi, nới ra khoảng 1,5 µm
+    verify_drc -report $env(HOME)/drc_fixed.rpt
+    ```
+
+3. Đạt khi `drc_fixed.rpt` ghi `No DRC violations were found`.
+
+Ví dụ 13/11: `Bounds` là `(199.540, 232.985) (199.660, 233.310)`, hộp ở trên, mất 9 giây, `verify_drc` từ 1 lỗi về 0.
+
+Lưu ý:
+
+- Tcl của Innovus không đổi `~` thành thư mục home, nên dùng `$env(HOME)`.
+- ECO đổi nhẹ đường nối (số via thay đổi). Với bản dùng làm kết quả chính phải `saveDesign`, chạy lại `timeDesign` cho setup và hold, rồi xuất lại SPEF, SDF, GDS.
+- Chưa thử một hộp phủ cả die khi có nhiều lỗi cùng lúc.
+- Tuỳ chọn vùng nằm trong `ecoRoute -help` (đối số `<area>`).
 
 ## 7. Quét PPA theo thử thách của Lab
 
