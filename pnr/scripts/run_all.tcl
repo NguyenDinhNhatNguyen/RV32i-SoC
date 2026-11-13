@@ -25,7 +25,9 @@ if {$TOP eq "soc_top"} {
 }
 set NETLIST    $REPO/syn/$SUB/${TOP}_netlist.v
 set DESIGN_SDC $REPO/syn/$SUB/${TOP}_synth.sdc
-set OUT        $REPO/pnr/$SUB
+# TAG (for example _u75) keeps the output of another core size apart (PD-07)
+set TAG        [expr {[info exists ::env(TAG)] ? $::env(TAG) : ""}]
+set OUT        $REPO/pnr/${SUB}${TAG}
 set RPT        $OUT/reports
 file mkdir $OUT $RPT DBS
 

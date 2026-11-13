@@ -16,8 +16,9 @@
 # 195 and 726 um2, scaled up). The 29/10 run
 # used 524 x 523 um because the total area with macros was given as --std-area, which counted
 # the macros twice.
-set CORE_W     405.0      ;# um
-set CORE_H     405.3
+# Another size for PD-07: make pnr-soc CORE_W=412.0 CORE_H=413.8 TAG=_u75 (docs/pd02_floorplan.md)
+set CORE_W     [expr {[info exists ::env(CORE_W)] ? $::env(CORE_W) : 405.0}]   ;# um
+set CORE_H     [expr {[info exists ::env(CORE_H)] ? $::env(CORE_H) : 405.3}]
 set IO_GAP     15.0       ;# Core to die edge, room for the power ring
 set MAC_W      80.0       ;# sram_2k_macro (HT-01)
 set MAC_H      100.0

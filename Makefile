@@ -107,14 +107,16 @@ pnr-accel:
 
 # Outputs (netlist, SPEF, SDF, GDS) stay in pnr/out_soc and are never committed.
 # Copy only pnr/out_soc/reports into appendix/pnr_soc.
+# Another core size (PD-07): make pnr-soc TAG=_u75 CORE_W=412.0 CORE_H=413.8
+# writes pnr/out_soc_u75 and pnr/run_soc_u75, the default run is not touched.
 pnr-soc:
 	@test -f syn/out_soc/soc_top_netlist.v || { echo "ERROR: no netlist yet, run make synth-soc first"; exit 1; }
-	rm -f pnr/out_soc/soc_top_pnr.v
-	cd pnr && mkdir -p run_soc && cd run_soc && rm -f innovus.log* innovus.cmd* && \
+	rm -f pnr/out_soc$(TAG)/soc_top_pnr.v
+	cd pnr && mkdir -p run_soc$(TAG) && cd run_soc$(TAG) && rm -f innovus.log* innovus.cmd* && \
 	  TOP=soc_top innovus -batch -files ../scripts/run_all.tcl -log innovus.log
-	@test -f pnr/out_soc/soc_top_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_soc/innovus.log"; exit 1; }
-	@cat pnr/out_soc/reports/pd_checks.rpt 2>/dev/null || true
-	@cat pnr/out_soc/reports/slack_summary.txt 2>/dev/null || true
+	@test -f pnr/out_soc$(TAG)/soc_top_pnr.v || { echo "ERROR: Innovus stopped midway, see pnr/run_soc$(TAG)/innovus.log"; exit 1; }
+	@cat pnr/out_soc$(TAG)/reports/pd_checks.rpt 2>/dev/null || true
+	@cat pnr/out_soc$(TAG)/reports/slack_summary.txt 2>/dev/null || true
 
 # Copy only text reports into appendix/, never netlists, SPEF, SDF or GDS
 save-pnr-accel:
@@ -122,8 +124,8 @@ save-pnr-accel:
 	@git status --short appendix/pnr_accel | head -20
 
 save-pnr-soc:
-	bash scripts/save_reports.sh pnr/out_soc/reports appendix/pnr_soc
-	@git status --short appendix/pnr_soc | head -20
+	bash scripts/save_reports.sh pnr/out_soc$(TAG)/reports appendix/pnr_soc$(TAG)
+	@git status --short appendix/pnr_soc$(TAG) | head -20
 
 clean:
 	rm -rf tb/unit/out syn/run* pnr/run*
