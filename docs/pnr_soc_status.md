@@ -1,6 +1,6 @@
 # Theo dõi PnR `soc_top`
 
-Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 12/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
+Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 13/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
 
 ## 1. Tình trạng từng mục
 
@@ -11,7 +11,7 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 | 3 | `run_all.tcl` chưa gọi `soc_floorplan.tcl`, macro do Innovus tự đặt | Xong 31/10 | `make pnr-soc` chạy `run_all.tcl` với `TOP=soc_top` và gọi `soc_floorplan.tcl` |
 | 4 | 1220 cell `CLKBUFX2` trong netlist PnR | Xong 31/10 | `CLKBUFX2` bị cấm ngay sau `init_design`, trước mọi bước tối ưu. 11 cell còn lại từ Genus đã hết từ 31/10, vì `CLKBUFX2` có trong `DONT_USE_CELLS` của `config.tcl` |
 | 5 | `run_all.tcl` bị đổi cứng sang `soc_top`, `make pnr-accel` hỏng | Xong 31/10 | Chọn khối bằng biến `TOP`. `make pnr-accel` dùng `TOP=accel_wrapper` như cũ |
-| 6 | Hold trước CTS: 1081 đường vi phạm, xấu nhất −0,147 ns ở chân CEN của macro IMEM. Removal trước layout chỉ dư 6 ps (Tempus 31/10) | Một phần 12/11 | `run_all.tcl` sửa hold sau CTS và sau route, với biên `holdTargetSlack 0.020` (04/11). Chạy 12/11: hold +0,020 ns (sau CTS) và +0,019 ns (sau route), removal +0,029 ns (Tempus). Riêng `slack_summary.txt` ghi `n/a` cho hold và removal, vì Innovus chỉ báo hai loại này ở chế độ hold (lỗi TCLCMD-1045). Đã sửa `slack_reports` trong `run_all.tcl` (chuyển sang `setAnalysisMode -checkType hold` khi đo hold và removal). Kiểm trên `DBS/route.enc` ngày 12/11: setup −0,027, hold +0,019, recovery +17,869, removal +0,026 ns. Lần `make pnr-soc` tới sẽ ghi các số này vào `slack_summary.txt` |
+| 6 | Hold trước CTS: 1081 đường vi phạm, xấu nhất −0,147 ns ở chân CEN của macro IMEM. Removal trước layout chỉ dư 6 ps (Tempus 31/10) | Xong 13/11 | `run_all.tcl` sửa hold sau CTS và sau route, với biên `holdTargetSlack 0.020` (04/11). Chạy 12/11: hold +0,020 ns (sau CTS) và +0,019 ns (sau route), removal +0,029 ns (Tempus). Riêng `slack_summary.txt` ghi `n/a` cho hold và removal, vì Innovus chỉ báo hai loại này ở chế độ hold (lỗi TCLCMD-1045). Đã sửa `slack_reports` trong `run_all.tcl` (chuyển sang `setAnalysisMode -checkType hold` khi đo hold và removal). Kiểm trên `DBS/route.enc` ngày 12/11: setup −0,027, hold +0,019, recovery +17,869, removal +0,026 ns. Chạy lại `make pnr-soc` ngày 13/11 (commit `7715481`): `slack_summary.txt` ghi đủ hold +0,020 và removal +0,023 ns sau CTS, hold +0,019 và removal +0,028 ns sau route |
 | 7 | Chưa có report timing, DRC của `soc_top` trong repo. Ảnh layout có 5 dấu X trắng | Xong 12/11 | Report đã ở `appendix/pnr_soc/` (commit `7691865`). Ảnh 12/11 có 12 dấu X thẳng hàng ở mép trên vành macro IMEM. Đó là 12 đoạn dây VDD Metal7 dài 0 (xem mục 4), không phải lỗi DRC |
 | 8 | Diện tích logic thật 53 408 µm², lõi tính theo số cũ | Xong 31/10 | Lõi đúng là 394 × 395 µm ở mật độ 70%, nới thành 397 × 400 µm ngày 07/11 khi có SPI, PWM, rồi 402 × 404 µm cùng ngày khi bật DMA, 405 × 405 µm ngày 10/11 khi ghép I2C (4 chân mới). Lõi 524 × 523 µm của lần 29/10 tính sai (nhập tổng có cả macro vào `--std-area`) |
 | 9 | `appendix/macro_check/sram_2k_macro_20261030.txt` còn trên server | Xong 12/11 | Đã commit trong `7691865`. Hướng macro không còn phụ thuộc file này: `soc_floorplan.tcl` tự đọc cạnh có chân tín hiệu từ LEF (31/10). Log Innovus in lớp chân VDD/VSS để kiểm lớp ring |
@@ -75,3 +75,16 @@ Chạy Tempus sau route phải dùng đường dẫn tuyệt đối, vì script 
 ```sh
 make sta-soc SPEF=$PWD/pnr/out_soc/soc_top.spef NETLIST=$PWD/pnr/out_soc/soc_top_pnr.v SDC=$PWD/syn/out_soc/soc_top_synth.sdc
 ```
+
+## 5. Chạy thử ba cỡ lõi (PD-07, 13/11)
+
+Cùng netlist `eced27a`, clock 20 ns. Mỗi cỡ chạy bằng `make pnr-soc TAG=<tag> CORE_W=<w> CORE_H=<h>`, kết quả ở `pnr/out_soc<tag>/`, report ở `appendix/pnr_soc<tag>/`.
+
+| Lõi (µm) | Thư mục | Cell chuẩn (µm²) | Mật độ ngoài macro | Setup sau route | Hold sau route | Removal sau route | DRC |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 405 × 405,3 | `pnr_soc` | 68 227 | 68,1% | −0,024 | +0,019 | +0,028 | 0 |
+| 412 × 413,8 | `pnr_soc_u75` | 68 116 | 64,0% | +0,016 | +0,019 | +0,034 | 1, ECO sửa về 0 |
+| 420 × 420,7 | `pnr_soc_u70` | 67 988 | 60,3% | +0,165 | +0,013 | +0,032 | 1, ECO sửa về 0 |
+| 430 × 429,2 | `pnr_soc_u65` | 67 978 | 56,4% | +0,190 | +0,017 | +0,029 | 0 |
+
+Số timing là của Innovus, tính bằng ns. Lõi lớn hơn thì setup tăng, nhảy mạnh nhất ở 420 µm. Hai lỗi DRC cùng loại Metal1 `ParallelRunLength`, cách sửa ở `docs/flow_notes.md` mục "DRC còn lại sau route". Cỡ lõi chính thức chốt cùng chu kỳ ở STA-04, vì setup sau route phụ thuộc cả hai. Nếu bản chính thức dùng `TAG`, lệnh Tempus sau route đổi `pnr/out_soc` thành `pnr/out_soc<tag>`.

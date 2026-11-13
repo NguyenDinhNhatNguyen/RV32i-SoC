@@ -15,6 +15,9 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `synth_soc_i2c/`, `sta_soc_i2c/` | Genus và Tempus `soc_top` ngày 12/11, có DMA, SPI, PWM, I2C, netlist giao cho PnR |
 | `core_signoff/` | Genus, LEC và GLS cho core `rv32_core` (D-042) |
 | `pnr_accel/` | Innovus cho accelerator: timing từng bước, DRC, connectivity, antenna, công suất |
+| `pnr_soc/` | Innovus cho `soc_top` (PD-04, 12/11 và 13/11), lõi 405 × 405,3 µm, `slack_summary.txt` và `pd_checks.rpt` |
+| `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
+| `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
 | `ver06_bench/` | Output `make bench-core` và `make bench-soc` ngày 12/11 (VER-06), chạy ở nhà trong Docker |
 
 Chỉ đưa report dạng văn bản. Không đưa netlist, SPEF, SDF, database hay file nào của GPDK45.
