@@ -2,7 +2,7 @@
 *	Innovus 21.19-s058_1 (64bit) 04/04/2024 09:59 (Linux 3.10.0-693.el7.x86_64)
 *	
 *
-* 	Date & Time:	2026-Nov-13 08:55:12 (2026-Nov-13 01:55:12 GMT)
+* 	Date & Time:	2026-Nov-13 10:33:53 (2026-Nov-13 03:33:53 GMT)
 *
 *----------------------------------------------------------------------------------------
 *
@@ -44,39 +44,39 @@
 
 Total Power 
 -----------------------------------------------------------------------------------------
-Total Internal Power:        0.59960939 	   44.7747%
-Total Switching Power:       0.72826881 	   54.3821%
-Total Leakage Power:         0.01129081 	    0.8431%
-Total Power:                 1.33916901 
+Total Internal Power:        0.59960684 	   44.7674%
+Total Switching Power:       0.72848503 	   54.3896%
+Total Leakage Power:         0.01129081 	    0.8430%
+Total Power:                 1.33938268 
 -----------------------------------------------------------------------------------------
 
 
 Group                           Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-Sequential                        0.2441      0.0495   0.0005418      0.2942       21.97 
-Macro                             0.0004       0.103      0.0096       0.113       8.438 
+Sequential                        0.2441     0.04952   0.0005418      0.2942       21.96 
+Macro                             0.0004       0.103      0.0096       0.113       8.437 
 IO                                     0           0           0           0           0 
-Combinational                     0.3146      0.5223    0.001108       0.838       62.58 
-Clock (Combinational)            0.01108     0.04085   9.597e-06     0.05195       3.879 
-Clock (Sequential)               0.02939     0.01262   3.114e-05     0.04204       3.139 
+Combinational                     0.3146      0.5225    0.001108      0.8382       62.58 
+Clock (Combinational)            0.01108     0.04086   9.597e-06     0.05195       3.879 
+Clock (Sequential)               0.02939     0.01263   3.114e-05     0.04205       3.139 
 -----------------------------------------------------------------------------------------
-Total                             0.5996      0.7283     0.01129       1.339         100 
+Total                             0.5996      0.7285     0.01129       1.339         100 
 -----------------------------------------------------------------------------------------
 
 
 Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-VDD                       0.9     0.5996      0.7283     0.01129       1.339         100 
+VDD                       0.9     0.5996      0.7285     0.01129       1.339         100 
 
 
 Clock                           Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-clk                              0.04047     0.05347   4.074e-05     0.09398       7.018 
+clk                              0.04047     0.05349   4.074e-05       0.094       7.018 
 -----------------------------------------------------------------------------------------
-Total (excluding duplicates)     0.04047     0.05347   4.074e-05     0.09398       7.018 
+Total (excluding duplicates)     0.04047     0.05349   4.074e-05       0.094       7.018 
 -----------------------------------------------------------------------------------------
 Clock: clk
 Clock Period: 0.020000 usec 
@@ -87,9 +87,9 @@ Clock Static Probability:  0.5000
 
 -----------------------------------------------------------------------------------------
 *	Power Distribution Summary: 
-*                Highest Average Power: u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac (sram_2k_macro):          0.01701 
+*                Highest Average Power: u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac (sram_2k_macro):          0.01702 
 *                Highest Leakage Power: u_dmem_u_arr_g_multi.g_bank[0].u_mac (sram_2k_macro):           0.0012 
-*          Total Cap:      1.08941e-10 F
+*          Total Cap:      1.08974e-10 F
 *          Total instances in design: 23814
 *          Total instances in design with no power:     0
 *          Total instances in design with no activity:     0
