@@ -52,9 +52,29 @@ bash scripts/save_reports.sh lint/run_hal appendix/lint_hal
 ```
 
 - `make lint-hal` chạy `xrun -hal` trên `soc_top` (cùng file với `lint-soc`, tham số mặc định), in số thông báo theo mức (`*F`, `*E`, `*W`, `*N`) và theo rule, lưu ở `lint/run_hal/summary.txt`.
-- Lệnh báo lỗi chỉ khi có `*E` hoặc `*F`. Khi đó xem `lint/run_hal/hal.log` và báo chủ khối như mục trên.
+- Lệnh báo lỗi khi có `*F`, hoặc `*E` của rule không nằm trong danh sách waive. Khi đó xem `lint/run_hal/xrun.log` và báo chủ khối như mục trên.
+- Danh sách waive mặc định chỉ có `CBPAHI` (biến `WAIVE` trong `scripts/hal_lint.sh`). `make lint-hal WAIVE=` thì mọi `*E` đều làm FAIL.
 - Nếu báo `no HAL log` thì bản `xrun` này không nhận `-hal`. Thử `hal -help` để xem lệnh HAL riêng và ghi lại vào đây.
 - Lệnh thứ ba copy `summary.txt` và log vào `appendix/lint_hal/` để commit. RTL không chứa gì của PDK nên log commit được.
+
+### Waiver HAL: `CBPAHI`
+
+`xmhelp hal CBPAHI`: thanh ghi hoặc cổng ra được lái bởi một đường tổ hợp đi qua nhiều cấp module. Đây là hướng dẫn để dễ đóng timing, không phải lỗi chức năng. Mức mặc định của Cadence là `E`.
+
+Lần chạy 13/11 có 576 thông báo `CBPAHI` và không có `*E` nào khác. Nhiều nhất ở `accel_wrapper.v` (259), `pe.v` (128), `rv32_btb.v` (40), `rv32_regfile.v` (31), `rv32_core.v` (27). Ví dụ ở core: tín hiệu chờ của bus (`wb_wait`) qua `pipe_stall` và `ex_go` tới các flop `ex_*_q`. Đường này cố ý có trong thiết kế: pipeline phải dừng ngay trong chu kỳ bus chưa sẵn sàng.
+
+Nhóm không sửa RTL theo rule này. Lý do:
+
+- Muốn hết `CBPAHI` phải chèn flop vào đường stall và đường giải mã APB. Việc đó đổi hành vi theo chu kỳ của core và accelerator ngay trước RTL freeze.
+- Timing của các đường này đã được kiểm bằng STA (Genus và Tempus, `docs/sta_results.md`).
+
+Waiver nằm ở `WAIVE` trong `scripts/hal_lint.sh`. `summary.txt` vẫn đếm `CBPAHI` theo từng file để đưa vào báo cáo.
+
+## Kết quả HAL
+
+| Ngày | Commit | Xcelium | `*F` | `*E` | `*W` | `*N` | Kết quả | Ghi chú |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- | --- |
+| 13/11 | `6f21de9` | 24.03-s013 | 0 | 576 | 1931 | 707 | PASS sau waiver | Cả 576 `*E` là `CBPAHI`. `*W` nhiều nhất: `MAXLEN` 343 (dòng dài), `STYVAL` 319, `SYNPRT` 175, `NBGEND` 149 |
 
 ## Kết quả
 
