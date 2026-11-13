@@ -1,0 +1,2 @@
+stage=postcts_async setup_ns=0.005 hold_ns=0.020 recovery_ns=17.915 removal_ns=0.036
+stage=postroute_async setup_ns=0.190 hold_ns=0.017 recovery_ns=17.895 removal_ns=0.029

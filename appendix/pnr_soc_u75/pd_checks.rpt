@@ -1,0 +1,15 @@
+Core box (um): {15.0 15.01 427.0 428.83}
+Die box (um) : {0.0 0.0 442.0 443.84}
+BUFX2 instances: 0 (must be 0)
+CLKBUFX2 instances: 0 (must be 0)
+CLKBUFX2 instances: 0 (must be 0)
+Macro {u_dmem_u_arr_g_multi.g_bank[0].u_mac} at {20.0 20.01} R0
+Macro {u_dmem_u_arr_g_multi.g_bank[1].u_mac} at {110.0 20.01} R0
+Macro {u_dmem_u_arr_g_multi.g_bank[2].u_mac} at {200.0 20.01} R0
+Macro {u_dmem_u_arr_g_multi.g_bank[3].u_mac} at {290.0 20.01} R0
+Macro {u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac} at {20.0 323.83} MX
+Macro {u_imem_u_sram_u_arr_g_multi.g_bank[1].u_mac} at {110.0 323.83} MX
+Macro {u_imem_u_sram_u_arr_g_multi.g_bank[2].u_mac} at {200.0 323.83} MX
+Macro {u_imem_u_sram_u_arr_g_multi.g_bank[3].u_mac} at {290.0 323.83} MX
+Standard cell area 68116 um2, macro area 64000 um2, core 170494 um2
+Standard cell density outside macros: 64.0%
