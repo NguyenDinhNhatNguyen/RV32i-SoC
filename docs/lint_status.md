@@ -74,7 +74,7 @@ Waiver nằm ở `WAIVE` trong `scripts/hal_lint.sh`. `summary.txt` vẫn đếm
 
 | Ngày | Commit | Xcelium | `*F` | `*E` | `*W` | `*N` | Kết quả | Ghi chú |
 | --- | --- | --- | ---: | ---: | ---: | ---: | --- | --- |
-| 13/11 | `6f21de9` | 24.03-s013 | 0 | 576 | 1931 | 707 | PASS sau waiver | Cả 576 `*E` là `CBPAHI`. `*W` nhiều nhất: `MAXLEN` 343 (dòng dài), `STYVAL` 319, `SYNPRT` 175, `NBGEND` 149 |
+| 13/11 | `7008da2` | 24.03-s013 | 0 | 576 | 1931 | 707 | PASS sau waiver | Cả 576 `*E` là `CBPAHI`. `*W` nhiều nhất: `MAXLEN` 343 (dòng dài), `STYVAL` 319, `SYNPRT` 175, `NBGEND` 149. Report ở `appendix/lint_hal/` |
 
 ## Kết quả
 

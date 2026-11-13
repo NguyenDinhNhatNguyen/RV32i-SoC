@@ -18,6 +18,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `pnr_soc/` | Innovus cho `soc_top` (PD-04, 12/11 và 13/11), lõi 405 × 405,3 µm, `slack_summary.txt` và `pd_checks.rpt` |
 | `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
+| `lint_hal/` | HAL lint của `soc_top` trên main `7008da2` (VER-03, 13/11): `summary.txt` và `xrun.log` |
 | `ver06_bench/` | Output `make bench-core` và `make bench-soc` ngày 12/11 (VER-06), chạy ở nhà trong Docker |
 
 Chỉ đưa report dạng văn bản. Không đưa netlist, SPEF, SDF, database hay file nào của GPDK45.
