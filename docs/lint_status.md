@@ -86,3 +86,4 @@ Waiver nằm ở `WAIVE` trong `scripts/hal_lint.sh`. `summary.txt` vẫn đếm
 | 10/11 | `cba0199` | 5.052 | PASS 5/5 | Phát sửa `spi_apb`, `i2c_apb` và ghép I2C vào `soc_top` |
 | 11/11 | `eb84067` | 5.052 | PASS 5/5 | `lint-soc` thêm cấu hình tắt SPI, PWM, I2C, DMA (9 cấu hình) |
 | 12/11 | `16b790b` | 5.052 | PASS 5/5 | Sau `eced27a` (localparam của `i2c_apb` ra ngoài generate) và `b3c6518`. Waiver không đổi |
+| 13/11 | `c92f53c` | 5.052 | PASS 5/5 | Sau PD-07 và HAL. So với `16b790b` RTL chỉ đổi 1 dòng ở `accel_apb.v`. Waiver không đổi |
