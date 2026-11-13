@@ -10,6 +10,11 @@
 #                             make synth-soc by someone else cannot change the netlist mid-run
 #   ONE_LINE=1                write the golden read design as one long line (like
 #                             core_rtl2gate.do) instead of lines continued with a backslash
+#   MACRO_MODE=undef|lib|verilog   how sram_2k_macro is declared before read design
+#                             undef    set undefined cell black_box (default). Worked in the 13/11
+#                                      check run, but it hides ANY undefined module
+#                             lib      read library -append -liberty sram_2k_macro.lib (not tried)
+#                             verilog  read library -append -verilog sram_2k_macro.v (not tried)
 #   DRY_RUN=1                 only check the inputs and write the dofile, do not start lec
 #
 # The script stops before lec while a TODO_MACRO marker is in the dofile template.
@@ -21,6 +26,7 @@ cd "$(dirname "$0")/.." || { echo "ERROR: cannot change to the repo root"; exit 
 SRC_DIR=${SRC_DIR:-syn/out_soc}
 LEC_DIR=${LEC_DIR:-syn/out_soc_lec}
 ONE_LINE=${ONE_LINE:-0}
+MACRO_MODE=${MACRO_MODE:-undef}
 DRY_RUN=${DRY_RUN:-0}
 NETLIST_SRC=$SRC_DIR/soc_top_netlist.v
 TEMPLATE=lec/soc_rtl2gate.do.in
@@ -88,11 +94,23 @@ else
     echo " $1" >> "$tmp_reads"
 fi
 
+# Macro declaration, written before read design (see the template)
+tmp_macro=$(mktemp)
+trap 'rm -f "$tmp_reads" "$tmp_macro"' EXIT
+case "$MACRO_MODE" in
+    lib)     echo "read library -both -append -liberty ~/PDK_GPDK45/lib/sram_2k_macro.lib" > "$tmp_macro" ;;
+    verilog) echo "read library -both -append -verilog ~/PDK_GPDK45/lib/sram_2k_macro.v" > "$tmp_macro" ;;
+    undef)   echo "set undefined cell black_box -noascend -both" > "$tmp_macro" ;;
+    *)       die "MACRO_MODE must be lib, verilog or undef" ;;
+esac
+
 sed -e "s|@@NETLIST@@|$LEC_DIR/soc_top_netlist.v|g" \
     -e "s|@@OUTDIR@@|$LEC_DIR/reports|g" \
     -e "/@@RTL_READ@@/{r $tmp_reads" \
+    -e "d}" \
+    -e "/^\/\/ @@MACRO@@\$/{r $tmp_macro" \
     -e "d}" "$TEMPLATE" > "$DO"
-echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE)"
+echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE)"
 
 if grep -q 'TODO_MACRO' "$DO"; then
     echo "STOP: a TODO_MACRO marker is still in the dofile, lec was not started."
