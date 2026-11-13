@@ -1,0 +1,54 @@
+// soc_rtl2gate.do.in - template of the LEC dofile for soc_top: RTL against the Genus netlist (LEC-01).
+// Do not run this file directly. lec/run_lec_soc.sh fills the @@...@@ markers and writes
+// lec/soc_rtl2gate.do, which is the file Conformal reads. Edit this template, not the generated file.
+// Every command below comes from lec/core_rtl2gate.do (D-042, run on the server 30/10) or
+// lec/accel_rtl2gate.do, except the add black box line, which was given by Phuc and has not been
+// run on the server yet.
+// Run on the school server, from the repo root: bash lec/run_lec_soc.sh
+//
+// Both sides have the same top module name (soc_top) with the default parameters, as in synth_soc.tcl.
+
+// Skip any failing command (for example a missing license) and keep going
+set dofile abort off
+
+read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+
+// Search paths for `include (rv32_defs.vh, boot_rom_init.vh). Conformal 24.1 rejects -incdir
+// in read design, so use add search path (same fix as D-042)
+add search path rtl/core -design -golden
+add search path rtl/bus  -design -golden
+add search path rtl/mem  -design -golden
+
+// Golden side: the same file set as synth_soc.tcl (rtl/core/rv32_*.v, rtl/bus, rtl/mem,
+// rtl/periph, and the four rtl/accel files)
+// @@RTL_READ@@
+
+// Revised side: the Genus netlist of soc_top
+read design -revised -verilog @@NETLIST@@
+set root module soc_top -both
+
+// SRAM macro (8 instances of sram_2k_macro): black box on both sides (docs/macro_notes.md 3.3).
+// Position as given by Phuc: after read design, before set system mode lec.
+// With set dofile abort off a failing command does not stop the run, so read the response of this
+// line in lec.txt.
+add black box -module sram_2k_macro -both
+
+// Same flatten options as core_rtl2gate.do
+set flatten model -seq_constant
+set flatten model -seq_constant_x_to 0
+set flatten model -nodff_to_dlat_zero
+set flatten model -nodff_to_dlat_feedback
+set flatten model -hier_seq_merge
+// The netlist has clock gating cells (latch + AND): model them as flop enables
+set flatten model -gated_clock
+set system mode lec
+
+// Same comment as core_rtl2gate.do: analyze datapath needs Conformal_Ultra, which the school
+// does not have. GLS also checks function (make gls-core for the core).
+set compare effort high
+add compared points -all
+compare
+report verification > @@OUTDIR@@/lec_verification.rpt
+report unmapped points > @@OUTDIR@@/lec_unmapped.rpt
+report verification
+exit -force
