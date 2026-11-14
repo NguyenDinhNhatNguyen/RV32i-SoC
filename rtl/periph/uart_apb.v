@@ -117,7 +117,7 @@ module uart_apb #(
     wire [7:0] tx_dout;
     reg  [3:0] tx_bits;           // Bits left in the frame (0 = idle)
     reg  [3:0] tx_os;             // Tick counter inside 1 bit
-    reg  [8:0] tx_sh;             // {stop, d7..d0}, the start bit is sent directly
+    reg  [7:0] tx_sh;             // d7..d0, the start bit is sent directly, 1s shift in from the top (stop bit)
 
     wire tx_start = tick & (tx_bits == 4'd0) & tx_en & ~tx_empty;
     wire tx_bound = tick & (tx_bits != 4'd0) & (tx_os == 4'd15);
@@ -153,8 +153,8 @@ module uart_apb #(
 
     // The shift register has no reset: used only after it is loaded
     always @(posedge PCLK) begin
-        if (tx_start)      tx_sh <= {1'b1, tx_dout};
-        else if (tx_bound) tx_sh <= {1'b1, tx_sh[8:1]};
+        if (tx_start)      tx_sh <= tx_dout;
+        else if (tx_bound) tx_sh <= {1'b1, tx_sh[7:1]};
     end
 
     wire tx_busy = (tx_bits != 4'd0);
