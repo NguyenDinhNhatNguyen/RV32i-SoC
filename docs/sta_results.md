@@ -21,8 +21,9 @@ Chung cho mọi dòng: Genus 21.10, Tempus 23.14, cell chuẩn corner slow 0,9 V
 | 30/10 | Giữ flop cho LEC | 3663 / 115 | +2,071 | -0,147 (1080) | -25,261 | +7,022 | 53 408 | `appendix/synth_soc_keepflop/`, `appendix/sta_soc/` |
 | 31/10 | Mạng reset có buffer, cấm `CLKBUFX2`, giao cho PnR | 3663 / 115 | +2,392 | -0,147 (1081) | +18,292 | +0,006 | 53 889 | `appendix/synth_soc_reset/`, `appendix/sta_soc_reset/` |
 | 12/11 | Có DMA, SPI, PWM, I2C (commit `eced27a`), giao cho PnR | 4079 / 137 | +0,529 | -0,143 (1241) | +18,281 | +0,028 | 58 843 | `appendix/synth_soc_i2c/`, `appendix/sta_soc_i2c/` |
+| 14/11 | Netlist chính thức STA-04 (commit `e60437a`, bỏ bit hằng ở UART, SPI, I2C, core), Genus 9 ns, Tempus 10 ns, giao cho PnR | 4068 / 136 | +0,978 | -0,141 (1201) | +8,677 | +0,020 | 60 188 | `appendix/synth_soc_e60437a/`, `appendix/sta_soc_e60437a/` |
 
-Setup ở dòng 29/10 là số của Genus, các dòng sau là số của Tempus. Genus và Tempus chênh dưới 0,04 ns.
+Setup ở dòng 29/10 là số của Genus, các dòng sau là số của Tempus. Dòng 14/11 khác chu kỳ: Genus ở 9 ns, Tempus ở 10 ns (signoff, mục 5), nên recovery nhỏ hơn các dòng 20 ns. Genus và Tempus chênh dưới 0,04 ns.
 
 Ghi chú:
 - Đường găng setup: từ CLK của macro IMEM qua bộ cộng ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, đúng như dự đoán ở `docs/spec/core.md` mục 4.5.
@@ -69,8 +70,11 @@ Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), clock gating 
 | 12/11 | `spi_apb` | 682,6 | 58 | 5 | +9,624 | RTL-13 |
 | 12/11 | `pwm_apb` | 1 377,6 | 98 | 2 | +9,827 | RTL-13 |
 | 12/11 | `i2c_apb` | 882,7 | 69 | 7 | +9,890 | RTL-14, sau khi đưa `localparam` ra ngoài `generate` |
+| 14/11 | `uart_apb` | – | 223 | 28 | +9,320 | Commit `e60437a` (`tx_sh` 8 bit), Genus đọc được RTL mới |
+| 14/11 | `spi_apb` | – | 50 | 5 | +9,890 | Commit `e60437a` (`ctrl_div` 8 bit, bớt 8 flop) |
+| 14/11 | `i2c_apb` | – | 68 | 6 | +9,592 | Commit `e60437a` (`state` 3 bit, bớt 1 flop) |
 
-Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Ba khối 12/11 có report trong `appendix/synth_blocks/<khối>/`. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
+Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Ba khối 12/11 có report trong `appendix/synth_blocks/<khối>/`. Ba dòng 14/11 chưa chép report về nên chưa có diện tích. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
 
 ## 4. Quét chu kỳ trên Genus (STA-03, ở trường)
 
@@ -130,7 +134,8 @@ Ghi chú:
 - Hold không xấu đi khi siết chu kỳ: 1201 đường (mốc 12/11 là 1241). Đây là hold trước CTS, Innovus sửa sau CTS. Nhóm clock gating có 1 đường hold -0,006 ns, cũng do clock lý tưởng.
 - `check_timing`: no_drive 76 như 12/11. Unconstrained 278 = 272 chân `SE` (136 ICG) và 6 chân `RN`, ít hơn 298 của 12/11 vì netlist 9 ns có ít flop hằng hơn (mục 4).
 - Độ rộng xung của macro: `sram_2k_macro.lib` có `min_pulse_width` 0,45 ns, coverage báo 0 vi phạm PulseWidth, nên macro không chặn 9 ns.
-- Còn lại trước khi chốt: PnR thử ở 9 ns trên lõi 420 µm (PD-07) và Tempus sau layout ở 10 ns. Chu kỳ và cỡ lõi chốt cùng với PnR.
+- 14/11: Netlist chính thức trên RTL `e60437a` (Genus 9 ns) cho đúng các số trên: 4068 flop, 136 ICG, 0 DRV, Tempus 10 ns setup +0,978. Report Genus và Tempus giống hệt netlist p9, vì ở 9 ns Genus đã tự xóa các bit hằng mà RTL mới bỏ. Netlist ở `syn/out_soc/` trên server, đã giao cho PnR (`make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`), LEC-02 và GLS.
+- Còn lại trước khi chốt 100 MHz: Tempus sau layout ở 10 ns trên `pnr/out_soc_p9`.
 
 ### Có và không có clock gating (14/11, 9 ns)
 
