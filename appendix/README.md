@@ -14,6 +14,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `synth_soc_reset/`, `sta_soc_reset/` | Genus và Tempus `soc_top` ngày 31/10, mạng reset có buffer |
 | `synth_soc_i2c/`, `sta_soc_i2c/` | Genus và Tempus `soc_top` ngày 12/11, có DMA, SPI, PWM, I2C, netlist giao cho PnR |
 | `synth_soc_sweep_1411/` | Quét chu kỳ Genus `soc_top` ngày 14/11 trên RTL đủ DMA, SPI, PWM, I2C (STA-03): 10, 9, 5, 4,5 ns và `summary.md`. `p10`, `p9` có thêm `post_syn_design_lint.rpt` |
+| `synth_soc_cg0_p9/` | Genus `soc_top` không clock gating ở 9 ns (STA-04, 14/11), để so với `synth_soc_sweep_1411/p9` |
 | `sta_soc_p9/` | Tempus trước layout ngày 14/11 (STA-04): netlist 9 ns với SDC 9 ns và 10 ns, netlist 10 ns với SDC 10 ns, gộp ở `summary.txt` |
 | `sta_soc_u70/` | Tempus sau layout trên `pnr/out_soc_u70` (STA-05 chạy thử, 14/11), lõi 420 × 420,7 µm, 20 ns, kèm `tempus.log` |
 | `core_signoff/` | Genus, LEC và GLS cho core `rv32_core` (D-042) |

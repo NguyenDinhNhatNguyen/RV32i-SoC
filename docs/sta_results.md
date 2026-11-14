@@ -132,6 +132,36 @@ Ghi chú:
 - Độ rộng xung của macro: `sram_2k_macro.lib` có `min_pulse_width` 0,45 ns, coverage báo 0 vi phạm PulseWidth, nên macro không chặn 9 ns.
 - Còn lại trước khi chốt: PnR thử ở 9 ns trên lõi 420 µm (PD-07) và Tempus sau layout ở 10 ns. Chu kỳ và cỡ lõi chốt cùng với PnR.
 
+### Có và không có clock gating (14/11, 9 ns)
+
+Cùng RTL, cùng chu kỳ 9 ns, chỉ khác `CG`. CG=1 là netlist p9 của mục 4, CG=0 chạy riêng vào `syn/out_soc_cg0_p9` (không đụng `syn/out_soc`). Report CG=0 ở `appendix/synth_soc_cg0_p9/`. Cả hai lần: 0 lỗi Genus, 0 DRV, 4068 flop, 0 scan flop, 0 latch.
+
+| Chỉ số | CG=0 | CG=1 | Chênh lệch |
+| --- | --- | --- | --- |
+| WNS | +1,6 ps | +0,7 ps | Cả hai đạt |
+| Cell chuẩn (µm²) | 66 337 | 60 188 | **−9,3%** |
+| Logic (µm²) | 39 730 | 32 687 | −7 043 |
+| Flop (µm²) | 25 022 | 25 355 | +333 |
+| ICG | 0 | 136 (884 µm²) | |
+| Flop được gate | 0 | 3880/4068 (95,4%) | |
+
+Công suất Genus (mW), activity mặc định:
+
+| Nhóm | CG=0 | CG=1 | Chênh lệch |
+| --- | --- | --- | --- |
+| Flop | 1,400 | 0,361 | −74% |
+| Logic | 0,617 | 0,345 | −44% |
+| Clock (ICG) | 0 | 0,065 | |
+| Macro | 0,045 | 0,045 | Không đổi |
+| **Tổng** | **2,062** | **0,817** | **−60,4%** |
+
+Ghi chú:
+- Diện tích giảm vì flop có enable không cần mux hồi tiếp nữa: 136 ICG thay cho khoảng 3 900 mux.
+- Phần giảm lớn nhất là công suất internal của flop (1,361 xuống 0,347 mW), vì flop không nhận clock khi giữ giá trị. Leakage gần như không đổi (0,011 mW).
+- Trước CTS chưa có cây clock thật, nên công suất mạng clock chưa tính ở cả hai bản. Sau CTS clock gating còn tiết kiệm thêm phần cây clock phía sau ICG.
+- Số công suất chỉ để so CG=0 và CG=1. Công suất theo testcase là PWR-01.
+- Nếu chu kỳ chốt khác 9 ns thì chạy lại phép so này ở chu kỳ đó.
+
 ## 6. Sau layout (STA-05, ở trường)
 
 Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc_top_synth.sdc`). Corner RC typical, clock propagated.
