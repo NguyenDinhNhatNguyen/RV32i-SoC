@@ -1,0 +1,25 @@
+Unmapped point (not-mapped):
+  (G)   520  DFF  /penable_reg
+Unmapped point (unreachable: Gated-clock deglitching latch):
+  (R)   563  DLAT /RC_CG_HIER_INST0/RC_CGIC_INST/sttb_$U1/udp1/U$1/i0
+Unmapped point (unreachable: Gated-clock deglitching latch):
+  (R)   564  DLAT /RC_CG_HIER_INST1/RC_CGIC_INST/sttb_$U1/udp1/U$1/i0
+Unmapped point (unreachable: Gated-clock deglitching latch):
+  (R)   565  DLAT /RC_CG_HIER_INST2/RC_CGIC_INST/sttb_$U1/udp1/U$1/i0
+Unmapped point (unreachable: Gated-clock deglitching latch):
+  (R)   566  DLAT /RC_CG_HIER_INST3/RC_CGIC_INST/sttb_$U1/udp1/U$1/i0
+
+5 unmapped points reported
+================================================================================
+Golden:
+--------------------------------------------------------------------------------
+Unmapped points   DFF       Total   
+--------------------------------------------------------------------------------
+Not-mapped        1         1       
+================================================================================
+Revised:
+--------------------------------------------------------------------------------
+Unmapped points   DLAT      Total   
+--------------------------------------------------------------------------------
+Unreachable       4         4       
+================================================================================

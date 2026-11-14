@@ -7,6 +7,7 @@ Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_
 | `lec/soc_rtl2gate.do.in` | Mẫu dofile. Sửa ở đây, không sửa file sinh ra |
 | `lec/run_lec_soc.sh` | Kiểm tra đầu vào, sinh `lec/soc_rtl2gate.do`, chạy `lec`, in dòng kết quả |
 | `lec/soc_rtl2gate.do` | Dofile đã sinh, Conformal đọc file này |
+| `lec/apb_bridge_rtl2gate.do.in`, `lec/run_lec_apb_bridge.sh` | LEC riêng khối `apb_bridge` (mục 5) |
 | `appendix/lec_soc/` | Report văn bản của các lần chạy |
 
 ## 1. Flow hoạt động thế nào
@@ -142,26 +143,50 @@ Netlist `syn/out_soc/soc_top_netlist.v` ngày 12/11 (3 323 276 byte), tổng h�
 | Điểm | D trong netlist | Quan sát ở RTL |
 | --- | --- | --- |
 | `u_uart/tx_sh_reg[8]` | `ONE` (netlist: `.D (1'b1)`) | `uart_apb.v`: cả hai nhánh nạp (`tx_start`, `tx_bound`) đều đưa `1'b1` vào bit 8 |
-| `g_spi.u_spi/gen_spi.ctrl_div_reg[15:8]` (8 điểm) | `ZERO` | `spi_apb.v`: nạp `ctrl_div <= {8'd0, PWDATA[15:8]}`, reset về 0 |
-| `g_i2c.u_i2c/gen_i2c.state_reg[3]` | `ZERO` | `i2c_apb.v`: các trạng thái chỉ có giá trị 0 đến 6, bit 3 không bao giờ là 1. Chưa tra D trong netlist bằng grep |
-| `u_core/wb_cause_q_reg[4]` | `ZERO` | `rv32_core.v`: nguyên nhân chưa xác nhận, cần kiểm các mã cause (`rv32_defs.vh`, `rv32_csr.v`) |
+| `g_spi.u_spi/gen_spi.ctrl_div_reg[15:8]` (8 điểm) | `ZERO` (netlist: `.D (1'b0)` ở bit 15) | `spi_apb.v`: nạp `ctrl_div <= {8'd0, PWDATA[15:8]}`, reset về 0 |
+| `g_i2c.u_i2c/gen_i2c.state_reg[3]` | `ZERO` (netlist: `.D (1'b0)`) | `i2c_apb.v`: các trạng thái chỉ có giá trị 0 đến 6, bit 3 không bao giờ là 1 |
+| `u_core/wb_cause_q_reg[4]` | `ZERO` | `rv32_core.v`: `wb_cause_q` nhận mã exception (0 đến 7 và 11, `rv32_defs.vh`) hoặc mã interrupt (3, 7, 11, `RV_INT_*`), tất cả nhỏ hơn 16 nên bit 4 luôn bằng 0 |
 
 Với 3 trường hợp đầu, điểm chung là flop có mạch giữ giá trị nhưng giá trị nạp vào luôn là hằng số. Genus thay chân D bằng hằng số, còn RTL giữ nguyên MUX nên hai hàm D khác nhau. Chưa có bản sửa nào được merge. Một hướng sửa đang được kiểm chứng (thu hẹp thanh ghi bỏ các bit hằng số). Hướng này đòi hỏi tổng hợp lại, vì RTL mới không còn khớp netlist 12/11.
 
 ### 112 điểm Abort
 
-- 68 điểm trong `u_core/g_md.u_muldiv`: `p_hi_q_reg[47:15]` (33 bit) và `p_lo_q_reg[48:14]` (35 bit). Trùng với 68 Abort của lõi ở D-042.
+- 68 điểm trong `u_core/g_md.u_muldiv`: `p_hi_q_reg[47:15]` (33 bit) và `p_lo_q_reg[48:14]` (35 bit). Đây là hai tích riêng của bộ nhân có dấu 33x17 (`p_lo`, `p_hi` trong `rv32_muldiv.v`). Các bit thấp đã được chứng minh, chỉ các bit cao Abort. Trùng với 68 Abort của lõi ở D-042 (dofile cũng đã ở `compare effort high`). Cách giải quyết duy nhất là `analyze datapath`, cần license Conformal_Ultra mà trường không có. Chức năng khối nhân chia được kiểm bằng GLS (49/49 PASS rv32ui và rv32um, D-042).
 - 44 điểm trong `u_apb`: `st_reg[0]`, `psel_reg[8:0]`, `rsp_err_reg`, `rsp_rdata_reg[31:0]`, `rsp_valid_reg`.
 
-Chưa rõ nguyên nhân Abort của khối `u_apb`. Chưa thử tùy chọn nào để giảm Abort.
+Với `u_apb`, LEC riêng khối `apb_bridge` (mục 5) cho 0 Abort và 94/94 DFF Equivalent. Vì vậy Abort ở `soc_top` không do logic của khối mà do cone quá lớn khi so cả SoC. Chưa thử tùy chọn nào khác để giảm Abort.
 
 ### 206 điểm Unmapped
 
-- 69 DFF ở mỗi phía, cùng một tập: các flop rìa mảng PE của accelerator (`a_out_reg`, `b_out_reg`, `valid_out_reg` ở các `ROW[i].COL[j].u_pe`, và `done_reg`). Cả hai phía đều ghi `unreachable: all paths to outputs are blocked`.
-- 137 DLAT chỉ có ở netlist: latch của cell clock gating (`RC_CG_HIER_INST*`, `RC_CG_DECLONE_HIER_INST*`). Khớp với số cell clock gating trong netlist.
+- 69 DFF ở mỗi phía, cùng một tập: các flop rìa mảng PE của accelerator. Cả hai phía đều ghi `unreachable: all paths to outputs are blocked`. Số lượng khớp với `accelerator_top.v`:
+
+  | Flop | Vì sao không có tải | Số lượng |
+  | --- | --- | --- |
+  | `a_out_reg` của PE cột 3 | Đi ra `a_wire[i][4]`, không PE nào nhận | 4 hàng x 8 bit = 32 |
+  | `b_out_reg` của PE hàng 3 | Đi ra `b_wire[4][j]`, không PE nào nhận | 4 cột x 8 bit = 32 |
+  | `valid_out_reg` của PE cột 3 | Đi ra `v_wire[i][4]`, không ai nhận | 4 |
+  | `done` của `accelerator_top` | `accel_wrapper` không dùng `core_done`, tự đếm LAT | 1 |
+
+  RTL và netlist đều còn các flop này vì flow giữ mọi flop, kể cả flop không có tải (D-042). Đây là hệ quả của flow, không phải lỗi RTL.
+- 137 DLAT chỉ có ở netlist: latch của cell clock gating (`RC_CG_HIER_INST*`, `RC_CG_DECLONE_HIER_INST*`), lý do `Gated-clock deglitching latch`. Số 137 khớp 137 ICG trong `docs/sta_results.md` (12/11). Lần LEC lõi ở D-042 cũng có 58 latch ICG unreachable. Chức năng enable đã được `-gated_clock` mô hình thành enable của flop.
 - `report verification` ghi `Incomplete verification: 0`.
 
-## 5. Giới hạn
+## 5. LEC riêng khối `apb_bridge` (14/11)
+
+Chạy để kiểm tra 44 Abort của `u_apb` ở mục 4. Dùng `lec/apb_bridge_rtl2gate.do.in` (mẫu) và `lec/run_lec_apb_bridge.sh`, cùng lệnh với `lec/core_rtl2gate.do`, netlist khối `syn/out_blocks/apb_bridge/apb_bridge_netlist.v` (tổng hợp 30/10). Kết quả nằm ở `syn/out_apb_bridge_lec/reports/`.
+
+| | Số điểm |
+| --- | --- |
+| Equivalent | 183 (89 PO, 94 DFF) |
+| Non-equivalent | 1 (PO `penable`) |
+| Abort | 0 |
+| Unmapped | 5: `penable_reg` phía golden, 4 DLAT của ICG phía revised |
+
+- **Abort:** 94/94 DFF Equivalent, 0 Abort.
+- **PO `penable`:** netlist khối có 94 flop và không có `penable_reg`. Theo RTL, `penable` lên 1 khi `st` sang `ST_ACCESS` và xuống 0 khi `st` rời `ST_ACCESS` (`ST_ACCESS = 2'd2`), nên `penable` bằng `st[1]` ở mọi trạng thái đạt tới. Genus đã gộp hai flop này. Conformal chỉ so tổ hợp, không biết hai flop bằng nhau, nên báo PO `penable` khác. Đây là kết quả của việc ghép cặp, không phải lỗi chức năng. Ở LEC `soc_top` không có điểm này vì netlist SoC giữ flop.
+- Netlist khối là bản 30/10, cũ hơn `rtl/bus/soc_map.vh` (commit `b3c6518`, 11/11). Số bit `psel` trong netlist là 9, khớp `SOC_APB_N = 9`. Chưa tổng hợp lại khối để đối chiếu.
+
+## 6. Giới hạn
 
 - Không có `analyze datapath` (cần Conformal_Ultra), nên các khối nhân chia có thể Abort. GLS kiểm tra thêm về chức năng (`make gls-core` cho lõi).
 - Macro SRAM là hộp đen: LEC không kiểm tra bên trong macro.
