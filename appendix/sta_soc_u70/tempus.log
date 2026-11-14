@@ -1,0 +1,221 @@
+
+Cadence Tempus(TM) Timing Solution.
+Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+
+Version:	v23.14-s089_1, built Fri Mar 7 10:32:07 PST 2025
+Options:	-nowin -files ../scripts/sta_soc.tcl -log tempus.log 
+Date:		Sat Nov 14 13:41:56 2026
+Host:		asiclab (x86_64 w/Linux 3.10.0-1160.119.1.el7.x86_64) (2cores*70cpus*Intel(R) Xeon(R) Platinum 8260 CPU @ 2.40GHz 36608KB)
+OS:		CentOS Linux 7 (Core)
+
+License:
+		[13:41:56.444321] Configured Lic search path (23.02-s006): 5280@192.168.32.10
+
+		tpsxl	Tempus Timing Signoff Solution XL	23.1	checkout succeeded
+		16 CPU jobs allowed with the current license(s). Use set_multi_cpu_usage to set your required CPU count.
+Change the soft stacksize limit to 0.2%RAM (322 mbytes). Set global soft_stack_size_limit to change the value.
+environment variable TMPDIR is '/tmp/ssv_tmpdir_80111_497152c1-2c40-4272-a484-265786abfb3d_5Jhjc4'.
+#@ Processing -files option
+Sourcing tcl/tk file '../scripts/sta_soc.tcl' ...
+<CMD> read_view_definition /home/s23521043/RV32i-SoC/pnr/scripts/mmmc.view
+<CMD> read_verilog /home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top_pnr.v
+<CMD> set_top_module soc_top
+#% Begin Load MMMC data ... (date=11/14 13:42:24, mem=1435.1M)
+Number of views requested 1 are allowed with the current licenses... continuing with set_analysis_view.
+#% End Load MMMC data ... (date=11/14 13:42:24, total cpu=0:00:00.0, real=0:00:00.0, peak res=1436.3M, current mem=1436.3M)
+rc_typ
+Loading view definition file from /home/s23521043/RV32i-SoC/pnr/scripts/mmmc.view
+Reading libs_slow timing library '/home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.lib' ...
+**WARN: (TECHLIB-302):	No function defined for cell 'ANTENNA'. The cell will only be used for analysis. (File /home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.lib)
+Read 480 cells in library 'slow_vdd1v0' 
+Reading libs_slow timing library '/home/s23521043/PDK_GPDK45/lib/sram_2k_macro.lib' ...
+**WARN: (TECHLIB-302):	No function defined for cell 'sram_2k_macro'. The cell will only be used for analysis. (File /home/s23521043/PDK_GPDK45/lib/sram_2k_macro.lib)
+Read 1 cells in library 'sram_2k_macro_lib' 
+Reading libs_fast timing library '/home/s23521043/PDK_GPDK45/lib/fast_vdd1v0_basicCells.lib' ...
+**WARN: (TECHLIB-302):	No function defined for cell 'ANTENNA'. The cell will only be used for analysis. (File /home/s23521043/PDK_GPDK45/lib/fast_vdd1v0_basicCells.lib)
+Read 480 cells in library 'fast_vdd1v0' 
+*** End library_loading (cpu=0.03min, real=0.03min, mem=47.5M, fe_cpu=0.50min, fe_real=0.50min, fe_mem=1645.9M) ***
+#% Begin Load netlist data ... (date=11/14 13:42:26, mem=1444.7M)
+*** Begin netlist parsing (mem=1645.9M) ***
+Reading verilog netlist '/home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top_pnr.v'
+
+*** Memory Usage v#2 (Current mem = 1989.938M, initial mem = 828.398M) ***
+*** End netlist parsing (cpu=0:00:00.4, real=0:00:02.0, mem=1989.9M) ***
+#% End Load netlist data ... (date=11/14 13:42:28, total cpu=0:00:01.1, real=0:00:02.0, peak res=1586.3M, current mem=1576.4M)
+Set top cell to soc_top.
+Building hierarchical netlist for Cell soc_top ...
+***** UseNewTieNetMode *****.
+*** Netlist is unique.
+** info: there are 1109 modules.
+** info: there are 23760 stdCell insts.
+** info: there are 23752 stdCell insts with at least one signal pin.
+
+*** Memory Usage v#2 (Current mem = 2416.996M, initial mem = 828.398M) ***
+Set Default Input Pin Transition as 0.1 ps.
+/home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc
+Extraction setup Started for TopCell soc_top 
+Summary of Active RC-Corners : 
+ 
+ Analysis View: av_setup
+    RC-Corner Name        : rc_typ
+    RC-Corner Index       : 0
+    RC-Corner Temperature : 25 Celsius
+    RC-Corner Cap Table   : ''
+    RC-Corner PostRoute Res Factor        : 1
+    RC-Corner PostRoute Cap Factor        : 1
+    RC-Corner PostRoute XCap Factor       : 1
+ 
+ Analysis View: av_hold
+    RC-Corner Name        : rc_typ
+    RC-Corner Index       : 0
+    RC-Corner Temperature : 25 Celsius
+    RC-Corner Cap Table   : ''
+    RC-Corner PostRoute Res Factor        : 1
+    RC-Corner PostRoute Cap Factor        : 1
+    RC-Corner PostRoute XCap Factor       : 1
+Reading timing constraints file '/home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc' ...
+Current (total cpu=0:00:32.8, real=0:00:34.0, peak res=2294.8M, current mem=2294.8M)
+**WARN: (TCLCMD-1461):	Skipped unsupported command: set_units (File /home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc, Line 9).
+
+**WARN: (TCLCMD-1461):	Skipped unsupported command: set_units (File /home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc, Line 10).
+
+soc_top
+------------------------------------------------------------------------------------
+CONSTRAINT READING SUMMARY                                                          
+------------------------------------------------------------------------------------
+Constraint                                        | Success        | Fail           
+------------------------------------------------------------------------------------
+set_dont_use                                      | 46             | 0              
+set_clock_uncertainty                             | 2              | 0              
+get_lib_cells                                     | 46             | 0              
+set_input_transition                              | 37             | 0              
+set_units                                         | 2              | 0              
+current_design                                    | 3              | 0              
+get_ports                                         | 325            | 0              
+create_clock                                      | 1              | 0              
+::set_wire_load_mode                              | 1              | 0              
+get_clocks                                        | 218            | 0              
+set_load                                          | 71             | 0              
+set_input_delay                                   | 73             | 0              
+set_clock_gating_check                            | 1              | 0              
+set_output_delay                                  | 142            | 0              
+set_max_fanout                                    | 1              | 0              
+set_false_path                                    | 1              | 0              
+set_clock_transition                              | 1              | 0              
+set_max_transition                                | 1              | 0              
+------------------------------------------------------------------------------------
+INFO (CTE): Reading of timing constraints file /home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc completed, with 2 WARNING
+Ending "Constraint file reading stats" (total cpu=0:00:00.1, real=0:00:01.0, peak res=2329.0M, current mem=2329.0M)
+Current (total cpu=0:00:33.0, real=0:00:35.0, peak res=2329.0M, current mem=2329.0M)
+**WARN: (TA-976):	Path groups asserted by the group_path/set_path_adjust_group constraint are considered by the software to be global in nature - they cannot be restricted to specific constraint modes. Due to this restriction, the group_path/set_path_adjust_group constraint is not supported directly in the constraint files which are configured in mode-specific commands such as create_constraint_mode. The current group_path/set_path_adjust_group entry will be ignored. You can enter the group_path/set_path_adjust_group constraint interactively or as part of a general command script -  where it will be interpreted as global and will be in effect for all modes.
+Total number of combinational cells: 316
+Total number of sequential cells: 152
+Total number of tristate cells: 10
+Total number of level shifter cells: 0
+Total number of power gating cells: 0
+Total number of isolation cells: 0
+Total number of power switch cells: 0
+Total number of pulse generator cells: 0
+Total number of always on buffers: 0
+Total number of retention cells: 0
+Total number of physical cells: 0
+List of usable buffers: BUFX12 BUFX16 BUFX20 BUFX3 BUFX4 BUFX6 BUFX8 CLKBUFX12 CLKBUFX16 CLKBUFX20 CLKBUFX3 CLKBUFX4 CLKBUFX6 CLKBUFX8
+Total number of usable buffers: 14
+List of unusable buffers: BUFX2 CLKBUFX2
+Total number of unusable buffers: 2
+List of usable inverters: CLKINVX1 CLKINVX12 CLKINVX16 CLKINVX2 CLKINVX20 CLKINVX3 CLKINVX4 CLKINVX6 CLKINVX8 INVX1 INVX12 INVX16 INVX2 INVX20 INVX3 INVX4 INVX6 INVXL INVX8
+Total number of usable inverters: 19
+List of unusable inverters:
+Total number of unusable inverters: 0
+List of identified usable delay cells: DLY1X1 DLY1X4 DLY2X1 DLY2X4 DLY3X1 DLY3X4 DLY4X4 DLY4X1
+Total number of identified usable delay cells: 8
+List of identified unusable delay cells:
+Total number of identified unusable delay cells: 0
+<CMD> read_spef -rc_corner rc_typ /home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top.spef
+
+SPEF files for RC Corner rc_typ:
+Top-level spef file '/home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top.spef'.
+Start spef parsing (MEM=2788.64).
+The SPEF file, '/home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top.spef', has encountered the error/warning message(s) during its reading.
+**WARN: (SPEF-1152):	Net 'i2c_scl_i ( having pins i2c_scl_i )' is not fully specified as per its connectivity in design netlist. Missing ports have been added to the net using low RC values. The timing accuracy is not reliable for such nets.
+SPEF file /home/s23521043/RV32i-SoC/pnr/out_soc_u70/soc_top.spef.
+Number of Resistors     : 482534
+Number of Ground Caps   : 485853
+Number of Coupling Caps : 124356
+
+End spef parsing (MEM=2852.64 CPU=0:00:05.6 REAL=0:00:03.0).
+<CMD> all_constraint_modes -active
+func
+<CMD> set_interactive_constraint_modes [all_constraint_modes -active]
+<CMD> set_propagated_clock [all_clocks]
+<CMD> update_timing -full
+AAE_INFO: opIsDesignInPostRouteState() is 1
+AAE_INFO: deleting AAE DB in update_timing -full ...
+AAE DB initialization (MEM=2348.832031 CPU=0:00:00.0 REAL=0:00:00.0) 
+#################################################################################
+# Design Name: soc_top
+# Design Mode: 65nm
+# Analysis Mode: MMMC OCV 
+# Parasitics Mode: SPEF/RCDB 
+# Signoff Settings: SI Off 
+#################################################################################
+Start delay calculation (fullDC) (1 T). (MEM=2294.16)
+/home/s23521043/RV32i-SoC/syn/out_soc/soc_top_synth.sdc
+**WARN: (IMPMSMV-1810):	Net CTS_23, driver CTS_ccl_a_buf_00008/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[1].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_23, driver CTS_ccl_a_buf_00008/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[0].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_22, driver CTS_ccl_a_buf_00006/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[1].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_22, driver CTS_ccl_a_buf_00006/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_17, driver CTS_ccl_a_buf_00005/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[3].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_17, driver CTS_ccl_a_buf_00005/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[2].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_25, driver CTS_ccl_a_buf_00007/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[3].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net CTS_25, driver CTS_ccl_a_buf_00007/Y (cell CLKBUFX16) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[2].u_mac/CLK (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4168_u_imem_u_sram_u_arr_n_140, driver FE_OFC4168_u_imem_u_sram_u_arr_n_140/Y (cell CLKINVX6) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac/CEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4158_u_imem_u_sram_u_arr_n_141, driver FE_OFC5663_u_imem_u_sram_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[3].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4158_u_imem_u_sram_u_arr_n_141, driver FE_OFC5663_u_imem_u_sram_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[2].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4158_u_imem_u_sram_u_arr_n_141, driver FE_OFC5663_u_imem_u_sram_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[1].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4158_u_imem_u_sram_u_arr_n_141, driver FE_OFC5663_u_imem_u_sram_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4154_u_dmem_u_arr_n_185, driver FE_OFC4154_u_dmem_u_arr_n_185/Y (cell INVX4) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[2].u_mac/CEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4152_u_dmem_u_arr_n_184, driver FE_OFC4152_u_dmem_u_arr_n_184/Y (cell CLKINVX4) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[1].u_mac/CEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4150_u_dmem_u_arr_n_141, driver FE_OFC4150_u_dmem_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[3].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4150_u_dmem_u_arr_n_141, driver FE_OFC4150_u_dmem_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[2].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4150_u_dmem_u_arr_n_141, driver FE_OFC4150_u_dmem_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[1].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4150_u_dmem_u_arr_n_141, driver FE_OFC4150_u_dmem_u_arr_n_141/Y (cell CLKINVX20) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[0].u_mac/WEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (IMPMSMV-1810):	Net FE_OFN4148_u_dmem_u_arr_n_140, driver FE_OFC5665_u_dmem_u_arr_n_140/Y (cell CLKINVX8) voltage 0.9 does not match receiver u_dmem_u_arr_g_multi.g_bank[0].u_mac/CEN (cell sram_2k_macro) voltage 1 for view av_setup.
+**WARN: (EMS-62):	Message <IMPMSMV-1810> has exceeded the default message display limit of 20.
+To avoid this warning, increase the display limit per unique message by
+using the set_message -limit <number> command.
+The message limit can be removed by using the set_message -no_limit command.
+Note that setting a very large number using the set_message -limit command
+or removing the message limit using the set_message -no_limit command can
+significantly increase the log file size.
+To suppress a message, use the set_message -suppress command.
+End delay calculation. (MEM=2423.19 CPU=0:00:10.0 REAL=0:00:11.0)
+Begin loading slews from CTE ...
+Loading slews from CTE completed...
+End delay calculation (fullDC). (MEM=2421.39 CPU=0:00:11.1 REAL=0:00:12.0)
+<CMD> check_timing -verbose                         > $OUT/check_timing.rpt
+<CMD> report_analysis_coverage                      > $OUT/coverage.rpt
+<CMD> report_timing -check_type setup    -max_paths 10 > $OUT/setup.rpt
+<CMD> report_timing -check_type hold     -max_paths 10 > $OUT/hold.rpt
+<CMD> report_timing -check_type recovery -max_paths 10 > $OUT/recovery.rpt
+<CMD> report_timing -check_type removal  -max_paths 10 > $OUT/removal.rpt
+<CMD> report_constraint -all_violators > /home/s23521043/RV32i-SoC/sta/run_soc/spef_u70_chk/violators.rpt
+<CMD> report_analysis_summary                       > $OUT/analysis_summary.rpt
+<CMD> report_timing {*}$args -max_paths 1 -collection
+<CMD> report_timing {*}$args -max_paths 1 -collection
+<CMD> report_timing {*}$args -max_paths 1 -collection
+<CMD> report_timing {*}$args -max_paths 1 -collection
+<CMD> exit
+
+*** Memory Usage v#2 (Current mem = 3031.328M, initial mem = 828.398M) ***
+
+*** Summary of all messages that are not suppressed in this session:
+Severity  ID               Count  Summary                                  
+WARNING   IMPMSMV-1810      1232  Net %s, driver %s (cell %s) voltage %g d...
+WARNING   SPEF-1152            1  Net '%s' is not fully specified as per i...
+WARNING   TA-976               1  Path groups asserted by the group_path/s...
+WARNING   TCLCMD-1461          2  Skipped unsupported command: %s          
+WARNING   TECHLIB-302          3  No function defined for cell '%s'. The c...
+*** Message Summary: 1239 warning(s), 0 error(s)
+
+--- Ending "Tempus Timing Solution" (totcpu=0:00:56.4, real=0:00:56.0, mem=3031.3M) ---

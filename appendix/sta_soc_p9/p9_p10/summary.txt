@@ -1,0 +1,1 @@
+top=soc_top stage=pre setup_ns=0.978 hold_ns=-0.141 recovery_ns=8.677 removal_ns=0.020

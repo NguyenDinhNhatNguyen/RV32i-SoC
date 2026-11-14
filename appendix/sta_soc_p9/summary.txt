@@ -1,0 +1,6 @@
+== netlist p9 sdc p9
+top=soc_top stage=pre setup_ns=-0.022 hold_ns=-0.141 recovery_ns=7.677 removal_ns=0.020
+== netlist p9 sdc p10
+top=soc_top stage=pre setup_ns=0.978 hold_ns=-0.141 recovery_ns=8.677 removal_ns=0.020
+== netlist p10 sdc p10
+top=soc_top stage=pre setup_ns=-0.009 hold_ns=-0.143 recovery_ns=8.712 removal_ns=0.011

@@ -1,0 +1,1 @@
+top=soc_top stage=spef setup_ns=0.190 hold_ns=0.014 recovery_ns=17.817 removal_ns=0.033

@@ -27,7 +27,7 @@ Setup ở dòng 29/10 là số của Genus, các dòng sau là số của Tempus
 Ghi chú:
 - Đường găng setup: từ CLK của macro IMEM qua bộ cộng ALU (so sánh nhánh) tới `u_core.if_pc_q_reg[31]`, đúng như dự đoán ở `docs/spec/core.md` mục 4.5.
 - Mạng reset: Genus mặc định coi chân set/reset bất đồng bộ là ideal (`ideal_seq_async_pins`), nên ở lần 29/10 và 30/10 flop `u_rst_sync_q_reg` lái thẳng khoảng 3500 chân, recovery âm khoảng 25 ns. Từ 31/10, `soc.sdc` có `set_max_transition 0.5`, `set_max_fanout 32` và `synth_soc.tcl` đặt `ideal_seq_async_pins false`. Flop chỉ còn lái 7 cell đảo đầu cây buffer.
-- Removal 31/10 chỉ dư 6 ps (chân `RN` của `u_imem.rom_sel_q_reg`). 12/11 dư 28 ps (chân `RN` của một flop tag trong BTB). Sau route thử 12/11 (PD-04, Tempus) dư 29 ps, xem `docs/pnr_soc_status.md` mục 4. Kiểm lại trên layout chính thức (STA-05).
+- Removal 31/10 chỉ dư 6 ps (chân `RN` của `u_imem.rom_sel_q_reg`). 12/11 dư 28 ps (chân `RN` của một flop tag trong BTB). Sau route thử 12/11 (PD-04, Tempus) dư 29 ps, xem `docs/pnr_soc_status.md` mục 4. Layout thử u70 ngày 14/11 dư 33 ps (mục 6). Kiểm lại trên layout chính thức (STA-05).
 - 12/11: setup còn +0,529 ns (31/10 là +2,392), cùng đường găng IMEM → ALU → `if_pc_q_reg[31]`. Ở 20 ns Genus chỉ tối ưu tới khi đạt, nên số này không cho biết F_max. F_max phải quét lại (mục 4) sau RTL freeze. Sau route thử 12/11 ở 20 ns, setup chỉ còn +0,007 ns (Tempus) và −0,027 ns (Innovus), nên STA-04 tổng hợp ở chu kỳ chặt hơn để layout còn biên.
 - 12/11: 3881/4079 flop (95,2%) qua clock gating. Genus báo 0 vi phạm max_transition, max_capacitance, max_fanout, 0 assign, 0 `CLKBUFX2`.
 - Hold vi phạm ở chân `CEN` của macro IMEM và các cặp flop nối thẳng, vì trước CTS clock còn lý tưởng. Innovus sửa bằng `optDesign -postCTS -hold`.
@@ -96,4 +96,52 @@ Từ 20 tới 6 ns là netlist 29–30/10 (trước khi giữ flop). 5 và 4 ns 
 Kết luận:
 - **F_max sau tổng hợp khoảng 200 MHz.** Đường găng luôn nằm trong lõi, từ macro qua so sánh nhánh tới `if_pc_q`.
 - Diện tích tăng chậm tới 10 ns (+0,46%), rồi tăng nhanh: +5,5% ở 5 ns, +10,9% ở 4 ns. Tần số chốt ở STA-04 nên để dư nhiều so với 200 MHz.
-- Còn lại: quét lại trên RTL đã freeze sau review 8/11 (có SPI, PWM, DMA và BTB 8 entry), chạy Tempus ở chu kỳ chọn.
+- Quét lại trên RTL đầy đủ (đã hoàn thành 14/11), xem bảng dưới. Tempus ở chu kỳ chọn: mục 5.
+
+### Quét lại 14/11 trên RTL đầy đủ
+
+Netlist cùng RTL với dòng 12/11 ở mục 1 (DMA, SPI, PWM, I2C, BTB 8 entry). `make synth-soc-sweep PERIODS="10 9 5 4.5"`. Report ở `appendix/synth_soc_sweep_1411/`. Cả bốn chu kỳ có 0 lỗi trong log Genus, 0 vi phạm max_transition, max_capacitance, max_fanout.
+
+| Chu kỳ (ns) | Tần số (MHz) | WNS | Flop / ICG | Cell chuẩn (µm²) | Gồm macro (µm²) | Đường găng |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | 100 | +3,7 ps | 4079 / 137 | 59 624 | 123 624 | IMEM → `if_pc_q` |
+| 9 | 111 | +0,7 ps | 4068 / 136 | 60 188 | 124 187 | `u_muldiv` → `wb_result_q` |
+| 5 | 200 | 0 (0 đường vi phạm) | 4068 / 136 | 65 708 | 129 708 | IMEM → `if_pc_q` |
+| 4,5 | 222 | -0,208 ns | 4068 / 136 | 70 722 | 134 722 | IMEM → chân `CEN` của macro IMEM |
+
+Kết luận:
+- **F_max sau tổng hợp vẫn khoảng 200 MHz** trên RTL đầy đủ, như lần 31/10.
+- Cell chuẩn ở 9 ns tăng 0,95% so với 10 ns và 2,3% so với 58 843 µm² ở 20 ns (12/11).
+- Từ 9 ns trở xuống Genus xóa thêm khoảng 10 flop có đầu vào hằng mà ở 10 ns còn giữ: số chân tuần tự nối hằng trong `post_syn_design_lint.rpt` giảm từ 12 xuống 2, số clock gating giảm 1. Chức năng không đổi, nhưng LEC trên netlist 9 ns phải chấp nhận các flop hằng đã bị xóa.
+
+## 5. Chọn chu kỳ (STA-04, ở trường, chưa chốt)
+
+Phương án đang xét: tổng hợp và PnR ở 9 ns, signoff Tempus ở 10 ns (100 MHz). Netlist tổng hợp ở chu kỳ chặt hơn để layout còn biên khi có delay dây và skew clock. Ngày 14/11 chạy Tempus trước layout (clock lý tưởng) trên netlist của mục 4. Report ở `appendix/sta_soc_p9/`.
+
+| Netlist | SDC | Setup WNS (số đường vi phạm) | Hold WNS (số đường) | Recovery | Removal |
+| --- | --- | --- | --- | --- | --- |
+| 9 ns | 9 ns | -0,022 (31) | -0,141 (1201) | +7,677 | +0,020 |
+| 9 ns | 10 ns | **+0,978 (0)** | -0,141 (1201) | +8,677 | +0,020 |
+| 10 ns | 10 ns | -0,009 (1) | -0,143 (1222) | +8,712 | +0,011 |
+
+Ghi chú:
+- Netlist 9 ns đem kiểm ở 10 ns dư gần 1 ns setup. Netlist 10 ns ở 10 ns đã âm 9 ps ngay trước PnR. Đường găng vẫn là IMEM → `if_pc_q`.
+- Tempus bi quan hơn Genus khoảng 0,02 ns ở cùng chu kỳ, cùng mức chênh như mục 1.
+- Hold không xấu đi khi siết chu kỳ: 1201 đường (mốc 12/11 là 1241). Đây là hold trước CTS, Innovus sửa sau CTS. Nhóm clock gating có 1 đường hold -0,006 ns, cũng do clock lý tưởng.
+- `check_timing`: no_drive 76 như 12/11. Unconstrained 278 = 272 chân `SE` (136 ICG) và 6 chân `RN`, ít hơn 298 của 12/11 vì netlist 9 ns có ít flop hằng hơn (mục 4).
+- Độ rộng xung của macro: `sram_2k_macro.lib` có `min_pulse_width` 0,45 ns, coverage báo 0 vi phạm PulseWidth, nên macro không chặn 9 ns.
+- Còn lại trước khi chốt: PnR thử ở 9 ns trên lõi 420 µm (PD-07) và Tempus sau layout ở 10 ns. Chu kỳ và cỡ lõi chốt cùng với PnR.
+
+## 6. Sau layout (STA-05, ở trường)
+
+Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc_top_synth.sdc`). Corner RC typical, clock propagated.
+
+| Ngày | Layout | Chu kỳ | Setup | Hold | Recovery | Removal | Report gốc |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 14/11 | `pnr/out_soc_u70`, lõi 420 × 420,7 µm (PD-07, netlist 12/11) | 20 ns | +0,190 | +0,014 | +17,817 | +0,033 | `appendix/sta_soc_u70/` |
+
+Ghi chú:
+- Đây là lần chạy thử, chưa phải layout chính thức. Số của Tempus lệch Innovus dưới 0,03 ns. Coverage: 0 vi phạm hold, unconstrained 298 như trước layout.
+- Đường găng setup vẫn là IMEM → `if_pc_q_reg[31]`. Removal xấu nhất ở chân `RN` của `minstret_q_reg[38]` trong CSR.
+- Tempus báo `SPEF-1152` ở net `i2c_scl_i`: net này trong SPEF thiếu kết nối so với netlist, Tempus nối phần thiếu bằng RC rất nhỏ. Chỉ ảnh hưởng đường vào I2C (đi qua bộ đồng bộ). Báo phía PnR kiểm lại pin của port này.
+- Không chạy được trên `pnr/out_soc` (lõi 405 µm) vì `soc_top_pnr.v` đã bị xóa khi chạy lại ngày 13/11.
