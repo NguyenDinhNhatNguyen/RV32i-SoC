@@ -96,6 +96,7 @@ Với `nohup`, đóng terminal không làm dừng lệnh. Server dùng chung nê
 | `MACRO_MODE` | `undef` | `undef`: `set undefined cell black_box`. `lib` và `verilog`: `read library -both -append -liberty` hoặc `-verilog` cho macro, chưa thử |
 | `THREADS` | tắt | Thêm `set parallel option -threads N` trước `compare`. Cú pháp lấy từ `help`, chưa biết có cần license và có nhanh hơn không |
 | `ONE_LINE` | `0` | `1`: viết `read design -golden` trên một dòng dài như `core_rtl2gate.do` |
+| `SEQ_FEEDBACK` | `0` | `1`: thêm `set flatten model -seq_constant_feedback` sau các tùy chọn flatten khác, cho các flop hằng có mux giữ giá trị (11 điểm Non-equivalent ở mục 4). Chưa thử trên server |
 | `DRY_RUN` | `0` | `1`: chỉ sinh dofile, không chạy `lec` |
 
 Ví dụ: `LEC_DIR=syn/out_soc_lec2 THREADS=4 nohup bash lec/run_lec_soc.sh > ~/lec_soc_run2.txt 2>&1 &`
@@ -110,7 +111,7 @@ Ví dụ: `LEC_DIR=syn/out_soc_lec2 THREADS=4 nohup bash lec/run_lec_soc.sh > ~/
 | `lec_abort.rpt` | Từng điểm Abort |
 | `lec_unmapped.rpt` | Điểm không ghép cặp được và lý do |
 
-Chỉ chép report văn bản vào `appendix/lec_soc/`. Không đưa netlist, SDF, SPEF, GDS, `.lib`, `.lef` lên repo (`.gitignore` chặn các loại này, và không dùng `git add -f`). Thư mục `syn/out_soc_lec*/` chứa bản chép netlist nên không add. Không chạy `make synth-soc` hay `make synth-soc-sweep` để làm LEC, vì chúng ghi đè `syn/out_soc`.
+Chỉ chép report văn bản vào `appendix/lec_soc/`. Không đưa netlist, SDF, SPEF, GDS, `.lib`, `.lef` lên repo (`.gitignore` chặn các loại này, và không dùng `git add -f`). Thư mục `syn/out_soc_lec*/` chứa bản chép netlist nên không add. Không chạy `make synth-soc` để làm LEC, vì lệnh này ghi đè `syn/out_soc`. `make synth-soc-sweep` chỉ ghi vào `syn/out_soc_sweep/`, netlist ở đó dùng được với `SRC_DIR`.
 
 ## 3. Cách đọc kết quả
 

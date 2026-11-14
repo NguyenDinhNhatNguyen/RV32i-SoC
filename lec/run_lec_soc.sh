@@ -17,6 +17,9 @@
 #                             verilog  read library -append -verilog sram_2k_macro.v (not tried)
 #   THREADS=N                 add "set parallel option -threads N" before compare (syntax from
 #                             help on the server, effect and licence not tried). Not set by default
+#   SEQ_FEEDBACK=1            add "set flatten model -seq_constant_feedback" after the other
+#                             flatten options, for flops that only reload their reset constant
+#                             (the 11 Non-equivalent points of docs/lec_soc.md 4). Not tried yet
 #   DRY_RUN=1                 only check the inputs and write the dofile, do not start lec
 #
 # The script stops before lec while a TODO_MACRO marker is in the dofile template.
@@ -30,6 +33,7 @@ LEC_DIR=${LEC_DIR:-syn/out_soc_lec}
 ONE_LINE=${ONE_LINE:-0}
 MACRO_MODE=${MACRO_MODE:-undef}
 DRY_RUN=${DRY_RUN:-0}
+SEQ_FEEDBACK=${SEQ_FEEDBACK:-0}
 NETLIST_SRC=$SRC_DIR/soc_top_netlist.v
 TEMPLATE=lec/soc_rtl2gate.do.in
 DO=lec/soc_rtl2gate.do
@@ -105,9 +109,17 @@ if [ -n "${THREADS:-}" ]; then
     echo "set parallel option -threads $THREADS" > "$tmp_par"
 fi
 
+# Optional flatten option for constant flops with a hold mux (see the template)
+tmp_seq=$(mktemp)
+case "$SEQ_FEEDBACK" in
+    1) echo "set flatten model -seq_constant_feedback" > "$tmp_seq" ;;
+    0) ;;
+    *) die "SEQ_FEEDBACK must be 0 or 1" ;;
+esac
+
 # Macro declaration, written before read design (see the template)
 tmp_macro=$(mktemp)
-trap 'rm -f "$tmp_reads" "$tmp_macro" "$tmp_par"' EXIT
+trap 'rm -f "$tmp_reads" "$tmp_macro" "$tmp_par" "$tmp_seq"' EXIT
 case "$MACRO_MODE" in
     lib)     echo "read library -both -append -liberty ~/PDK_GPDK45/lib/sram_2k_macro.lib" > "$tmp_macro" ;;
     verilog) echo "read library -both -append -verilog ~/PDK_GPDK45/lib/sram_2k_macro.v" > "$tmp_macro" ;;
@@ -122,8 +134,10 @@ sed -e "s|@@NETLIST@@|$LEC_DIR/soc_top_netlist.v|g" \
     -e "/^\/\/ @@MACRO@@\$/{r $tmp_macro" \
     -e "d}" \
     -e "/^\/\/ @@PARALLEL@@\$/{r $tmp_par" \
+    -e "d}" \
+    -e "/^\/\/ @@SEQ_FEEDBACK@@\$/{r $tmp_seq" \
     -e "d}" "$TEMPLATE" > "$DO"
-echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off})"
+echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off}, SEQ_FEEDBACK=$SEQ_FEEDBACK)"
 
 if grep -q 'TODO_MACRO' "$DO"; then
     echo "STOP: a TODO_MACRO marker is still in the dofile, lec was not started."
