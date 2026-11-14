@@ -1,0 +1,31 @@
+// apb_bridge_rtl2gate.do.in - block-level LEC of apb_bridge: RTL against the Genus block netlist.
+// Template: lec/run_lec_apb_bridge.sh fills @@NETLIST@@ and @@OUTDIR@@ and writes lec/apb_bridge_rtl2gate.do.
+// Same commands as lec/core_rtl2gate.do (D-042). Purpose: check whether the 44 aborted points of
+// apb_bridge in the soc_top LEC (LEC-01) are proven when the block is compared alone.
+
+set dofile abort off
+
+read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+// Search path for `include "soc_map.vh" (Conformal 24.1 rejects -incdir in read design)
+add search path rtl/bus -design -golden
+read design -golden -verilog rtl/bus/apb_bridge.v
+read design -revised -verilog @@NETLIST@@
+set root module apb_bridge -both
+
+set flatten model -seq_constant
+set flatten model -seq_constant_x_to 0
+set flatten model -nodff_to_dlat_zero
+set flatten model -nodff_to_dlat_feedback
+set flatten model -hier_seq_merge
+set flatten model -gated_clock
+set system mode lec
+
+set compare effort high
+add compared points -all
+compare
+report compare data -class nonequivalent -verbose > @@OUTDIR@@/lec_noneq.rpt
+report compare data -class abort > @@OUTDIR@@/lec_abort.rpt
+report verification > @@OUTDIR@@/lec_verification.rpt
+report unmapped points > @@OUTDIR@@/lec_unmapped.rpt
+report verification
+exit -force

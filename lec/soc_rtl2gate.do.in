@@ -1,0 +1,64 @@
+// soc_rtl2gate.do.in - template of the LEC dofile for soc_top: RTL against the Genus netlist (LEC-01).
+// Do not run this file directly. lec/run_lec_soc.sh fills the @@...@@ markers and writes
+// lec/soc_rtl2gate.do, which is the file Conformal reads. Edit this template, not the generated file.
+// Every command below comes from lec/core_rtl2gate.do (D-042, run on the server 30/10) or
+// lec/accel_rtl2gate.do, except the SRAM macro block, which is chosen by MACRO_MODE
+// in run_lec_soc.sh and has not been run on the server yet.
+// Run on the school server, from the repo root: bash lec/run_lec_soc.sh
+//
+// Both sides have the same top module name (soc_top) with the default parameters, as in synth_soc.tcl.
+
+// Skip any failing command (for example a missing license) and keep going
+set dofile abort off
+
+read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+
+// SRAM macro (8 instances of sram_2k_macro), docs/macro_notes.md 3.3: the macro is a black box on
+// both sides. It must be declared BEFORE read design: the 13/11 check run on the server showed
+// read design failing with "Module 'sram_2k_macro' is referenced but not defined", and add black
+// box after read design then found no design ("Golden does not exist").
+// 13/11 results on the server: set undefined cell black_box (MACRO_MODE=undef) lets both read
+// design commands succeed. A read library of the macro without -append failed with
+// "Library for golden design already exists". The undef mode black-boxes ANY undefined module, so
+// the report black box line below must list sram_2k_macro and nothing else.
+// @@MACRO@@
+
+// Search paths for `include (rv32_defs.vh, boot_rom_init.vh). Conformal 24.1 rejects -incdir
+// in read design, so use add search path (same fix as D-042)
+add search path rtl/core -design -golden
+add search path rtl/bus  -design -golden
+add search path rtl/mem  -design -golden
+
+// Golden side: the same file set as synth_soc.tcl (rtl/core/rv32_*.v, rtl/bus, rtl/mem,
+// rtl/periph, and the four rtl/accel files)
+// @@RTL_READ@@
+
+// Revised side: the Genus netlist of soc_top
+read design -revised -verilog @@NETLIST@@
+set root module soc_top -both
+// Black boxes of both sides. The list must show sram_2k_macro and nothing else
+report black box -both
+
+// Same flatten options as core_rtl2gate.do
+set flatten model -seq_constant
+set flatten model -seq_constant_x_to 0
+set flatten model -nodff_to_dlat_zero
+set flatten model -nodff_to_dlat_feedback
+set flatten model -hier_seq_merge
+// The netlist has clock gating cells (latch + AND): model them as flop enables
+set flatten model -gated_clock
+set system mode lec
+// @@PARALLEL@@
+
+// Same comment as core_rtl2gate.do: analyze datapath needs Conformal_Ultra, which the school
+// does not have. GLS also checks function (make gls-core for the core).
+set compare effort high
+add compared points -all
+compare
+// Syntax of report compare data confirmed with help on the server (Setup / LEC mode)
+report compare data -class nonequivalent -verbose > @@OUTDIR@@/lec_noneq.rpt
+report compare data -class abort > @@OUTDIR@@/lec_abort.rpt
+report verification > @@OUTDIR@@/lec_verification.rpt
+report unmapped points > @@OUTDIR@@/lec_unmapped.rpt
+report verification
+exit -force
