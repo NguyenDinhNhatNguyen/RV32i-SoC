@@ -48,12 +48,16 @@ set flatten model -hier_seq_merge
 // The netlist has clock gating cells (latch + AND): model them as flop enables
 set flatten model -gated_clock
 set system mode lec
+// @@PARALLEL@@
 
 // Same comment as core_rtl2gate.do: analyze datapath needs Conformal_Ultra, which the school
 // does not have. GLS also checks function (make gls-core for the core).
 set compare effort high
 add compared points -all
 compare
+// Syntax of report compare data confirmed with help on the server (Setup / LEC mode)
+report compare data -class nonequivalent -verbose > @@OUTDIR@@/lec_noneq.rpt
+report compare data -class abort > @@OUTDIR@@/lec_abort.rpt
 report verification > @@OUTDIR@@/lec_verification.rpt
 report unmapped points > @@OUTDIR@@/lec_unmapped.rpt
 report verification

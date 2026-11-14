@@ -15,6 +15,8 @@
 #                                      check run, but it hides ANY undefined module
 #                             lib      read library -append -liberty sram_2k_macro.lib (not tried)
 #                             verilog  read library -append -verilog sram_2k_macro.v (not tried)
+#   THREADS=N                 add "set parallel option -threads N" before compare (syntax from
+#                             help on the server, effect and licence not tried). Not set by default
 #   DRY_RUN=1                 only check the inputs and write the dofile, do not start lec
 #
 # The script stops before lec while a TODO_MACRO marker is in the dofile template.
@@ -94,9 +96,18 @@ else
     echo " $1" >> "$tmp_reads"
 fi
 
+# Optional parallel option, written before compare (see the template)
+tmp_par=$(mktemp)
+if [ -n "${THREADS:-}" ]; then
+    case "$THREADS" in
+        ''|*[!0-9]*) die "THREADS must be a number" ;;
+    esac
+    echo "set parallel option -threads $THREADS" > "$tmp_par"
+fi
+
 # Macro declaration, written before read design (see the template)
 tmp_macro=$(mktemp)
-trap 'rm -f "$tmp_reads" "$tmp_macro"' EXIT
+trap 'rm -f "$tmp_reads" "$tmp_macro" "$tmp_par"' EXIT
 case "$MACRO_MODE" in
     lib)     echo "read library -both -append -liberty ~/PDK_GPDK45/lib/sram_2k_macro.lib" > "$tmp_macro" ;;
     verilog) echo "read library -both -append -verilog ~/PDK_GPDK45/lib/sram_2k_macro.v" > "$tmp_macro" ;;
@@ -109,8 +120,10 @@ sed -e "s|@@NETLIST@@|$LEC_DIR/soc_top_netlist.v|g" \
     -e "/@@RTL_READ@@/{r $tmp_reads" \
     -e "d}" \
     -e "/^\/\/ @@MACRO@@\$/{r $tmp_macro" \
+    -e "d}" \
+    -e "/^\/\/ @@PARALLEL@@\$/{r $tmp_par" \
     -e "d}" "$TEMPLATE" > "$DO"
-echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE)"
+echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off})"
 
 if grep -q 'TODO_MACRO' "$DO"; then
     echo "STOP: a TODO_MACRO marker is still in the dofile, lec was not started."

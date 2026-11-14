@@ -1,0 +1,99 @@
+Compared points are: Non-equivalent (reachable)
+  (G) + 118   DFF  /u_core/wb_cause_q_reg[4]
+  (R) + 3905  DFF  /u_core_wb_cause_q_reg[4]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 18752 MUX  /u_core/U$55/U$5
+  (R) + 9242  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 2571  DFF  /u_uart/tx_sh_reg[8]
+  (R) + 1140  DFF  /u_uart_tx_sh_reg[8]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 41195 MUX  /u_uart/U$53/U$9
+  (R) + 9244  ONE  /ONE
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3990  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[15]
+  (R) + 3599  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[15]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58180 MUX  /g_spi.u_spi/U$73/U$16
+  (R) + 9241  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3991  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[14]
+  (R) + 3598  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[14]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58179 MUX  /g_spi.u_spi/U$73/U$15
+  (R) + 9240  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3992  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[13]
+  (R) + 3597  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[13]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58178 MUX  /g_spi.u_spi/U$73/U$14
+  (R) + 9239  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3993  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[12]
+  (R) + 3596  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[12]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58177 MUX  /g_spi.u_spi/U$73/U$13
+  (R) + 9238  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3994  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[11]
+  (R) + 3595  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[11]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58176 MUX  /g_spi.u_spi/U$73/U$12
+  (R) + 9237  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3995  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[10]
+  (R) + 3594  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[10]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58175 MUX  /g_spi.u_spi/U$73/U$11
+  (R) + 9236  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3996  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[9]
+  (R) + 3593  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[9]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58174 MUX  /g_spi.u_spi/U$73/U$10
+  (R) + 9235  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 3997  DFF  /g_spi.u_spi/gen_spi.ctrl_div_reg[8]
+  (R) + 3592  DFF  /g_spi.u_spi_gen_spi.ctrl_div_reg[8]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58173 MUX  /g_spi.u_spi/U$73/U$9
+  (R) + 9234  ZERO /ZERO
+
+Compared points are: Non-equivalent (reachable)
+  (G) + 4146  DFF  /g_i2c.u_i2c/gen_i2c.state_reg[3]
+  (R) + 3507  DFF  /g_i2c.u_i2c_gen_i2c.state_reg[3]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 59535 MUX  /g_i2c.u_i2c/U$44/U$4
+  (R) + 9233  ZERO /ZERO
+
+11 Non-equivalent point(s) reported
+11 compared point(s) reported
+================================================================================
+Compared points      PO     DFF    BBOX      Total   
+--------------------------------------------------------------------------------
+Equivalent           71     3887   8         3966    
+--------------------------------------------------------------------------------
+Non-equivalent       0      11     0         11      
+--------------------------------------------------------------------------------
+Abort                0      112    0         112     
+================================================================================
