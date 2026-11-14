@@ -24,13 +24,13 @@ module i2c_apb #(
 
     // FSM states. Declared outside generate, because Genus reads Verilog-2001 and rejects a
     // localparam inside a generate block (VLOGPT-9)
-    localparam [3:0] IDLE  = 4'd0,
-                     START = 4'd1,
-                     WRITE = 4'd2,
-                     READ  = 4'd3,
-                     ACK_W = 4'd4,
-                     ACK_R = 4'd5,
-                     STOP  = 4'd6;
+    localparam [2:0] IDLE  = 3'd0,
+                     START = 3'd1,
+                     WRITE = 3'd2,
+                     READ  = 3'd3,
+                     ACK_W = 3'd4,
+                     ACK_R = 3'd5,
+                     STOP  = 3'd6;
 
     generate
         if (ENABLE_I2C) begin : gen_i2c
@@ -79,7 +79,7 @@ module i2c_apb #(
                 end
             end
 
-            reg [3:0]  state;
+            reg [2:0]  state;          // 7 states fit in 3 bits
             reg [15:0] clk_cnt;
             reg [1:0]  tick_cnt; 
             reg [2:0]  bit_cnt;

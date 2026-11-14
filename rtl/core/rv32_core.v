@@ -491,7 +491,7 @@ module rv32_core #(
     reg         wb_mem_q;         // Request issued, waiting for the response
     reg         wb_exc_q;         // Exception from EX or interrupted
     reg         wb_int_q;         // Interrupted (mcause bit 31)
-    reg  [4:0]  wb_cause_q;
+    reg  [3:0]  wb_cause_q;       // Every cause code used here is < 16, bit 4 is always 0
     reg         wb_csr_q;
     reg         wb_csr_we_q;
     reg         wb_mret_q;
@@ -522,7 +522,7 @@ module rv32_core #(
             wb_addr_lo_q <= 2'b00;
             wb_exc_q     <= 1'b0;
             wb_int_q     <= 1'b0;
-            wb_cause_q   <= 5'd0;
+            wb_cause_q   <= 4'd0;
             wb_csr_q     <= 1'b0;
             wb_csr_we_q  <= 1'b0;
             wb_mret_q    <= 1'b0;
@@ -540,7 +540,7 @@ module rv32_core #(
             wb_addr_lo_q <= ex_alu_res[1:0];
             wb_exc_q     <= ex_trap;
             wb_int_q     <= ex_irq;
-            wb_cause_q   <= ex_irq ? csr_irq_cause : ex_cause;
+            wb_cause_q   <= ex_irq ? csr_irq_cause[3:0] : ex_cause[3:0];
             wb_csr_q     <= ex_csr & ~ex_trap;
             wb_csr_we_q  <= ex_csr_we;
             wb_mret_q    <= ex_mret & ~ex_trap;
@@ -550,6 +550,9 @@ module rv32_core #(
     end
 
     assign wb_wait = wb_valid_q & wb_mem_q & ~d_rsp_valid_i;
+
+    // Bit 4 of the cause codes is always 0 (wb_cause_q keeps bits [3:0] only)
+    wire unused_cause_ok = &{1'b0, csr_irq_cause[4], ex_cause[4]};
 
     // The instruction leaves WB this cycle, retiring or trapping (tb_core traces
     // from here).
@@ -565,7 +568,7 @@ module rv32_core #(
 
     always @(*) begin
         if (wb_exc_q)
-            wb_trap_cause = wb_cause_q;
+            wb_trap_cause = {1'b0, wb_cause_q};
         else
             wb_trap_cause = wb_load_q ? `RV_EXC_LOAD_ACCESS : `RV_EXC_STORE_ACCESS;
     end

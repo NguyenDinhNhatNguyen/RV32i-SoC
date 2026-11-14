@@ -23,7 +23,7 @@ module spi_apb #(
     generate
         if (ENABLE_SPI) begin : gen_spi
             reg [7:0]  tx_data, rx_data;
-            reg [15:0] ctrl_div;
+            reg [7:0]  ctrl_div;       // Only 8 bits are writable, the counter uses {8'd0, ctrl_div}
             reg        ctrl_cpha, ctrl_cpol, ctrl_cs_n;
             
             // FSM & Counters
@@ -49,12 +49,12 @@ module spi_apb #(
             // Handle register write (APB Write)
             always @(posedge PCLK or negedge PRESETn) begin
                 if (!PRESETn) begin
-                    ctrl_div  <= 16'd0;
+                    ctrl_div  <= 8'd0;
                     ctrl_cpha <= 1'b0;
                     ctrl_cpol <= 1'b0;
                     ctrl_cs_n <= 1'b1; // Default unselected Slave (Active-Low)
                 end else if (wr_ctrl) begin
-                    ctrl_div  <= {8'd0, PWDATA[15:8]};
+                    ctrl_div  <= PWDATA[15:8];
                     ctrl_cpha <= PWDATA[2];
                     ctrl_cpol <= PWDATA[1];
                     ctrl_cs_n <= PWDATA[0];
@@ -79,13 +79,13 @@ module spi_apb #(
                             tx_data <= PWDATA[7:0];
                             mosi_reg <= PWDATA[7];  // MSB is ready before the first edge
                             busy    <= 1'b1;
-                            clk_cnt <= ctrl_div;
+                            clk_cnt <= {8'd0, ctrl_div};
                             bit_cnt <= 3'd7;      // MSB first
                             phase   <= 1'b0;
                         end
                     end else begin
                         if (clk_cnt == 16'd0) begin
-                            clk_cnt <= ctrl_div;
+                            clk_cnt <= {8'd0, ctrl_div};
                             spi_clk_reg <= ~spi_clk_reg; // Toggle sclk state
                             phase <= ~phase;
 
@@ -121,7 +121,7 @@ module spi_apb #(
             assign mosi = mosi_reg;
             assign sclk = spi_clk_reg;
 
-            // PWDATA[31:16] is not used by any register, ctrl_div[15:8] is always 0
+            // PWDATA[31:16] is not used by any register
             wire unused_ok = &{1'b0, PWDATA[31:16]};
 
             // Read register (APB Read), prdata_r is combinational
@@ -132,7 +132,7 @@ module spi_apb #(
                 else case (widx)
                     10'd0:   prdata_r = {24'd0, rx_data};
                     10'd1:   prdata_r = {31'd0, busy};
-                    10'd2:   prdata_r = {16'd0, ctrl_div[7:0], 5'd0,
+                    10'd2:   prdata_r = {16'd0, ctrl_div, 5'd0,
                                          ctrl_cpha, ctrl_cpol, ctrl_cs_n};
                     default: prdata_r = 32'd0;
                 endcase
