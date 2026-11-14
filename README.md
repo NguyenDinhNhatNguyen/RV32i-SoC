@@ -18,7 +18,7 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 
 Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
 
-## Trạng thái (11/11)
+## Trạng thái (14/11)
 
 | Phần | Kết quả |
 | --- | --- |
@@ -26,7 +26,7 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 | Bus, SoC | fw-bus 124/124, fw-soc 131/131 (có SPI, PWM, I2C), bootloader `sim-boot` PASS, lint 0 warning |
 | Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM, I2C đã ghép vào `soc_top` (I2C từ 10/11) |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
-| SoC qua Cadence | Genus và Tempus đạt 20 ns, mạng reset có buffer (31/10). F_max sau tổng hợp khoảng 200 MHz (`docs/sta_results.md`). Script PnR đã có chân SPI, PWM, I2C, đang chờ netlist mới (`docs/pnr_soc_status.md`) |
+| SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Đang chọn chu kỳ: thử tổng hợp 9 ns, signoff 10 ns (`docs/sta_results.md` mục 5) |
 
 ## Bắt đầu nhanh
 

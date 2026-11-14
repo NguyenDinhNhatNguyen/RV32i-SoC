@@ -18,7 +18,7 @@ Số Genus thật (report `area.rpt` ghi tổng có cả 8 macro, mỗi macro 8 
 | `appendix/synth_soc` (29/10) | 116 757 µm² | 52 757 µm² |
 | `appendix/synth_soc_keepflop` (30/10, giữ mọi flop cho LEC) | 117 408 µm² | **53 408 µm²** |
 
-Dùng **53 408 µm²** để chọn floorplan. Bản sắp tới có buffer cho mạng reset (`soc.sdc` thêm `set_max_transition`, `set_max_fanout`) sẽ lớn hơn một chút, mật độ 70% vẫn còn chỗ.
+Dùng **53 408 µm²** để chọn floorplan. Diện tích các lần sau ở `docs/sta_results.md`.
 
 Lưu ý: Yosys trong image Docker của nhóm không nhận `abc -fast` trong `syn/yosys/synth_nangate.tcl`. Lần chạy này dùng bản chép bỏ `-fast`.
 
@@ -76,7 +76,7 @@ Tổng 109 chân (5 chân SPI, PWM thêm ngày 07/11, 4 chân I2C ngày 10/11). 
 - Ring lõi Metal7/Metal8, stripe Metal7 ngang và Metal8 dọc cách nhau 30 µm, như PD-01 (đã chạy được trên Innovus 21.1).
 - Ring quanh từng macro, rồi `sroute -connect {blockPin}` nối chân nguồn của macro. Lớp của ring macro (mặc định Metal5/Metal6) chọn lại theo lớp chân VDD/VSS trong output `macro_info.sh`.
 
-## 6. Kết quả và việc còn lại
+## 6. Kết quả
 
 Lần chạy 29/10 (`make pnr-accel` sửa tạm thành `soc_top`) đã place và route được `soc_top` với 8 macro, nhưng `run_all.tcl` chưa gọi script này nên Innovus tự đặt macro. Sửa ngày 31/10:
 
@@ -84,8 +84,4 @@ Lần chạy 29/10 (`make pnr-accel` sửa tạm thành `soc_top`) đã place v�
 - Lõi 394 × 395 µm thay cho 524 × 523 µm (07/11 nới thành 397 × 400 µm cho SPI, PWM, rồi 402 × 404 µm khi bật DMA, 405 × 405 µm ngày 10/11 khi có I2C).
 - `CLKBUFX2` bị cấm ngay sau `init_design`. Lần 29/10 chỉ cấm trước CTS nên tối ưu placement chèn 1220 cell này làm buffer dữ liệu.
 
-| Việc | Vì sao chưa xong | Khi nào |
-| --- | --- | --- |
-| Chạy `make pnr-soc` với netlist mới | Chờ Phát chạy lại `make synth-soc` (bản giữ flop và buffer mạng reset) | Buổi lên trường tới |
-| Đưa report timing, DRC của `soc_top` vào `appendix/pnr_soc` | Report lần 29/10 nằm trên server | Cùng buổi trên |
-| Chọn lại hướng macro và lớp ring | Output `macro_info.sh` (30/10) còn trên server, chưa commit | Cùng buổi trên |
+Kết quả PnR từ 12/11 (PD-04, PD-07) ở `docs/pnr_soc_status.md` mục 4 và 5.

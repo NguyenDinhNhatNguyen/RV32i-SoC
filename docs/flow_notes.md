@@ -48,7 +48,7 @@ make synth-block B=sram_wrap1                    # sram_wrap với 1 macro, đ�
 
 | Mục | Nội dung |
 | --- | --- |
-| Khối | `sys_bus`, `apb_bridge`, `dma_apb`, `imem_port`, `sram_wrap`, `timer_apb`, `uart_apb`, `gpio_apb`, `irqc_apb`, `spi_apb`, `pwm_apb`, `i2c_apb` (3 khối cuối thêm 11/11, chưa chạy trên server), `accel_apb`. Lõi `rv32_core` tổng hợp riêng bằng `make synth-core` của Nhân (`docs/genus_core.md`) |
+| Khối | `sys_bus`, `apb_bridge`, `dma_apb`, `imem_port`, `sram_wrap`, `timer_apb`, `uart_apb`, `gpio_apb`, `irqc_apb`, `spi_apb`, `pwm_apb`, `i2c_apb` (3 khối cuối thêm 11/11, chạy trên server 12/11), `accel_apb`. Lõi `rv32_core` tổng hợp riêng bằng `make synth-core` của Nhân (`docs/genus_core.md`) |
 | Tham số | Mặc định của từng khối (`sys_bus` với 1 master, mỗi bộ nhớ 16 KB). `soc_top` từ 07/11 dùng `sys_bus` 2 master, được tổng hợp trong `make synth-soc` |
 | SDC | Mỗi khối một file sinh tự động: clock 20 ns trên cổng clock của khối, uncertainty và IO delay theo tỉ lệ Lab, false path từ cổng reset |
 | SRAM macro | `imem_port`, `sram_wrap` đọc thêm `~/PDK_GPDK45/lib/sram_2k_macro.lib` |

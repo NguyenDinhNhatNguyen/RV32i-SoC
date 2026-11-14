@@ -15,8 +15,6 @@ Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp c
 | 7 | Chưa có report timing, DRC của `soc_top` trong repo. Ảnh layout có 5 dấu X trắng | Xong 12/11 | Report đã ở `appendix/pnr_soc/` (commit `7691865`). Ảnh 12/11 có 12 dấu X thẳng hàng ở mép trên vành macro IMEM. Đó là 12 đoạn dây VDD Metal7 dài 0 (xem mục 4), không phải lỗi DRC |
 | 8 | Diện tích logic thật 53 408 µm², lõi tính theo số cũ | Xong 31/10 | Lõi đúng là 394 × 395 µm ở mật độ 70%, nới thành 397 × 400 µm ngày 07/11 khi có SPI, PWM, rồi 402 × 404 µm cùng ngày khi bật DMA, 405 × 405 µm ngày 10/11 khi ghép I2C (4 chân mới). Lõi 524 × 523 µm của lần 29/10 tính sai (nhập tổng có cả macro vào `--std-area`) |
 | 9 | `appendix/macro_check/sram_2k_macro_20261030.txt` còn trên server | Xong 12/11 | Đã commit trong `7691865`. Hướng macro không còn phụ thuộc file này: `soc_floorplan.tcl` tự đọc cạnh có chân tín hiệu từ LEF (31/10). Log Innovus in lớp chân VDD/VSS để kiểm lớp ring |
-| 10 | Sheet trùng ID VER-09 | Xong | Đã đổi trước ngày 31/10, Sheet hiện chỉ còn một VER-09 |
-| 11 | Ảnh layout ở `docs/images/`, hình khác ở `docs/figures/` | Xong 31/10 | Chuyển sang `docs/figures/soc_top_layout.png` |
 
 ## 2. File bản quyền trong repo (31/10)
 
@@ -37,20 +35,9 @@ Không push từ bản clone cũ chưa reset, vì như vậy GDS sẽ quay lại
 
 `.gitignore` giờ chặn ở mọi thư mục: thư viện (`.lib`, `.lef`, `.gds`, `.cdl`...), SPEF, SDF, `*_netlist.v`, `*_pnr.v`, `*_pnr_pg.v`, database Innovus. Mấy dòng này nằm cuối file nên `!appendix/**` không mở lại được. Không dùng `git add -f` cho output của flow.
 
-## 3. Việc cho buổi lên trường tới
+## 3. Việc cho buổi lên trường 12/11 (đã hoàn thành 13/11)
 
-1. Phát: `make synth-soc` (bản giữ flop, có buffer mạng reset, cấm `CLKBUFX2`). Chạy lại 12/11 trên commit `eced27a`, có DMA, SPI, PWM, I2C: std cell 58 843 µm² (nhỏ hơn 59 400 µm² dùng để tính lõi), setup +0,529 ns. Netlist ở `syn/out_soc/` trên server.
-2. Nguyên: `make pnr-soc`. Cuối lệnh in `pnr/out_soc/reports/pd_checks.rpt`, kiểm:
-   - `BUFX2 instances: 0` và `CLKBUFX2 instances: 0`.
-   - 8 dòng `Macro ...`: 4 IMEM ở hàng trên, 4 DMEM ở hàng dưới, đúng hướng in trong log (`grep PD-02 pnr/run_soc/innovus.log`).
-   - Mật độ cell chuẩn khoảng 70%.
-   - `cat pnr/out_soc/reports/slack_summary.txt`: setup, hold, recovery, removal sau CTS và sau route đều ≥ 0. Removal là chỗ dễ âm nhất.
-   - DRC, connectivity, antenna 0 lỗi.
-3. `make save-pnr-soc` và `make save-pnr-accel` (report PD-01 lần 29/10), commit `appendix/pnr_soc`, `appendix/pnr_accel`, `appendix/macro_check/`. Không commit gì trong `pnr/out_soc/`.
-4. Gửi Phát đường dẫn cho Tempus sau layout (STA-05). Server dùng chung một tài khoản nên Phát đọc thẳng, không cần copy:
-   - Netlist sau route: `~/RV32i-SoC/pnr/out_soc/soc_top_pnr.v`
-   - SPEF: `~/RV32i-SoC/pnr/out_soc/soc_top.spef` (corner `rc_typ`)
-   - SDF cho GLS của Hiếu: `~/RV32i-SoC/pnr/out_soc/soc_top.sdf`
+Synth, PnR, lưu report và đường dẫn cho Tempus đều đã làm. Kết quả ở mục 4 và 5. Đường dẫn Tempus sau layout ở `docs/flow_notes.md` (dòng STA-05).
 
 ## 4. Kết quả chạy 12/11 (PD-04)
 

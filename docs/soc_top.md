@@ -164,7 +164,7 @@ Xem recovery và removal:
 - Tempus, Innovus: `report_timing -check_type recovery` và `-check_type removal`.
 - OpenSTA: `report_checks -path_group asynchronous` (OpenSTA 3.1 bật sẵn kiểm này).
 
-Kết quả kiểm SDC (OpenSTA ở nhà 26/10, Genus và Tempus ở trường 29–31/10) ghi ở `docs/sta_results.md`. Tóm tắt: 0 endpoint thiếu ràng buộc. Mạng reset `rst_n_sync` (fanout khoảng 3500) chỉ được Genus buffer khi có `set_max_fanout` trong SDC và `ideal_seq_async_pins false` trong `synth_soc.tcl` (31/10). Khi đó recovery +18,3 ns, removal +0,006 ns. Removal rất sát, phải kiểm lại sau CTS.
+Kết quả kiểm SDC (OpenSTA ở nhà 26/10, Genus và Tempus ở trường 29–31/10) ghi ở `docs/sta_results.md`. Tóm tắt: 0 endpoint thiếu ràng buộc. Mạng reset `rst_n_sync` (fanout khoảng 3500) chỉ được Genus buffer khi có `set_max_fanout` trong SDC và `ideal_seq_async_pins false` trong `synth_soc.tcl` (31/10). Số mới nhất trước layout ở `docs/sta_results.md` mục 1, sau layout ở mục 6.
 
 ## 5. Kiểm chứng ở nhà
 
@@ -181,7 +181,7 @@ Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 
 | `make fw-soc` | 131/131 PASS: `smoke`, `hazard`, `soc`, `bus`, `spi_pwm`, `i2c`, rv32ui, rv32mi (M0W0 và M1W1), rv32um và `dma` (M1W1) |
 | `make unit-bus` | 8/8 PASS, gồm `tb_dma_apb` và phần kiểm round-robin của `tb_sys_bus` |
 | `make sim-boot` | PASS, `tb_boot` dùng mặc định của `soc_top` nên có DMA |
-| `make sta-soc-nangate` | Yosys không latch, đủ 8 macro, 0 unconstrained. Diện tích Nangate45 61 561 µm² khi có I2C (07/11 chưa có I2C là 60 426 µm², thêm 1 778 µm² tức +3,0% so với bản chưa bật DMA, `docs/sta_results.md` mục 2) |
+| `make sta-soc-nangate` | Yosys không latch, đủ 8 macro, 0 unconstrained. Diện tích Nangate45 61 561 µm² khi có I2C (các lần trước ở `docs/sta_results.md` mục 2) |
 | Test khác | `fw-bus` 124/124, `lint-all`, `eda.sh check` vẫn PASS |
 
 `tb_soc` kiểm bộ đồng bộ reset trước khi chạy chương trình: nhả reset giữa chu kỳ thì `rst_n_sync` lên 1 đúng ở cạnh thứ hai, kéo reset xuống giữa chu kỳ thì `rst_n_sync` xuống 0 ngay.
@@ -213,5 +213,5 @@ Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - I2C chưa có clock stretching (`i2c_scl_i` không dùng) và chưa có ngắt. Slave nào kéo dài SCL sẽ bị sai.
-- Removal của mạng reset dư ít: 28 ps trước layout (12/11, `docs/sta_results.md` mục 1) và 29 ps sau route thử (PD-04, `docs/pnr_soc_status.md` mục 4). Kiểm lại trên layout chính thức (STA-05).
+- Removal của mạng reset dư ít: 28 ps trước layout (12/11, `docs/sta_results.md` mục 1) và 29 ps sau route thử (PD-04, `docs/pnr_soc_status.md` mục 4), 33 ps trên layout thử lõi 420 µm (PD-07, `docs/sta_results.md` mục 6). Kiểm lại trên layout chính thức (STA-05).
 - Trên server: GLS với `sram_2k_macro.v` thật.

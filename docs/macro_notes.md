@@ -15,18 +15,9 @@ Thầy nhắc xem kỹ cách làm với macro. Tài liệu này gom những gì 
 | Không có | GDS, file CDL/SPICE. Thầy xác nhận ngày 22/10 là không cần (mục 3.7) |
 | Corner của `.lib` | Chỉ có 1 file, corner typical (1,0 V, 25 °C), không có bản fast hay slow (đọc trên server 29/10) |
 
-## 2. Việc cần kiểm tra trên server
+## 2. Kiểm tra trên server (đã hoàn thành 30/10)
 
-Chạy `bash scripts/macro_info.sh` và dán output vào chat. Script trả lời các câu sau:
-
-| Câu hỏi | Vì sao quan trọng |
-| --- | --- |
-| Chân tín hiệu nằm ở lớp kim loại nào, ở cạnh nào | Quyết định hướng đặt macro (chân quay vào phía logic) và lớp dùng để đi dây tới chân |
-| Chân VDD/VSS có không, ở lớp nào, dạng ring hay stripe | Quyết định cách nối nguồn: stripe chạy qua macro hay ring riêng quanh macro |
-| OBS chặn những lớp nào | Lớp bị chặn thì không đi dây qua macro được. Nếu OBS phủ tới Metal4, chỉ Metal5 trở lên đi qua được |
-| `SYMMETRY` cho phép xoay/lật kiểu nào | Giới hạn hướng đặt (R0, MX, MY, R180...) |
-| `.lib` có mấy corner | Thiếu corner fast thì phân tích hold của đường đi qua macro không chính xác |
-| `Q` làm gì khi đang ghi, khi `CEN=1` | Wrapper phải dựa vào hành vi này để biết khi nào `Q` hợp lệ |
+Đã chạy `scripts/macro_info.sh` trên server ngày 29/10 và 30/10, output ở `appendix/macro_check/`. Hướng macro do `pnr/scripts/soc_floorplan.tcl` tự đọc từ LEF (31/10), log Innovus in lớp chân VDD/VSS.
 
 ## 3. Macro ở từng bước
 
@@ -65,7 +56,7 @@ Chạy `bash scripts/macro_info.sh` và dán output vào chat. Script trả lờ
 
 ### 3.6 STA
 
-- Dùng `.lib` của macro cho cả setup và hold. Nếu chỉ có corner slow, view hold dùng tạm `.lib` slow cho macro và ghi rõ trong report.
+- Dùng `.lib` của macro cho cả setup và hold. File này chỉ có corner typical (mục 1), nên cả hai view dùng chung file đó và report ghi rõ đường qua macro hơi lạc quan (`docs/sta_results.md` mục 1).
 
 ### 3.7 Kiểm tra cuối và xuất file
 
@@ -85,4 +76,4 @@ Còn hỏi:
 
 ## 5. Thử trước trên một khối nhỏ
 
-Giống PD-01 với accelerator: dựng wrapper SRAM với 1 macro, chạy Genus, LEC, Innovus trên server để luyện đủ các bước 3.2 đến 3.7 trước khi ghép cả SoC. RTL-08 đã có. Genus cho bản 1 macro (đã chạy 29/10, `docs/sta_results.md` mục 3): `make synth-block B=sram_wrap1` (kết quả ở `syn/out_blocks/sram_wrap1/`).
+Genus cho `sram_wrap` với 1 macro đã chạy 29/10 (`make synth-block B=sram_wrap1`, `docs/sta_results.md` mục 3). Không chạy LEC, Innovus riêng cho 1 macro vì cả `soc_top` với 8 macro đã qua PnR từ 12/11 (`docs/pnr_soc_status.md`).
