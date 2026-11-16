@@ -1,6 +1,6 @@
 # Theo dõi PnR `soc_top`
 
-Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 13/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
+Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 16/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
 
 ## 1. Tình trạng từng mục
 
@@ -75,3 +75,5 @@ Cùng netlist `eced27a`, clock 20 ns. Mỗi cỡ chạy bằng `make pnr-soc TAG
 | 430 × 429,2 | `pnr_soc_u65` | 67 978 | 56,4% | +0,190 | +0,017 | +0,029 | 0 |
 
 Số timing là của Innovus, tính bằng ns. Lõi lớn hơn thì setup tăng, nhảy mạnh nhất ở 420 µm. Hai lỗi DRC cùng loại Metal1 `ParallelRunLength`, cách sửa ở `docs/flow_notes.md` mục "DRC còn lại sau route". Cỡ lõi chính thức chốt cùng chu kỳ ở STA-04, vì setup sau route phụ thuộc cả hai. Nếu bản chính thức dùng `TAG`, lệnh Tempus sau route đổi `pnr/out_soc` thành `pnr/out_soc<tag>`.
+
+Từ 14/11 `syn/out_soc/` trên server là netlist chính thức của STA-04: RTL `e60437a`, Genus 9 ns, cell chuẩn 60 188 µm² (`docs/sta_results.md` mục 5). Lần PnR kế tiếp chạy trên netlist này với lõi 420 µm: `make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`. Bốn dòng ở bảng trên là của netlist cũ `eced27a` ở 20 ns.

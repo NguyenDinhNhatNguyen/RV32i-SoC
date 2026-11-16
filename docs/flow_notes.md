@@ -89,6 +89,8 @@ make sta-soc                                     # Tempus trên syn/out_soc/
 | Tempus | `sta/scripts/sta_soc.tcl`, corner theo `pnr/scripts/mmmc.view`: slow cho setup và recovery, fast cho hold và removal. Report ở `sta/run_soc/pre/`, tóm tắt ở `summary.txt`. Đã chạy trên server 30–31/10 (Tempus 23.14) |
 | Sau route (STA-05) | `make sta-soc SPEF=$PWD/pnr/out_soc/soc_top.spef NETLIST=$PWD/pnr/out_soc/soc_top_pnr.v SDC=$PWD/syn/out_soc/soc_top_synth.sdc`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/`. Đường dẫn phải tuyệt đối vì Tempus chạy trong `sta/run_soc/`. SDC là file Genus ghi ra, giống file Innovus đọc |
 | Log Tempus | `sta/run_soc/tempus.log`, stdout và stderr (gồm dòng `ERROR`) ở `sta/run_soc/tempus.out` (từ 12/11) |
+| Thư mục kết quả riêng | Thêm `STA_OUT=<đường dẫn tuyệt đối>` để không ghi đè `pre/` hay `spef/`. Từ 16/11 `make sta-soc` xóa `summary.txt` cũ trước khi chạy và in đúng file trong `STA_OUT`, nên Tempus hỏng thì báo `ERROR` chứ không in số của lần trước |
+| Signoff ở chu kỳ khác | Tạo SDC từ `soc.sdc` với dòng `set SOC_PERIOD` đổi sang chu kỳ signoff, rồi truyền qua `SDC=`. Ví dụ 14/11: netlist Genus 9 ns kiểm ở 10 ns (`docs/sta_results.md` mục 5, `appendix/sta_soc_e60437a/soc_10ns.sdc`) |
 
 Ở nhà xem xu hướng trước bằng `make sta-soc-nangate STA_PERIOD=<ns>` (Yosys, Nangate45, OpenSTA với `soc.sdc`, macro SRAM là hộp đen nên đường qua macro không được tính). Lần đầu tổng hợp khoảng 11 phút, các lần sau chỉ chạy lại OpenSTA. Số ở nhà ghi vào `docs/sta_results.md` mục 2, không đưa vào report.
 

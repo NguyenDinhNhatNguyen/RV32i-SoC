@@ -148,7 +148,7 @@ Netlist `syn/out_soc/soc_top_netlist.v` ngày 12/11 (3 323 276 byte), tổng h�
 | `g_i2c.u_i2c/gen_i2c.state_reg[3]` | `ZERO` (netlist: `.D (1'b0)`) | `i2c_apb.v`: các trạng thái chỉ có giá trị 0 đến 6, bit 3 không bao giờ là 1 |
 | `u_core/wb_cause_q_reg[4]` | `ZERO` | `rv32_core.v`: `wb_cause_q` nhận mã exception (0 đến 7 và 11, `rv32_defs.vh`) hoặc mã interrupt (3, 7, 11, `RV_INT_*`), tất cả nhỏ hơn 16 nên bit 4 luôn bằng 0 |
 
-Với 3 trường hợp đầu, điểm chung là flop có mạch giữ giá trị nhưng giá trị nạp vào luôn là hằng số. Genus thay chân D bằng hằng số, còn RTL giữ nguyên MUX nên hai hàm D khác nhau. Chưa có bản sửa nào được merge. Một hướng sửa đang được kiểm chứng (thu hẹp thanh ghi bỏ các bit hằng số). Hướng này đòi hỏi tổng hợp lại, vì RTL mới không còn khớp netlist 12/11.
+Với 3 trường hợp đầu, điểm chung là flop có mạch giữ giá trị nhưng giá trị nạp vào luôn là hằng số. Genus thay chân D bằng hằng số, còn RTL giữ nguyên MUX nên hai hàm D khác nhau. Bản sửa đã merge ngày 14/11 (commit `e60437a`): thu hẹp bốn thanh ghi, bỏ các bit hằng số (`tx_sh` 8 bit, `ctrl_div` 8 bit, `state` 3 bit, `wb_cause_q` 4 bit). Netlist chính thức đã tổng hợp lại trên RTL này cùng ngày (`docs/sta_results.md` mục 1 và 5). Chưa chạy lại LEC trên netlist mới, đó là LEC-02.
 
 ### 112 điểm Abort
 

@@ -1233,17 +1233,21 @@ synth-soc:
 synth-soc-sweep:
 	bash syn/scripts/sweep_soc.sh
 
-# Reports in sta/run_soc/pre/ (or sta/run_soc/spef/ with SPEF), log in sta/run_soc/tempus.log.
+# Reports in sta/run_soc/pre/ (or sta/run_soc/spef/ with SPEF, or STA_OUT when set as an absolute
+# path), log in sta/run_soc/tempus.log.
 # Stdout and stderr go to sta/run_soc/tempus.out, so ERROR lines from the script are kept.
+# The old summary is removed first, so a failed run cannot print the numbers of an earlier run.
 # < /dev/null so Tempus exits if the script stops midway
+STA_SOC_SUM = $(if $(STA_OUT),$(STA_OUT),sta/run_soc/$(if $(SPEF),spef,pre))/summary.txt
 sta-soc:
 	@command -v tempus > /dev/null || \
 	  { echo "ERROR: tempus not found, this target runs on the school server"; exit 1; }
+	rm -f $(STA_SOC_SUM)
 	mkdir -p sta/run_soc && cd sta/run_soc && rm -f tempus.log* tempus.cmd* tempus.out && \
 	  tempus -nowin -files ../scripts/sta_soc.tcl -log tempus.log < /dev/null > tempus.out 2>&1 || true
-	@f=sta/run_soc/$$( [ -n "$(SPEF)" ] && echo spef || echo pre )/summary.txt; \
-	  test -f $$f || { echo "ERROR: Tempus wrote no summary, see sta/run_soc/tempus.log and tempus.out"; exit 1; }; \
-	  cat $$f
+	@test -f $(STA_SOC_SUM) || \
+	  { echo "ERROR: Tempus wrote no summary, see sta/run_soc/tempus.log and tempus.out"; exit 1; }
+	@cat $(STA_SOC_SUM)
 
 # Home trend run of the whole soc_top. The 8 SRAM macros are black boxes (no Nangate45 .lib),
 # so paths through them are not timed. Results in syn/run_yosys/soc_top_ng/sta_p<period>/
