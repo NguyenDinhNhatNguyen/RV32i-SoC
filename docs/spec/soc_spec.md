@@ -7,6 +7,7 @@ Mục 7 ghi 5 điểm từng mâu thuẫn giữa Doc kế hoạch, spec lõi và
 ## 1. Clock và reset
 
 - Một miền clock `clk`, không có CDC. Đề yêu cầu tối thiểu 50 MHz (chu kỳ 20 ns). Nhóm chốt 100 MHz ngày 18/11: tổng hợp và PnR ở 9 ns, signoff ở 10 ns (`docs/sta_results.md` mục 5, 6).
+- **Chốt 18/11: giữ nguyên RTL và boot ROM ở 100 MHz.** Giá trị reset `BAUDDIV = 27` và tham số bootloader (`BOOT_CLK_HZ`, `BOOT_BAUD`, `BOOT_TIMEOUT`) vẫn tính cho 50 MHz. Ở 100 MHz, UART sau reset và bootloader chạy 230 400 baud, timeout của bootloader là 0,5 s. Chương trình cần 115200 baud thì tự ghi `BAUDDIV = 54`. Không sửa vì boot ROM là logic, đổi nội dung là đổi netlist, phải tổng hợp, PnR, LEC, GLS lại. Nếu thầy yêu cầu 115200 ngay sau reset thì sửa trong vòng ECO cuối (STA-06, PD-08, trước 03/12).
 - Reset `rst_n` tích cực mức thấp, bất đồng bộ khi assert, đồng bộ khi deassert.
 - Một bộ đồng bộ reset 2 flop ở `soc_top`. Mọi khối dùng chung ngõ ra của bộ đồng bộ này.
 - SDC: chỉ false path từ chân `rst_n` tới bộ đồng bộ. Đường deassert sau đó phải kiểm recovery/removal.

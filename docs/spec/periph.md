@@ -35,7 +35,7 @@ UART 8N1, FIFO TX và RX sâu `2**FIFO_AW` byte (mặc định 8).
 | 0x04 | STATUS | R | — | bit0 TXF, bit1 TXE, bit2 TXB, bit3 RXF, bit4 RXNE, bit5 OVR, bit6 FE, bit7 TXOVF |
 | 0x04 | STATUS | W | — | Ghi 1 vào bit 5..7 để xoá. Các bit khác bỏ qua |
 | 0x08 | CTRL | RW | 0x03 | bit0 TXEN, bit1 RXEN, bit2 TXIE, bit3 RXIE, bit4 ERRIE |
-| 0x0C | BAUDDIV | RW | 27 | `baud = f_clk / (16 × DIV)`. 27 cho 115200 baud ở 50 MHz (sai số +0,47%). Ở 100 MHz giá trị reset 27 cho 230 400 baud, muốn 115200 thì ghi 54 |
+| 0x0C | BAUDDIV | RW | 27 | `baud = f_clk / (16 × DIV)`. 27 cho 115200 baud ở 50 MHz (sai số +0,47%). Ở 100 MHz giá trị reset 27 cho 230 400 baud, muốn 115200 thì ghi 54. Chốt 18/11 giữ nguyên giá trị reset (`docs/spec/soc_spec.md` mục 1) |
 
 Ý nghĩa các bit STATUS:
 

@@ -136,6 +136,7 @@ Ghi chú:
 - Độ rộng xung của macro: `sram_2k_macro.lib` có `min_pulse_width` 0,45 ns, coverage báo 0 vi phạm PulseWidth, nên macro không chặn 9 ns.
 - 14/11: Netlist chính thức trên RTL `e60437a` (Genus 9 ns) cho đúng các số trên: 4068 flop, 136 ICG, 0 DRV, Tempus 10 ns setup +0,978. Report Genus và Tempus giống hệt netlist p9, vì ở 9 ns Genus đã tự xóa các bit hằng mà RTL mới bỏ. Netlist ở `syn/out_soc/` trên server, đã giao cho PnR (`make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`), LEC-02 và GLS.
 - 18/11: Tempus sau layout ở 10 ns trên `pnr/out_soc_p9` (sau ECO) đạt cả bốn loại kiểm (mục 6), chốt 100 MHz.
+- Hệ quả cho UART: giữ nguyên RTL và boot ROM, nên ở 100 MHz baud mặc định là 230 400 (chốt 18/11, `docs/spec/soc_spec.md` mục 1).
 
 ### Có và không có clock gating (14/11, 9 ns)
 

@@ -95,6 +95,8 @@ Sau NAK, bootloader quay về chờ SYNC, không còn timeout. PC gửi lại t�
 | `BOOT_CLK_HZ` | 50000000 | Clock của SoC. `soc_top` không có tham số clock nên ghi ở đây |
 | `BOOT_BAUD` | 115200 | BAUDDIV = round(CLK / (16 × BAUD)) = 27, bằng giá trị reset của UART |
 | `BOOT_TIMEOUT` | 50000000 | Chu kỳ chờ MAGIC, 1 s ở 50 MHz, tối đa 2^31 |
+
+Chip chạy 100 MHz (chốt 18/11, `docs/spec/soc_spec.md` mục 1). Ba tham số trên giữ nguyên giá trị cho 50 MHz, không build lại boot ROM. Vì vậy ở 100 MHz bootloader chạy **230 400 baud** và timeout là **0,5 s**. Máy tính nạp chương trình (`scripts/uart_pack.py` hoặc terminal) phải đặt 230 400 baud.
 | IMEM, DMEM | 16384, 16384 ở 0x1000_0000 | Lấy từ `SOC_IMEM_SIZE`, `SOC_DMEM_BASE`, `SOC_DMEM_SIZE` trong `rtl/bus/soc_map.vh` |
 
 - ROM: 143 / 256 word (572 byte). Bootloader không dùng DMEM cho chính nó, không dùng stack.
