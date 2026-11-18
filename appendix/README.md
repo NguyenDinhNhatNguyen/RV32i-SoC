@@ -21,6 +21,8 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `core_signoff/` | Genus, LEC và GLS cho core `rv32_core` (D-042) |
 | `pnr_accel/` | Innovus cho accelerator: timing từng bước, DRC, connectivity, antenna, công suất |
 | `pnr_soc/` | Innovus cho `soc_top` (PD-04, 12/11 và 13/11), lõi 405 × 405,3 µm, `slack_summary.txt` và `pd_checks.rpt` |
+| `pnr_soc_p9/` | Innovus `soc_top` trên netlist chính thức STA-04 (18/11, lõi 420 µm, SDC 9 ns), `eco/` là report sau ECO của Phát |
+| `sta_soc_p9_post/` | Tempus sau layout `_p9` (sau ECO, 18/11): `sdc_10` là signoff 100 MHz, `sdc_9` để đối chiếu, kèm `tempus.log` |
 | `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
 | `lec_soc/` | Conformal LEC của `soc_top` (`run2/`, netlist 12/11) và của khối `apb_bridge` (LEC-01, 14/11) |

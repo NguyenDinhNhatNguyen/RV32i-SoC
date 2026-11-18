@@ -18,7 +18,7 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 
 Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
 
-## Trạng thái (14/11)
+## Trạng thái (18/11)
 
 | Phần | Kết quả |
 | --- | --- |
@@ -26,7 +26,7 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 | Bus, SoC | fw-bus 124/124, fw-soc 131/131 (có SPI, PWM, I2C), bootloader `sim-boot` PASS, lint 0 warning |
 | Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM, I2C đã ghép vào `soc_top` (I2C từ 10/11) |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
-| SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Netlist chính thức tổng hợp ở 9 ns trên RTL `e60437a`, Tempus trước layout ở 10 ns dư setup 0,978 ns (`docs/sta_results.md` mục 5). Chốt 100 MHz sau khi có Tempus sau layout. LEC thử của `soc_top` ở `docs/lec_soc.md` |
+| SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Netlist chính thức tổng hợp và PnR ở 9 ns trên RTL `e60437a`. **Chốt 100 MHz (18/11)**: Tempus sau layout `_p9` ở 10 ns dư setup 0,977 ns, hold, recovery, removal đều dương (`docs/sta_results.md` mục 5, 6). LEC thử của `soc_top` ở `docs/lec_soc.md` |
 
 ## Bắt đầu nhanh
 

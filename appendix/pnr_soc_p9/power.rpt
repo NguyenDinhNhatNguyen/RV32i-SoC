@@ -1,0 +1,98 @@
+*----------------------------------------------------------------------------------------
+*	Innovus 21.19-s058_1 (64bit) 04/04/2024 09:59 (Linux 3.10.0-693.el7.x86_64)
+*	
+*
+* 	Date & Time:	2026-Nov-18 10:11:41 (2026-Nov-18 03:11:41 GMT)
+*
+*----------------------------------------------------------------------------------------
+*
+*	Design: soc_top
+*
+*	Liberty Libraries used: 
+*	        av_setup: /home/s23521043/PDK_GPDK45/lib/slow_vdd1v0_basiccells.lib
+*	        av_setup: /home/s23521043/PDK_GPDK45/lib/sram_2k_macro.lib
+*
+*	Power Domain used: 
+*              Rail:        VDD      Voltage:        0.9 
+*
+*       Power View : av_setup
+*
+*       User-Defined Activity : N.A.
+*
+*       Activity File: N.A.
+*
+*       Hierarchical Global Activity: N.A.
+*
+*       Global Activity: N.A.
+*
+*       Sequential Element Activity: 0.200000
+*
+*       Primary Input Activity: 0.200000
+*
+*       Default icg ratio: N.A.
+*
+*       Global Comb ClockGate Ratio: N.A.
+*
+*	Power Units = 1mW
+*
+*	Time Units = 1e-09 secs 
+*
+*       report_power -outfile /home/s23521043/RV32i-SoC/pnr/out_soc_p9/reports/power.rpt
+*
+-----------------------------------------------------------------------------------------
+
+
+Total Power 
+-----------------------------------------------------------------------------------------
+Total Internal Power:        1.48754125 	   45.9858%
+Total Switching Power:       1.73579733 	   53.6604%
+Total Leakage Power:         0.01144227 	    0.3537%
+Total Power:                 3.23478085 
+-----------------------------------------------------------------------------------------
+
+
+Group                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+Sequential                        0.5272      0.1035   0.0005381      0.6312       19.51 
+Macro                          0.0008889      0.2124      0.0096      0.2229       6.892 
+IO                                     0           0           0           0           0 
+Combinational                     0.8646       1.299    0.001261       2.165       66.92 
+Clock (Combinational)            0.02744     0.09353   1.046e-05       0.121        3.74 
+Clock (Sequential)                0.0674     0.02738   3.263e-05     0.09481       2.931 
+-----------------------------------------------------------------------------------------
+Total                              1.488       1.736     0.01144       3.235         100 
+-----------------------------------------------------------------------------------------
+
+
+Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+VDD                       0.9      1.488       1.736     0.01144       3.235         100 
+
+
+Clock                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+clk                              0.09484      0.1209   4.309e-05      0.2158       6.671 
+-----------------------------------------------------------------------------------------
+Total (excluding duplicates)     0.09484      0.1209   4.309e-05      0.2158       6.671 
+-----------------------------------------------------------------------------------------
+Clock: clk
+Clock Period: 0.009000 usec 
+Clock Toggle Rate:   222.2222 Mhz 
+Clock Static Probability:  0.5000
+
+
+
+-----------------------------------------------------------------------------------------
+*	Power Distribution Summary: 
+*                Highest Average Power: u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac (sram_2k_macro):          0.03441 
+*                Highest Leakage Power: u_dmem_u_arr_g_multi.g_bank[0].u_mac (sram_2k_macro):           0.0012 
+*          Total Cap:      1.13106e-10 F
+*          Total instances in design: 25616
+*          Total instances in design with no power:     0
+*          Total instances in design with no activity:     0
+*          Total Fillers and Decap:     0
+-----------------------------------------------------------------------------------------
+

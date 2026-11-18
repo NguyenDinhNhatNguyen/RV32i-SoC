@@ -118,9 +118,9 @@ Kết luận:
 - Cell chuẩn ở 9 ns tăng 0,95% so với 10 ns và 2,3% so với 58 843 µm² ở 20 ns (12/11).
 - Từ 9 ns trở xuống Genus xóa thêm khoảng 10 flop có đầu vào hằng mà ở 10 ns còn giữ: số chân tuần tự nối hằng trong `post_syn_design_lint.rpt` giảm từ 12 xuống 2, số clock gating giảm 1. Chức năng không đổi, nhưng LEC trên netlist 9 ns phải chấp nhận các flop hằng đã bị xóa.
 
-## 5. Chọn chu kỳ (STA-04, ở trường, chưa chốt)
+## 5. Chọn chu kỳ (STA-04, ở trường, chốt 100 MHz ngày 18/11)
 
-Phương án đang xét: tổng hợp và PnR ở 9 ns, signoff Tempus ở 10 ns (100 MHz). Netlist tổng hợp ở chu kỳ chặt hơn để layout còn biên khi có delay dây và skew clock. Ngày 14/11 chạy Tempus trước layout (clock lý tưởng) trên netlist của mục 4. Report ở `appendix/sta_soc_p9/`.
+**Chốt: tổng hợp và PnR ở 9 ns, signoff Tempus ở 10 ns (100 MHz).** Tempus sau layout `_p9` ở 10 ns dư setup 0,977 ns, hold, recovery, removal đều dương (mục 6). Netlist tổng hợp ở chu kỳ chặt hơn để layout còn biên khi có delay dây và skew clock. Ngày 14/11 chạy Tempus trước layout (clock lý tưởng) trên netlist của mục 4. Report ở `appendix/sta_soc_p9/`.
 
 | Netlist | SDC | Setup WNS (số đường vi phạm) | Hold WNS (số đường) | Recovery | Removal |
 | --- | --- | --- | --- | --- | --- |
@@ -135,7 +135,7 @@ Ghi chú:
 - `check_timing`: no_drive 76 như 12/11. Unconstrained 278 = 272 chân `SE` (136 ICG) và 6 chân `RN`, ít hơn 298 của 12/11 vì netlist 9 ns có ít flop hằng hơn (mục 4).
 - Độ rộng xung của macro: `sram_2k_macro.lib` có `min_pulse_width` 0,45 ns, coverage báo 0 vi phạm PulseWidth, nên macro không chặn 9 ns.
 - 14/11: Netlist chính thức trên RTL `e60437a` (Genus 9 ns) cho đúng các số trên: 4068 flop, 136 ICG, 0 DRV, Tempus 10 ns setup +0,978. Report Genus và Tempus giống hệt netlist p9, vì ở 9 ns Genus đã tự xóa các bit hằng mà RTL mới bỏ. Netlist ở `syn/out_soc/` trên server, đã giao cho PnR (`make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`), LEC-02 và GLS.
-- Còn lại trước khi chốt 100 MHz: Tempus sau layout ở 10 ns trên `pnr/out_soc_p9`.
+- 18/11: Tempus sau layout ở 10 ns trên `pnr/out_soc_p9` (sau ECO) đạt cả bốn loại kiểm (mục 6), chốt 100 MHz.
 
 ### Có và không có clock gating (14/11, 9 ns)
 
@@ -174,9 +174,13 @@ Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc
 | Ngày | Layout | Chu kỳ | Setup | Hold | Recovery | Removal | Report gốc |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 14/11 | `pnr/out_soc_u70`, lõi 420 × 420,7 µm (PD-07, netlist 12/11) | 20 ns | +0,190 | +0,014 | +17,817 | +0,033 | `appendix/sta_soc_u70/` |
+| 18/11 | `pnr/out_soc_p9` sau ECO, lõi 420 × 420,7 µm, netlist chính thức `e60437a` (Genus 9 ns, PnR 9 ns) | **10 ns (signoff)** | **+0,977** | **+0,020** | **+7,434** | **+0,023** | `appendix/sta_soc_p9_post/sdc_10/`, `appendix/pnr_soc_p9/` |
+| 18/11 | Như trên, đối chiếu ở chu kỳ PnR | 9 ns | -0,023 (5 đường) | +0,020 | +6,434 | +0,023 | `appendix/sta_soc_p9_post/sdc_9/` |
 
 Ghi chú:
-- Đây là lần chạy thử, chưa phải layout chính thức. Số của Tempus lệch Innovus dưới 0,03 ns. Coverage: 0 vi phạm hold, unconstrained 298 như trước layout.
+- 18/11, layout `_p9`: Tempus 10 ns dùng `soc_10ns.sdc` (`soc.sdc` với chu kỳ 10 ns), 9 ns dùng SDC do Genus ghi. Ở 9 ns Tempus báo -0,023 ns, Innovus sau ECO báo -0,047 ns, cùng mức chênh như các lần trước. Setup sau layout ở 10 ns (+0,977) gần bằng trước layout (+0,978), nghĩa là delay dây và skew clock nằm gọn trong biên 1 ns. Coverage: 0 vi phạm hold trên 4351 điểm kiểm, unconstrained 278 và no_drive 76 như trước layout.
+- 18/11, đường găng ở 10 ns: setup từ Q của macro IMEM bank 3 tới `u_muldiv.p_lo_q_reg[48]`, removal ở chân `RN` của `u_muldiv.p_hi_q_reg[33]`, hold ở `u_dma.cur_dst_reg[24]`. Vẫn có `SPEF-1152` ở `i2c_scl_i` như layout u70.
+- 14/11, layout u70: Đây là lần chạy thử, chưa phải layout chính thức. Số của Tempus lệch Innovus dưới 0,03 ns. Coverage: 0 vi phạm hold, unconstrained 298 như trước layout.
 - Đường găng setup vẫn là IMEM → `if_pc_q_reg[31]`. Removal xấu nhất ở chân `RN` của `minstret_q_reg[38]` trong CSR.
 - Tempus báo `SPEF-1152` ở net `i2c_scl_i`: net này trong SPEF thiếu kết nối so với netlist, Tempus nối phần thiếu bằng RC rất nhỏ. Chỉ ảnh hưởng đường vào I2C (đi qua bộ đồng bộ). Báo phía PnR kiểm lại pin của port này.
 - Không chạy được trên `pnr/out_soc` (lõi 405 µm) vì `soc_top_pnr.v` đã bị xóa khi chạy lại ngày 13/11.

@@ -1,6 +1,6 @@
 # Theo dõi PnR `soc_top`
 
-Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 16/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
+Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 18/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
 
 ## 1. Tình trạng từng mục
 
@@ -76,4 +76,30 @@ Cùng netlist `eced27a`, clock 20 ns. Mỗi cỡ chạy bằng `make pnr-soc TAG
 
 Số timing là của Innovus, tính bằng ns. Lõi lớn hơn thì setup tăng, nhảy mạnh nhất ở 420 µm. Hai lỗi DRC cùng loại Metal1 `ParallelRunLength`, cách sửa ở `docs/flow_notes.md` mục "DRC còn lại sau route". Cỡ lõi chính thức chốt cùng chu kỳ ở STA-04, vì setup sau route phụ thuộc cả hai. Nếu bản chính thức dùng `TAG`, lệnh Tempus sau route đổi `pnr/out_soc` thành `pnr/out_soc<tag>`.
 
-Từ 14/11 `syn/out_soc/` trên server là netlist chính thức của STA-04: RTL `e60437a`, Genus 9 ns, cell chuẩn 60 188 µm² (`docs/sta_results.md` mục 5). Lần PnR kế tiếp chạy trên netlist này với lõi 420 µm: `make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`. Bốn dòng ở bảng trên là của netlist cũ `eced27a` ở 20 ns.
+Bốn dòng ở bảng trên là của netlist cũ `eced27a` ở 20 ns, giữ lại để đối chiếu.
+
+## 6. Layout chính thức `_p9` (18/11)
+
+Netlist chính thức STA-04 (RTL `e60437a`, Genus 9 ns, `docs/sta_results.md` mục 5), `make pnr-soc TAG=_p9 CORE_W=420.0 CORE_H=420.7`, SDC 9 ns do Genus ghi. Nguyên chạy PnR, Phát làm ECO. Report ở `appendix/pnr_soc_p9/` (bản của Nguyên) và `appendix/pnr_soc_p9/eco/` (sau ECO).
+
+| Mục | Kết quả |
+| --- | --- |
+| Lõi, cell chuẩn | 420 × 420,7 µm, 71 800 µm², mật độ 63,7% ngoài macro. 0 `BUFX2`, 0 `CLKBUFX2`, 8 macro |
+| CTS | Skew 0,112 ns (mục tiêu 0,080 ns) |
+| Timing Innovus trước ECO | Setup sau route -0,043 ns ở 9 ns, hold +0,020, recovery +6,355, removal +0,025 |
+| DRC | 5 lỗi sau route, `fix_drc_boxes` sửa còn 1 (Metal1 `ParallelRunLength` giữa `FE_OFN1608_inc_u_core_u_csr_add_258_50_n_29` và `n_9957`), ECO sửa còn 0 |
+| max_tran | 1 net (2 điểm, xấu nhất -0,025 ns, ví dụ `n_5414`) trước ECO, 0 sau ECO |
+| Sau ECO (Innovus, 9 ns) | Setup -0,047, hold +0,020, max_cap 0, max_tran 0, antenna sạch |
+| Connectivity | 2 chỗ hở `VSS` ở góc vành nguồn, (8,5, 8,5) và (21,6, 327,5), có từ trước ECO. Sửa ở PD-08 |
+| Fanout | 134 net vượt `set_max_fanout 32`, như các lần trước |
+| Công suất | 3,235 mW (Innovus, activity mặc định, 9 ns) |
+| Signoff Tempus 10 ns | Setup +0,977, hold +0,020, recovery +7,434, removal +0,023 (`docs/sta_results.md` mục 6), chốt 100 MHz |
+
+ECO (18/11, script ở `~/eco_p9.tcl` và `~/eco_out_p9.tcl` trên server, ngoài repo):
+
+1. Khôi phục `DBS/route_drcfix.enc`, gỡ filler, `optDesign -postRoute -drv` cho max_tran.
+2. `editDelete -net n_9957` rồi `ecoRoute`. Innovus 21.19 không có `deleteRoute`, gõ lệnh này thì Innovus đoán thành `deleteRouteBlk` và báo lỗi.
+3. Chèn lại filler, lưu `DBS/route_eco.enc`, kiểm DRC, connectivity, antenna, `timeDesign` setup và hold.
+4. Xuất lại netlist, netlist PG, SPEF, SDF, GDS vào `pnr/out_soc_p9/` bằng đúng lệnh của `run_all.tcl`. Bản gốc của Nguyên chuyển vào `pnr/out_soc_p9/pre_eco/`.
+
+LEC-03 (Phúc) và GLS có SDF (Hiếu) dùng file trong `pnr/out_soc_p9/`, không dùng `pre_eco/`.
