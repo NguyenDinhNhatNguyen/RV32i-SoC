@@ -23,10 +23,10 @@ Chủ: Phát. Đặc tả SoC ở `docs/spec/soc_spec.md`. Bus và bộ nhớ �
 
 | Chân | Hướng | Ý nghĩa |
 | --- | --- | --- |
-| `clk` | in | Clock duy nhất, mục tiêu 50 MHz |
+| `clk` | in | Clock duy nhất, chốt 100 MHz (18/11), đề yêu cầu tối thiểu 50 MHz |
 | `rst_n` | in | Reset ngoài, tích cực thấp, bất đồng bộ |
 | `gpio_i[31:0]`, `gpio_o[31:0]`, `gpio_oe[31:0]` | in, out, out | GPIO. `gpio_oe = 1` là ngõ ra, pad 3 trạng thái nối ở mức chip |
-| `uart_rx`, `uart_tx` | in, out | UART 8N1, mặc định 115200 baud ở 50 MHz (`BAUDDIV = 27`) |
+| `uart_rx`, `uart_tx` | in, out | UART 8N1, `BAUDDIV = 27` sau reset: 115200 baud ở 50 MHz, 230 400 baud ở 100 MHz |
 | `spi_sclk`, `spi_mosi`, `spi_cs_n`, `spi_miso` | out, out, out, in | SPI master (RTL-13), `spi_cs_n` mặc định 1 |
 | `pwm_o` | out | PWM (RTL-13) |
 | `i2c_scl_i`, `i2c_scl_oe`, `i2c_sda_i`, `i2c_sda_oe` | in, out, in, out | I2C master (RTL-14), open drain. `*_oe = 1` thì pad kéo đường dây xuống 0, `*_oe = 0` thì nhả cho điện trở kéo lên. `*_i` là mức thật trên đường dây |
@@ -147,7 +147,7 @@ File `syn/constraints/soc.sdc`. Mỗi ràng buộc có chú thích lý do ngay t
 
 | Ràng buộc | Giá trị | Ghi chú |
 | --- | --- | --- |
-| Clock `clk` | Chu kỳ 20 ns (50 MHz), duty 50% | Một miền clock. Chu kỳ là biến `SOC_PERIOD`, đổi số này thì input và output delay max đổi theo (STA-03) |
+| Clock `clk` | Chu kỳ 20 ns (50 MHz) trong file, duty 50% | Một miền clock. Chu kỳ là biến `SOC_PERIOD`, đổi số này thì input và output delay max đổi theo (STA-03). Netlist chính thức tổng hợp với `PERIOD=9`, signoff Tempus với `SOC_PERIOD` 10 ns (`docs/sta_results.md` mục 5) |
 | Uncertainty | Setup 0,15 ns, hold 0,08 ns | Giống Lab 01 và `accel.sdc` |
 | Clock transition | 0,08 ns | Chỉ dùng trước CTS, sau CTS tool dùng clock thật |
 | Input delay | Max 4,8 ns, min 0,3 ns cho `gpio_i[*]`, `uart_rx`, `spi_miso`, `i2c_scl_i`, `i2c_sda_i` | Max bằng 24% chu kỳ như Lab. `gpio_i`, `uart_rx` bất đồng bộ, đi thẳng vào bộ đồng bộ 2 flop. `spi_miso`, `i2c_sda_i` về theo clock do chính SoC tạo nên là ngõ vào đồng bộ. `i2c_scl_i` không ai đọc (không có clock stretching), chỉ ràng buộc để không bị sót |

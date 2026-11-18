@@ -7,7 +7,7 @@ Hạn nộp report PDF qua Courses: 20/12/2026.
 | Yêu cầu | Đáp ứng ở đâu | Chủ |
 | --- | --- | --- |
 | Kiến trúc bắt buộc: core RV32I, SRAM hard macro, accelerator (Lab 2 + wrapper), interconnect, Timer, UART, GPIO | `rtl/core`, `rtl/mem`, `rtl/accel`, `rtl/bus`, `rtl/periph` | Nhân, Phát, Nguyên, Phúc |
-| Process Cadence GPDK 45nm, tần số tối thiểu 50 MHz | `pnr/scripts/config.tcl`, `syn/constraints/*.sdc` (clock 20 ns) | Phát, Nguyên |
+| Process Cadence GPDK 45nm, tần số tối thiểu 50 MHz | `pnr/scripts/config.tcl`, `syn/constraints/*.sdc` (mặc định 20 ns). Chốt 100 MHz ngày 18/11: Genus và Innovus 9 ns, Tempus 10 ns (`docs/sta_results.md` mục 5, 6) | Phát, Nguyên |
 | Thiết kế RTL và kiểm tra chức năng | `tb/`, `fw/`, riscv-tests | Hiếu |
 | Bộ ràng buộc thiết kế | `syn/constraints/` | Phát |
 | Tổng hợp, tối ưu mức cổng, báo cáo | `syn/scripts/`, `appendix/syn*/` | Phát |
