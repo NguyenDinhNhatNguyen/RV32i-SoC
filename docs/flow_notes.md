@@ -90,6 +90,7 @@ make sta-soc                                     # Tempus trên syn/out_soc/
 | Sau route (STA-05) | `make sta-soc SPEF=$PWD/pnr/out_soc/soc_top.spef NETLIST=$PWD/pnr/out_soc/soc_top_pnr.v SDC=$PWD/syn/out_soc/soc_top_synth.sdc`: đọc SPEF và dùng clock thật, report ở `sta/run_soc/spef/`. Đường dẫn phải tuyệt đối vì Tempus chạy trong `sta/run_soc/`. SDC là file Genus ghi ra, giống file Innovus đọc |
 | Log Tempus | `sta/run_soc/tempus.log`, stdout và stderr (gồm dòng `ERROR`) ở `sta/run_soc/tempus.out` (từ 12/11) |
 | Thư mục kết quả riêng | Thêm `STA_OUT=<đường dẫn tuyệt đối>` để không ghi đè `pre/` hay `spef/`. Từ 16/11 `make sta-soc` xóa `summary.txt` cũ trước khi chạy và in đúng file trong `STA_OUT`, nên Tempus hỏng thì báo `ERROR` chứ không in số của lần trước |
+| Sau CTS (STA-05) | Trong `pnr/run_soc<tag>`, Innovus khôi phục `DBS/cts.enc`, rồi `saveNetlist`, `extractRC`, `rcOut -spef ... -rc_corner rc_typ` vào một thư mục riêng (19/11 dùng `sta/run_soc/cts_p9/`). Sau đó `make sta-soc` với netlist và SPEF đó. Không ghi vào `pnr/out_soc<tag>/` |
 | Nhiều corner (STA-05) | Thêm `VIEWS=cross`: ngoài slow cho setup và fast cho hold như `mmmc.view`, Tempus kiểm thêm setup ở fast và hold ở slow. Chỉ có một corner RC (`rc_typ`) vì file QRC của Lab không đọc được, và `sram_2k_macro.lib` chỉ có corner typical |
 | Signoff ở chu kỳ khác | Tạo SDC từ `soc.sdc` với dòng `set SOC_PERIOD` đổi sang chu kỳ signoff, rồi truyền qua `SDC=`. Ví dụ 14/11: netlist Genus 9 ns kiểm ở 10 ns (`docs/sta_results.md` mục 5, `appendix/sta_soc_e60437a/soc_10ns.sdc`) |
 

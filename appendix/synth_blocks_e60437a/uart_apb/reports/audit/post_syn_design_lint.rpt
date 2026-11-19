@@ -1,0 +1,917 @@
+
+ 	 Check Design Report (c)
+	 ------------------- 
+No subdesign's name is greater than 1.5k in length.
+
+ Feedthrough Module(s)
+ -------------------------
+No feed through module in 'uart_apb'
+
+  Unresolved References & Empty Modules
+  ------------------------------------- 
+No unresolved references in design 'uart_apb'
+
+No empty modules in design 'uart_apb'
+
+ Unloaded Pin(s), Port(s)
+ -------------------------
+No unloaded sequential element in 'uart_apb'
+
+design 'uart_apb' has the following unloaded port(s)
+port:uart_apb/PWDATA[31]
+port:uart_apb/PWDATA[30]
+port:uart_apb/PWDATA[29]
+port:uart_apb/PWDATA[28]
+port:uart_apb/PWDATA[27]
+port:uart_apb/PWDATA[26]
+port:uart_apb/PWDATA[25]
+port:uart_apb/PWDATA[24]
+port:uart_apb/PWDATA[23]
+port:uart_apb/PWDATA[22]
+port:uart_apb/PWDATA[21]
+port:uart_apb/PWDATA[20]
+port:uart_apb/PWDATA[19]
+port:uart_apb/PWDATA[18]
+port:uart_apb/PWDATA[17]
+port:uart_apb/PWDATA[16]
+Total number of unloaded ports in design 'uart_apb' : 16
+
+ Unloaded Combinational Pin(s)
+ -------------------------------
+No unloaded combinational element in 'uart_apb'
+
+ Assigns
+ ------- 
+Encountered an assign statement at port 'port:uart_apb/PRDATA[31]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[30]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[29]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[28]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[27]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[26]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[25]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[24]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[23]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[22]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[21]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[20]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[19]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[18]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[17]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PRDATA[16]' in design uart_apb
+Encountered an assign statement at port 'port:uart_apb/PREADY' in design uart_apb
+Total number of assign statements in design 'uart_apb' : 17
+
+ Undriven Port(s)/Pin(s)
+ ------------------------
+No undriven combinational pin in 'uart_apb'
+
+No undriven sequential pin in 'uart_apb'
+
+No undriven hierarchical pin in 'uart_apb'
+
+No undriven port in 'uart_apb'
+
+ Multidriven Port(s)/Pin(s)
+--------------------------
+
+No multidriven combinational pin in 'uart_apb'
+
+No multidriven sequential pin in 'uart_apb'
+
+No multidriven hierarchical pin in 'uart_apb'
+
+No multidriven ports in 'uart_apb'
+
+No multidriven unloaded nets in 'uart_apb'
+
+  Constant Pin(s)
+  ----------------
+No constant combinational pin(s) in design 'uart_apb'
+
+No constant sequential pin(s) in design 'uart_apb'
+
+design 'uart_apb' has the following constant input hierarchical pin(s)
+hpin:uart_apb/RC_CG_HIER_INST0/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST1/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST2/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST3/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST4/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST5/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST6/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST7/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST8/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST9/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST10/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST11/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST12/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST13/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST14/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST15/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST16/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST17/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST18/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST19/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST20/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST21/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST22/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST23/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST24/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST25/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST26/test 	 (fanout : 1)
+hpin:uart_apb/RC_CG_HIER_INST27/test 	 (fanout : 1)
+Total number of constant hierarchical pins in design 'uart_apb' : 28
+
+design 'uart_apb' has the following constant port(s)
+port:uart_apb/PRDATA[31]
+port:uart_apb/PRDATA[30]
+port:uart_apb/PRDATA[29]
+port:uart_apb/PRDATA[28]
+port:uart_apb/PRDATA[27]
+port:uart_apb/PRDATA[26]
+port:uart_apb/PRDATA[25]
+port:uart_apb/PRDATA[24]
+port:uart_apb/PRDATA[23]
+port:uart_apb/PRDATA[22]
+port:uart_apb/PRDATA[21]
+port:uart_apb/PRDATA[20]
+port:uart_apb/PRDATA[19]
+port:uart_apb/PRDATA[18]
+port:uart_apb/PRDATA[17]
+port:uart_apb/PRDATA[16]
+port:uart_apb/PREADY
+Total number of constant port(s) in design 'uart_apb' : 17
+
+  Preserved instances(s)
+  ----------------
+No preserved combinational instance(s) in design 'uart_apb'
+No preserved sequential instance(s) in design 'uart_apb'
+No preserved hierarchical instance(s) in design 'uart_apb'
+
+  Physical only instances(s)
+  ----------------
+No physical only instance(s) in design 'uart_apb'
+
+  Logical only instance(s) and linked libcells
+    -----------------------------------------
+design 'uart_apb' has following logical only instance(s)
+inst:uart_apb/RC_CG_HIER_INST0/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST1/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST10/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST11/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST12/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST13/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST14/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST15/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST16/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST17/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST18/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST19/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST2/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST20/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST21/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST22/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST23/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST24/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST25/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST26/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST27/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST3/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST4/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST5/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST6/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST7/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST8/RC_CGIC_INST
+inst:uart_apb/RC_CG_HIER_INST9/RC_CGIC_INST
+inst:uart_apb/g6155
+inst:uart_apb/g6157
+inst:uart_apb/g6159
+inst:uart_apb/div_reg[0]
+inst:uart_apb/div_reg[1]
+inst:uart_apb/div_reg[2]
+inst:uart_apb/div_reg[3]
+inst:uart_apb/div_reg[4]
+inst:uart_apb/div_reg[5]
+inst:uart_apb/div_reg[6]
+inst:uart_apb/div_reg[7]
+inst:uart_apb/div_reg[8]
+inst:uart_apb/div_reg[9]
+inst:uart_apb/div_reg[10]
+inst:uart_apb/div_reg[11]
+inst:uart_apb/div_reg[12]
+inst:uart_apb/div_reg[13]
+inst:uart_apb/div_reg[14]
+inst:uart_apb/div_reg[15]
+inst:uart_apb/err_ie_reg
+inst:uart_apb/irq_reg
+inst:uart_apb/rx_en_reg
+inst:uart_apb/rx_ie_reg
+inst:uart_apb/rx_s1_reg
+inst:uart_apb/rx_s2_reg
+inst:uart_apb/rx_sh_reg[0]
+inst:uart_apb/rx_sh_reg[1]
+inst:uart_apb/rx_sh_reg[2]
+inst:uart_apb/rx_sh_reg[3]
+inst:uart_apb/rx_sh_reg[4]
+inst:uart_apb/rx_sh_reg[5]
+inst:uart_apb/rx_sh_reg[6]
+inst:uart_apb/rx_sh_reg[7]
+inst:uart_apb/tick_reg
+inst:uart_apb/tx_en_reg
+inst:uart_apb/tx_ie_reg
+inst:uart_apb/tx_sh_reg[0]
+inst:uart_apb/tx_sh_reg[1]
+inst:uart_apb/tx_sh_reg[2]
+inst:uart_apb/tx_sh_reg[3]
+inst:uart_apb/tx_sh_reg[4]
+inst:uart_apb/tx_sh_reg[5]
+inst:uart_apb/tx_sh_reg[6]
+inst:uart_apb/tx_sh_reg[7]
+inst:uart_apb/u_rxf_mem_reg[0][0]
+inst:uart_apb/u_rxf_mem_reg[0][1]
+inst:uart_apb/u_rxf_mem_reg[0][2]
+inst:uart_apb/u_rxf_mem_reg[0][3]
+inst:uart_apb/u_rxf_mem_reg[0][4]
+inst:uart_apb/u_rxf_mem_reg[0][5]
+inst:uart_apb/u_rxf_mem_reg[0][6]
+inst:uart_apb/u_rxf_mem_reg[0][7]
+inst:uart_apb/u_rxf_mem_reg[1][0]
+inst:uart_apb/u_rxf_mem_reg[1][1]
+inst:uart_apb/u_rxf_mem_reg[1][2]
+inst:uart_apb/u_rxf_mem_reg[1][3]
+inst:uart_apb/u_rxf_mem_reg[1][4]
+inst:uart_apb/u_rxf_mem_reg[1][5]
+inst:uart_apb/u_rxf_mem_reg[1][6]
+inst:uart_apb/u_rxf_mem_reg[1][7]
+inst:uart_apb/u_rxf_mem_reg[2][0]
+inst:uart_apb/u_rxf_mem_reg[2][1]
+inst:uart_apb/u_rxf_mem_reg[2][2]
+inst:uart_apb/u_rxf_mem_reg[2][3]
+inst:uart_apb/u_rxf_mem_reg[2][4]
+inst:uart_apb/u_rxf_mem_reg[2][5]
+inst:uart_apb/u_rxf_mem_reg[2][6]
+inst:uart_apb/u_rxf_mem_reg[2][7]
+inst:uart_apb/u_rxf_mem_reg[3][0]
+inst:uart_apb/u_rxf_mem_reg[3][1]
+inst:uart_apb/u_rxf_mem_reg[3][2]
+inst:uart_apb/u_rxf_mem_reg[3][3]
+inst:uart_apb/u_rxf_mem_reg[3][4]
+inst:uart_apb/u_rxf_mem_reg[3][5]
+inst:uart_apb/u_rxf_mem_reg[3][6]
+inst:uart_apb/u_rxf_mem_reg[3][7]
+inst:uart_apb/u_rxf_mem_reg[4][0]
+inst:uart_apb/u_rxf_mem_reg[4][1]
+inst:uart_apb/u_rxf_mem_reg[4][2]
+inst:uart_apb/u_rxf_mem_reg[4][3]
+inst:uart_apb/u_rxf_mem_reg[4][4]
+inst:uart_apb/u_rxf_mem_reg[4][5]
+inst:uart_apb/u_rxf_mem_reg[4][6]
+inst:uart_apb/u_rxf_mem_reg[4][7]
+inst:uart_apb/u_rxf_mem_reg[5][0]
+inst:uart_apb/u_rxf_mem_reg[5][1]
+inst:uart_apb/u_rxf_mem_reg[5][2]
+inst:uart_apb/u_rxf_mem_reg[5][3]
+inst:uart_apb/u_rxf_mem_reg[5][4]
+inst:uart_apb/u_rxf_mem_reg[5][5]
+inst:uart_apb/u_rxf_mem_reg[5][6]
+inst:uart_apb/u_rxf_mem_reg[5][7]
+inst:uart_apb/u_rxf_mem_reg[6][0]
+inst:uart_apb/u_rxf_mem_reg[6][1]
+inst:uart_apb/u_rxf_mem_reg[6][2]
+inst:uart_apb/u_rxf_mem_reg[6][3]
+inst:uart_apb/u_rxf_mem_reg[6][4]
+inst:uart_apb/u_rxf_mem_reg[6][5]
+inst:uart_apb/u_rxf_mem_reg[6][6]
+inst:uart_apb/u_rxf_mem_reg[6][7]
+inst:uart_apb/u_rxf_mem_reg[7][0]
+inst:uart_apb/u_rxf_mem_reg[7][1]
+inst:uart_apb/u_rxf_mem_reg[7][2]
+inst:uart_apb/u_rxf_mem_reg[7][3]
+inst:uart_apb/u_rxf_mem_reg[7][4]
+inst:uart_apb/u_rxf_mem_reg[7][5]
+inst:uart_apb/u_rxf_mem_reg[7][6]
+inst:uart_apb/u_rxf_mem_reg[7][7]
+inst:uart_apb/u_txf_mem_reg[0][0]
+inst:uart_apb/u_txf_mem_reg[0][1]
+inst:uart_apb/u_txf_mem_reg[0][2]
+inst:uart_apb/u_txf_mem_reg[0][3]
+inst:uart_apb/u_txf_mem_reg[0][4]
+inst:uart_apb/u_txf_mem_reg[0][5]
+inst:uart_apb/u_txf_mem_reg[0][6]
+inst:uart_apb/u_txf_mem_reg[0][7]
+inst:uart_apb/u_txf_mem_reg[1][0]
+inst:uart_apb/u_txf_mem_reg[1][1]
+inst:uart_apb/u_txf_mem_reg[1][2]
+inst:uart_apb/u_txf_mem_reg[1][3]
+inst:uart_apb/u_txf_mem_reg[1][4]
+inst:uart_apb/u_txf_mem_reg[1][5]
+inst:uart_apb/u_txf_mem_reg[1][6]
+inst:uart_apb/u_txf_mem_reg[1][7]
+inst:uart_apb/u_txf_mem_reg[2][0]
+inst:uart_apb/u_txf_mem_reg[2][1]
+inst:uart_apb/u_txf_mem_reg[2][2]
+inst:uart_apb/u_txf_mem_reg[2][3]
+inst:uart_apb/u_txf_mem_reg[2][4]
+inst:uart_apb/u_txf_mem_reg[2][5]
+inst:uart_apb/u_txf_mem_reg[2][6]
+inst:uart_apb/u_txf_mem_reg[2][7]
+inst:uart_apb/u_txf_mem_reg[3][0]
+inst:uart_apb/u_txf_mem_reg[3][1]
+inst:uart_apb/u_txf_mem_reg[3][2]
+inst:uart_apb/u_txf_mem_reg[3][3]
+inst:uart_apb/u_txf_mem_reg[3][4]
+inst:uart_apb/u_txf_mem_reg[3][5]
+inst:uart_apb/u_txf_mem_reg[3][6]
+inst:uart_apb/u_txf_mem_reg[3][7]
+inst:uart_apb/u_txf_mem_reg[4][0]
+inst:uart_apb/u_txf_mem_reg[4][1]
+inst:uart_apb/u_txf_mem_reg[4][2]
+inst:uart_apb/u_txf_mem_reg[4][3]
+inst:uart_apb/u_txf_mem_reg[4][4]
+inst:uart_apb/u_txf_mem_reg[4][5]
+inst:uart_apb/u_txf_mem_reg[4][6]
+inst:uart_apb/u_txf_mem_reg[4][7]
+inst:uart_apb/u_txf_mem_reg[5][0]
+inst:uart_apb/u_txf_mem_reg[5][1]
+inst:uart_apb/u_txf_mem_reg[5][2]
+inst:uart_apb/u_txf_mem_reg[5][3]
+inst:uart_apb/u_txf_mem_reg[5][4]
+inst:uart_apb/u_txf_mem_reg[5][5]
+inst:uart_apb/u_txf_mem_reg[5][6]
+inst:uart_apb/u_txf_mem_reg[5][7]
+inst:uart_apb/u_txf_mem_reg[6][0]
+inst:uart_apb/u_txf_mem_reg[6][1]
+inst:uart_apb/u_txf_mem_reg[6][2]
+inst:uart_apb/u_txf_mem_reg[6][3]
+inst:uart_apb/u_txf_mem_reg[6][4]
+inst:uart_apb/u_txf_mem_reg[6][5]
+inst:uart_apb/u_txf_mem_reg[6][6]
+inst:uart_apb/u_txf_mem_reg[6][7]
+inst:uart_apb/u_txf_mem_reg[7][0]
+inst:uart_apb/u_txf_mem_reg[7][1]
+inst:uart_apb/u_txf_mem_reg[7][2]
+inst:uart_apb/u_txf_mem_reg[7][3]
+inst:uart_apb/u_txf_mem_reg[7][4]
+inst:uart_apb/u_txf_mem_reg[7][5]
+inst:uart_apb/u_txf_mem_reg[7][6]
+inst:uart_apb/u_txf_mem_reg[7][7]
+inst:uart_apb/uart_txd_reg
+inst:uart_apb/g11244__2398
+inst:uart_apb/g11246__5107
+inst:uart_apb/g11247__6260
+inst:uart_apb/g11249__4319
+inst:uart_apb/g11250__8428
+inst:uart_apb/g11252__5526
+inst:uart_apb/g11253__6783
+inst:uart_apb/g11254__3680
+inst:uart_apb/g11255__1617
+inst:uart_apb/g11257__2802
+inst:uart_apb/g11258__1705
+inst:uart_apb/g11259__5122
+inst:uart_apb/g11260__8246
+inst:uart_apb/g11262__7098
+inst:uart_apb/g11263__6131
+inst:uart_apb/g11264__1881
+inst:uart_apb/g11265__5115
+inst:uart_apb/g11267__7482
+inst:uart_apb/g11268__4733
+inst:uart_apb/g11269__6161
+inst:uart_apb/g11270__9315
+inst:uart_apb/g11272__9945
+inst:uart_apb/g11273__2883
+inst:uart_apb/g11275__2346
+inst:uart_apb/g11276__1666
+inst:uart_apb/g11277__7410
+inst:uart_apb/g11279__5477
+inst:uart_apb/g11280__2398
+inst:uart_apb/g11281__5107
+inst:uart_apb/g11282__6260
+inst:uart_apb/g11283__4319
+inst:uart_apb/g11284__8428
+inst:uart_apb/g11285__5526
+inst:uart_apb/g11286__6783
+inst:uart_apb/g11287__3680
+inst:uart_apb/g11288__1617
+inst:uart_apb/g11289__2802
+inst:uart_apb/g11290__1705
+inst:uart_apb/g11291__5122
+inst:uart_apb/g11292__8246
+inst:uart_apb/g11293__7098
+inst:uart_apb/g11294__6131
+inst:uart_apb/g11295__1881
+inst:uart_apb/g11296__5115
+inst:uart_apb/g11297__7482
+inst:uart_apb/g11298__4733
+inst:uart_apb/g11299__6161
+inst:uart_apb/g11300__9315
+inst:uart_apb/g11301__9945
+inst:uart_apb/g11302__2883
+inst:uart_apb/g11303__2346
+inst:uart_apb/g11304__1666
+inst:uart_apb/g11305__7410
+inst:uart_apb/g11306__6417
+inst:uart_apb/g11307__5477
+inst:uart_apb/g11308__2398
+inst:uart_apb/g11309__5107
+inst:uart_apb/g11310__6260
+inst:uart_apb/g11311__4319
+inst:uart_apb/g11312__8428
+inst:uart_apb/g11313__5526
+inst:uart_apb/g11314__6783
+inst:uart_apb/g11315__3680
+inst:uart_apb/g11316__1617
+inst:uart_apb/g11317__2802
+inst:uart_apb/g11318__1705
+inst:uart_apb/g11319__5122
+inst:uart_apb/g11320__8246
+inst:uart_apb/g11321
+inst:uart_apb/g11322__7098
+inst:uart_apb/g11323__6131
+inst:uart_apb/g11324__1881
+inst:uart_apb/g11325__5115
+inst:uart_apb/g11326__7482
+inst:uart_apb/g11327
+inst:uart_apb/g11328__4733
+inst:uart_apb/g11329__6161
+inst:uart_apb/g11330__9315
+inst:uart_apb/g11331__9945
+inst:uart_apb/g11332__2883
+inst:uart_apb/g11333__2346
+inst:uart_apb/g11334__1666
+inst:uart_apb/g11335__7410
+inst:uart_apb/g11336__6417
+inst:uart_apb/g11337__5477
+inst:uart_apb/g11338__2398
+inst:uart_apb/g11339
+inst:uart_apb/g11340__5107
+inst:uart_apb/g11341__6260
+inst:uart_apb/g11342__4319
+inst:uart_apb/g11343__8428
+inst:uart_apb/g11344__5526
+inst:uart_apb/g11345__6783
+inst:uart_apb/g11346__3680
+inst:uart_apb/g11347__1617
+inst:uart_apb/g11348__2802
+inst:uart_apb/g11349__1705
+inst:uart_apb/g11350__5122
+inst:uart_apb/g11351__8246
+inst:uart_apb/g11352__7098
+inst:uart_apb/g11353__6131
+inst:uart_apb/g11354__1881
+inst:uart_apb/g11355__5115
+inst:uart_apb/g11356__7482
+inst:uart_apb/g11357__4733
+inst:uart_apb/g11358__6161
+inst:uart_apb/g11359__9315
+inst:uart_apb/g11360__9945
+inst:uart_apb/g11361__2883
+inst:uart_apb/g11370__2346
+inst:uart_apb/g11371__1666
+inst:uart_apb/g11372__7410
+inst:uart_apb/g11373__6417
+inst:uart_apb/g11374__5477
+inst:uart_apb/g11375
+inst:uart_apb/g11376__2398
+inst:uart_apb/g11377__5107
+inst:uart_apb/g11378__6260
+inst:uart_apb/g11379__4319
+inst:uart_apb/g11380__8428
+inst:uart_apb/g11381__5526
+inst:uart_apb/g11382__6783
+inst:uart_apb/g11383__3680
+inst:uart_apb/g11384__1617
+inst:uart_apb/g11385__2802
+inst:uart_apb/g11386__1705
+inst:uart_apb/g11387__5122
+inst:uart_apb/g11388__8246
+inst:uart_apb/g11389__7098
+inst:uart_apb/g11390
+inst:uart_apb/g11391__6131
+inst:uart_apb/g11392__1881
+inst:uart_apb/g11401__5115
+inst:uart_apb/g11402__7482
+inst:uart_apb/g11405__4733
+inst:uart_apb/g11406__6161
+inst:uart_apb/g11407__9315
+inst:uart_apb/g11408__9945
+inst:uart_apb/g11409__2883
+inst:uart_apb/g11410__2346
+inst:uart_apb/g11411__1666
+inst:uart_apb/g11412__7410
+inst:uart_apb/g11413__6417
+inst:uart_apb/g11414__5477
+inst:uart_apb/g11415__2398
+inst:uart_apb/g11416__5107
+inst:uart_apb/g11417__6260
+inst:uart_apb/g11418__4319
+inst:uart_apb/g11419__8428
+inst:uart_apb/g11420
+inst:uart_apb/g11427__5526
+inst:uart_apb/g11432
+inst:uart_apb/g11433__6783
+inst:uart_apb/g11435__1617
+inst:uart_apb/g11436__2802
+inst:uart_apb/g11437__1705
+inst:uart_apb/g11438__5122
+inst:uart_apb/g11439__8246
+inst:uart_apb/g11440__7098
+inst:uart_apb/g11441__6131
+inst:uart_apb/g11442__1881
+inst:uart_apb/g11443__5115
+inst:uart_apb/g11453
+inst:uart_apb/g11454__7482
+inst:uart_apb/g11455__4733
+inst:uart_apb/g11456__6161
+inst:uart_apb/g11457__9315
+inst:uart_apb/g11458__9945
+inst:uart_apb/g11460__2883
+inst:uart_apb/g11461__2346
+inst:uart_apb/g11462__1666
+inst:uart_apb/g11470__7410
+inst:uart_apb/g11472__6417
+inst:uart_apb/g11473__5477
+inst:uart_apb/g11474__2398
+inst:uart_apb/g11475__5107
+inst:uart_apb/g11476__6260
+inst:uart_apb/g11479__4319
+inst:uart_apb/g11480__8428
+inst:uart_apb/g11481__5526
+inst:uart_apb/g11482__6783
+inst:uart_apb/g11483__3680
+inst:uart_apb/g11484__1617
+inst:uart_apb/g11485__2802
+inst:uart_apb/g11486__1705
+inst:uart_apb/g11487__5122
+inst:uart_apb/g11488__8246
+inst:uart_apb/g11489__7098
+inst:uart_apb/g11490__6131
+inst:uart_apb/g11491__1881
+inst:uart_apb/g11492__5115
+inst:uart_apb/g11493__7482
+inst:uart_apb/g11502
+inst:uart_apb/g11503__4733
+inst:uart_apb/g11504__6161
+inst:uart_apb/g11505__9315
+inst:uart_apb/g11507__9945
+inst:uart_apb/g11508__2883
+inst:uart_apb/g11509__2346
+inst:uart_apb/g11510__1666
+inst:uart_apb/g11511__7410
+inst:uart_apb/g11521
+inst:uart_apb/g11522__6417
+inst:uart_apb/g11523__5477
+inst:uart_apb/g11524__2398
+inst:uart_apb/g11525__5107
+inst:uart_apb/g11526__6260
+inst:uart_apb/g11527__4319
+inst:uart_apb/g11529__8428
+inst:uart_apb/g11530__5526
+inst:uart_apb/g11540
+inst:uart_apb/g11541__3680
+inst:uart_apb/g11544__1617
+inst:uart_apb/g11545__2802
+inst:uart_apb/g11546__1705
+inst:uart_apb/g11547__5122
+inst:uart_apb/g11548
+inst:uart_apb/g11549
+inst:uart_apb/g11550__8246
+inst:uart_apb/g11551__7098
+inst:uart_apb/g11553__6131
+inst:uart_apb/g11554__1881
+inst:uart_apb/g11555__5115
+inst:uart_apb/g11556
+inst:uart_apb/g11560__4733
+inst:uart_apb/g11561__6161
+inst:uart_apb/g11562__9315
+inst:uart_apb/g11563__9945
+inst:uart_apb/g11564__2883
+inst:uart_apb/g11565__2346
+inst:uart_apb/g11566__1666
+inst:uart_apb/g11567__7410
+inst:uart_apb/g11568__6417
+inst:uart_apb/g11569__5477
+inst:uart_apb/g11572__2398
+inst:uart_apb/g11573__5107
+inst:uart_apb/g11574__6260
+inst:uart_apb/g11575__4319
+inst:uart_apb/g11576__8428
+inst:uart_apb/g11577__5526
+inst:uart_apb/g11578__6783
+inst:uart_apb/g11579__3680
+inst:uart_apb/g11580__1617
+inst:uart_apb/g11581__2802
+inst:uart_apb/g11582__1705
+inst:uart_apb/g11583__5122
+inst:uart_apb/g11584
+inst:uart_apb/g11585
+inst:uart_apb/g11586
+inst:uart_apb/g11587
+inst:uart_apb/g11639
+inst:uart_apb/g11640
+inst:uart_apb/g11641
+inst:uart_apb/g11642
+inst:uart_apb/g11643
+inst:uart_apb/g11679__8246
+inst:uart_apb/g11680__7098
+inst:uart_apb/g11681__6131
+inst:uart_apb/g11682__1881
+inst:uart_apb/g11683__5115
+inst:uart_apb/g11684__7482
+inst:uart_apb/g11685__4733
+inst:uart_apb/g11686__6161
+inst:uart_apb/g11687__9315
+inst:uart_apb/g11688__9945
+inst:uart_apb/g11689__2883
+inst:uart_apb/g11691__2346
+inst:uart_apb/g11692__1666
+inst:uart_apb/g11693__7410
+inst:uart_apb/g11694__6417
+inst:uart_apb/g11695
+inst:uart_apb/g11697
+inst:uart_apb/g11698
+inst:uart_apb/g11699
+inst:uart_apb/g11700
+inst:uart_apb/g11701
+inst:uart_apb/g11702
+inst:uart_apb/g2__5477
+inst:uart_apb/g11708__2398
+inst:uart_apb/g11709__5107
+inst:uart_apb/bcnt_reg[0]
+inst:uart_apb/bcnt_reg[1]
+inst:uart_apb/bcnt_reg[2]
+inst:uart_apb/bcnt_reg[3]
+inst:uart_apb/bcnt_reg[4]
+inst:uart_apb/bcnt_reg[5]
+inst:uart_apb/bcnt_reg[6]
+inst:uart_apb/bcnt_reg[7]
+inst:uart_apb/bcnt_reg[8]
+inst:uart_apb/bcnt_reg[9]
+inst:uart_apb/bcnt_reg[10]
+inst:uart_apb/bcnt_reg[11]
+inst:uart_apb/bcnt_reg[12]
+inst:uart_apb/bcnt_reg[13]
+inst:uart_apb/bcnt_reg[14]
+inst:uart_apb/bcnt_reg[15]
+inst:uart_apb/frame_err_reg
+inst:uart_apb/overrun_reg
+inst:uart_apb/rx_bit_reg[0]
+inst:uart_apb/rx_bit_reg[1]
+inst:uart_apb/rx_bit_reg[2]
+inst:uart_apb/rx_os_reg[0]
+inst:uart_apb/rx_os_reg[1]
+inst:uart_apb/rx_os_reg[2]
+inst:uart_apb/rx_os_reg[3]
+inst:uart_apb/rx_st_reg[0]
+inst:uart_apb/rx_st_reg[1]
+inst:uart_apb/rx_st_reg[2]
+inst:uart_apb/tx_bits_reg[0]
+inst:uart_apb/tx_bits_reg[1]
+inst:uart_apb/tx_bits_reg[2]
+inst:uart_apb/tx_bits_reg[3]
+inst:uart_apb/tx_os_reg[0]
+inst:uart_apb/tx_os_reg[1]
+inst:uart_apb/tx_os_reg[2]
+inst:uart_apb/tx_os_reg[3]
+inst:uart_apb/tx_ovf_reg
+inst:uart_apb/u_rxf_rptr_reg[0]
+inst:uart_apb/u_rxf_rptr_reg[1]
+inst:uart_apb/u_rxf_rptr_reg[2]
+inst:uart_apb/u_rxf_rptr_reg[3]
+inst:uart_apb/u_rxf_wptr_reg[0]
+inst:uart_apb/u_rxf_wptr_reg[1]
+inst:uart_apb/u_rxf_wptr_reg[2]
+inst:uart_apb/u_rxf_wptr_reg[3]
+inst:uart_apb/u_txf_rptr_reg[0]
+inst:uart_apb/u_txf_rptr_reg[1]
+inst:uart_apb/u_txf_rptr_reg[2]
+inst:uart_apb/u_txf_rptr_reg[3]
+inst:uart_apb/u_txf_wptr_reg[0]
+inst:uart_apb/u_txf_wptr_reg[1]
+inst:uart_apb/u_txf_wptr_reg[2]
+inst:uart_apb/u_txf_wptr_reg[3]
+inst:uart_apb/g7460__6260
+inst:uart_apb/g7461__4319
+inst:uart_apb/g7462__8428
+inst:uart_apb/g7464__5526
+inst:uart_apb/g7465
+inst:uart_apb/g7467__6783
+inst:uart_apb/g7468__3680
+inst:uart_apb/g7469__1617
+inst:uart_apb/g7471__2802
+inst:uart_apb/g7472__1705
+inst:uart_apb/g7473__5122
+inst:uart_apb/g7475__8246
+inst:uart_apb/g7476__7098
+inst:uart_apb/g7477__6131
+inst:uart_apb/g7479__1881
+inst:uart_apb/g7480__5115
+inst:uart_apb/g7481__7482
+inst:uart_apb/g7483__4733
+inst:uart_apb/g7484__6161
+inst:uart_apb/g7485__9315
+inst:uart_apb/g7487__9945
+inst:uart_apb/g7488__2883
+inst:uart_apb/g7489__2346
+inst:uart_apb/g7491__1666
+inst:uart_apb/g7492__7410
+inst:uart_apb/g7493__6417
+inst:uart_apb/g7495__5477
+inst:uart_apb/g7496__2398
+inst:uart_apb/g7497__5107
+inst:uart_apb/g7499__6260
+inst:uart_apb/g7500__4319
+inst:uart_apb/g7501__8428
+inst:uart_apb/g7505__5526
+inst:uart_apb/g7507__6783
+inst:uart_apb/g7508__3680
+inst:uart_apb/g7509__1617
+inst:uart_apb/g7510__2802
+inst:uart_apb/g7511__1705
+inst:uart_apb/g7513__5122
+inst:uart_apb/g7515
+inst:uart_apb/g7516__8246
+inst:uart_apb/g7517__7098
+inst:uart_apb/g7518__6131
+inst:uart_apb/g7519__1881
+inst:uart_apb/g7520__5115
+inst:uart_apb/g7522__7482
+inst:uart_apb/g7524__4733
+inst:uart_apb/g7528__6161
+inst:uart_apb/g7529__9315
+inst:uart_apb/g7531__9945
+inst:uart_apb/g7532__2883
+inst:uart_apb/g7533__2346
+inst:uart_apb/g7535__1666
+inst:uart_apb/g7536__7410
+inst:uart_apb/g7537__6417
+inst:uart_apb/g7542__5477
+inst:uart_apb/g7543__2398
+inst:uart_apb/g7559
+inst:uart_apb/g7560__5107
+inst:uart_apb/g7561__6260
+inst:uart_apb/g7562__4319
+inst:uart_apb/g7563__8428
+inst:uart_apb/g7564__5526
+inst:uart_apb/g7565__6783
+inst:uart_apb/g7566__3680
+inst:uart_apb/g7567__1617
+inst:uart_apb/g7568__2802
+inst:uart_apb/g7569__1705
+inst:uart_apb/g7570__5122
+inst:uart_apb/g7571__8246
+inst:uart_apb/g7572__7098
+inst:uart_apb/g7573__6131
+inst:uart_apb/g7574__1881
+inst:uart_apb/g7575__5115
+inst:uart_apb/g7578__7482
+inst:uart_apb/g7579__4733
+inst:uart_apb/g7580__6161
+inst:uart_apb/g7581__9315
+inst:uart_apb/g7582__9945
+inst:uart_apb/g7583__2883
+inst:uart_apb/g7584__2346
+inst:uart_apb/g7585__1666
+inst:uart_apb/g7586__7410
+inst:uart_apb/g7587__6417
+inst:uart_apb/g7588__5477
+inst:uart_apb/g7589__2398
+inst:uart_apb/g7590__5107
+inst:uart_apb/g7591__6260
+inst:uart_apb/g7595__4319
+inst:uart_apb/g7596__8428
+inst:uart_apb/g7597__5526
+inst:uart_apb/g7598__6783
+inst:uart_apb/g7599__3680
+inst:uart_apb/g7600__1617
+inst:uart_apb/g7601__2802
+inst:uart_apb/g7603__5122
+inst:uart_apb/g7604__8246
+inst:uart_apb/g7605__7098
+inst:uart_apb/g7606__6131
+inst:uart_apb/g7607__1881
+inst:uart_apb/g7608__5115
+inst:uart_apb/g7609__7482
+inst:uart_apb/g7610__4733
+inst:uart_apb/g7611__6161
+inst:uart_apb/g7612__9315
+inst:uart_apb/g7613__9945
+inst:uart_apb/g7614__2883
+inst:uart_apb/g7615__2346
+inst:uart_apb/g7616__1666
+inst:uart_apb/g7617__7410
+inst:uart_apb/g7618__6417
+inst:uart_apb/g7619__5477
+inst:uart_apb/g7624__2398
+inst:uart_apb/g7625__5107
+inst:uart_apb/g7626__6260
+inst:uart_apb/g7627__4319
+inst:uart_apb/g7628__8428
+inst:uart_apb/g7629__5526
+inst:uart_apb/g7630__6783
+inst:uart_apb/g7631__3680
+inst:uart_apb/g7634
+inst:uart_apb/g7636
+inst:uart_apb/g7638
+inst:uart_apb/g7639
+inst:uart_apb/g2
+inst:uart_apb/g11710
+inst:uart_apb/g11711
+inst:uart_apb/g11712
+Total number of logical only instances in design 'uart_apb' : 662
+
+design 'uart_apb' has the following logical only libcells linked to above instance(s)
+lib_cell:default_emulate_libset_max/slow_vdd1v0/TLATNTSCAX2
+lib_cell:default_emulate_libset_max/slow_vdd1v0/INVX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFSHQX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFRHQX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFRHQX8
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFHQX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFQXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFSHQX8
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI211X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI221X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI2BB1X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI222X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR4X8
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR3X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI22X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR3X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR3BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI31X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AO22XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR2BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI22X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND3BXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI22XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OR3X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AND2X6
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND3X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2BX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/INVXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI21X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND4BBXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI221X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/XNOR2X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/DFFRX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NOR3XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/ADDHX1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI211XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/NAND2BXL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/MX2XL
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI32X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI32X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/AOI21X1
+lib_cell:default_emulate_libset_max/slow_vdd1v0/OAI21XL
+
+Libcells with no corresponding LEF
+----------------------------------
+No libcell(s) found.
+
+LEF cells with no corresponding libcell
+---------------------------------------
+
+No physical (LEF) cells found.
+
+ Summary
+ ------- 
+
+              Name                       Total
+----------------------------------------------
+Unresolved References                        0
+Empty Modules                                0
+Unloaded Port(s)                            16
+Unloaded Sequential Pin(s)                   0
+Unloaded Combinational Pin(s)                0
+Assigns                                     17
+Undriven Port(s)                             0
+Undriven Leaf Pin(s)                         0
+Undriven hierarchical pin(s)                 0
+Multidriven Port(s)                          0
+Multidriven Leaf Pin(s)                      0
+Multidriven hierarchical Pin(s)              0
+Multidriven unloaded net(s)                  0
+Constant Port(s)                            17
+Constant Leaf Pin(s)                         0
+Constant hierarchical Pin(s)                28
+Preserved leaf instance(s)                   0
+Preserved hierarchical instance(s)           0
+Feedthrough Modules(s)                       0
+Libcells with no LEF cell                    0
+Physical (LEF) cells with no libcell         0
+Subdesigns with long module name             0
+Physical only instance(s)                    0
+Logical only instance(s)                   662
+
+  Done Checking the design.

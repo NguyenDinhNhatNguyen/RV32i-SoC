@@ -1,0 +1,1 @@
+block=i2c_apb top=i2c_apb cg=1 scan_flops=0 flops=68 latches=0 icg=6 wns_ps=9591.5

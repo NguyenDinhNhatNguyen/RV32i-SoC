@@ -70,11 +70,11 @@ Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), clock gating 
 | 12/11 | `spi_apb` | 682,6 | 58 | 5 | +9,624 | RTL-13 |
 | 12/11 | `pwm_apb` | 1 377,6 | 98 | 2 | +9,827 | RTL-13 |
 | 12/11 | `i2c_apb` | 882,7 | 69 | 7 | +9,890 | RTL-14, sau khi đưa `localparam` ra ngoài `generate` |
-| 14/11 | `uart_apb` | – | 223 | 28 | +9,320 | Commit `e60437a` (`tx_sh` 8 bit), Genus đọc được RTL mới |
-| 14/11 | `spi_apb` | – | 50 | 5 | +9,890 | Commit `e60437a` (`ctrl_div` 8 bit, bớt 8 flop) |
-| 14/11 | `i2c_apb` | – | 68 | 6 | +9,592 | Commit `e60437a` (`state` 3 bit, bớt 1 flop) |
+| 14/11 | `uart_apb` | 2 169,6 | 223 | 28 | +9,320 | Commit `e60437a` (`tx_sh` 8 bit), Genus đọc được RTL mới |
+| 14/11 | `spi_apb` | 619,4 | 50 | 5 | +9,890 | Commit `e60437a` (`ctrl_div` 8 bit, bớt 8 flop) |
+| 14/11 | `i2c_apb` | 835,5 | 68 | 6 | +9,592 | Commit `e60437a` (`state` 3 bit, bớt 1 flop) |
 
-Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Ba khối 12/11 có report trong `appendix/synth_blocks/<khối>/`. Ba dòng 14/11 chưa chép report về nên chưa có diện tích. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
+Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Ba khối 12/11 có report trong `appendix/synth_blocks/<khối>/`. Ba dòng 14/11 có report trong `appendix/synth_blocks_e60437a/<khối>/` (chép về 19/11). So với 12/11, `spi_apb` bớt 63 µm² và `i2c_apb` bớt 47 µm² nhờ bỏ các bit hằng. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
 
 ## 4. Quét chu kỳ trên Genus (STA-03, ở trường)
 
@@ -177,10 +177,16 @@ Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc
 | 14/11 | `pnr/out_soc_u70`, lõi 420 × 420,7 µm (PD-07, netlist 12/11) | 20 ns | +0,190 | +0,014 | +17,817 | +0,033 | `appendix/sta_soc_u70/` |
 | 18/11 | `pnr/out_soc_p9` sau ECO, lõi 420 × 420,7 µm, netlist chính thức `e60437a` (Genus 9 ns, PnR 9 ns) | **10 ns (signoff)** | **+0,977** | **+0,020** | **+7,434** | **+0,023** | `appendix/sta_soc_p9_post/sdc_10/`, `appendix/pnr_soc_p9/` |
 | 18/11 | Như trên, đối chiếu ở chu kỳ PnR | 9 ns | -0,023 (5 đường) | +0,020 | +6,434 | +0,023 | `appendix/sta_soc_p9_post/sdc_9/` |
+| 19/11 | `_p9` sau CTS (`DBS/cts.enc`), 4 view, SDC mới | 10 ns | +0,984 | +0,020 | +7,378 | +0,019 | `appendix/sta_soc_p9_sta05/cts_10_cross/` |
+| 19/11 | `_p9` sau route (sau ECO), 4 view, SDC mới | **10 ns** | **+0,977** | **+0,020** | **+7,434** | **+0,023** | `appendix/sta_soc_p9_sta05/route_10_cross/` |
 
 Ghi chú:
 - 18/11, layout `_p9`: Tempus 10 ns dùng `soc_10ns.sdc` (`soc.sdc` với chu kỳ 10 ns), 9 ns dùng SDC do Genus ghi. Ở 9 ns Tempus báo -0,023 ns, Innovus sau ECO báo -0,047 ns, cùng mức chênh như các lần trước. Setup sau layout ở 10 ns (+0,977) gần bằng trước layout (+0,978), nghĩa là delay dây và skew clock nằm gọn trong biên 1 ns. Coverage: 0 vi phạm hold trên 4351 điểm kiểm, unconstrained 278 và no_drive 76 như trước layout.
 - 18/11, đường găng ở 10 ns: setup từ Q của macro IMEM bank 3 tới `u_muldiv.p_lo_q_reg[48]`, removal ở chân `RN` của `u_muldiv.p_hi_q_reg[33]`, hold ở `u_dma.cur_dst_reg[24]`. Vẫn có `SPEF-1152` ở `i2c_scl_i` như layout u70.
+- 19/11, nhiều corner (STA-05): `make sta-soc VIEWS=cross` kiểm 4 view, setup và recovery ở slow và fast, hold và removal ở fast và slow. Server chỉ có `.lib` slow và fast cho cell chuẩn (không có typical), một corner RC (`rc_typ`), và `sram_2k_macro.lib` chỉ có corner typical. Đây là mức nhiều corner tối đa với PDK hiện có.
+- 19/11, lần chạy đầu với 4 view báo hold -0,199 ns ở view `av_hold_slow`, 50 đường, đều từ chân vào: 32 `gpio_i` và 1 `uart_rx` vào flop đầu của bộ đồng bộ, 8 `spi_miso` vào `u_spi.rx_data`, 9 `i2c_sda_i` vào `u_i2c.rx_data` và `ack_in` (`appendix/sta_soc_p9_sta05/route_10_cross_before_fix/`). Ở corner slow cây clock dài hơn `input_delay -min` 0,3 ns. Đây là vi phạm giả: `gpio_i`, `uart_rx` bất đồng bộ, còn `spi_miso`, `i2c_sda_i` chỉ đổi sau sườn lấy mẫu ít nhất 1 chu kỳ clock. Sửa trong `soc.sdc` bằng false path (`docs/soc_top.md` mục 4.7), không phải tổng hợp hay PnR lại. Sau khi sửa: 0 vi phạm ở cả 4 view. `check_timing` báo unconstrained 688 = 278 × 2 (4 view thay vì 2) + 33 chân D của flop đồng bộ × 4, no_drive 152 = 76 × 2.
+- 19/11, F_max sau layout: Tempus trên SPEF sau route ở 9, 8,5 và 8 ns cho setup -0,023, -0,523, -1,023 ns (`appendix/sta_soc_p9_sta05/fmax_<chu kỳ>/`). Cùng một đường găng, chu kỳ nhỏ nhất 9,023 ns, **F_max sau layout khoảng 110,8 MHz** (corner slow, RC typical). Hold, recovery, removal đạt ở mọi chu kỳ đã thử. Signoff 100 MHz dư khoảng 10%.
+- 19/11, sau CTS: netlist và SPEF xuất từ `pnr/run_soc_p9/DBS/cts.enc` (Innovus `saveNetlist`, `extractRC`, `rcOut`) vào `sta/run_soc/cts_p9/`. Setup sau CTS (+0,984) gần bằng sau route (+0,977), route và ECO gần như không làm tụt biên.
 - 14/11, layout u70: Đây là lần chạy thử, chưa phải layout chính thức. Số của Tempus lệch Innovus dưới 0,03 ns. Coverage: 0 vi phạm hold, unconstrained 298 như trước layout.
 - Đường găng setup vẫn là IMEM → `if_pc_q_reg[31]`. Removal xấu nhất ở chân `RN` của `minstret_q_reg[38]` trong CSR.
 - Tempus báo `SPEF-1152` ở net `i2c_scl_i`: net này trong SPEF thiếu kết nối so với netlist, Tempus nối phần thiếu bằng RC rất nhỏ. Chỉ ảnh hưởng đường vào I2C (đi qua bộ đồng bộ). Báo phía PnR kiểm lại pin của port này.

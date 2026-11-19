@@ -1,0 +1,1 @@
+top=soc_top stage=spef views=cross setup_ns=0.984 hold_ns=0.020 recovery_ns=7.378 removal_ns=0.019
