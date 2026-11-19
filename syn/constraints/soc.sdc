@@ -21,17 +21,26 @@ set_clock_uncertainty -hold  0.08 [get_clocks clk]
 set_clock_transition 0.08 [get_clocks clk]
 
 # 3. Input delays, 24% of the period for max (4.8 ns at 20 ns) and 0.3 ns for min (Lab 01 ratio).
-# gpio_i and uart_rx are asynchronous to clk and each bit goes straight into a 2-flop
-# synchronizer (gpio_apb, uart_apb). They still get an input delay so the path to the first
-# synchronizer flop is constrained and no endpoint is left unconstrained.
-# spi_miso comes back from the SPI slave in step with spi_sclk, which spi_apb makes from clk,
-# so it is a normal synchronous input (sampled in rx_data without a synchronizer).
-# i2c_sda_i is the same: i2c_apb makes SCL from clk and samples SDA in the middle of the SCL
-# high time, at least one SCL tick after the line settled. i2c_scl_i is read by nobody (no
-# clock stretching), it gets the input delay only so it is not left unconstrained.
+# Every input gets a delay, then the false paths below remove the checks that do not apply.
 set in_ports [get_ports {gpio_i[*] uart_rx spi_miso i2c_scl_i i2c_sda_i}]
 set_input_delay  -clock clk -max [expr {0.24 * $SOC_PERIOD}] $in_ports
 set_input_delay  -clock clk -min 0.3 $in_ports
+
+# gpio_i and uart_rx are asynchronous to clk and each bit goes straight into a 2-flop
+# synchronizer (gpio_apb, uart_apb), so setup and hold at the first synchronizer flop mean
+# nothing. i2c_scl_i is read by nobody (no clock stretching). These paths are false paths.
+# Found 19/11 (STA-05): with the propagated clock at the slow corner the clock reaches
+# u_gpio_in_s1_reg and u_uart_rx_s1_reg later than the 0.3 ns min input delay, so Tempus
+# reported 33 hold violations of -0.199 ns that cannot happen in silicon.
+set_false_path -from [get_ports {gpio_i[*] uart_rx i2c_scl_i}]
+
+# spi_miso and i2c_sda_i are sampled without a synchronizer, so setup stays checked. Hold is
+# not: spi_apb samples MISO on the clk edge where SCLK reaches its sampling edge, and the slave
+# changes MISO only on the other SCLK edge, at least ctrl_div + 1 clk cycles later. i2c_apb
+# samples SDA at tick 2 of the SCL high time and SDA changes only while SCL is low. The data
+# never changes within a clk cycle after the sampling edge. These were the other 17 hold
+# violations at the slow corner on 19/11.
+set_false_path -hold -from [get_ports {spi_miso i2c_sda_i}]
 
 # 4. Output delays, 20% of the period for max (4.0 ns at 20 ns) and 0.2 ns for min (Lab 01 ratio).
 # Every output comes from a flop (gpio_apb data_out and dir, uart_apb uart_txd, spi_apb sclk,
