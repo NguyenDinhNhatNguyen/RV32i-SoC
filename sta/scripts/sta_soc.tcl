@@ -8,6 +8,9 @@
 #   SDC=<file>       default syn/out_soc/soc_run.sdc (soc.sdc at the period of that Genus run)
 #   SPEF=<file>      empty before layout. With SPEF the clock is propagated (after CTS)
 #   STA_OUT=<dir>    default sta/run_soc/pre, or sta/run_soc/spef when SPEF is set
+#   VIEWS=cross      also check setup and recovery at the fast library and hold and removal at
+#                    the slow library (STA-05, multi-corner). Empty: only the two views of
+#                    mmmc.view. The summary is the worst over all active views
 #
 # Corners come from pnr/scripts/mmmc.view (same as Innovus): slow library for setup and
 # recovery, fast library for hold and removal. sram_2k_macro.lib has only a typical corner and
@@ -44,6 +47,16 @@ foreach f [list $NETLIST $DESIGN_SDC $SRAM_LIB_SLOW] {
 }
 
 read_view_definition $REPO/pnr/scripts/mmmc.view
+# Cross-corner views (VIEWS=cross). The delay corners dc_slow and dc_fast come from mmmc.view
+if {[env_or VIEWS ""] eq "cross"} {
+    create_analysis_view -name av_setup_fast -constraint_mode func -delay_corner dc_fast
+    create_analysis_view -name av_hold_slow  -constraint_mode func -delay_corner dc_slow
+    set_analysis_view -setup {av_setup av_setup_fast} -hold {av_hold av_hold_slow}
+    puts "STA: cross-corner views on (setup at slow and fast, hold at fast and slow)"
+} elseif {[env_or VIEWS ""] ne ""} {
+    puts "ERROR: VIEWS must be empty or cross"
+    exit
+}
 read_verilog $NETLIST
 set_top_module $TOP
 
@@ -85,7 +98,7 @@ set s_recovery [worst_slack -check_type recovery]
 set s_removal  [worst_slack -check_type removal]
 
 set fp [open $OUT/summary.txt w]
-puts $fp "top=$TOP stage=$STAGE setup_ns=$s_setup hold_ns=$s_hold recovery_ns=$s_recovery\
+puts $fp "top=$TOP stage=$STAGE views=[env_or VIEWS default] setup_ns=$s_setup hold_ns=$s_hold recovery_ns=$s_recovery\
 removal_ns=$s_removal"
 close $fp
 puts "Tempus done: $OUT (stage=$STAGE, setup $s_setup, hold $s_hold, recovery $s_recovery,\
