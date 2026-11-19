@@ -177,7 +177,8 @@ module tb_soc;
     // ---------------------------------------------------------- activity (PWR-01)
     // Window: from the reset release (running = 1) to the tohost write, the same window as
     // the cycle count. +vcd=<file>: VCD of dut (any simulator, large). -DGLS_SAIF (Xcelium):
-    // SAIF of dut written to gls.saif in the run folder, durations in ns.
+    // $stop at both ends of the window, where the xmsim Tcl script of scripts/gls_soc.sh
+    // starts and ends dumpsaif (the $toggle_* tasks are not available at simulation).
     reg [8*256-1:0] vcd_file;
     reg             vcd_on = 1'b0;
     task act_start;
@@ -188,8 +189,7 @@ module tb_soc;
                 vcd_on = 1'b1;
             end
 `ifdef GLS_SAIF
-            $set_toggle_region(dut);
-            $toggle_start;
+            $stop;
 `endif
         end
     endtask
@@ -197,8 +197,7 @@ module tb_soc;
         begin
             if (vcd_on) $dumpflush;
 `ifdef GLS_SAIF
-            $toggle_stop;
-            $toggle_report("gls.saif", 1.0e-9, "tb_soc.dut");
+            $stop;
 `endif
         end
     endtask

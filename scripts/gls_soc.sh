@@ -18,7 +18,7 @@
 #               T may also name the rv32im benchmarks of make bench-soc (list_bench)
 #   BENCH       1: add the 3 rv32im benchmarks to the default list (PWR-01)
 #   SAIF        1: write the SAIF of dut for each test to OUT/saif/<test>.saif (xrun only,
-#               define GLS_SAIF, PWR-01)
+#               define GLS_SAIF and the xmsim command dumpsaif, PWR-01)
 #   VCD         1: write the VCD of dut for each test to OUT/vcd/<test>.vcd (large)
 #   OUT         Run folder (default syn/out_soc/gls)
 #   gls_soc.sh --list   prints the memory image files the tests need, for copying to the server
@@ -170,6 +170,19 @@ else
     fi
 fi
 
+if [ "$SAIF" = 1 ]; then
+    cat > "$OUT/gls_saif.tcl" <<'TCL'
+run
+if {[catch {dumpsaif -scope tb_soc.dut -hierarchy -internal -output gls.saif -overwrite} m]} {
+    puts "gls_saif: dumpsaif with -hierarchy -internal failed ($m), trying the short form"
+    dumpsaif -scope tb_soc.dut -output gls.saif -overwrite
+}
+run
+dumpsaif -end
+exit
+TCL
+fi
+
 pass=0
 fail=0
 for p in $progs; do
@@ -181,10 +194,10 @@ for p in $progs; do
     rm -f "$OUT/gls.saif"
     if [ "$SIM" = xrun ]; then
         if [ "$SAIF" = 1 ]; then
-            # The SAIF tasks ($toggle_*) are registered by xrun at elaboration and must be
-            # registered again at simulation (xmsim *E,MSSYSTF with -R). One-step xrun with
-            # the same options reuses the snapshot and only runs.
-            (cd "$OUT" && xrun "${xbase[@]}" "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
+            # tb_soc -DGLS_SAIF stops ($stop) at the reset release and at the tohost write.
+            # dumpsaif records the toggles of dut between the two stops.
+            (cd "$OUT" && xrun -64bit -R -snapshot gls_soc "${args[@]}" -input gls_saif.tcl \
+                -l "$REPO/$log" > /dev/null 2>&1)
         else
             (cd "$OUT" && xrun -64bit -R -snapshot gls_soc "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
         fi

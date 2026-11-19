@@ -68,7 +68,7 @@ File SAIF lớn, không đưa lên repo. Giữ trên server ở `syn/out_soc/gls
 ## 5. Kiểm tra ở nhà (19/11)
 
 - `tb_soc -DGLS` với `+vcd=`: ghi VCD của `dut` đúng cửa sổ đo (Icarus, netlist Yosys, test `soc`, 16 MB cho 2458 chu kỳ). Vì VCD rất lớn, các testcase dài dùng SAIF của Xcelium.
-- Phần ghi SAIF (`$set_toggle_region`, `$toggle_start`, `$toggle_stop`, `$toggle_report`) là system task của Xcelium. Chỉ bật khi có define `GLS_SAIF`, nên chưa thử được ở nhà.
+- SAIF dùng lệnh Tcl `dumpsaif` của xmsim. Với define `GLS_SAIF`, tb dừng bằng `$stop` khi reset nhả và khi ghi `tohost`, script Tcl bật và tắt `dumpsaif` ở hai điểm đó. Các task `$toggle_*` không dùng được vì xmsim báo `*E,MSSYSTF` (thử trên server 19/11).
 - `power_soc.sh` đã thử phần đọc report với file `power.rpt` của STA-04: tách đúng leakage, internal, switching, tổng, và tính đúng năng lượng.
 - Chế độ RTL của `tb_soc` không đổi: fw-soc 131/131, fw-soc-c 2/2. GLS ở nhà: `soc` và `dma` PASS.
 - 3 benchmark ở mức cổng (netlist Yosys, Icarus): đang chạy, Icarus mất hơn một giờ cho CoreMark. Trên server, `gls-soc-saif` kiểm luôn phần này (các benchmark phải PASS).
