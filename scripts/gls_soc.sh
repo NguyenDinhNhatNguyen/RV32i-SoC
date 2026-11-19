@@ -14,7 +14,12 @@
 #   SDF         Empty (default): zero delay, clock 10 ns. A file: annotate it (VER-08), the
 #               clock period then comes from HALF (default 5 ns)
 #   HALF        Half clock period in ns (default 5)
-#   T           Test names (default every program of the fw-soc M1W1 build, see list_tests)
+#   T           Test names (default every program of the fw-soc M1W1 build, see list_tests).
+#               T may also name the rv32im benchmarks of make bench-soc (list_bench)
+#   BENCH       1: add the 3 rv32im benchmarks to the default list (PWR-01)
+#   SAIF        1: write the SAIF of dut for each test to OUT/saif/<test>.saif (xrun only,
+#               define GLS_SAIF, PWR-01)
+#   VCD         1: write the VCD of dut for each test to OUT/vcd/<test>.vcd (large)
 #   OUT         Run folder (default syn/out_soc/gls)
 #   gls_soc.sh --list   prints the memory image files the tests need, for copying to the server
 #
@@ -65,14 +70,23 @@ list_tests() {
     fi
 }
 
+# rv32im benchmarks of make bench-soc (built with -DBENCH_SOC), for PWR-01
+list_bench() {
+    local b
+    for b in coremark dhrystone accel_bench; do echo "tb/core/out/bench_soc/${b}_rv32im"; done
+}
+
 if [ "${1:-}" = "--list" ]; then
-    list_tests | while read -r p; do echo "$p.imem.hex $p.dmem.hex $p.tohost"; done | tr ' ' '\n'
+    { list_tests; list_bench; } | while read -r p; do echo "$p.imem.hex $p.dmem.hex $p.tohost"; done | tr ' ' '\n'
     exit 0
 fi
 
+SAIF=${SAIF:-0}
+VCD=${VCD:-0}
 progs=$(list_tests)
+[ "${BENCH:-0}" = 1 ] && progs="$progs $(list_bench)"
 if [ -n "${T:-}" ]; then
-    progs=$(for p in $progs; do case " $T " in *" $(basename "$p") "*) echo "$p" ;; esac; done)
+    progs=$(for p in $(list_tests) $(list_bench); do case " $T " in *" $(basename "$p") "*) echo "$p" ;; esac; done)
 fi
 [ -n "$progs" ] || { echo "ERROR: no test selected (T=$T)"; exit 1; }
 
@@ -85,12 +99,13 @@ esac
 [ -f "$GLS_LIB" ] || { echo "ERROR: cannot find the cell model $GLS_LIB (set GLS_LIB or PDK_DIR)"; exit 1; }
 [ -z "$SDF" ] || [ -f "$SDF" ] || { echo "ERROR: SDF file $SDF not found"; exit 1; }
 [ -f "$MACRO_V" ] || { echo "ERROR: cannot find the macro model $MACRO_V"; exit 1; }
+[ "$SAIF" != 1 ] || [ "$SIM" = xrun ] || { echo "ERROR: SAIF=1 needs SIM=xrun (use VCD=1 with iverilog)"; exit 1; }
 
 missing=""
 for p in $progs; do [ -f "$p.tohost" ] || missing="$missing $p"; done
 if [ -n "$missing" ]; then
     echo "ERROR: missing memory images for:$(echo "$missing" | cut -c1-300)"
-    echo "       At home: make fw-soc fw-soc-c, then make gls-soc-pack and copy the tarball"
+    echo "       At home: make fw-soc fw-soc-c bench-soc, then make gls-soc-pack and copy the tarball"
     echo "       to the server (docs/gls_soc.md step 2)."
     exit 1
 fi
@@ -124,6 +139,7 @@ echo "  macro model $MACRO_V, word array \"$MACRO_MEM\""
 
 defs=(GLS "GLS_HALF=$HALF" "GLS_MEM=$MACRO_MEM")
 [ -z "$SDF" ] || defs+=("GLS_SDF=\"$(absp "$SDF")\"")
+[ "$SAIF" != 1 ] || defs+=(GLS_SAIF)
 if [ -z "$SDF" ]; then mode="zero delay, clock $((HALF * 2)) ns"; else mode="SDF $SDF, clock $((HALF * 2)) ns"; fi
 echo "gls-soc: $NETLIST, $SIM, $mode, $(echo "$progs" | wc -w) tests"
 
@@ -135,6 +151,7 @@ if [ "$SIM" = xrun ]; then
     for d in "${defs[@]}"; do xdefs+=(-define "$d"); done
     timing=()
     [ -n "$SDF" ] || timing=(-nospecify -notimingchecks)
+    [ "$SAIF" != 1 ] || timing+=(-access +r)    # toggle counting reads every net of dut
     if ! (cd "$OUT" && xrun -64bit -elaborate -timescale 1ns/1ps "${xdefs[@]}" ${timing[@]+"${timing[@]}"} \
             -incdir "$REPO/$OUT" -top tb_soc -snapshot gls_soc "${srcs[@]}" \
             -l elab.log > /dev/null 2>&1); then
@@ -160,10 +177,17 @@ for p in $progs; do
     log=$OUT/$t.log
     args=(+imem="$REPO/$p.imem.hex" +dmem="$REPO/$p.dmem.hex" +"$(cat "$p.tohost")"
           +test="$t/gls" +timeout=2000000)
+    if [ "$VCD" = 1 ]; then mkdir -p "$OUT/vcd"; args+=(+vcd="$(absp "$OUT")/vcd/$t.vcd"); fi
+    rm -f "$OUT/gls.saif"
     if [ "$SIM" = xrun ]; then
         (cd "$OUT" && xrun -64bit -R -snapshot gls_soc "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
     else
         vvp -n "$OUT/gls.vvp" "${args[@]}" > "$log" 2>&1
+    fi
+    if [ "$SAIF" = 1 ]; then
+        mkdir -p "$OUT/saif"
+        if [ -s "$OUT/gls.saif" ]; then mv "$OUT/gls.saif" "$OUT/saif/$t.saif"
+        else echo "ERROR: no SAIF written for $t" >> "$log"; fi
     fi
     if grep -q '^PASS' "$log" && ! grep -qE '^(FAIL|ERROR)' "$log"; then
         echo "  $(grep '^PASS' "$log" | tail -n 1)"

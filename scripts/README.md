@@ -17,5 +17,6 @@
 | `regress.sh` | Chạy toàn bộ regression, in bảng PASS/FAIL (`make regress`, VER-05) | Container |
 | `gls_soc.sh` | GLS netlist `soc_top` với `tb_soc -DGLS` (`make gls-soc`, VER-07) | Server (xrun), container (Icarus) |
 | `gls_paths.py` | Tìm 8 macro SRAM trong netlist, ghi `gls_paths.vh` cho `tb_soc` | Cả hai |
+| `power_soc.sh` | Genus tính công suất cho từng SAIF và toggle rate mặc định, bảng `summary.md` (`make power-soc`, PWR-01) | Server |
 | `soc_cov.sh` | Coverage line và toggle của `soc_top` bằng Verilator (`make cov-soc`, VER-05) | Container |
 | `hal_lint.sh` | Lint HAL cho `soc_top`, đếm thông báo theo mức và rule (`make lint-hal`, VER-03) | Server trường |

@@ -173,6 +173,37 @@ module tb_soc;
     reg         running = 1'b0;
     reg         done    = 1'b0;
 
+`ifdef GLS
+    // ---------------------------------------------------------- activity (PWR-01)
+    // Window: from the reset release (running = 1) to the tohost write, the same window as
+    // the cycle count. +vcd=<file>: VCD of dut (any simulator, large). -DGLS_SAIF (Xcelium):
+    // SAIF of dut written to gls.saif in the run folder, durations in ns.
+    reg [8*256-1:0] vcd_file;
+    reg             vcd_on = 1'b0;
+    task act_start;
+        begin
+            if ($value$plusargs("vcd=%s", vcd_file)) begin
+                $dumpfile(vcd_file);
+                $dumpvars(0, dut);
+                vcd_on = 1'b1;
+            end
+`ifdef GLS_SAIF
+            $set_toggle_region(dut);
+            $toggle_start;
+`endif
+        end
+    endtask
+    task act_stop;
+        begin
+            if (vcd_on) $dumpflush;
+`ifdef GLS_SAIF
+            $toggle_stop;
+            $toggle_report("gls.saif", 1.0e-9, "tb_soc.dut");
+`endif
+        end
+    endtask
+`endif
+
     task end_test(input pass, input [8*128-1:0] why);
         begin
             if (!done) begin
@@ -184,6 +215,7 @@ module tb_soc;
                     $display("PASS: %0s (gate level, cycles %0d)", test_name, cycle);
                 else
                     $display("FAIL: %0s: %0s (gate level, cycle %0d)", test_name, why, cycle);
+                act_stop;
 `else
                 if (pass && ENABLE_DMA != 0)
                     $display({"PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, ",
@@ -373,6 +405,9 @@ module tb_soc;
         @(posedge clk) #1 check_rst(1'b0, "rose too early (after 1 edge)");
         @(posedge clk) #1 check_rst(1'b1, "did not rise after 2 edges");
         running = 1'b1;
+`ifdef GLS
+        act_start;
+`endif
     end
 
 endmodule

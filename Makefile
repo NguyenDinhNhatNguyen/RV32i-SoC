@@ -27,6 +27,8 @@ help:
 	@echo "make gls-soc       - Xcelium GLS of the soc_top netlist with tb_soc -DGLS (server, VER-07)"
 	@echo "make gls-soc-pack  - memory images for gls-soc in tb/soc/out/gls_images.tgz (home)"
 	@echo "make gls-soc-home  - same GLS flow on a Yosys netlist with Icarus (home check)"
+	@echo "make gls-soc-saif  - GLS of the PWR_TESTS with SAIF per testcase (server, PWR-01)"
+	@echo "make power-soc     - Genus pre-layout power per SAIF and default toggle rate (server, PWR-01)"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -1174,7 +1176,7 @@ cov-soc:
 # make synth-soc, the fw-soc M1W1 programs. Docs: docs/gls_soc.md.
 #   make gls-soc                   server, Xcelium, zero delay (SDF=<file> for VER-08)
 #   make gls-soc T="soc dma"       some tests
-#   make gls-soc-pack              at home after make fw-soc fw-soc-c: memory images in
+#   make gls-soc-pack              at home after make fw-soc fw-soc-c bench-soc: images in
 #                                  tb/soc/out/gls_images.tgz, to copy to the server
 #   make gls-soc-home              at home: the same flow on a Yosys netlist with Icarus,
 #                                  checks tb_soc -DGLS and the scripts (T="soc rv32ui-p-add")
@@ -1188,7 +1190,7 @@ gls-soc:
 
 gls-soc-pack:
 	@missing=$$(bash scripts/gls_soc.sh --list | while read -r f; do [ -f $$f ] || echo $$f; done | head -3); \
-	if [ -n "$$missing" ]; then echo "ERROR: missing $$missing, run make fw-soc fw-soc-c first"; exit 1; fi
+	if [ -n "$$missing" ]; then echo "ERROR: missing $$missing, run make fw-soc fw-soc-c bench-soc first"; exit 1; fi
 	tar czf tb/soc/out/gls_images.tgz $$(bash scripts/gls_soc.sh --list)
 	@echo "gls-soc-pack: $$(bash scripts/gls_soc.sh --list | wc -l) files in tb/soc/out/gls_images.tgz"
 
@@ -1199,6 +1201,23 @@ $(GLS_HOME_NET): $(wildcard rtl/*/*.v) syn/yosys/sram_2k_macro_bb.v syn/yosys/gl
 gls-soc-home: $(GLS_HOME_NET)
 	@SIM=iverilog NETLIST=$(GLS_HOME_NET) GLS_LIB=$$(yosys-config --datdir)/simcells.v \
 	  OUT=$(GLS_HOME_OUT)/run T="$${T:-soc rv32ui-p-add}" bash scripts/gls_soc.sh
+
+# ---------------------------------------------------------------------------
+# Pre-layout power per testcase (Hieu, PWR-01), server only. Docs: docs/power_soc.md.
+#   make gls-soc-saif    GLS of the PWR_TESTS with SAIF of dut (syn/out_soc/gls_pwr/saif/)
+#   make power-soc       Genus power for each SAIF and for the default toggle rate,
+#                        table in syn/out_soc/power/summary.md
+# Both take NETLIST=<file> like gls-soc. The benchmark images come from make bench-soc
+# (packed by make gls-soc-pack).
+# ---------------------------------------------------------------------------
+PWR_TESTS ?= soc dma i2c spi_pwm soc_fw_rv32im coremark_rv32im dhrystone_rv32im accel_bench_rv32im
+
+.PHONY: gls-soc-saif power-soc
+gls-soc-saif:
+	@SAIF=1 OUT=syn/out_soc/gls_pwr T="$(PWR_TESTS)" bash scripts/gls_soc.sh
+
+power-soc:
+	@bash scripts/power_soc.sh
 
 lint-all:
 	@fail=0; sum=""; \

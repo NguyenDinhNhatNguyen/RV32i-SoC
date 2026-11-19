@@ -44,6 +44,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `lint_status.md` | Quy trình lint sau mỗi lần merge, danh sách waiver, bảng kết quả (VER-03) |
 | `regression.md` | `make regress` (15 target), coverage `soc_top` bằng Verilator, xác nhận RTL freeze (VER-05) |
 | `gls_soc.md` | GLS netlist `soc_top` bằng `tb_soc -DGLS`, các bước ở nhà và trên server (VER-07) |
+| `power_soc.md` | Công suất `soc_top` trước layout theo testcase (SAIF từ GLS) và theo toggle rate mặc định (PWR-01) |
 | `fw_soc_c.md` | Firmware C trên `soc_top`: UART, GPIO, timer, ngắt, accelerator, rv32um (VER-04) |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
 | `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |
