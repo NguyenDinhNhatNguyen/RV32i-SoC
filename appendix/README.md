@@ -24,6 +24,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `pnr_soc_p9/` | Innovus `soc_top` trên netlist chính thức STA-04 (18/11, lõi 420 µm, SDC 9 ns), `eco/` là report sau ECO của Phát |
 | `sta_soc_p9_post/` | Tempus sau layout `_p9` (sau ECO, 18/11): `sdc_10` là signoff 100 MHz, `sdc_9` để đối chiếu, kèm `tempus.log` |
 | `sta_soc_p9_sta05/` | STA-05 trên layout `_p9` (19/11): sau CTS và sau route với 4 view (`VIEWS=cross`), lần trước khi sửa SDC (`route_10_cross_before_fix`), F_max sau layout ở 9, 8,5, 8 ns, kèm `soc_10ns.sdc` mới |
+| `synth_picorv32/` | Genus PicoRV32 (`ref/picorv32`, 3 cấu hình mặc định, I, IM) cùng flow với các khối, để so với `rv32_core` (EVA-02, 19/11) |
 | `synth_blocks_e60437a/` | Genus từng khối `uart_apb`, `spi_apb`, `i2c_apb` trên RTL `e60437a` (14/11) |
 | `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |

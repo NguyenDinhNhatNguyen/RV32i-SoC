@@ -1,0 +1,1 @@
+block=picorv32_I top=picorv32 cg=1 scan_flops=0 flops=1957 latches=0 icg=49 wns_ps=12542.7

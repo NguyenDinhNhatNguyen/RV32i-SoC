@@ -76,6 +76,24 @@ Chạy bằng `make synth-blocks` (`syn/scripts/synth_block.tcl`), clock gating 
 
 Mọi khối đạt tiêu chí: 0 scan flop, 0 latch, 0 unconstrained, setup ≥ 0. Ba khối 12/11 có report trong `appendix/synth_blocks/<khối>/`. Ba dòng 14/11 có report trong `appendix/synth_blocks_e60437a/<khối>/` (chép về 19/11). So với 12/11, `spi_apb` bớt 63 µm² và `i2c_apb` bớt 47 µm² nhờ bỏ các bit hằng. Chạy lại 30/10 sau khi thêm driving cell cho cổng reset: số liệu không đổi, lint sạch. Report trong `appendix/synth_blocks/` là của lần này (trừ `sram_wrap1`).
 
+### So với PicoRV32 cùng flow Genus (EVA-02, 19/11)
+
+`make synth-block B=picorv32`, `B=picorv32_I`, `B=picorv32_IM` trên server: lõi tham chiếu `ref/picorv32` (commit `ef203c2`, không sửa), ba cấu hình như `docs/yosys_compare.md`. Cùng Genus 21.1, `slow_vdd1v0`, 20 ns, có clock gating, giữ mọi flop, cấm scan flop như `rv32_core`. Cả ba: 0 scan flop, 0 latch, timing đạt. Report ở `appendix/synth_picorv32/<cấu hình>/`.
+
+| Lõi | Cấu hình | Flop | ICG | Cell | Diện tích (µm²) | Công suất Genus (mW) | DMIPS/MHz |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `rv32_core` (28/10, `appendix/core_signoff/`) | IM, BTB 8 entry | 2163 | 58 | 9 974 | **30 226** | 0,219 | 0,88 (`docs/bench_soc.md`) |
+| PicoRV32 | mặc định | 1728 | 41 | 5 618 | 17 991 | 0,129 | - |
+| PicoRV32 | I (barrel shifter, IRQ) | 1957 | 49 | 7 022 | 21 257 | 0,161 | - |
+| PicoRV32 | IM (thêm nhân nhanh, chia) | 2295 | 54 | 10 009 | **29 529** | 0,188 | 0,516 (README PicoRV32, không đo lại) |
+
+Kết luận:
+- Cùng tính năng RV32IM, hai lõi gần bằng diện tích: `rv32_core` lớn hơn PicoRV32 IM khoảng 2,4%, dù có thêm BTB 8 entry và CSR M-mode đầy đủ hơn.
+- Hiệu năng trên mỗi MHz của `rv32_core` cao hơn khoảng 1,7 lần (0,88 so với 0,516 DMIPS/MHz), nên hiệu năng trên diện tích cũng hơn khoảng 1,7 lần.
+- Không so F_max bằng slack ở 20 ns: `rv32_core` dùng `core.sdc` có delay macro SRAM và Genus chỉ tối ưu tới khi vừa đạt (slack +0,32 ns), còn PicoRV32 dùng SDC chung của khối (24% và 20% chu kỳ, slack +6,6 đến +12,6 ns). Muốn so F_max phải quét chu kỳ cả hai với cùng kiểu ràng buộc chân.
+- Công suất Genus dùng activity mặc định, chỉ để tham khảo. Số `rv32_core` là lần 28/10, trước khi bỏ bit hằng `wb_cause_q[4]` (14/11), sai khác không đáng kể.
+- Đường găng PicoRV32 mặc định và I tới `reg_next_pc`, IM tới `pcpi_mul_rd` (bộ nhân nhanh).
+
 ## 4. Quét chu kỳ trên Genus (STA-03, ở trường)
 
 `make synth-soc-sweep`. Đây là setup sau tổng hợp: chưa có delay dây, skew clock, macro dùng `.lib` typical. Report ở `appendix/synth_soc_sweep/p<chu kỳ>/`.
