@@ -46,17 +46,27 @@ foreach f [list $NETLIST $DESIGN_SDC $SRAM_LIB_SLOW] {
     }
 }
 
-read_view_definition $REPO/pnr/scripts/mmmc.view
-# Cross-corner views (VIEWS=cross). The delay corners dc_slow and dc_fast come from mmmc.view
+# Cross-corner views (VIEWS=cross). Tempus creates the MMMC objects only when the design is
+# loaded, so the extra views go into a copy of mmmc.view instead of separate commands (a
+# create_analysis_view right after read_view_definition fails with TCLCMD-994, 19/11)
+set VIEW_FILE $REPO/pnr/scripts/mmmc.view
 if {[env_or VIEWS ""] eq "cross"} {
-    create_analysis_view -name av_setup_fast -constraint_mode func -delay_corner dc_fast
-    create_analysis_view -name av_hold_slow  -constraint_mode func -delay_corner dc_slow
-    set_analysis_view -setup {av_setup av_setup_fast} -hold {av_hold av_hold_slow}
+    set fp [open $VIEW_FILE r]
+    set view_text [read $fp]
+    close $fp
+    set VIEW_FILE $OUT/mmmc_cross.view
+    set fp [open $VIEW_FILE w]
+    puts $fp $view_text
+    puts $fp "create_analysis_view -name av_setup_fast -constraint_mode func -delay_corner dc_fast"
+    puts $fp "create_analysis_view -name av_hold_slow -constraint_mode func -delay_corner dc_slow"
+    puts $fp "set_analysis_view -setup {av_setup av_setup_fast} -hold {av_hold av_hold_slow}"
+    close $fp
     puts "STA: cross-corner views on (setup at slow and fast, hold at fast and slow)"
 } elseif {[env_or VIEWS ""] ne ""} {
     puts "ERROR: VIEWS must be empty or cross"
     exit
 }
+read_view_definition $VIEW_FILE
 read_verilog $NETLIST
 set_top_module $TOP
 
