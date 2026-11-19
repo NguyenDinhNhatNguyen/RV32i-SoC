@@ -97,7 +97,15 @@ fi
 
 mkdir -p "$OUT"
 rm -rf "$OUT"/xcelium.d "$OUT"/*.log "$OUT"/gls.vvp "$OUT"/summary.txt
-python3 scripts/gls_paths.py "$NETLIST" -o "$OUT/gls_paths.vh" 2> "$OUT/gls_paths.log" ||
+# The tool setup on the server can put another libpython in LD_LIBRARY_PATH and break
+# python3 ("undefined symbol _Py_..."), so take the first python that starts
+PY=""
+for c in "python3" "env -u LD_LIBRARY_PATH python3" "/usr/bin/python3" \
+         "env -u LD_LIBRARY_PATH /usr/bin/python3" "python"; do
+    if $c -c 'import re, argparse; x = f"{1}"' > /dev/null 2>&1; then PY=$c; break; fi
+done
+[ -n "$PY" ] || { echo "ERROR: no working python (python3 fails to start, check LD_LIBRARY_PATH)"; exit 1; }
+$PY scripts/gls_paths.py "$NETLIST" -o "$OUT/gls_paths.vh" 2> "$OUT/gls_paths.log" ||
     { cat "$OUT/gls_paths.log"; exit 1; }
 sed 's/^/  /' "$OUT/gls_paths.log"
 
