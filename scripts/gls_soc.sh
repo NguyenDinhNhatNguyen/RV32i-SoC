@@ -152,9 +152,9 @@ if [ "$SIM" = xrun ]; then
     timing=()
     [ -n "$SDF" ] || timing=(-nospecify -notimingchecks)
     [ "$SAIF" != 1 ] || timing+=(-access +r)    # toggle counting reads every net of dut
-    if ! (cd "$OUT" && xrun -64bit -elaborate -timescale 1ns/1ps "${xdefs[@]}" ${timing[@]+"${timing[@]}"} \
-            -incdir "$REPO/$OUT" -top tb_soc -snapshot gls_soc "${srcs[@]}" \
-            -l elab.log > /dev/null 2>&1); then
+    xbase=(-64bit -timescale 1ns/1ps "${xdefs[@]}" ${timing[@]+"${timing[@]}"}
+           -incdir "$(absp "$OUT")" -top tb_soc -snapshot gls_soc "${srcs[@]}")
+    if ! (cd "$OUT" && xrun -elaborate "${xbase[@]}" -l elab.log > /dev/null 2>&1); then
         echo "ERROR: xrun elaboration failed, see $OUT/elab.log"
         grep -E '\*[EF],' "$OUT/elab.log" | head -10
         exit 1
@@ -180,7 +180,14 @@ for p in $progs; do
     if [ "$VCD" = 1 ]; then mkdir -p "$OUT/vcd"; args+=(+vcd="$(absp "$OUT")/vcd/$t.vcd"); fi
     rm -f "$OUT/gls.saif"
     if [ "$SIM" = xrun ]; then
-        (cd "$OUT" && xrun -64bit -R -snapshot gls_soc "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
+        if [ "$SAIF" = 1 ]; then
+            # The SAIF tasks ($toggle_*) are registered by xrun at elaboration and must be
+            # registered again at simulation (xmsim *E,MSSYSTF with -R). One-step xrun with
+            # the same options reuses the snapshot and only runs.
+            (cd "$OUT" && xrun "${xbase[@]}" "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
+        else
+            (cd "$OUT" && xrun -64bit -R -snapshot gls_soc "${args[@]}" -l "$REPO/$log" > /dev/null 2>&1)
+        fi
     else
         vvp -n "$OUT/gls.vvp" "${args[@]}" > "$log" 2>&1
     fi
