@@ -27,6 +27,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
 | `lec_soc/` | Conformal LEC của `soc_top` (`run2/`, netlist 12/11) và của khối `apb_bridge` (LEC-01, 14/11) |
 | `lint_hal/` | HAL lint của `soc_top` trên main `7008da2` (VER-03, 13/11): `summary.txt` và `xrun.log` |
+| `ver05_regress/` | `make regress` và `make cov-soc` ngày 17/11 trên `3289802` (VER-05): bảng regression, coverage theo module, 74 lần chạy Verilator |
 | `ver06_bench/` | Output `make bench-core` và `make bench-soc` ngày 12/11 (VER-06), chạy ở nhà trong Docker |
 
 Chỉ đưa report dạng văn bản. Không đưa netlist, SPEF, SDF, database hay file nào của GPDK45.

@@ -42,6 +42,8 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `riscv-tests-status.md` | Kết quả riscv-tests và test assembly của lõi |
 | `riscof.md` | riscv-arch-test qua RISCOF |
 | `lint_status.md` | Quy trình lint sau mỗi lần merge, danh sách waiver, bảng kết quả (VER-03) |
+| `regression.md` | `make regress` (15 target), coverage `soc_top` bằng Verilator, xác nhận RTL freeze (VER-05) |
+| `gls_soc.md` | GLS netlist `soc_top` bằng `tb_soc -DGLS`, các bước ở nhà và trên server (VER-07) |
 | `fw_soc_c.md` | Firmware C trên `soc_top`: UART, GPIO, timer, ngắt, accelerator, rv32um (VER-04) |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
 | `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |

@@ -1,0 +1,53 @@
+cov-soc: 74/74 programs PASS on Verilator, ENABLE_M=1 WFI_SLEEP=1 DMA=1
+
+module file            line                   toggle                
+accel_apb.v                -                   90.7% (176/194)      
+accel_wrapper.v         95.0% (19/20)          98.0% (1217/1242)    
+accelerator_top.v       87.5% (7/8)            99.9% (995/996)      
+apb_bridge.v           100.0% (10/10)          95.4% (433/454)      
+boot_rom.v             100.0% (4/4)            96.7% (145/150)      
+dma_apb.v               95.0% (19/20)          64.1% (522/814)      
+gpio_apb.v             100.0% (6/6)            95.9% (800/834)      
+i2c_apb.v               82.4% (14/17)          61.2% (213/348)      
+imem_port.v            100.0% (1/1)            90.0% (439/488)      
+irqc_apb.v             100.0% (7/7)            64.2% (140/218)      
+pe.v                   100.0% (2/2)            99.3% (147/148)      
+pwm_apb.v               90.0% (9/10)           34.1% (133/390)      
+reset_sync.v           100.0% (1/1)            80.0% (8/10)         
+rv32_alu.v             100.0% (12/12)         100.0% (280/280)      
+rv32_btb.v             100.0% (10/10)          43.1% (987/2290)     
+rv32_core.v             98.0% (48/49)          81.0% (2316/2858)    
+rv32_csr.v              96.4% (53/55)          55.0% (826/1502)     
+rv32_decoder.v          92.0% (23/25)          99.5% (221/222)      
+rv32_imm_gen.v          87.5% (7/8)           100.0% (122/122)      
+rv32_lsu_align.v       100.0% (9/9)           100.0% (350/350)      
+rv32_muldiv.v          100.0% (10/10)          99.9% (1469/1470)    
+rv32_regfile.v         100.0% (2/2)            89.9% (2049/2278)    
+soc_top.v                  -                   87.9% (1444/1642)    
+spi_apb.v               87.5% (7/8)            59.5% (220/370)      
+sram_array.v           100.0% (2/2)            99.8% (423/424)      
+sram_wrap.v            100.0% (1/1)            99.3% (439/442)      
+sys_bus.v              100.0% (21/21)          94.6% (717/758)      
+timer_apb.v            100.0% (21/21)          68.2% (405/594)      
+uart_apb.v              90.0% (27/30)          65.7% (297/452)      
+uart_fifo.v            100.0% (2/2)            93.2% (179/192)      
+
+RTL total line: 95.4% (354/371)
+RTL total toggle: 80.4% (18112/22532)
+
+Lines never reached:
+  rtl/accel/accel_wrapper.v:97  default: state <= S_IDLE;
+  rtl/accel/accelerator_top.v:131  default: begin
+  rtl/bus/dma_apb.v:151  if (rd_rsp && m_rsp_err) begin
+  rtl/core/rv32_core.v:322  if (ex_ferr)
+  rtl/core/rv32_csr.v:237  else if (wr_mcycle)
+  rtl/core/rv32_csr.v:246  else if (wr_mcycleh)
+  rtl/core/rv32_decoder.v:180  default:          ill      = 1'b1;
+  rtl/core/rv32_imm_gen.v:24  default:   imm_o = 32'h0;
+  rtl/periph/i2c_apb.v:143  else if (op_read) state <= READ;
+  rtl/periph/i2c_apb.v:205  default: state <= IDLE;
+  rtl/periph/pwm_apb.v:47  default: ;
+  rtl/periph/spi_apb.v:137  default: prdata_r = 32'd0;
+  rtl/periph/uart_apb.v:101  end else if (!(tx_en | rx_en)) begin
+  rtl/periph/uart_apb.v:236  default: begin                       // R_WAIT: wait for the line to go high
+  rtl/periph/uart_apb.v:285  default: PRDATA = 32'd0;

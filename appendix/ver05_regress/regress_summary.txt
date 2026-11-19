@@ -1,0 +1,23 @@
+regress 17/11/2026 13:45 commit 3289802 (local changes)
+Verilator 5.052 2026-09-05 rev v5.052, Icarus Verilog version 14.0
+riscv64-unknown-elf-gcc () 16.1.0
+
+target         result    time  last result line
+lint-all       PASS        4s  LINT-ALL PASS
+unit-core      PASS       53s  UNIT-CORE: 11 passed, 0 failed
+unit-bus       PASS        2s  UNIT-BUS: 8 passed, 0 failed
+unit-periph    PASS        0s  UNIT-PERIPH: 7 passed, 0 failed
+sim-accel      PASS        0s  PASS: 40 matrix multiplies 4x4 match the golden model
+sim-accel-apb  PASS        0s  PASS: APB3 - 10 multiplies and 4 PSLVERR checks correct
+fw-core        PASS       13s  fw-core: 112 passed, 0 failed
+isa-core       PASS       10s  isa-core: 472 passed, 0 failed
+fw-bus         PASS        3s  fw-bus: 124 passed, 0 failed
+fw-soc         PASS        4s  fw-soc: 131 passed, 0 failed
+fw-soc-c       PASS       25s  fw-soc-c: 2 passed, 0 failed
+sim-boot       PASS       44s  SIM-BOOT PASS
+arch-core-dut  PASS       28s  arch-core-dut: 118 passed, 0 failed (core side only, not compared with Spike)
+bench-core     PASS      195s  bench-core: 4 passed, 0 failed
+bench-soc      PASS      453s  bench-soc: 0 failed
+
+total 834s, 15/15 targets passed
+REGRESS PASS

@@ -30,6 +30,17 @@
 // words the DMA wrote and how many cycles it was busy.
 //
 // Plusargs: +imem=<hex> +dmem=<hex> +tohost=<hex> +test=<name> +timeout=<cycles>
+//
+// With -DGLS (scripts/gls_soc.sh, VER-07) the DUT is the soc_top netlist from Genus (default
+// parameters: ENABLE_M=1, ENABLE_WFI_SLEEP=1, ENABLE_DMA=1). The netlist has no internal
+// signals, so gls_paths.vh (written by scripts/gls_paths.py from the netlist) gives the
+// hierarchical names of the 8 sram_2k_macro instances. The tb loads the programs through
+// them and ends the test on the macro write to tohost. Checks that read internal signals are
+// left out: instret, sleep and APB counters, trap without handler (ends by timeout instead),
+// the UART decoder (it needs BAUDDIV, the UART tests check the loopback data themselves),
+// the DMA statistics and the reset synchronizer checks.
+// -DGLS_HALF=<ns> sets half the clock period (default 5 ns), -DGLS_SDF=<file> annotates
+// the netlist with that SDF (VER-08).
 
 module tb_soc;
 
@@ -42,7 +53,11 @@ module tb_soc;
 
     reg clk   = 1'b0;
     reg rst_n = 1'b1;
+`ifdef GLS_HALF
+    always #(`GLS_HALF) clk = ~clk;
+`else
     always #5 clk = ~clk;
+`endif
 
     wire [31:0] gpio_i, gpio_o, gpio_oe;
     wire        uart_tx;
@@ -63,11 +78,15 @@ module tb_soc;
 
     assign gpio_i = (gpio_oe & gpio_o) | (~gpio_oe & pad);
 
+`ifdef GLS
+    soc_top dut (
+`else
     soc_top #(
         .ENABLE_M         (ENABLE_M),
         .ENABLE_WFI_SLEEP (ENABLE_WFI_SLEEP),
         .ENABLE_DMA       (ENABLE_DMA)
     ) dut (
+`endif
         .clk     (clk),
         .rst_n   (rst_n),
         .gpio_i  (gpio_i),
@@ -102,6 +121,27 @@ module tb_soc;
     end
 
     // The macro model clears itself at time 0, so copy after that
+`ifdef GLS
+`include "gls_paths.vh"
+    // Array of the macro model that holds the words (scripts/gls_soc.sh finds it in MACRO_V)
+`ifndef GLS_MEM
+`define GLS_MEM mem
+`endif
+    integer j;
+    initial begin
+        #2;
+        for (j = 0; j < 1024; j = j + 1) begin
+            `GLS_I0 .`GLS_MEM [j] = img_i[0*1024 + j];
+            `GLS_I1 .`GLS_MEM [j] = img_i[1*1024 + j];
+            `GLS_I2 .`GLS_MEM [j] = img_i[2*1024 + j];
+            `GLS_I3 .`GLS_MEM [j] = img_i[3*1024 + j];
+            `GLS_D0 .`GLS_MEM [j] = img_d[0*1024 + j];
+            `GLS_D1 .`GLS_MEM [j] = img_d[1*1024 + j];
+            `GLS_D2 .`GLS_MEM [j] = img_d[2*1024 + j];
+            `GLS_D3 .`GLS_MEM [j] = img_d[3*1024 + j];
+        end
+    end
+`else
     genvar gb;
     generate
         for (gb = 0; gb < (1 << BANK_W); gb = gb + 1) begin : g_load
@@ -115,6 +155,7 @@ module tb_soc;
             end
         end
     endgenerate
+`endif
 
     // ---------------------------------------------------------- end of test
     integer     cycle   = 0;
@@ -138,6 +179,12 @@ module tb_soc;
                 done = 1'b1;
                 if (!uart_nl)
                     $display("");           // Keep the result line at the start of a line
+`ifdef GLS
+                if (pass)
+                    $display("PASS: %0s (gate level, cycles %0d)", test_name, cycle);
+                else
+                    $display("FAIL: %0s: %0s (gate level, cycle %0d)", test_name, why, cycle);
+`else
                 if (pass && ENABLE_DMA != 0)
                     $display({"PASS: %0s (cycles %0d, instret %0d, CPI %0.3f, APB %0d, sleep %0d, ",
                               "UART %0d byte, DMA %0d words in %0d busy cycles)"},
@@ -153,11 +200,60 @@ module tb_soc;
                 else
                     $display("FAIL: %0s: %0s (cycle %0d, instret %0d)",
                              test_name, why, cycle, instret);
+`endif
                 $finish;
             end
         end
     endtask
 
+`ifdef GLS
+    // tohost lives in one macro: DMEM for the fw-soc programs, IMEM (base 0) for riscv-tests,
+    // whose tohost is in the code image. Bank = word index [11:10], row = word index [9:0]
+    // (the bank order of sram_array). The write is seen on the macro pins at the falling
+    // edge, when the zero-delay netlist has settled.
+    wire        th_dmem = (tohost >= 32'h1000_0000);
+    wire [11:0] th_word = (th_dmem ? tohost - 32'h1000_0000 : tohost) >> 2;
+    reg         th_we;
+    reg  [9:0]  th_a;
+    reg  [31:0] th_d;
+    always @(*) begin
+        case ({th_dmem, th_word[11:10]})
+            3'b100:  begin th_we = !`GLS_D0 .CEN && !`GLS_D0 .WEN; th_a = `GLS_D0 .A; th_d = `GLS_D0 .D; end
+            3'b101:  begin th_we = !`GLS_D1 .CEN && !`GLS_D1 .WEN; th_a = `GLS_D1 .A; th_d = `GLS_D1 .D; end
+            3'b110:  begin th_we = !`GLS_D2 .CEN && !`GLS_D2 .WEN; th_a = `GLS_D2 .A; th_d = `GLS_D2 .D; end
+            3'b111:  begin th_we = !`GLS_D3 .CEN && !`GLS_D3 .WEN; th_a = `GLS_D3 .A; th_d = `GLS_D3 .D; end
+            3'b000:  begin th_we = !`GLS_I0 .CEN && !`GLS_I0 .WEN; th_a = `GLS_I0 .A; th_d = `GLS_I0 .D; end
+            3'b001:  begin th_we = !`GLS_I1 .CEN && !`GLS_I1 .WEN; th_a = `GLS_I1 .A; th_d = `GLS_I1 .D; end
+            3'b010:  begin th_we = !`GLS_I2 .CEN && !`GLS_I2 .WEN; th_a = `GLS_I2 .A; th_d = `GLS_I2 .D; end
+            default: begin th_we = !`GLS_I3 .CEN && !`GLS_I3 .WEN; th_a = `GLS_I3 .A; th_d = `GLS_I3 .D; end
+        endcase
+    end
+
+    always @(posedge clk) begin
+        if (running) begin
+            cycle = cycle + 1;
+            if (cycle >= timeout)
+                end_test(1'b0, "timeout");
+            if (uart_tx === 1'bx)
+                end_test(1'b0, "uart_tx = X");
+        end
+    end
+
+    always @(negedge clk) begin
+        if (running && th_we === 1'b1 && th_a == th_word[9:0]) begin
+            if (th_d === 32'd1)
+                end_test(1'b1, "");
+            else begin
+                $sformat(msg, "tohost = 0x%08h (test %0d)", th_d, th_d >> 1);
+                end_test(1'b0, msg);
+            end
+        end
+    end
+
+`ifdef GLS_SDF
+    initial $sdf_annotate(`GLS_SDF, dut);
+`endif
+`else
     always @(posedge clk) begin
         if (running) begin
             cycle = cycle + 1;
@@ -240,14 +336,17 @@ module tb_soc;
             end
         end
     endgenerate
+`endif
 
     // ---------------------------------------------------------- reset
     task check_rst(input exp, input [8*64-1:0] why);
         begin
+`ifndef GLS
             if (dut.rst_n_sync !== exp) begin
                 $sformat(msg, "reset_sync: %0s (rst_n_sync = %b)", why, dut.rst_n_sync);
                 end_test(1'b0, msg);
             end
+`endif
         end
     endtask
 

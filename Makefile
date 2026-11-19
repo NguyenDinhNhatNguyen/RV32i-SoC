@@ -22,6 +22,11 @@ help:
 	@echo "make lint-core     - lint the RV32I core with Verilator, 0 warnings"
 	@echo "make lint-all      - every lint target (accel, core, bus, periph, soc), run after each merge"
 	@echo "make lint-hal      - Cadence HAL lint of soc_top (server), summary in lint/run_hal/summary.txt"
+	@echo "make regress       - full regression (lint, unit, fw, isa, arch, boot, bench), QUICK=1 CLEAN=1"
+	@echo "make cov-soc       - line and toggle coverage of soc_top with Verilator, after make regress"
+	@echo "make gls-soc       - Xcelium GLS of the soc_top netlist with tb_soc -DGLS (server, VER-07)"
+	@echo "make gls-soc-pack  - memory images for gls-soc in tb/soc/out/gls_images.tgz (home)"
+	@echo "make gls-soc-home  - same GLS flow on a Yosys netlist with Icarus (home check)"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -1147,6 +1152,53 @@ LINT_ALL_TARGETS := lint-accel lint-core lint-bus lint-periph lint-soc
 
 lint-hal:
 	@bash scripts/hal_lint.sh
+
+# ---------------------------------------------------------------------------
+# Full regression (Hieu, VER-05), at home in the team Docker image. Docs: docs/regression.md.
+#   make regress                   every functional target, one log each in tb/regress
+#   make regress QUICK=1           skip arch-core-dut, bench-core and bench-soc
+#   make regress CLEAN=1           delete simulation outputs first, rebuild everything
+#   make regress LIST="fw-soc sim-boot"   only these targets
+#   make cov-soc                   line and toggle coverage of soc_top with Verilator, after
+#                                  make regress (needs the fw-soc, fw-soc-c and bench-soc images)
+# ---------------------------------------------------------------------------
+.PHONY: regress cov-soc
+regress:
+	@bash scripts/regress.sh
+
+cov-soc:
+	@bash scripts/soc_cov.sh
+
+# ---------------------------------------------------------------------------
+# Gate-level simulation of soc_top (Hieu, VER-07): tb_soc -DGLS on the Genus netlist of
+# make synth-soc, the fw-soc M1W1 programs. Docs: docs/gls_soc.md.
+#   make gls-soc                   server, Xcelium, zero delay (SDF=<file> for VER-08)
+#   make gls-soc T="soc dma"       some tests
+#   make gls-soc-pack              at home after make fw-soc fw-soc-c: memory images in
+#                                  tb/soc/out/gls_images.tgz, to copy to the server
+#   make gls-soc-home              at home: the same flow on a Yosys netlist with Icarus,
+#                                  checks tb_soc -DGLS and the scripts (T="soc rv32ui-p-add")
+# ---------------------------------------------------------------------------
+GLS_HOME_OUT := tb/soc/out/gls_home
+GLS_HOME_NET := $(GLS_HOME_OUT)/soc_top_yosys_hier.v
+
+.PHONY: gls-soc gls-soc-pack gls-soc-home
+gls-soc:
+	@bash scripts/gls_soc.sh
+
+gls-soc-pack:
+	@missing=$$(bash scripts/gls_soc.sh --list | while read -r f; do [ -f $$f ] || echo $$f; done | head -3); \
+	if [ -n "$$missing" ]; then echo "ERROR: missing $$missing, run make fw-soc fw-soc-c first"; exit 1; fi
+	tar czf tb/soc/out/gls_images.tgz $$(bash scripts/gls_soc.sh --list)
+	@echo "gls-soc-pack: $$(bash scripts/gls_soc.sh --list | wc -l) files in tb/soc/out/gls_images.tgz"
+
+$(GLS_HOME_NET): $(wildcard rtl/*/*.v) syn/yosys/sram_2k_macro_bb.v syn/yosys/gls_home.tcl
+	YS_OUT=$(GLS_HOME_OUT) yosys -q -c syn/yosys/gls_home.tcl > $(GLS_HOME_OUT).log 2>&1 || \
+	  { echo "ERROR: Yosys failed, see $(GLS_HOME_OUT).log"; exit 1; }
+
+gls-soc-home: $(GLS_HOME_NET)
+	@SIM=iverilog NETLIST=$(GLS_HOME_NET) GLS_LIB=$$(yosys-config --datdir)/simcells.v \
+	  OUT=$(GLS_HOME_OUT)/run T="$${T:-soc rv32ui-p-add}" bash scripts/gls_soc.sh
 
 lint-all:
 	@fail=0; sum=""; \

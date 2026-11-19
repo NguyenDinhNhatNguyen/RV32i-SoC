@@ -65,6 +65,8 @@ fv/
 sim_build/
 obj_dir/
 tb/**/out/
+tb/regress/
+tb/cov/
 
 # Firmware build
 fw/**/*.o

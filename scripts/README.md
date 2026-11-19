@@ -14,4 +14,8 @@
 | `check_server.sh` | Ghi lại tool và PDK trên server (HT-01) | Server trường |
 | `macro_info.sh` | Tóm tắt SRAM macro, không copy file thư viện | Server trường |
 | `save_reports.sh` | Chép report văn bản vào `appendix/`, bỏ qua netlist, SPEF, GDS (`make save-pnr-soc`) | Server trường |
+| `regress.sh` | Chạy toàn bộ regression, in bảng PASS/FAIL (`make regress`, VER-05) | Container |
+| `gls_soc.sh` | GLS netlist `soc_top` với `tb_soc -DGLS` (`make gls-soc`, VER-07) | Server (xrun), container (Icarus) |
+| `gls_paths.py` | Tìm 8 macro SRAM trong netlist, ghi `gls_paths.vh` cho `tb_soc` | Cả hai |
+| `soc_cov.sh` | Coverage line và toggle của `soc_top` bằng Verilator (`make cov-soc`, VER-05) | Container |
 | `hal_lint.sh` | Lint HAL cho `soc_top`, đếm thông báo theo mức và rule (`make lint-hal`, VER-03) | Server trường |
