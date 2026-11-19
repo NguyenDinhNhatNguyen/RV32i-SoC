@@ -22,6 +22,10 @@ source $REPO/pnr/scripts/config.tcl
 # sys_bus with two masters since 07/11, which is covered by make synth-soc.
 # sram_wrap1 is sram_wrap with one macro (BANK_W = 0), a small block to practice the macro flow
 # in Genus, Conformal and Innovus (docs/macro_notes.md section 5). It is not in make synth-blocks.
+# picorv32, picorv32_I and picorv32_IM are the reference core (submodule ref/picorv32, not
+# changed) with the same three configurations as make synth-ref-yosys (docs/yosys_compare.md),
+# for the EVA-02 comparison with rv32_core under the same Genus flow. They are not in make
+# synth-blocks either. Run git submodule update --init ref/picorv32 first if the file is missing.
 set ACCEL [list $REPO/rtl/accel/pe.v $REPO/rtl/accel/accelerator_top.v \
                 $REPO/rtl/accel/accel_wrapper.v $REPO/rtl/accel/accel_apb.v]
 set BLOCKS [dict create \
@@ -44,6 +48,12 @@ set BLOCKS [dict create \
     pwm_apb    [list pwm_apb    [list $REPO/rtl/periph/pwm_apb.v]   PCLK PRESETn {} 0] \
     i2c_apb    [list i2c_apb    [list $REPO/rtl/periph/i2c_apb.v]   PCLK PRESETn {} 0] \
     accel_apb  [list accel_apb  $ACCEL pclk presetn {} 0] \
+    picorv32    [list picorv32 [list $REPO/ref/picorv32/picorv32.v] clk resetn {} 0] \
+    picorv32_I  [list picorv32 [list $REPO/ref/picorv32/picorv32.v] clk resetn \
+                                 {{BARREL_SHIFTER 1} {ENABLE_IRQ 1}} 0] \
+    picorv32_IM [list picorv32 [list $REPO/ref/picorv32/picorv32.v] clk resetn \
+                                 {{BARREL_SHIFTER 1} {ENABLE_IRQ 1} {ENABLE_FAST_MUL 1} \
+                                  {ENABLE_DIV 1}} 0] \
 ]
 
 if {![info exists ::env(BLOCK)] || ![dict exists $BLOCKS $::env(BLOCK)]} {
@@ -52,6 +62,12 @@ if {![info exists ::env(BLOCK)] || ![dict exists $BLOCKS $::env(BLOCK)]} {
 }
 set BLOCK $::env(BLOCK)
 lassign [dict get $BLOCKS $BLOCK] TOP FILES CLK RST PARAMS SRAM
+foreach f $FILES {
+    if {![file exists $f]} {
+        puts "ERROR: $f not found (for picorv32: git submodule update --init ref/picorv32)"
+        quit
+    }
+}
 
 set OUT   $REPO/syn/out_blocks/$BLOCK
 set AUDIT $OUT/reports/audit
