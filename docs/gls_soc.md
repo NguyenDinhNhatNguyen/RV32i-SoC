@@ -2,7 +2,7 @@
 
 Chủ: Hiếu. Mô phỏng mức cổng netlist `soc_top` của Genus bằng `tb_soc` và các chương trình của `make fw-soc` (cấu hình M1W1). Mục tiêu là kiểm netlist chạy đúng chức năng như RTL, trước khi chạy với SDF ở VER-08.
 
-**Trạng thái (17/11):** flow đã chạy thử ở nhà trên netlist Yosys bằng Icarus (mục 5). Chưa chạy trên server với netlist Genus.
+**Trạng thái (19/11):** PASS. Netlist Genus chính thức (STA-04) chạy trên server bằng Xcelium, 71/71 test PASS, zero delay (mục 5). GLS có SDF để dành cho VER-08.
 
 ## 1. Cách tb_soc chạy ở mức cổng
 
@@ -85,7 +85,25 @@ Rồi chép `appendix/gls_soc/` về máy nhà bằng scp và commit.
 
 `bash scripts/gls_soc.sh --list` in danh sách file hex cần có.
 
-## 5. Kết quả thử ở nhà (17/11)
+## 5. Kết quả
+
+### 5.1 Server, netlist Genus (19/11)
+
+- Netlist: `soc_top_netlist.v` của STA-04 (RTL `e60437a`, Genus 9 ns, 4068 flop, 136 ICG), ngày 14/11.
+- Xcelium 24.03, `slow_vdd1v0_basiccells.v`, model macro thật `sram_2k_macro.v` (mảng word tên `mem`).
+- Zero delay, clock 10 ns. Repo ở `a561331`.
+
+| Test | Kết quả |
+|------|---------|
+| `soc` | PASS, 2458 chu kỳ |
+| `rv32ui-p-add` | PASS, 590 chu kỳ |
+| Cả 71 test (fw-soc M1W1, fw-soc-c, riscv-tests rv32ui, rv32mi, rv32um) | **71 PASS, 0 FAIL** |
+
+Số chu kỳ trùng với lần chạy ở nhà trên netlist Yosys. Genus làm phẳng phân cấp phía trên macro thành một tên escape (`\u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac`). `gls_paths.py` vẫn tìm đúng 8 macro. Log ở `appendix/gls_soc/`.
+
+Lỗi gặp trên server: `python3` báo `undefined symbol: _Py_LegacyLocaleDetected` vì `LD_LIBRARY_PATH` của tool trỏ tới libpython khác. `gls_soc.sh` tự thử lại với `env -u LD_LIBRARY_PATH python3`.
+
+### 5.2 Ở nhà, netlist Yosys (17/11)
 
 Netlist Yosys của `soc_top` (`syn/yosys/gls_home.tcl`, cổng generic, giữ phân cấp, macro là black box), mô phỏng bằng Icarus với `simcells.v` và model macro ở nhà. Zero delay, clock 10 ns.
 
