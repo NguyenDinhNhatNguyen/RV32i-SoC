@@ -1,0 +1,19 @@
+Compared points are: Non-equivalent (reachable)
+  (G) + 3968  DFF  /g_spi.u_spi/gen_spi.clk_cnt_reg[15]
+  (R) + 841   DFF  /g_spi.u_spi_gen_spi.clk_cnt_reg[15]/U$1
+Due to these Non-equivalent points:
+[DATA]
+  (G) + 58125 MUX  /g_spi.u_spi/U$61/U$16
+  (R) + 55667 MUX  /g_spi.u_spi_gen_spi.clk_cnt_reg[15]/U$1
+
+1 Non-equivalent point(s) reported
+1 compared point(s) reported
+================================================================================
+Compared points      PO     DFF    BBOX      Total   
+--------------------------------------------------------------------------------
+Equivalent           71     3886   8         3965    
+--------------------------------------------------------------------------------
+Non-equivalent       0      1      0         1       
+--------------------------------------------------------------------------------
+Abort                0      112    0         112     
+================================================================================

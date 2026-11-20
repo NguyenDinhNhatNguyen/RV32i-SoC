@@ -1,0 +1,35 @@
+// soc_gate2gate.do.in - LEC-03: Genus netlist (golden) against the post-layout Innovus netlist (revised).
+// Do not run directly: lec/run_lec_g2g.sh fills the @@...@@ markers and writes lec/soc_gate2gate.do.
+// Same commands as lec/soc_rtl2gate.do.in (LEC-01/02), only the golden side changes from RTL to the
+// synthesized netlist. Not run on the server yet.
+
+set dofile abort off
+
+read library -both ~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v
+// sram_2k_macro is a black box on both sides (same as LEC-01/02, docs/lec_soc.md section 1).
+// The undef mode black-boxes ANY undefined module, so report black box below must list
+// sram_2k_macro and nothing else (a filler or other physical cell would show up here).
+set undefined cell black_box -noascend -both
+
+read design -golden  -verilog @@GOLDEN@@
+read design -revised -verilog @@REVISED@@
+set root module soc_top -both
+report black box -both
+
+set flatten model -seq_constant
+set flatten model -seq_constant_x_to 0
+set flatten model -nodff_to_dlat_zero
+set flatten model -nodff_to_dlat_feedback
+set flatten model -hier_seq_merge
+set flatten model -gated_clock
+set system mode lec
+
+set compare effort high
+add compared points -all
+compare
+report compare data -class nonequivalent -verbose > @@OUTDIR@@/lec_noneq.rpt
+report compare data -class abort > @@OUTDIR@@/lec_abort.rpt
+report verification > @@OUTDIR@@/lec_verification.rpt
+report unmapped points > @@OUTDIR@@/lec_unmapped.rpt
+report verification
+exit -force
