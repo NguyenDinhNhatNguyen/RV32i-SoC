@@ -1,6 +1,6 @@
 # LEC của `soc_top`: Conformal, RTL ↔ netlist Genus
 
-Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả và kết quả của lần chạy thử đầu tiên (LEC-01). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
+Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả, kết quả của lần chạy thử đầu tiên (LEC-01) và của LEC-02 (RTL ↔ netlist chính thức 14/11) và LEC-03 (netlist tổng hợp ↔ netlist sau layout). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
 
 | File | Vai trò |
 | --- | --- |
@@ -8,7 +8,9 @@ Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_
 | `lec/run_lec_soc.sh` | Kiểm tra đầu vào, sinh `lec/soc_rtl2gate.do`, chạy `lec`, in dòng kết quả |
 | `lec/soc_rtl2gate.do` | Dofile đã sinh, Conformal đọc file này |
 | `lec/apb_bridge_rtl2gate.do.in`, `lec/run_lec_apb_bridge.sh` | LEC riêng khối `apb_bridge` (mục 5) |
-| `appendix/lec_soc/` | Report văn bản của các lần chạy |
+| `lec/precheck_lec02.sh` | Kiểm tra trước khi chạy LEC-02: netlist, trạng thái git, RTL đổi sau commit chốt |
+| `lec/soc_gate2gate.do.in`, `lec/run_lec_g2g.sh` | LEC-03: netlist tổng hợp ↔ netlist sau layout. `DRY_RUN=1` và `CHECK=1` để kiểm tra đầu vào (mục 4) |
+| `appendix/lec_soc/` | Report văn bản của các lần chạy: `run3/` (LEC-02), `run4_seqfb/` (LEC-02 với `SEQ_FEEDBACK=1`), `g2g/` (LEC-03) |
 
 ## 1. Flow hoạt động thế nào
 
@@ -96,7 +98,7 @@ Với `nohup`, đóng terminal không làm dừng lệnh. Server dùng chung nê
 | `MACRO_MODE` | `undef` | `undef`: `set undefined cell black_box`. `lib` và `verilog`: `read library -both -append -liberty` hoặc `-verilog` cho macro, chưa thử |
 | `THREADS` | tắt | Thêm `set parallel option -threads N` trước `compare`. Cú pháp lấy từ `help`, chưa biết có cần license và có nhanh hơn không |
 | `ONE_LINE` | `0` | `1`: viết `read design -golden` trên một dòng dài như `core_rtl2gate.do` |
-| `SEQ_FEEDBACK` | `0` | `1`: thêm `set flatten model -seq_constant_feedback` sau các tùy chọn flatten khác, cho các flop hằng có mux giữ giá trị (11 điểm Non-equivalent ở mục 4). Chưa thử trên server |
+| `SEQ_FEEDBACK` | `0` | `1`: thêm `set flatten model -seq_constant_feedback` sau các tùy chọn flatten khác, cho các flop hằng có mux giữ giá trị (11 điểm Non-equivalent ở mục 4). Đã chạy trên server 20/11 (LEC-02, mục 4): không đổi kết quả |
 | `DRY_RUN` | `0` | `1`: chỉ sinh dofile, không chạy `lec` |
 
 Ví dụ: `LEC_DIR=syn/out_soc_lec2 THREADS=4 nohup bash lec/run_lec_soc.sh > ~/lec_soc_run2.txt 2>&1 &`
@@ -148,7 +150,7 @@ Netlist `syn/out_soc/soc_top_netlist.v` ngày 12/11 (3 323 276 byte), tổng h�
 | `g_i2c.u_i2c/gen_i2c.state_reg[3]` | `ZERO` (netlist: `.D (1'b0)`) | `i2c_apb.v`: các trạng thái chỉ có giá trị 0 đến 6, bit 3 không bao giờ là 1 |
 | `u_core/wb_cause_q_reg[4]` | `ZERO` | `rv32_core.v`: `wb_cause_q` nhận mã exception (0 đến 7 và 11, `rv32_defs.vh`) hoặc mã interrupt (3, 7, 11, `RV_INT_*`), tất cả nhỏ hơn 16 nên bit 4 luôn bằng 0 |
 
-Với 3 trường hợp đầu, điểm chung là flop có mạch giữ giá trị nhưng giá trị nạp vào luôn là hằng số. Genus thay chân D bằng hằng số, còn RTL giữ nguyên MUX nên hai hàm D khác nhau. Bản sửa đã merge ngày 14/11 (commit `e60437a`): thu hẹp bốn thanh ghi, bỏ các bit hằng số (`tx_sh` 8 bit, `ctrl_div` 8 bit, `state` 3 bit, `wb_cause_q` 4 bit). Netlist chính thức đã tổng hợp lại trên RTL này cùng ngày (`docs/sta_results.md` mục 1 và 5). Chưa chạy lại LEC trên netlist mới, đó là LEC-02.
+Với 3 trường hợp đầu, điểm chung là flop có mạch giữ giá trị nhưng giá trị nạp vào luôn là hằng số. Genus thay chân D bằng hằng số, còn RTL giữ nguyên MUX nên hai hàm D khác nhau. Bản sửa đã merge ngày 14/11 (commit `e60437a`): thu hẹp bốn thanh ghi, bỏ các bit hằng số (`tx_sh` 8 bit, `ctrl_div` 8 bit, `state` 3 bit, `wb_cause_q` 4 bit). Netlist chính thức đã tổng hợp lại trên RTL này cùng ngày (`docs/sta_results.md` mục 1 và 5). LEC trên netlist mới (LEC-02) ở cuối mục 4.
 
 ### 112 điểm Abort
 
@@ -172,6 +174,38 @@ Với `u_apb`, LEC riêng khối `apb_bridge` (mục 5) cho 0 Abort và 94/94 DF
 - 137 DLAT chỉ có ở netlist: latch của cell clock gating (`RC_CG_HIER_INST*`, `RC_CG_DECLONE_HIER_INST*`), lý do `Gated-clock deglitching latch`. Số 137 khớp 137 ICG trong `docs/sta_results.md` (12/11). Lần LEC lõi ở D-042 cũng có 58 latch ICG unreachable. Chức năng enable đã được `-gated_clock` mô hình thành enable của flop.
 - `report verification` ghi `Incomplete verification: 0`.
 
+### LEC-02 trên netlist chính thức 14/11 (chạy 20/11)
+
+Netlist `syn/out_soc/soc_top_netlist.v` ngày 14/11 (top `soc_top`, chu kỳ 9 ns), tổng hợp sau commit `e60437a` (sửa RTL cho các bit hằng số). Chạy `lec/run_lec_soc.sh` hai lần: `syn/out_soc_lec3` (mặc định) và `syn/out_soc_lec4` (`SEQ_FEEDBACK=1`, thêm `set flatten model -seq_constant_feedback`, đã xác nhận trong `lec.txt`). Lần 4:
+
+| | Số điểm |
+| --- | --- |
+| Equivalent | 3965 (71 PO, 3886 DFF, 8 BBOX) |
+| Non-equivalent | 1 (DFF) |
+| Abort | 112 (đều là DFF, cùng nguyên nhân như trên) |
+| Kết quả `report verification` | `FAIL:NONEQ`, `Non-standard modeling options used: 0`, `Incomplete verification: 0` |
+
+Cả 11 điểm Non-equivalent của 12/11 đã hết. Còn 1 điểm mới là `g_spi.u_spi/gen_spi.clk_cnt_reg[15]`. Netlist nối `.D (1'b0)` (dòng 22348), RTL còn MUX. Đây là tác dụng phụ của bản sửa: `ctrl_div` giờ chỉ 8 bit nhưng `clk_cnt` vẫn 16 bit.
+
+Kết luận: đây không phải lỗi chức năng. `clk_cnt` chỉ được gán ở 4 chỗ trong `spi_apb.v`: reset về 0 (dòng 68), nạp `{8'd0, ctrl_div}` (dòng 82, 88), và giảm 1 (dòng 115) chỉ khi `clk_cnt != 0` (nhánh `else` của dòng 87). Nên `clk_cnt <= 255` ở mọi trạng thái, bit [15:8] luôn bằng 0 và `D=1'b0` của Genus là đúng. Conformal không chứng minh được bất biến quy nạp này nên vẫn báo Non-equivalent, kể cả khi bật `-seq_constant_feedback`. Cách loại điểm này khỏi báo cáo là thu hẹp `clk_cnt` về 8 bit trong một lần ECO sau (cần tổng hợp lại).
+
+### LEC-03: netlist tổng hợp ↔ netlist sau layout (20/11)
+
+Golden là `syn/out_soc/soc_top_netlist.v` (14/11 15:55), revised là `pnr/out_soc_p9/soc_top_pnr.v` (18/11 15:31, không dùng bản `pre_eco`). Chạy `lec/run_lec_g2g.sh` (dofile mẫu `lec/soc_gate2gate.do.in`, kết quả ở `syn/out_soc_lec_g2g/`). Trước khi chạy, `DRY_RUN=1` và `CHECK=1` xác nhận: 8 macro ở mỗi phía, chỉ `sram_2k_macro` không có trong thư viện cell (bị coi là hộp đen), 0 instance FILL/DECAP/TAP, không có dòng `// Error`. Bước `compare` mất khoảng 10 giây CPU.
+
+| | Số điểm |
+| --- | --- |
+| Equivalent | 4078 (71 PO, 3999 DFF, 8 BBOX) |
+| Non-equivalent | 0 |
+| Abort | 0 |
+| Unmapped | 341: 205 phía golden (69 DFF, 136 DLAT), 136 phía revised (136 DLAT) |
+| Kết quả `report verification` | `PASS`, `Incomplete verification: 0` |
+
+Hai netlist tương đương chức năng, nên CTS, sửa hold và ECO không làm đổi logic. Điểm "Design ambiguity" là hộp đen `sram_2k_macro`, như các lần LEC khác.
+
+- **272 điểm DLAT** là latch deglitching của ICG (`Gated-clock deglitching latch`), 136 ở mỗi phía, khớp `icg=136` của netlist 14/11.
+- **69 điểm DFF chỉ ở golden** là các flop rìa PE và `done` đã nêu ở mục 4 (32 + 32 + 4 + 1), đều `unreachable: all paths to outputs are blocked`. Netlist sau layout không còn các flop này (phía revised không có điểm DFF Unmapped nào). Nguyên nhân chưa được xác nhận: có thể bước tối ưu của PnR xóa flop không có tải. Các flop này không có đường ra, nên việc mất chúng không làm đổi chức năng.
+
 ## 5. LEC riêng khối `apb_bridge` (14/11)
 
 Chạy để kiểm tra 44 Abort của `u_apb` ở mục 4. Dùng `lec/apb_bridge_rtl2gate.do.in` (mẫu) và `lec/run_lec_apb_bridge.sh`, cùng lệnh với `lec/core_rtl2gate.do`, netlist khối `syn/out_blocks/apb_bridge/apb_bridge_netlist.v` (tổng hợp 30/10). Kết quả nằm ở `syn/out_apb_bridge_lec/reports/`.
@@ -192,5 +226,7 @@ Chạy để kiểm tra 44 Abort của `u_apb` ở mục 4. Dùng `lec/apb_bridg
 - Không có `analyze datapath` (cần Conformal_Ultra), nên các khối nhân chia có thể Abort. GLS kiểm tra thêm về chức năng (`make gls-core` cho lõi).
 - Macro SRAM là hộp đen: LEC không kiểm tra bên trong macro.
 - `MACRO_MODE=undef` che mọi module thiếu. Luôn đối chiếu `report black box -both`.
+- `spi clk_cnt_reg[15]` còn báo Non-equivalent ở LEC-02 dù bit này hằng 0 (mục 4). Conformal không chứng minh được bất biến quy nạp. Thu hẹp `clk_cnt` về 8 bit sẽ loại điểm này, cần tổng hợp lại.
+- LEC-03 chỉ kiểm tương đương giữa hai netlist, không kiểm chức năng so với RTL. Chức năng sau layout cần GLS có SDF.
 - Kết quả chỉ đúng với netlist và RTL của lần chạy. RTL hoặc netlist đổi thì phải chạy lại.
 - File shell sửa trên Windows có thể bị đổi ký tự xuống dòng. Nếu `bash` báo `$'\r': command not found` thì chạy `sed -i 's/\r$//' <file>`.
