@@ -78,7 +78,8 @@ Rồi chép `appendix/gls_soc/` về máy nhà bằng scp và commit.
 | `GLS_LIB` | `~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v` | Model Verilog của cell |
 | `MACRO_V` | model thật nếu có (xrun), không thì `tb/models/sram_2k_macro.v` | Model `sram_2k_macro` |
 | `MACRO_MEM` | tự tìm | Tên mảng word trong `MACRO_V` |
-| `SDF` | rỗng (zero delay) | File SDF cho VER-08 |
+| `SDF` | rỗng (zero delay) | File SDF cho VER-08, bật timing check |
+| `SDF_MTM` | `MAXIMUM` | Giá trị nào trong bộ ba min:typ:max của SDF |
 | `HALF` | 5 | Nửa chu kỳ clock (ns) |
 | `T` | cả 71 test | Danh sách tên test |
 | `OUT` | `syn/out_soc/gls` | Thư mục chạy |
@@ -126,7 +127,7 @@ Phép thử âm: sửa lệnh `li gp,1` của `RVTEST_PASS` trong file hex thàn
 
 - Không kiểm tín hiệu nội bộ (thanh ghi, PC). Chỉ kiểm mã ghi vào `tohost`, X trên `uart_tx` và timeout.
 - Chỉ cấu hình M1W1, đúng cấu hình của netlist.
-- Zero delay chỉ kiểm chức năng. Timing kiểm bằng STA, GLS có SDF ở VER-08.
+- Zero delay chỉ kiểm chức năng. Timing kiểm bằng STA, và bằng GLS có SDF ở mục 8.
 - Icarus với netlist cổng chậm (khoảng 20 phút cho 250 nghìn chu kỳ). Xcelium nhanh hơn nhiều.
 
 ## 7. File
@@ -137,3 +138,57 @@ Phép thử âm: sửa lệnh `li gp,1` của `RVTEST_PASS` trong file hex thàn
 | `scripts/gls_soc.sh` | Dịch một lần, chạy từng test, in bảng PASS/FAIL (`make gls-soc`) |
 | `scripts/gls_paths.py` | Tìm 8 macro trong netlist, ghi `gls_paths.vh` |
 | `syn/yosys/gls_home.tcl` | Netlist Yosys để thử ở nhà (`make gls-soc-home`) |
+
+## 8. GLS có SDF (VER-08)
+
+Chạy netlist sau layout (sau ECO) với SDF của Innovus. Mục tiêu là kiểm netlist có delay thật vẫn chạy đúng ở 100 MHz và không có vi phạm timing trong mô phỏng.
+
+**Trạng thái (21/11):** flow đã sẵn sàng, đã kiểm ở nhà phần dịch và phần bắt `tohost` ở cạnh lên. Chưa chạy trên server.
+
+### 8.1 Khác với zero delay
+
+- Netlist là `pnr/out_soc_p9/soc_top_pnr.v`, không phải netlist Genus. Netlist sau layout có thêm buffer clock tree và cell sửa hold, nên phải đi đúng cặp với SDF của nó (`pnr/out_soc_p9/soc_top.sdf`, `write_sdf -view av_setup`, góc slow). Không dùng thư mục `pre_eco/`.
+- Bật specify và timing check của model cell (không có `-nospecify -notimingchecks`). Test chỉ PASS khi chương trình ghi 1 vào `tohost` **và** log có 0 dòng `Timing violation`.
+- tb bắt lệnh ghi `tohost` ở cạnh lên của clock tại port. Clock tới macro muộn hơn (qua clock tree), nên lúc đó chân macro vẫn giữ giá trị mà macro sắp chốt. Ở zero delay vẫn bắt ở cạnh xuống như trước. Vì vậy số chu kỳ có SDF bằng số của RTL, hơn zero delay 1 chu kỳ.
+- `$sdf_annotate` dùng giá trị `MAXIMUM` của bộ ba (đổi bằng `SDF_MTM`) và ghi `sdf_annotate.log`. Script chép SDF vào thư mục chạy trước khi đọc, vì Xcelium ghi bản SDF đã dịch cạnh file nó đọc.
+- Clock 10 ns (`HALF=5`), đúng tần số signoff. Có thể thử tần số cao hơn bằng `HALF`, ví dụ `HALF=4.5` cho 9 ns.
+
+### 8.2 Trên server
+
+PnR `_p9` chạy trong clone có `pnr/out_soc_p9/`. Tìm thư mục đó trước:
+
+```bash
+ls -la ~/RV32i-SoC/pnr/out_soc_p9/soc_top_pnr.v ~/RV32i-SoC/pnr/out_soc_p9/soc_top.sdf
+```
+
+Chạy trong `~/RV32i-SoC-main`, chỉ đọc file PnR:
+
+```bash
+cd ~/RV32i-SoC-main && git pull
+P=~/RV32i-SoC/pnr/out_soc_p9
+NETLIST=$P/soc_top_pnr.v SDF=$P/soc_top.sdf make gls-soc-sdf T="soc rv32ui-p-add"
+NETLIST=$P/soc_top_pnr.v SDF=$P/soc_top.sdf make gls-soc-sdf
+```
+
+Đạt khi dòng cuối là `gls-soc: 71 passed, 0 failed` và mỗi dòng PASS ghi `0 timing violations`. Log ở `syn/out_soc/gls_sdf/`. Kiểm thêm `syn/out_soc/gls_sdf/sdf_annotate.first.log` (hoặc `elab.log`): số cell được annotate và không có lỗi `SDFNEP`, `SDFINF` hàng loạt.
+
+Lưu kết quả cho repo:
+
+```bash
+mkdir -p appendix/gls_soc_sdf
+cp syn/out_soc/gls_sdf/summary.txt syn/out_soc/gls_sdf/gls_paths.log appendix/gls_soc_sdf/
+grep -E '\*[WE],SDF|Annotat' syn/out_soc/gls_sdf/elab.log | sort | uniq -c > appendix/gls_soc_sdf/sdf_annotate_summary.txt
+```
+
+Không đưa file SDF, netlist hay log có dữ liệu thư viện lên repo.
+
+### 8.3 Nếu gặp lỗi
+
+- **Có timing violation:** script in 2 dòng đầu sau mỗi `Timing violation` (loại check, cell, thời điểm). Gửi phần đó để xem đó là đường thật (so với report Tempus của Phát) hay là input bất đồng bộ từ tb, như `rst_n` hoặc `uart_rx`, đã được false path trong `soc.sdc`.
+- **Elaboration báo SDF không khớp netlist:** kiểm netlist và SDF cùng một lần xuất (cùng ngày trong `ls -la`).
+- **Test timeout nhưng không có violation:** chạy riêng test đó với `HALF=10` (clock 20 ns). Nếu khi đó PASS thì đường đó không đạt 100 MHz trong mô phỏng, cần đối chiếu với STA.
+
+### 8.4 Kiểm ở nhà (21/11)
+
+Icarus với netlist Yosys và một SDF rỗng (model `simcells.v` không có specify, nên không có delay thật): `soc`, `rv32ui-p-add`, `dma` PASS. Phép thử này chỉ cho thấy tb dịch được với `GLS_SDF`, gọi được `$sdf_annotate`, và phần bắt `tohost` ở cạnh lên đúng (2459 chu kỳ, bằng RTL). Zero delay không đổi (`soc` 2458 chu kỳ).
+

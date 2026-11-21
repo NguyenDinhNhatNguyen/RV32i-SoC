@@ -270,7 +270,15 @@ module tb_soc;
         end
     end
 
+    // Zero delay: sample at the falling edge, when the netlist has settled. With SDF the pins
+    // may still move at the falling edge, so sample at the rising edge of the clock port:
+    // the clock reaches the macro later (clock tree), so the pins still hold the values the
+    // macro is about to capture.
+`ifdef GLS_SDF
+    always @(posedge clk) begin
+`else
     always @(negedge clk) begin
+`endif
         if (running && th_we === 1'b1 && th_a == th_word[9:0]) begin
             if (th_d === 32'd1)
                 end_test(1'b1, "");
@@ -282,7 +290,11 @@ module tb_soc;
     end
 
 `ifdef GLS_SDF
-    initial $sdf_annotate(`GLS_SDF, dut);
+    // GLS_SDF_MTM picks the delay of the SDF triplets: "MAXIMUM" (default), "TYPICAL", "MINIMUM"
+`ifndef GLS_SDF_MTM
+`define GLS_SDF_MTM "MAXIMUM"
+`endif
+    initial $sdf_annotate(`GLS_SDF, dut, , "sdf_annotate.log", `GLS_SDF_MTM);
 `endif
 `else
     always @(posedge clk) begin

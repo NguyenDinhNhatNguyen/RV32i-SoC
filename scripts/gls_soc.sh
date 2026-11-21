@@ -11,8 +11,11 @@
 #               ~/PDK_GPDK45/lib/sram_2k_macro.v if it exists. Otherwise tb/models/sram_2k_macro.v
 #               (the home model, same pins)
 #   MACRO_MEM   Name of the word array in MACRO_V (default: the one 2-D reg found in MACRO_V)
-#   SDF         Empty (default): zero delay, clock 10 ns. A file: annotate it (VER-08), the
-#               clock period then comes from HALF (default 5 ns)
+#   SDF         Empty (default): zero delay, clock 10 ns. A file: annotate it with timing
+#               checks on (VER-08, the post-layout netlist and its SDF). The clock period
+#               comes from HALF (default 5 ns). A test with SDF passes only with 0 timing
+#               violations
+#   SDF_MTM     MAXIMUM (default), TYPICAL or MINIMUM: which value of the SDF triplets
 #   HALF        Half clock period in ns (default 5)
 #   T           Test names (default every program of the fw-soc M1W1 build, see list_tests).
 #               T may also name the rv32im benchmarks of make bench-soc (list_bench)
@@ -42,6 +45,7 @@ if [ -z "${MACRO_V:-}" ]; then
     if [ "$SIM" = xrun ] && [ -f "$PDK_MACRO_V" ]; then MACRO_V=$PDK_MACRO_V; else MACRO_V=tb/models/sram_2k_macro.v; fi
 fi
 SDF=${SDF:-}
+SDF_MTM=${SDF_MTM:-MAXIMUM}
 HALF=${HALF:-5}
 OUT=${OUT:-syn/out_soc/gls}
 SKIP="rv32ui-p-ma_data rv32mi-p-breakpoint rv32mi-p-pmpaddr"   # CORE_ISA_SKIP in the Makefile
@@ -111,7 +115,13 @@ if [ -n "$missing" ]; then
 fi
 
 mkdir -p "$OUT"
-rm -rf "$OUT"/xcelium.d "$OUT"/*.log "$OUT"/gls.vvp "$OUT"/summary.txt
+rm -rf "$OUT"/xcelium.d "$OUT"/*.log "$OUT"/gls.vvp "$OUT"/summary.txt "$OUT"/*.sdf "$OUT"/*.sdf.X
+# Xcelium compiles the SDF next to the file it reads, so read a copy in OUT (the PnR folder
+# may belong to another user)
+if [ -n "$SDF" ]; then
+    cp "$SDF" "$OUT/$(basename "$SDF")" || exit 1
+    SDF_RUN=$(absp "$OUT")/$(basename "$SDF")
+fi
 # The tool setup on the server can put another libpython in LD_LIBRARY_PATH and break
 # python3 ("undefined symbol _Py_..."), so take the first python that starts
 PY=""
@@ -138,9 +148,9 @@ fi
 echo "  macro model $MACRO_V, word array \"$MACRO_MEM\""
 
 defs=(GLS "GLS_HALF=$HALF" "GLS_MEM=$MACRO_MEM")
-[ -z "$SDF" ] || defs+=("GLS_SDF=\"$(absp "$SDF")\"")
+[ -z "$SDF" ] || defs+=("GLS_SDF=\"$SDF_RUN\"" "GLS_SDF_MTM=\"$SDF_MTM\"")
 [ "$SAIF" != 1 ] || defs+=(GLS_SAIF)
-if [ -z "$SDF" ]; then mode="zero delay, clock $((HALF * 2)) ns"; else mode="SDF $SDF, clock $((HALF * 2)) ns"; fi
+if [ -z "$SDF" ]; then mode="zero delay, clock $((HALF * 2)) ns"; else mode="SDF $SDF ($SDF_MTM), clock $((HALF * 2)) ns, timing checks on"; fi
 echo "gls-soc: $NETLIST, $SIM, $mode, $(echo "$progs" | wc -w) tests"
 
 # Compile once. tb_soc sets `default_nettype none, so it goes last.
@@ -209,12 +219,22 @@ for p in $progs; do
         if [ -s "$OUT/gls.saif" ]; then mv "$OUT/gls.saif" "$OUT/saif/$t.saif"
         else echo "ERROR: no SAIF written for $t" >> "$log"; fi
     fi
+    if [ -n "$SDF" ]; then
+        # Timing check messages of the cell models (setup, hold, recovery, removal, width)
+        ntv=$(grep -ciE 'timing violation' "$log")
+        [ -f "$OUT/sdf_annotate.log" ] && [ ! -f "$OUT/sdf_annotate.first.log" ] &&
+            cp "$OUT/sdf_annotate.log" "$OUT/sdf_annotate.first.log"
+        if [ "$ntv" -gt 0 ]; then
+            echo "ERROR: $ntv timing violations" >> "$log"
+        fi
+    fi
     if grep -q '^PASS' "$log" && ! grep -qE '^(FAIL|ERROR)' "$log"; then
-        echo "  $(grep '^PASS' "$log" | tail -n 1)"
+        echo "  $(grep '^PASS' "$log" | tail -n 1)${SDF:+, 0 timing violations}"
         pass=$((pass + 1))
     else
         echo "  [FAIL] $t (log: $log)"
         grep -E '^(FAIL|ERROR)|\*[EF],' "$log" | head -5 | sed 's/^/      /'
+        [ -z "$SDF" ] || grep -iE -A2 'timing violation' "$log" | head -6 | sed 's/^/      /'
         fail=$((fail + 1))
     fi
 done | tee "$OUT/summary.txt"

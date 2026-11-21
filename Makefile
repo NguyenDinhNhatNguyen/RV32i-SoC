@@ -29,6 +29,7 @@ help:
 	@echo "make gls-soc-home  - same GLS flow on a Yosys netlist with Icarus (home check)"
 	@echo "make gls-soc-saif  - GLS of the PWR_TESTS with SAIF per testcase (server, PWR-01)"
 	@echo "make power-soc     - Genus pre-layout power per SAIF and default toggle rate (server, PWR-01)"
+	@echo "make gls-soc-sdf   - GLS of the post-layout netlist with its SDF, timing checks on (server, VER-08)"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -1218,6 +1219,19 @@ gls-soc-saif:
 
 power-soc:
 	@bash scripts/power_soc.sh
+
+# ---------------------------------------------------------------------------
+# GLS with SDF (Hieu, VER-08), server only. Docs: docs/gls_soc.md section 8.
+#   make gls-soc-sdf     the post-layout netlist and SDF of GLS_PNR (after ECO), timing checks
+#                        on, clock 10 ns, results in syn/out_soc/gls_sdf/
+#   NETLIST=... SDF=...  other files, for example the PnR outputs in another clone
+# ---------------------------------------------------------------------------
+GLS_PNR ?= pnr/out_soc_p9
+
+.PHONY: gls-soc-sdf
+gls-soc-sdf:
+	@NETLIST=$${NETLIST:-$(GLS_PNR)/soc_top_pnr.v} SDF=$${SDF:-$(GLS_PNR)/soc_top.sdf} \
+	  OUT=$${OUT:-syn/out_soc/gls_sdf} bash scripts/gls_soc.sh
 
 lint-all:
 	@fail=0; sum=""; \
