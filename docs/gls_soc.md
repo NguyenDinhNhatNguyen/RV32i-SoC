@@ -41,7 +41,7 @@ scripts/eda.sh run "make gls-soc-home T=soc_fw_rv32im"    # firmware C, khoảng
 
 ## 3. Trên server: chạy GLS
 
-Chạy trong bản clone `~/RV32i-SoC-main` (nhánh main), không dùng `~/RV32i-SoC` đang ở nhánh của Phúc.
+Chạy trong bản clone `~/RV32i-SoC-main` (nhánh main). Lúc viết, `~/RV32i-SoC` còn ở nhánh của Phúc. Từ 14/11 `~/RV32i-SoC` đã về `main`, nên chạy ở đó cũng được (đổi `cd` cho đúng thư mục).
 
 ```bash
 cd ~/RV32i-SoC-main
