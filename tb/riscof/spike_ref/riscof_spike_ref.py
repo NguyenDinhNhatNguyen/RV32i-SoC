@@ -32,8 +32,10 @@ class spike_ref(pluginTemplate):
     def initialise(self, suite, work_dir, archtest_env):
         self.work_dir = work_dir
         self.suite_dir = suite
+        # -mno-relax like scripts/arch_run.sh: with relaxation the .align padding of the
+        # misalign tests lands elsewhere, so ref.elf and my.elf trap at different places
         self.compile_cmd = (self.prefix + "-gcc -march={0} -mabi=ilp32 -static -mcmodel=medany"
-                            " -fvisibility=hidden -nostdlib -nostartfiles -g"
+                            " -fvisibility=hidden -mno-relax -nostdlib -nostartfiles -g"
                             " -T " + SPIKE_ENV + "/link.ld -I " + SPIKE_ENV +
                             " -I " + archtest_env + " {1} -o {2} {3}")
 

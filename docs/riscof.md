@@ -56,7 +56,9 @@ riscv64-unknown-elf-gcc 13.2.0, Icarus Verilog 12.0, riscv-arch-test 3.10.0.
 
 `make arch-core` mất khoảng 3 phút. `make arch-core-dut`: 118/118 PASS (55 + 63).
 
-Chạy lại 11/11 với toolchain mới của container (GCC 16.1, binutils 2.47): `make arch-core-dut` 118/118 PASS sau khi `scripts/arch_run.sh` dịch với `-mno-relax`. Không có cờ này, binutils 2.47 chèn lệnh nén `c.nop` ở các `.align` của `arch_test.h` và 88 test gặp illegal instruction. `make arch-core` (so với Spike) chưa chạy lại vì container không có RISCOF.
+Chạy lại 11/11 với toolchain mới của container (GCC 16.1, binutils 2.47): `make arch-core-dut` 118/118 PASS sau khi `scripts/arch_run.sh` dịch với `-mno-relax`. Không có cờ này, binutils 2.47 chèn lệnh nén `c.nop` ở các `.align` của `arch_test.h` và 88 test gặp illegal instruction.
+
+Chạy lại `make arch-core` ngày 21/11 trên RTL main (đã có commit 513611d): M0W1 55/55, M1W1 63/63. Lần chạy đầu cùng ngày fail 1 test ở mỗi cấu hình (`privilege/misalign-jal-01`). Nguyên nhân: sau 51a7d85 chỉ phía core dịch với `-mno-relax`, phía Spike (`tb/riscof/spike_ref/riscof_spike_ref.py`) thì không. Padding `.align` trong test vì vậy nằm ở chỗ khác nhau giữa my.elf và ref.elf. Sau trap, Spike chạy vào `.short 0x0000` và ghi thêm các bản ghi illegal instruction. Đã thêm `-mno-relax` cho phía Spike. Spike chạy `--isa=rv32i_zicsr_zifencei`, không có C.
 
 Lần chạy đầu (cùng ngày) có 2 test lệch ở cả hai cấu hình, đã sửa:
 
