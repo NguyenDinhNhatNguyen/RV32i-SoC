@@ -33,6 +33,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `genus_core.md` | Genus, Conformal, GLS cho `rv32_core` ở trường, quét chu kỳ tìm F_max |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
 | `pnr_soc_status.md` | Theo dõi các việc PnR của `soc_top` |
+| `ir_drop.md` | IR drop tĩnh của `soc_top` bằng Voltus: cách chạy, kết quả 20/11, giới hạn (LEC-04, LEC-06) |
 | `lec_soc.md` | LEC Conformal của `soc_top` và `apb_bridge`: flow, cách chạy, kết quả chạy thử (LEC-01) |
 
 ## Kiểm chứng và đánh giá

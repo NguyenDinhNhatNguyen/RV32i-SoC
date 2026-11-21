@@ -28,7 +28,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `synth_blocks_e60437a/` | Genus từng khối `uart_apb`, `spi_apb`, `i2c_apb` trên RTL `e60437a` (14/11) |
 | `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
-| `lec_soc/` | Conformal LEC của `soc_top` (`run2/`, netlist 12/11) và của khối `apb_bridge` (LEC-01, 14/11) |
+| `lec_soc/` | Conformal LEC của `soc_top`: `run2/` (LEC-01, netlist 12/11), `run3/` và `run4_seqfb/` (LEC-02, netlist chính thức 14/11, 20/11), `g2g/` (LEC-03, netlist tổng hợp với netlist sau layout, 20/11). `apb_bridge/` là LEC riêng khối (14/11) |
 | `lint_hal/` | HAL lint của `soc_top` trên main `7008da2` (VER-03, 13/11): `summary.txt` và `xrun.log` |
 | `ver05_regress/` | `make regress` và `make cov-soc` ngày 17/11 trên `3289802` (VER-05): bảng regression, coverage theo module, 74 lần chạy Verilator |
 | `gls_soc/` | `make gls-soc` ngày 19/11 trên server (VER-07): netlist Genus STA-04, Xcelium, zero delay, 71/71 PASS, đường dẫn 8 macro |

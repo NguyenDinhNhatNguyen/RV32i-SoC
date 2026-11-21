@@ -52,7 +52,7 @@ Netlist `eced27a` (DMA, SPI, PWM, I2C), clock 20 ns, Innovus 21.19, Tempus 23.14
 | Recovery, removal | Recovery +17,92 ns, removal +0,029 ns (Tempus) |
 | CTS | 0 vi phạm transition, skew 0,115 ns (mục tiêu 0,080 ns) |
 | DRC, antenna, PDN | Sạch |
-| Connectivity | 12 cảnh báo IMPVFC-94: dây VDD Metal7 dài 0 ở đầu dải VDD của vành macro, mép trên. Lần 29/10 không có. Chờ Phúc chạy IR drop, sửa ở PD-08 nếu còn sau PD-05 |
+| Connectivity | 12 cảnh báo IMPVFC-94: dây VDD Metal7 dài 0 ở đầu dải VDD của vành macro, mép trên. Lần 29/10 không có. Sửa ở PD-08 nếu còn (bản `_p9` ở mục 6). IR drop VDD chạy 20/11, sụt khoảng 1 đến 2 mV (`docs/ir_drop.md`) |
 | Fanout | 190 net vượt `set_max_fanout 32`: 27 net clock và 163 net khác (khoảng 61 net cây reset, 102 net dữ liệu). Giữ ràng buộc này vì Genus cần nó để buffer mạng reset (`docs/sta_results.md` mục 1). Max_cap 0, max_tran 3 net (xấu nhất −0,069 ns, ví dụ `n_5552`) cần sửa |
 | Công suất | 1,261 mW, activity mặc định 0,2, chưa phải theo testcase |
 | GDS | Có ghi file. Cảnh báo IMPOGDS-1176: 26 cell rỗng vì map thiếu luật, chưa rõ cell nào |
@@ -90,7 +90,7 @@ Netlist chính thức STA-04 (RTL `e60437a`, Genus 9 ns, `docs/sta_results.md` m
 | DRC | 5 lỗi sau route, `fix_drc_boxes` sửa còn 1 (Metal1 `ParallelRunLength` giữa `FE_OFN1608_inc_u_core_u_csr_add_258_50_n_29` và `n_9957`), ECO sửa còn 0 |
 | max_tran | 1 net (2 điểm, xấu nhất -0,025 ns, ví dụ `n_5414`) trước ECO, 0 sau ECO |
 | Sau ECO (Innovus, 9 ns) | Setup -0,047, hold +0,020, max_cap 0, max_tran 0, antenna sạch |
-| Connectivity | 2 chỗ hở `VSS` ở góc vành nguồn, (8,5, 8,5) và (21,6, 327,5), có từ trước ECO. Sửa ở PD-08 |
+| Connectivity | 19 thông báo, có từ trước ECO (bản của Nguyên và bản sau ECO giống nhau). 2 chỗ hở `VSS` (IMPVFC-200) ở góc vành nguồn, (8,5, 8,5) và (21,6, 327,5). 17 đoạn dây `VSS` Metal7 dài 0 (IMPVFC-94) ở mép vành macro, y = 328,26 và 418,26, cùng loại với 12 đoạn `VDD` của 12/11. Sửa ở PD-08 |
 | Fanout | 134 net vượt `set_max_fanout 32`, như các lần trước |
 | Công suất | 3,235 mW (Innovus, activity mặc định, 9 ns) |
 | Signoff Tempus 10 ns | Setup +0,977, hold +0,020, recovery +7,434, removal +0,023 (`docs/sta_results.md` mục 6), chốt 100 MHz |

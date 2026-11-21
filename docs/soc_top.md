@@ -214,5 +214,5 @@ Kết quả ngày 10/11 (DMA và I2C bật mặc định). `fw-soc` dựng M0W0 
 
 - GPIO chưa có ngõ ra ngắt, bit 2 của IRQC đang nối 0.
 - I2C chưa có clock stretching (`i2c_scl_i` không dùng) và chưa có ngắt. Slave nào kéo dài SCL sẽ bị sai.
-- Removal của mạng reset dư ít: 28 ps trước layout (12/11, `docs/sta_results.md` mục 1) và 29 ps sau route thử (PD-04, `docs/pnr_soc_status.md` mục 4), 33 ps trên layout thử lõi 420 µm (PD-07, `docs/sta_results.md` mục 6). Kiểm lại trên layout chính thức (STA-05).
-- Trên server: GLS với `sram_2k_macro.v` thật.
+- Removal của mạng reset dư ít: 28 ps trước layout (12/11, `docs/sta_results.md` mục 1) và 29 ps sau route thử (PD-04, `docs/pnr_soc_status.md` mục 4), 33 ps trên layout thử lõi 420 µm (PD-07, `docs/sta_results.md` mục 6), 23 ps sau route và 19 ps sau CTS trên layout chính thức `_p9` (STA-05, 19/11). Removal dương ở cả 4 view, nhưng biên vẫn mỏng nên giữ theo dõi ở STA-06.
+- GLS với `sram_2k_macro.v` thật (đã hoàn thành 19/11): Hiếu chạy Xcelium trên netlist chính thức, 71/71 PASS (VER-07, `docs/gls_soc.md`).

@@ -4,6 +4,8 @@
 | --- | --- | --- |
 | `eda.sh` | Bật, tắt container và chạy lệnh trong đó (`start`, `status`, `check`, `run`, `wave`, `stop`) | Nhà (WSL) |
 | `core_run.sh`, `bus_run.sh`, `soc_run.sh` | Chạy một bài mô phỏng, được `make fw-*` gọi | Container |
+| `bench_soc_run.sh` | Chạy một benchmark trên `tb_soc`, được `make bench-soc` gọi | Container |
+| `gls_core.sh` | GLS netlist `rv32_core` với `tb_core -DGLS`, rv32ui và rv32um (`make gls-core`, `docs/genus_core.md`) | Server trường |
 | `arch_run.sh` | Chạy một bài riscv-arch-test | Container |
 | `elf2hex.py` | Tách ELF thành ảnh IMEM, DMEM cho `$readmemh` | Container |
 | `gen_boot_rom.py` | ELF của bootloader ra `rtl/mem/boot_rom_init.vh` (`make boot-gen`) | Container |
