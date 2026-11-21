@@ -3,8 +3,8 @@
 # From the repo on the school server:
 #   IR_DB=<path to route.enc.dat> bash power/run_ir.sh                  scenario A (activity 0.1)
 #   IR_DB=<...> IR_ACT=0.5 bash power/run_ir.sh                         scenario B (stress, 0.5)
-# Official database (20/11): pnr/run_soc_p9/DBS/route_eco.enc.dat (saved 18/11 15:10, before the
-# post-ECO netlist, SPEF and GDS were written at 15:31).
+# Official database (20/11): pnr/run_soc_p9/DBS/route_eco.enc.dat (saved 18/11 15:10). The post-ECO
+# netlist, SPEF and GDS were written at 15:31 from this same database, with no layout change.
 # Needs IR_TECH=/home/eda/library/cadence/gpdk045_v_6_0/qrc/typical/qrcTechFile (the PDK .tch is not readable, VOLTUS-5360).
 # Optional: IR_PADS=<pad file, format in ir_static.tcl>, IR_VIEW (default av_setup). Output: power/run_ir_act<ACT>/
 set -u

@@ -81,6 +81,6 @@ Lab 06 dùng ngưỡng sụt áp tĩnh nhỏ hơn 5% VDD. VDD của Lab là 1,0 
 - **Dòng pad chưa khớp công suất.** Ở kịch bản A, 12 pad x 0,109 mA cho khoảng 1,3 mA, trong khi 1,975 mW chia 0,9 V cho khoảng 2,2 mA. Chưa rõ nguyên nhân (có thể do scale của `.ptiavg` hoặc phần dòng không đi qua pad VDD). Mức sụt áp rất thấp nên kết luận không đổi, nhưng cần ghi chú.
 - **Chỉ phân tích VDD.** Chưa phân tích VSS (ground bounce) và không có EM, vì Lab 06 không yêu cầu. Cần hỏi nhóm hoặc thầy có cần hay không.
 - **Layout cuối.** Chạy trên `route_eco` của `run_soc_p9`. LEC-06 (sign-off) chỉ xong khi chạy lại trên layout cuối, nếu PD-08 làm thay đổi lưới nguồn.
-- **Database có thể không phải bản cuối.** `route_eco.enc.dat` được lưu lúc 15:10 ngày 18/11, còn `soc_top_pnr.v`, SPEF và GDS được ghi lúc 15:31 cùng ngày (ghi chú trong `run_ir.sh`). Chưa kiểm tra giữa hai thời điểm layout có thay đổi gì không. Cần hỏi Nguyên.
+- **Database là bản cuối của `_p9`.** `route_eco.enc.dat` được lưu lúc 15:10 ngày 18/11 (`~/eco_p9.tcl`), rồi `~/eco_out_p9.tcl` khôi phục đúng database này để ghi `soc_top_pnr.v`, SPEF, SDF và GDS lúc 15:31. Giữa hai bước không có lệnh nào sửa layout (Phát làm ECO, xác nhận 21/11, `docs/pnr_soc_status.md` mục 6). Vì vậy IR drop ở đây và Tempus của STA-05 chạy trên cùng một layout.
 - **Vành nguồn VSS.** Sheet (PD-06) ghi "2 chỗ hở VSS ở góc vành nguồn". Kết quả ở đây chỉ phân tích VDD nên không phản ánh ảnh hưởng của chỗ hở này lên VSS.
 - **Hoạt độ là giả định.** 0,1 và 0,5 theo Lab 06, không phải hoạt độ từ mô phỏng thực tế của SoC.

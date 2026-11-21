@@ -19,7 +19,11 @@
 #                             help on the server, effect and licence not tried). Not set by default
 #   SEQ_FEEDBACK=1            add "set flatten model -seq_constant_feedback" after the other
 #                             flatten options, for flops that only reload their reset constant
-#                             (the 11 Non-equivalent points of docs/lec_soc.md 4). Not tried yet
+#                             (the 11 Non-equivalent points of docs/lec_soc.md 4). Tried 20/11 on
+#                             LEC-02 (syn/out_soc_lec4): same result as without it
+#   SEQ_EFFORT=high           add "set flatten model -seq_constant_effort high" (deeper search for
+#                             flops that are constant over all reachable states), tried for the
+#                             last Non-equivalent point of LEC-02 (clk_cnt_reg[15], 21/11)
 #   DRY_RUN=1                 only check the inputs and write the dofile, do not start lec
 #
 # The script stops before lec while a TODO_MACRO marker is in the dofile template.
@@ -34,6 +38,7 @@ ONE_LINE=${ONE_LINE:-0}
 MACRO_MODE=${MACRO_MODE:-undef}
 DRY_RUN=${DRY_RUN:-0}
 SEQ_FEEDBACK=${SEQ_FEEDBACK:-0}
+SEQ_EFFORT=${SEQ_EFFORT:-}
 NETLIST_SRC=$SRC_DIR/soc_top_netlist.v
 TEMPLATE=lec/soc_rtl2gate.do.in
 DO=lec/soc_rtl2gate.do
@@ -116,6 +121,11 @@ case "$SEQ_FEEDBACK" in
     0) ;;
     *) die "SEQ_FEEDBACK must be 0 or 1" ;;
 esac
+case "$SEQ_EFFORT" in
+    high|medium) echo "set flatten model -seq_constant_effort $SEQ_EFFORT" >> "$tmp_seq" ;;
+    '') ;;
+    *) die "SEQ_EFFORT must be empty, medium or high" ;;
+esac
 
 # Macro declaration, written before read design (see the template)
 tmp_macro=$(mktemp)
@@ -137,7 +147,7 @@ sed -e "s|@@NETLIST@@|$LEC_DIR/soc_top_netlist.v|g" \
     -e "d}" \
     -e "/^\/\/ @@SEQ_FEEDBACK@@\$/{r $tmp_seq" \
     -e "d}" "$TEMPLATE" > "$DO"
-echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off}, SEQ_FEEDBACK=$SEQ_FEEDBACK)"
+echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off}, SEQ_FEEDBACK=$SEQ_FEEDBACK, SEQ_EFFORT=${SEQ_EFFORT:-default})"
 
 if grep -q 'TODO_MACRO' "$DO"; then
     echo "STOP: a TODO_MACRO marker is still in the dofile, lec was not started."

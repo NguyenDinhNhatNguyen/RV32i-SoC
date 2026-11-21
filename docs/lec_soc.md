@@ -99,6 +99,7 @@ Với `nohup`, đóng terminal không làm dừng lệnh. Server dùng chung nê
 | `THREADS` | tắt | Thêm `set parallel option -threads N` trước `compare`. Cú pháp lấy từ `help`, chưa biết có cần license và có nhanh hơn không |
 | `ONE_LINE` | `0` | `1`: viết `read design -golden` trên một dòng dài như `core_rtl2gate.do` |
 | `SEQ_FEEDBACK` | `0` | `1`: thêm `set flatten model -seq_constant_feedback` sau các tùy chọn flatten khác, cho các flop hằng có mux giữ giá trị (11 điểm Non-equivalent ở mục 4). Đã chạy trên server 20/11 (LEC-02, mục 4): không đổi kết quả |
+| `SEQ_EFFORT` | rỗng | `high` (hoặc `medium`): thêm `set flatten model -seq_constant_effort high`, cho Conformal tìm sâu hơn các flop luôn hằng ở mọi trạng thái đạt tới. Thêm 21/11 để thử điểm Non-equivalent còn lại của LEC-02 (`clk_cnt_reg[15]`) |
 | `DRY_RUN` | `0` | `1`: chỉ sinh dofile, không chạy `lec` |
 
 Ví dụ: `LEC_DIR=syn/out_soc_lec2 THREADS=4 nohup bash lec/run_lec_soc.sh > ~/lec_soc_run2.txt 2>&1 &`

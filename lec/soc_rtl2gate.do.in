@@ -47,10 +47,11 @@ set flatten model -nodff_to_dlat_feedback
 set flatten model -hier_seq_merge
 // The netlist has clock gating cells (latch + AND): model them as flop enables
 set flatten model -gated_clock
-// Optional (SEQ_FEEDBACK=1 in run_lec_soc.sh), not tried yet: lets Conformal treat a flop that
-// holds a constant through its own feedback mux as that constant. Genus ties D of such flops to
-// 0 or 1, which gave the 11 Non-equivalent points of the 13/11 and 14/11 runs (docs/lec_soc.md 4).
-// Check the exact meaning with help set flatten model on the server
+// Optional (SEQ_FEEDBACK=1 and SEQ_EFFORT=high in run_lec_soc.sh): let Conformal treat a flop
+// that holds a constant through its own feedback mux as that constant, and search deeper for
+// flops that are constant in every reachable state. Genus ties D of such flops to 0 or 1, which
+// gave the 11 Non-equivalent points of the 13/11 and 14/11 runs (docs/lec_soc.md 4).
+// SEQ_FEEDBACK alone was tried 20/11 on LEC-02 and did not remove clk_cnt_reg[15]
 // @@SEQ_FEEDBACK@@
 set system mode lec
 // @@PARALLEL@@
