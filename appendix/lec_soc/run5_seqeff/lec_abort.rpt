@@ -1,0 +1,907 @@
+Compared points are: Abort (reachable)
+  (G) + 1688  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[47]
+  (R) + 557   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[47]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 29075 MUX  /u_core/g_md.u_muldiv/U$52/U$48
+  (R) + 55391 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[47]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1689  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[46]
+  (R) + 558   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[46]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 29037 MUX  /u_core/g_md.u_muldiv/U$52/U$47
+  (R) + 55392 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[46]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1690  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[45]
+  (R) + 589   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[45]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28992 MUX  /u_core/g_md.u_muldiv/U$52/U$46
+  (R) + 55423 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[45]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1691  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[44]
+  (R) + 559   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[44]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28940 MUX  /u_core/g_md.u_muldiv/U$52/U$45
+  (R) + 55393 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[44]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1692  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[43]
+  (R) + 574   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[43]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28881 MUX  /u_core/g_md.u_muldiv/U$52/U$44
+  (R) + 55408 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[43]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1693  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[42]
+  (R) + 590   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[42]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28815 MUX  /u_core/g_md.u_muldiv/U$52/U$43
+  (R) + 55424 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[42]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1694  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[41]
+  (R) + 598   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[41]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28742 MUX  /u_core/g_md.u_muldiv/U$52/U$42
+  (R) + 55432 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[41]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1695  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[40]
+  (R) + 560   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[40]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28662 MUX  /u_core/g_md.u_muldiv/U$52/U$41
+  (R) + 55394 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[40]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1696  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[39]
+  (R) + 567   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[39]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28575 MUX  /u_core/g_md.u_muldiv/U$52/U$40
+  (R) + 55401 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[39]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1697  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[38]
+  (R) + 575   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[38]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28481 MUX  /u_core/g_md.u_muldiv/U$52/U$39
+  (R) + 55409 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[38]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1698  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[37]
+  (R) + 582   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[37]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28380 MUX  /u_core/g_md.u_muldiv/U$52/U$38
+  (R) + 55416 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[37]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1699  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[36]
+  (R) + 591   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[36]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28272 MUX  /u_core/g_md.u_muldiv/U$52/U$37
+  (R) + 55425 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[36]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1700  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[35]
+  (R) + 595   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[35]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28157 MUX  /u_core/g_md.u_muldiv/U$52/U$36
+  (R) + 55429 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[35]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1701  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[34]
+  (R) + 599   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[34]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 28035 MUX  /u_core/g_md.u_muldiv/U$52/U$35
+  (R) + 55433 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[34]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1702  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[33]
+  (R) + 602   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[33]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27907 MUX  /u_core/g_md.u_muldiv/U$52/U$34
+  (R) + 55436 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[33]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1703  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[32]
+  (R) + 561   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[32]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27773 MUX  /u_core/g_md.u_muldiv/U$52/U$33
+  (R) + 55395 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[32]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1704  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[31]
+  (R) + 564   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[31]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27641 MUX  /u_core/g_md.u_muldiv/U$52/U$32
+  (R) + 55398 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[31]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1705  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[30]
+  (R) + 568   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[30]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27510 MUX  /u_core/g_md.u_muldiv/U$52/U$31
+  (R) + 55402 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[30]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1706  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[29]
+  (R) + 571   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[29]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27379 MUX  /u_core/g_md.u_muldiv/U$52/U$30
+  (R) + 55405 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[29]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1707  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[28]
+  (R) + 576   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[28]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27248 MUX  /u_core/g_md.u_muldiv/U$52/U$29
+  (R) + 55410 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[28]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1708  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[27]
+  (R) + 579   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[27]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 27116 MUX  /u_core/g_md.u_muldiv/U$52/U$28
+  (R) + 55413 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[27]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1709  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[26]
+  (R) + 583   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[26]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26984 MUX  /u_core/g_md.u_muldiv/U$52/U$27
+  (R) + 55417 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[26]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1710  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[25]
+  (R) + 586   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[25]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26853 MUX  /u_core/g_md.u_muldiv/U$52/U$26
+  (R) + 55420 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[25]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1711  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[24]
+  (R) + 592   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[24]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26722 MUX  /u_core/g_md.u_muldiv/U$52/U$25
+  (R) + 55426 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[24]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1712  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[23]
+  (R) + 594   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[23]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26592 MUX  /u_core/g_md.u_muldiv/U$52/U$24
+  (R) + 55428 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[23]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1713  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[22]
+  (R) + 596   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[22]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26462 MUX  /u_core/g_md.u_muldiv/U$52/U$23
+  (R) + 55430 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[22]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1714  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[21]
+  (R) + 597   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[21]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26332 MUX  /u_core/g_md.u_muldiv/U$52/U$22
+  (R) + 55431 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[21]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1715  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[20]
+  (R) + 600   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[20]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26202 MUX  /u_core/g_md.u_muldiv/U$52/U$21
+  (R) + 55434 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[20]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1716  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[19]
+  (R) + 601   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[19]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 26075 MUX  /u_core/g_md.u_muldiv/U$52/U$20
+  (R) + 55435 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[19]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1717  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[18]
+  (R) + 603   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[18]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 25948 MUX  /u_core/g_md.u_muldiv/U$52/U$19
+  (R) + 55437 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[18]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1718  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[17]
+  (R) + 604   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[17]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 25822 MUX  /u_core/g_md.u_muldiv/U$52/U$18
+  (R) + 55438 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[17]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1719  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[16]
+  (R) + 562   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[16]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 25699 MUX  /u_core/g_md.u_muldiv/U$52/U$17
+  (R) + 55396 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[16]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1720  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[15]
+  (R) + 563   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[15]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 25579 MUX  /u_core/g_md.u_muldiv/U$52/U$16
+  (R) + 55397 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[15]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1721  DFF  /u_core/g_md.u_muldiv/p_hi_q_reg[14]
+  (R) + 565   DFF  /u_core_g_md.u_muldiv_p_hi_q_reg[14]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 25471 MUX  /u_core/g_md.u_muldiv/U$52/U$15
+  (R) + 55399 MUX  /u_core_g_md.u_muldiv_p_hi_q_reg[14]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1736  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[48]
+  (R) + 508   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[48]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33326 MUX  /u_core/g_md.u_muldiv/U$53/U$49
+  (R) + 55342 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[48]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1737  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[47]
+  (R) + 509   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[47]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33302 MUX  /u_core/g_md.u_muldiv/U$53/U$48
+  (R) + 55343 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[47]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1738  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[46]
+  (R) + 540   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[46]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33268 MUX  /u_core/g_md.u_muldiv/U$53/U$47
+  (R) + 55374 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[46]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1739  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[45]
+  (R) + 510   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[45]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33227 MUX  /u_core/g_md.u_muldiv/U$53/U$46
+  (R) + 55344 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[45]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1740  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[44]
+  (R) + 525   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[44]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33179 MUX  /u_core/g_md.u_muldiv/U$53/U$45
+  (R) + 55359 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[44]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1741  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[43]
+  (R) + 541   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[43]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33124 MUX  /u_core/g_md.u_muldiv/U$53/U$44
+  (R) + 55375 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[43]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1742  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[42]
+  (R) + 550   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[42]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 33062 MUX  /u_core/g_md.u_muldiv/U$53/U$43
+  (R) + 55384 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[42]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1743  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[41]
+  (R) + 511   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[41]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32993 MUX  /u_core/g_md.u_muldiv/U$53/U$42
+  (R) + 55345 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[41]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1744  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[40]
+  (R) + 518   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[40]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32917 MUX  /u_core/g_md.u_muldiv/U$53/U$41
+  (R) + 55352 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[40]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1745  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[39]
+  (R) + 526   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[39]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32834 MUX  /u_core/g_md.u_muldiv/U$53/U$40
+  (R) + 55360 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[39]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1746  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[38]
+  (R) + 533   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[38]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32744 MUX  /u_core/g_md.u_muldiv/U$53/U$39
+  (R) + 55367 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[38]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1747  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[37]
+  (R) + 542   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[37]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32647 MUX  /u_core/g_md.u_muldiv/U$53/U$38
+  (R) + 55376 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[37]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1748  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[36]
+  (R) + 547   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[36]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32543 MUX  /u_core/g_md.u_muldiv/U$53/U$37
+  (R) + 55381 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[36]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1749  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[35]
+  (R) + 551   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[35]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32432 MUX  /u_core/g_md.u_muldiv/U$53/U$36
+  (R) + 55385 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[35]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1750  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[34]
+  (R) + 554   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[34]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32314 MUX  /u_core/g_md.u_muldiv/U$53/U$35
+  (R) + 55388 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[34]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1751  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[33]
+  (R) + 512   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[33]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32190 MUX  /u_core/g_md.u_muldiv/U$53/U$34
+  (R) + 55346 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[33]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1752  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[32]
+  (R) + 515   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[32]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 32060 MUX  /u_core/g_md.u_muldiv/U$53/U$33
+  (R) + 55349 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[32]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1753  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[31]
+  (R) + 519   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[31]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31932 MUX  /u_core/g_md.u_muldiv/U$53/U$32
+  (R) + 55353 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[31]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1754  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[30]
+  (R) + 522   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[30]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31805 MUX  /u_core/g_md.u_muldiv/U$53/U$31
+  (R) + 55356 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[30]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1755  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[29]
+  (R) + 527   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[29]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31678 MUX  /u_core/g_md.u_muldiv/U$53/U$30
+  (R) + 55361 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[29]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1756  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[28]
+  (R) + 530   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[28]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31551 MUX  /u_core/g_md.u_muldiv/U$53/U$29
+  (R) + 55364 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[28]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1757  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[27]
+  (R) + 534   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[27]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31423 MUX  /u_core/g_md.u_muldiv/U$53/U$28
+  (R) + 55368 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[27]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1758  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[26]
+  (R) + 537   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[26]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31295 MUX  /u_core/g_md.u_muldiv/U$53/U$27
+  (R) + 55371 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[26]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1759  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[25]
+  (R) + 543   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[25]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31168 MUX  /u_core/g_md.u_muldiv/U$53/U$26
+  (R) + 55377 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[25]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1760  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[24]
+  (R) + 546   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[24]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 31041 MUX  /u_core/g_md.u_muldiv/U$53/U$25
+  (R) + 55380 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[24]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1761  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[23]
+  (R) + 548   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[23]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30915 MUX  /u_core/g_md.u_muldiv/U$53/U$24
+  (R) + 55382 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[23]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1762  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[22]
+  (R) + 549   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[22]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30789 MUX  /u_core/g_md.u_muldiv/U$53/U$23
+  (R) + 55383 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[22]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1763  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[21]
+  (R) + 552   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[21]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30663 MUX  /u_core/g_md.u_muldiv/U$53/U$22
+  (R) + 55386 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[21]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1764  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[20]
+  (R) + 553   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[20]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30537 MUX  /u_core/g_md.u_muldiv/U$53/U$21
+  (R) + 55387 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[20]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1765  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[19]
+  (R) + 555   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[19]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30414 MUX  /u_core/g_md.u_muldiv/U$53/U$20
+  (R) + 55389 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[19]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1766  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[18]
+  (R) + 556   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[18]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30291 MUX  /u_core/g_md.u_muldiv/U$53/U$19
+  (R) + 55390 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[18]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1767  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[17]
+  (R) + 513   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[17]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30169 MUX  /u_core/g_md.u_muldiv/U$53/U$18
+  (R) + 55347 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[17]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1768  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[16]
+  (R) + 514   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[16]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 30052 MUX  /u_core/g_md.u_muldiv/U$53/U$17
+  (R) + 55348 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[16]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 1769  DFF  /u_core/g_md.u_muldiv/p_lo_q_reg[15]
+  (R) + 545   DFF  /u_core_g_md.u_muldiv_p_lo_q_reg[15]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 29935 MUX  /u_core/g_md.u_muldiv/U$53/U$16
+  (R) + 55379 MUX  /u_core_g_md.u_muldiv_p_lo_q_reg[15]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2330  DFF  /u_apb/st_reg[0]
+  (R) + 1990  DFF  /u_apb_st_reg[0]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39525 OR   /u_apb/U$51/U$1
+  (R) + 19162 INV  /g160027/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2377  DFF  /u_apb/psel_reg[8]
+  (R) + 1922  DFF  /u_apb_psel_reg[8]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39793 OR   /u_apb/U$65/U$33
+  (R) + 56669 MUX  /u_apb_psel_reg[8]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2378  DFF  /u_apb/psel_reg[7]
+  (R) + 1921  DFF  /u_apb_psel_reg[7]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39786 OR   /u_apb/U$65/U$29
+  (R) + 56668 MUX  /u_apb_psel_reg[7]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2379  DFF  /u_apb/psel_reg[6]
+  (R) + 1920  DFF  /u_apb_psel_reg[6]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39778 OR   /u_apb/U$65/U$25
+  (R) + 56667 MUX  /u_apb_psel_reg[6]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2380  DFF  /u_apb/psel_reg[5]
+  (R) + 1919  DFF  /u_apb_psel_reg[5]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39770 OR   /u_apb/U$65/U$21
+  (R) + 56666 MUX  /u_apb_psel_reg[5]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2381  DFF  /u_apb/psel_reg[4]
+  (R) + 1918  DFF  /u_apb_psel_reg[4]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39762 OR   /u_apb/U$65/U$17
+  (R) + 56665 MUX  /u_apb_psel_reg[4]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2382  DFF  /u_apb/psel_reg[3]
+  (R) + 1917  DFF  /u_apb_psel_reg[3]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39754 OR   /u_apb/U$65/U$13
+  (R) + 56664 MUX  /u_apb_psel_reg[3]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2383  DFF  /u_apb/psel_reg[2]
+  (R) + 1916  DFF  /u_apb_psel_reg[2]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39745 OR   /u_apb/U$65/U$9
+  (R) + 56663 MUX  /u_apb_psel_reg[2]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2384  DFF  /u_apb/psel_reg[1]
+  (R) + 1915  DFF  /u_apb_psel_reg[1]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39736 OR   /u_apb/U$65/U$5
+  (R) + 56662 MUX  /u_apb_psel_reg[1]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2385  DFF  /u_apb/psel_reg[0]
+  (R) + 1914  DFF  /u_apb_psel_reg[0]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39727 OR   /u_apb/U$65/U$1
+  (R) + 56661 MUX  /u_apb_psel_reg[0]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2386  DFF  /u_apb/rsp_err_reg
+  (R) + 1956  DFF  /u_apb_rsp_err_reg/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39799 OR   /u_apb/U$68/U$1
+  (R) + 45078 NAND /g157418/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2387  DFF  /u_apb/rsp_rdata_reg[31]
+  (R) + 1984  DFF  /u_apb_rsp_rdata_reg[31]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 40026 OR   /u_apb/U$72/U$125
+  (R) + 56730 MUX  /u_apb_rsp_rdata_reg[31]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2388  DFF  /u_apb/rsp_rdata_reg[30]
+  (R) + 608   DFF  /u_apb_rsp_rdata_reg[30]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 40019 OR   /u_apb/U$72/U$121
+  (R) + 55442 MUX  /u_apb_rsp_rdata_reg[30]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2389  DFF  /u_apb/rsp_rdata_reg[29]
+  (R) + 607   DFF  /u_apb_rsp_rdata_reg[29]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 40012 OR   /u_apb/U$72/U$117
+  (R) + 55441 MUX  /u_apb_rsp_rdata_reg[29]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2390  DFF  /u_apb/rsp_rdata_reg[28]
+  (R) + 606   DFF  /u_apb_rsp_rdata_reg[28]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 40005 OR   /u_apb/U$72/U$113
+  (R) + 55440 MUX  /u_apb_rsp_rdata_reg[28]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2391  DFF  /u_apb/rsp_rdata_reg[27]
+  (R) + 1983  DFF  /u_apb_rsp_rdata_reg[27]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39998 OR   /u_apb/U$72/U$109
+  (R) + 56729 MUX  /u_apb_rsp_rdata_reg[27]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2392  DFF  /u_apb/rsp_rdata_reg[26]
+  (R) + 1982  DFF  /u_apb_rsp_rdata_reg[26]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39991 OR   /u_apb/U$72/U$105
+  (R) + 56728 MUX  /u_apb_rsp_rdata_reg[26]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2393  DFF  /u_apb/rsp_rdata_reg[25]
+  (R) + 1981  DFF  /u_apb_rsp_rdata_reg[25]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39984 OR   /u_apb/U$72/U$101
+  (R) + 56727 MUX  /u_apb_rsp_rdata_reg[25]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2394  DFF  /u_apb/rsp_rdata_reg[24]
+  (R) + 1980  DFF  /u_apb_rsp_rdata_reg[24]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39977 OR   /u_apb/U$72/U$97
+  (R) + 56726 MUX  /u_apb_rsp_rdata_reg[24]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2395  DFF  /u_apb/rsp_rdata_reg[23]
+  (R) + 1979  DFF  /u_apb_rsp_rdata_reg[23]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39970 OR   /u_apb/U$72/U$93
+  (R) + 56725 MUX  /u_apb_rsp_rdata_reg[23]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2396  DFF  /u_apb/rsp_rdata_reg[22]
+  (R) + 1978  DFF  /u_apb_rsp_rdata_reg[22]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39963 OR   /u_apb/U$72/U$89
+  (R) + 56724 MUX  /u_apb_rsp_rdata_reg[22]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2397  DFF  /u_apb/rsp_rdata_reg[21]
+  (R) + 1977  DFF  /u_apb_rsp_rdata_reg[21]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39956 OR   /u_apb/U$72/U$85
+  (R) + 56723 MUX  /u_apb_rsp_rdata_reg[21]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2398  DFF  /u_apb/rsp_rdata_reg[20]
+  (R) + 1976  DFF  /u_apb_rsp_rdata_reg[20]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39949 OR   /u_apb/U$72/U$81
+  (R) + 56722 MUX  /u_apb_rsp_rdata_reg[20]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2399  DFF  /u_apb/rsp_rdata_reg[19]
+  (R) + 1975  DFF  /u_apb_rsp_rdata_reg[19]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39942 OR   /u_apb/U$72/U$77
+  (R) + 56721 MUX  /u_apb_rsp_rdata_reg[19]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2400  DFF  /u_apb/rsp_rdata_reg[18]
+  (R) + 1974  DFF  /u_apb_rsp_rdata_reg[18]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39935 OR   /u_apb/U$72/U$73
+  (R) + 56720 MUX  /u_apb_rsp_rdata_reg[18]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2401  DFF  /u_apb/rsp_rdata_reg[17]
+  (R) + 1973  DFF  /u_apb_rsp_rdata_reg[17]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39928 OR   /u_apb/U$72/U$69
+  (R) + 56719 MUX  /u_apb_rsp_rdata_reg[17]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2402  DFF  /u_apb/rsp_rdata_reg[16]
+  (R) + 1972  DFF  /u_apb_rsp_rdata_reg[16]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39921 OR   /u_apb/U$72/U$65
+  (R) + 56718 MUX  /u_apb_rsp_rdata_reg[16]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2403  DFF  /u_apb/rsp_rdata_reg[15]
+  (R) + 1971  DFF  /u_apb_rsp_rdata_reg[15]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39914 OR   /u_apb/U$72/U$61
+  (R) + 56717 MUX  /u_apb_rsp_rdata_reg[15]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2404  DFF  /u_apb/rsp_rdata_reg[14]
+  (R) + 1970  DFF  /u_apb_rsp_rdata_reg[14]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39907 OR   /u_apb/U$72/U$57
+  (R) + 56716 MUX  /u_apb_rsp_rdata_reg[14]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2405  DFF  /u_apb/rsp_rdata_reg[13]
+  (R) + 605   DFF  /u_apb_rsp_rdata_reg[13]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39900 OR   /u_apb/U$72/U$53
+  (R) + 55439 MUX  /u_apb_rsp_rdata_reg[13]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2406  DFF  /u_apb/rsp_rdata_reg[12]
+  (R) + 1969  DFF  /u_apb_rsp_rdata_reg[12]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39893 OR   /u_apb/U$72/U$49
+  (R) + 56715 MUX  /u_apb_rsp_rdata_reg[12]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2407  DFF  /u_apb/rsp_rdata_reg[11]
+  (R) + 1968  DFF  /u_apb_rsp_rdata_reg[11]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39886 OR   /u_apb/U$72/U$45
+  (R) + 56714 MUX  /u_apb_rsp_rdata_reg[11]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2408  DFF  /u_apb/rsp_rdata_reg[10]
+  (R) + 1967  DFF  /u_apb_rsp_rdata_reg[10]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39879 OR   /u_apb/U$72/U$41
+  (R) + 56713 MUX  /u_apb_rsp_rdata_reg[10]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2409  DFF  /u_apb/rsp_rdata_reg[9]
+  (R) + 1966  DFF  /u_apb_rsp_rdata_reg[9]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39872 OR   /u_apb/U$72/U$37
+  (R) + 56712 MUX  /u_apb_rsp_rdata_reg[9]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2410  DFF  /u_apb/rsp_rdata_reg[8]
+  (R) + 1965  DFF  /u_apb_rsp_rdata_reg[8]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39865 OR   /u_apb/U$72/U$33
+  (R) + 56711 MUX  /u_apb_rsp_rdata_reg[8]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2411  DFF  /u_apb/rsp_rdata_reg[7]
+  (R) + 1964  DFF  /u_apb_rsp_rdata_reg[7]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39858 OR   /u_apb/U$72/U$29
+  (R) + 56710 MUX  /u_apb_rsp_rdata_reg[7]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2412  DFF  /u_apb/rsp_rdata_reg[6]
+  (R) + 1963  DFF  /u_apb_rsp_rdata_reg[6]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39851 OR   /u_apb/U$72/U$25
+  (R) + 56709 MUX  /u_apb_rsp_rdata_reg[6]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2413  DFF  /u_apb/rsp_rdata_reg[5]
+  (R) + 1962  DFF  /u_apb_rsp_rdata_reg[5]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39844 OR   /u_apb/U$72/U$21
+  (R) + 56708 MUX  /u_apb_rsp_rdata_reg[5]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2414  DFF  /u_apb/rsp_rdata_reg[4]
+  (R) + 1961  DFF  /u_apb_rsp_rdata_reg[4]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39837 OR   /u_apb/U$72/U$17
+  (R) + 56707 MUX  /u_apb_rsp_rdata_reg[4]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2415  DFF  /u_apb/rsp_rdata_reg[3]
+  (R) + 1960  DFF  /u_apb_rsp_rdata_reg[3]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39830 OR   /u_apb/U$72/U$13
+  (R) + 56706 MUX  /u_apb_rsp_rdata_reg[3]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2416  DFF  /u_apb/rsp_rdata_reg[2]
+  (R) + 1959  DFF  /u_apb_rsp_rdata_reg[2]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39823 OR   /u_apb/U$72/U$9
+  (R) + 56705 MUX  /u_apb_rsp_rdata_reg[2]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2417  DFF  /u_apb/rsp_rdata_reg[1]
+  (R) + 1958  DFF  /u_apb_rsp_rdata_reg[1]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39816 OR   /u_apb/U$72/U$5
+  (R) + 56704 MUX  /u_apb_rsp_rdata_reg[1]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2418  DFF  /u_apb/rsp_rdata_reg[0]
+  (R) + 1957  DFF  /u_apb_rsp_rdata_reg[0]/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 39809 OR   /u_apb/U$72/U$1
+  (R) + 56703 MUX  /u_apb_rsp_rdata_reg[0]/U$1
+
+Compared points are: Abort (reachable)
+  (G) + 2419  DFF  /u_apb/rsp_valid_reg
+  (R) + 1985  DFF  /u_apb_rsp_valid_reg/U$1
+Due to these  aborted points:
+[DATA]
+  (G) + 40032 OR   /u_apb/U$80/U$1
+  (R) + 19093 NAND /g101213/U$1
+
+112 Abort point(s) reported
+112 compared point(s) reported
+================================================================================
+Compared points      PO     DFF    BBOX      Total   
+--------------------------------------------------------------------------------
+Equivalent           71     3886   8         3965    
+--------------------------------------------------------------------------------
+Non-equivalent       0      1      0         1       
+--------------------------------------------------------------------------------
+Abort                0      112    0         112     
+================================================================================
