@@ -99,7 +99,7 @@ Với `nohup`, đóng terminal không làm dừng lệnh. Server dùng chung nê
 | `THREADS` | tắt | Thêm `set parallel option -threads N` trước `compare`. Cú pháp lấy từ `help`, chưa biết có cần license và có nhanh hơn không |
 | `ONE_LINE` | `0` | `1`: viết `read design -golden` trên một dòng dài như `core_rtl2gate.do` |
 | `SEQ_FEEDBACK` | `0` | `1`: thêm `set flatten model -seq_constant_feedback` sau các tùy chọn flatten khác, cho các flop hằng có mux giữ giá trị (11 điểm Non-equivalent ở mục 4). Đã chạy trên server 20/11 (LEC-02, mục 4): không đổi kết quả |
-| `SEQ_EFFORT` | rỗng | `high` (hoặc `medium`): thêm `set flatten model -seq_constant_effort high`, cho Conformal tìm sâu hơn các flop luôn hằng ở mọi trạng thái đạt tới. Thêm 21/11 để thử điểm Non-equivalent còn lại của LEC-02 (`clk_cnt_reg[15]`) |
+| `SEQ_EFFORT` | rỗng | `high` (hoặc `medium`): thêm `set flatten model -seq_constant_effort high`, cho Conformal tìm sâu hơn các flop luôn hằng ở mọi trạng thái đạt tới. Thêm 21/11 để thử điểm Non-equivalent còn lại của LEC-02 (`clk_cnt_reg[15]`). Đã chạy 25/11 (LEC-02 lần 5, mục 4): không đổi kết quả |
 | `DRY_RUN` | `0` | `1`: chỉ sinh dofile, không chạy `lec` |
 
 Ví dụ: `LEC_DIR=syn/out_soc_lec2 THREADS=4 nohup bash lec/run_lec_soc.sh > ~/lec_soc_run2.txt 2>&1 &`
@@ -188,7 +188,11 @@ Netlist `syn/out_soc/soc_top_netlist.v` ngày 14/11 (top `soc_top`, chu kỳ 9 n
 
 Cả 11 điểm Non-equivalent của 12/11 đã hết. Còn 1 điểm mới là `g_spi.u_spi/gen_spi.clk_cnt_reg[15]`. Netlist nối `.D (1'b0)` (dòng 22348), RTL còn MUX. Đây là tác dụng phụ của bản sửa: `ctrl_div` giờ chỉ 8 bit nhưng `clk_cnt` vẫn 16 bit.
 
-Kết luận: đây không phải lỗi chức năng. `clk_cnt` chỉ được gán ở 4 chỗ trong `spi_apb.v`: reset về 0 (dòng 68), nạp `{8'd0, ctrl_div}` (dòng 82, 88), và giảm 1 (dòng 115) chỉ khi `clk_cnt != 0` (nhánh `else` của dòng 87). Nên `clk_cnt <= 255` ở mọi trạng thái, bit [15:8] luôn bằng 0 và `D=1'b0` của Genus là đúng. Conformal không chứng minh được bất biến quy nạp này nên vẫn báo Non-equivalent, kể cả khi bật `-seq_constant_feedback`. Cách loại điểm này khỏi báo cáo là thu hẹp `clk_cnt` về 8 bit trong một lần ECO sau (cần tổng hợp lại).
+Kết luận: đây không phải lỗi chức năng. `clk_cnt` chỉ được gán ở 4 chỗ trong `spi_apb.v`: reset về 0 (dòng 68), nạp `{8'd0, ctrl_div}` (dòng 82, 88), và giảm 1 (dòng 115) chỉ khi `clk_cnt != 0` (nhánh `else` của dòng 87). Nên `clk_cnt <= 255` ở mọi trạng thái, bit [15:8] luôn bằng 0 và `D=1'b0` của Genus là đúng. Conformal không chứng minh được bất biến quy nạp này nên vẫn báo Non-equivalent, kể cả khi bật `-seq_constant_feedback`. Nhóm (Phát, 21/11) quyết định không sửa RTL, vì sửa phải làm lại tổng hợp, PnR, ECO, STA, LEC và GLS.
+
+### LEC-02 lần 5: `SEQ_EFFORT=high` (25/11)
+
+Phát thêm `SEQ_EFFORT` vào `lec/run_lec_soc.sh` (commit `53bb87e`, `set flatten model -seq_constant_effort high`). Chạy `SEQ_FEEDBACK=1 SEQ_EFFORT=high LEC_DIR=syn/out_soc_lec5`, cùng netlist 14/11 và RTL `e60437a`. Tùy chọn được Conformal nhận (kiểm tra trước bằng dofile cắt ngắn, không có `// Error`). Kết quả: 3965 Equivalent (71 PO, 3886 DFF, 8 BBOX), 1 Non-equivalent, 112 Abort, giống hệt lần 4. Điểm `clk_cnt_reg[15]` vẫn còn, chấp nhận kèm chứng minh ở trên. `report verification` ghi `FAIL:NONEQ` chỉ vì điểm này. Report ở `appendix/lec_soc/run5_seqeff/`.
 
 ### LEC-03: netlist tổng hợp ↔ netlist sau layout (20/11)
 
@@ -227,7 +231,7 @@ Chạy để kiểm tra 44 Abort của `u_apb` ở mục 4. Dùng `lec/apb_bridg
 - Không có `analyze datapath` (cần Conformal_Ultra), nên các khối nhân chia có thể Abort. GLS kiểm tra thêm về chức năng (`make gls-core` cho lõi).
 - Macro SRAM là hộp đen: LEC không kiểm tra bên trong macro.
 - `MACRO_MODE=undef` che mọi module thiếu. Luôn đối chiếu `report black box -both`.
-- `spi clk_cnt_reg[15]` còn báo Non-equivalent ở LEC-02 dù bit này hằng 0 (mục 4). Conformal không chứng minh được bất biến quy nạp. Thu hẹp `clk_cnt` về 8 bit sẽ loại điểm này, cần tổng hợp lại.
+- `spi clk_cnt_reg[15]` còn báo Non-equivalent ở LEC-02 dù bit này hằng 0 (mục 4). Conformal không chứng minh được bất biến quy nạp. Thu hẹp `clk_cnt` về 8 bit sẽ loại điểm này nhưng phải tổng hợp lại, nên nhóm chấp nhận điểm này kèm chứng minh ở mục 4.
 - LEC-03 chỉ kiểm tương đương giữa hai netlist, không kiểm chức năng so với RTL. Chức năng sau layout cần GLS có SDF.
 - Kết quả chỉ đúng với netlist và RTL của lần chạy. RTL hoặc netlist đổi thì phải chạy lại.
 - File shell sửa trên Windows có thể bị đổi ký tự xuống dòng. Nếu `bash` báo `$'\r': command not found` thì chạy `sed -i 's/\r$//' <file>`.

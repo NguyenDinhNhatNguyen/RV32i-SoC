@@ -69,11 +69,21 @@ Vòng ring VDD gồm 4 wire: 2 wire ngang trên Metal8 (y = 11,51 và y = 437,17
 
 Tổng công suất ở hoạt độ 0,1 (báo cáo `power_act0.1.rpt`): 1,975 mW, gồm nội bộ 0,962 mW, chuyển mạch 1,001 mW, rò 0,011 mW.
 
-Log của Voltus chỉ làm tròn đến 1 mV. Số mV chính xác và vị trí điểm sụt áp lớn nhất chưa được đọc từ file báo cáo.
+Log của Voltus chỉ làm tròn đến 1 mV. Số chính xác của kịch bản A lấy từ file điện áp từng instance `power/run_ir_act0.1/reports/rail/VDD_25C_avg_4/Reports/VDD/VDD.iv` (46674 instance, đọc 25/11):
+
+| Kịch bản A | Giá trị |
+| --- | --- |
+| Điện áp thấp nhất | 0,89931 V, tức sụt 0,69 mV (0,077% của 0,9 V) |
+| Điện áp trung bình | 0,89992 V, tức sụt khoảng 0,08 mV |
+| Instance thấp nhất | nhiều instance cùng 0,89931 V (file chỉ ghi 5 chữ số), ví dụ `FE_OFC16_FE_DBTN16_rst_n_sync_BAR` (CLKBUFX8) |
+| Theo lớp (`VDD.layerbased_ir.rpt`) | Metal1 0,693 mV; Metal2 đến Metal8 khoảng 0,09 mV |
+| Số vi phạm (`VDD.main.rpt`) | 0, ngưỡng 0,855 V |
+
+Thư mục `VDD_25C_avg_3` là lần thử chế độ `auto` (1089 nguồn), không dùng. Thư mục `VDD_25C_avg_4` là lần chạy 12 pad, đúng với bảng trên. Kịch bản B (hoạt độ 0,5) chưa được đọc chi tiết từ file, chỉ có số làm tròn của log.
 
 ## 6. So với ngưỡng
 
-Lab 06 dùng ngưỡng sụt áp tĩnh nhỏ hơn 5% VDD. VDD của Lab là 1,0 V (50 mV), còn view `av_setup` của `soc_top` là 0,9 V (45 mV). Nhóm chưa chốt dùng ngưỡng nào. Kết quả ở cả hai kịch bản (khoảng 1 đến 2 mV) thấp hơn cả hai ngưỡng.
+Lab 06 dùng ngưỡng sụt áp tĩnh nhỏ hơn 5% VDD. VDD của Lab là 1,0 V (50 mV), còn view `av_setup` của `soc_top` là 0,9 V (45 mV). Nhóm chốt ngưỡng 45 mV (5% của 0,9 V, đúng điện áp corner slow mà timing và IR đang dùng; Phát đề xuất 22/11, nhóm xác nhận 25/11). Kết quả ở cả hai kịch bản (khoảng 1 đến 2 mV) thấp hơn cả hai ngưỡng.
 
 ## 7. Giới hạn và việc còn lại
 
