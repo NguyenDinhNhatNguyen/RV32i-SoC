@@ -93,6 +93,7 @@ Kết luận:
 - Không so F_max bằng slack ở 20 ns: `rv32_core` dùng `core.sdc` có delay macro SRAM và Genus chỉ tối ưu tới khi vừa đạt (slack +0,32 ns), còn PicoRV32 dùng SDC chung của khối (24% và 20% chu kỳ, slack +6,6 đến +12,6 ns). Muốn so F_max phải quét chu kỳ cả hai với cùng kiểu ràng buộc chân.
 - Công suất Genus dùng activity mặc định, chỉ để tham khảo. Số `rv32_core` là lần 28/10, trước khi bỏ bit hằng `wb_cause_q[4]` (14/11), sai khác không đáng kể.
 - Đường găng PicoRV32 mặc định và I tới `reg_next_pc`, IM tới `pcpi_mul_rd` (bộ nhân nhanh).
+- So sánh thêm với Ibex và SERV, quy về kGE: `docs/eva02_compare.md`.
 
 ## 4. Quét chu kỳ trên Genus (STA-03, ở trường)
 
