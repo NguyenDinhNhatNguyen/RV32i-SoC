@@ -12,7 +12,7 @@ Chủ: Hiếu, cùng Phúc. Xuất SAIF (hoặc VCD) cho từng testcase từ GL
 
 Cửa sổ đo của SAIF bắt đầu khi reset nhả (`running = 1`) và kết thúc ở lệnh ghi `tohost`. Đây cũng là cửa sổ đếm chu kỳ. Năng lượng của một testcase = công suất tổng × số chu kỳ × 10 ns.
 
-Chỉ có góc slow (1,0 V, 125 °C), vì PDK không có thư viện typical. Kết quả cùng góc với report power của Genus trong STA-04.
+Chỉ có góc slow (0,9 V, 125 °C, thư viện `slow_vdd1v0`), vì PDK không có thư viện typical. Report Genus ghi `PVT_0P9V_125C`, report Innovus ghi rail VDD 0,9 V. Kết quả cùng góc với report power của Genus trong STA-04.
 
 ## 2. Testcase
 
@@ -140,8 +140,32 @@ Report ở `appendix/power_soc_post/`. Công suất tính bằng mW. Năng lư�
 
 Nhận xét và giới hạn:
 
-- Công suất sau layout bằng 1,90 đến 2,02 lần trước layout. Phần switching tăng nhiều nhất. Nguyên nhân dự kiến là cây clock, buffer và tải dây, nhóm chưa tách riêng từng phần. Hai bước còn dùng hai công cụ khác nhau (Genus và Innovus).
+- Công suất sau layout bằng 1,90 đến 2,02 lần trước layout. Phần tăng chủ yếu ở logic tổ hợp, sau đó tới cây clock (bảng tách nhóm ở dưới). Hai bước dùng hai công cụ khác nhau (Genus và Innovus).
 - Gán activity từ SAIF: ngõ vào, flop và ngõ ra macro 100%, tổng số net 80,7%. Phần còn lại do Innovus tự lan truyền.
 - Chỉ có góc slow, RC typical.
 - PD-08 sau đó chỉ sửa lưới `VSS` (`route_trim.enc`), netlist và dây tín hiệu không đổi, nên nhóm không chạy lại.
+
+### 9.1 Công suất theo nhóm cell
+
+Innovus tách công suất theo nhóm trong bảng `Group` của `appendix/power_soc_post/<testcase>/power.rpt`. Cột Clock là tổng hai dòng `Clock (Combinational)` và `Clock (Sequential)`, khớp dòng `clk` trong bảng `Clock` của report (CoreMark 0,17 mW). Đơn vị mW.
+
+| Testcase | Sequential | Combinational | Clock | Clock / tổng | Macro | Leakage macro | Tổng | Phần tăng do logic tổ hợp | Phần tăng do clock |
+|----------|-----------:|--------------:|------:|-------------:|------:|--------------:|-----:|--------------------------:|-------------------:|
+| `soc` | 0,1518 | 0,2304 | 0,1650 | 28,4% | 0,0329 | 0,0161 | 0,5800 | 56% | 41% |
+| `dma` | 0,1658 | 0,3844 | 0,1663 | 22,0% | 0,0377 | 0,0176 | 0,7541 | 67% | 30% |
+| `i2c` | 0,1578 | 0,2569 | 0,1656 | 26,9% | 0,0359 | 0,0167 | 0,6161 | 59% | 38% |
+| `spi_pwm` | 0,1655 | 0,3256 | 0,1664 | 24,1% | 0,0343 | 0,0168 | 0,6919 | 64% | 34% |
+| `soc_fw_rv32im` | 0,1961 | 0,5654 | 0,1694 | 17,6% | 0,0339 | 0,0170 | 0,9647 | 75% | 24% |
+| `coremark_rv32im` | 0,1838 | 0,5153 | 0,1700 | 18,7% | 0,0379 | 0,0184 | 0,9069 | 73% | 26% |
+| `dhrystone_rv32im` | 0,1710 | 0,4279 | 0,1681 | 20,8% | 0,0402 | 0,0193 | 0,8071 | 69% | 29% |
+| `accel_bench_rv32im` | 0,1794 | 0,4551 | 0,1671 | 19,9% | 0,0373 | 0,0180 | 0,8389 | 70% | 28% |
+
+Hai cột cuối so với PWR-01. Report Genus chia nhóm `register`, `logic`, `clock`, `bbox` (macro). Phần tăng do logic tổ hợp là Combinational sau layout trừ `logic` trước layout. Phần tăng do clock là Clock sau layout trừ `clock` trước layout. Hai cách chia nhóm của hai tool không trùng hẳn, nên đây là ước lượng.
+
+Nhận xét:
+
+- Cây clock tốn khoảng 0,17 mW ở mọi testcase, tức 18 đến 28% tổng. Trước layout Genus chỉ tính khoảng 0,053 mW vì chưa có cây clock của CTS.
+- Phần tăng sau layout đến chủ yếu từ logic tổ hợp (56 đến 75%), cây clock chiếm 24 đến 41%. Sequential và macro gần như không đổi. Nguyên nhân dự kiến là tải dây thật thay cho wireload, buffer sửa hold và tối ưu sau route, và 19,3% net không có SAIF do Innovus tự lan truyền.
+- Macro SRAM chỉ chiếm khoảng 4% tổng. Phần động của cả 8 macro chỉ 0,017 đến 0,021 mW, tức khoảng 0,2 pJ mỗi chu kỳ, dù IMEM được đọc gần như mỗi chu kỳ. Số này thấp so với SRAM thật ở 45 nm. Nó phụ thuộc vào số liệu công suất trong `sram_2k_macro.lib` của môn, nhóm không kiểm được. Công suất tổng vì vậy có thể thấp hơn thực tế ở phần SRAM.
+- Leakage của macro chiếm khoảng 91% leakage tổng (CoreMark 0,0184 trên 0,0202 mW). Leakage của cell chuẩn chỉ khoảng 0,002 mW.
 

@@ -21,7 +21,8 @@ Chu kỳ chốt 10 ns (100 MHz). Tổng hợp và PnR ở 9 ns để layout còn
 | Power | Công suất theo testcase, trước layout | 0,306 đến 0,478 mW | Genus, SAIF từ GLS, slow, 10 ns (PWR-01) | `power_soc.md` mục 5 |
 | Power | Công suất theo testcase, sau layout | **0,580 đến 0,965 mW** | Innovus, SAIF của PWR-01, SPEF `route_eco`, slow, 10 ns (PWR-02) | `power_soc.md` mục 9 |
 | Power | Công suất CoreMark | 0,456 mW trước layout, **0,907 mW** sau layout | Như trên, `coremark_rv32im` | `power_soc.md` mục 5 và 9 |
-| Power | Static power (leakage) sau layout | **0,0179 đến 0,0211 mW** | Như PWR-02, chiếm khoảng 2 đến 3% tổng | `appendix/power_soc_post/summary.md` |
+| Power | Static power (leakage) sau layout | **0,0179 đến 0,0211 mW** | Như PWR-02, chiếm khoảng 2 đến 3% tổng. Khoảng 91% là leakage của macro SRAM | `appendix/power_soc_post/summary.md`, `power_soc.md` mục 9.1 |
+| Power | Công suất cây clock sau layout | **khoảng 0,17 mW**, 18 đến 28% tổng | Như PWR-02, nhóm `Clock` trong report Innovus | `power_soc.md` mục 9.1 |
 | Power | EPI | 4,53 đến 5,86 pJ/lệnh trước layout, **8,69 đến 11,59 pJ/lệnh** sau layout, CoreMark 5,14 và 10,23 | EPI = P × CPI / f | Mục 4 |
 | Perf | CPI (vùng đo), IPC = 1/CPI | CPI 1,094 (CoreMark), 1,206 (Dhrystone). IPC 0,914 và 0,829 | RTL `soc_top`, rv32im, M1W1 | `bench_soc.md` |
 | Perf | DMIPS/MHz | **0,882** | Như trên | `bench_soc.md` |
@@ -62,6 +63,7 @@ Ghi chú:
 | **Tempus layout cuối `route_trim`, 4 view (signoff, STA-06)** | **10 ns** | **+0,977 ns** | **+0,020 ns** | `appendix/sta_soc_p9_trim/` |
 
 - F_max sau tổng hợp khoảng 200 MHz lấy từ lần quét chu kỳ, không lấy từ slack ở 9 ns. Genus chỉ tối ưu tới khi vừa đạt, nên 1 / (9 − 0,0007) ≈ 111 MHz không phải F_max.
+- Không lấy hai số 200 MHz và 110,8 MHz để tính mức suy giảm do layout. Hai số đo trên hai netlist khác nhau. Số 200 MHz là netlist tổng hợp riêng ở 5 ns (65 708 µm² cell chuẩn), clock lý tưởng, chưa có delay dây, macro dùng `.lib` typical. Số 110,8 MHz là netlist 9 ns (60 188 µm²) đã đưa vào layout, clock propagated, có tải dây thật. Netlist 9 ns chưa bao giờ được tối ưu cho 200 MHz.
 - F_max sau layout khoảng 110,8 MHz là số Tempus. Innovus ở 9 ns cho −0,047 ns, tức khoảng 110,5 MHz, chênh dưới 0,03 ns như các lần trước.
 - Signoff 100 MHz dư khoảng 10% so với F_max sau layout.
 
@@ -89,6 +91,7 @@ Kiểm lại:
 - IPC = 1 / CPI = instret / chu kỳ.
 - Cột sau layout lấy từ `docs/power_soc.md` mục 9 và `appendix/power_soc_post/summary.md`. Kiểm lại EPI = P × CPI / f với công suất chưa làm tròn trong `summary.md`: cả 8 testcase ra đúng EPI và năng lượng của `power_soc.md` mục 9, không lệch. Ví dụ CoreMark: 0,9069 mW × 1,128 / 100 MHz = 10,23 pJ/lệnh.
 - Công suất sau layout bằng 1,90 đến 2,02 lần trước layout, nên EPI cũng tăng cùng tỉ lệ (CPI không đổi). Leakage sau layout 0,0179 đến 0,0211 mW, gần bằng trước layout (0,0173 đến 0,0205 mW).
+- Phần tăng sau layout đến chủ yếu từ logic tổ hợp (56 đến 75% phần tăng), cây clock chiếm 24 đến 41%. Cây clock sau layout tốn khoảng 0,17 mW ở mọi testcase. Bảng tách theo nhóm ở `power_soc.md` mục 9.1.
 
 Số công suất tham khảo, không dùng cho bảng chính:
 
@@ -122,12 +125,12 @@ RTL `soc_top` ở commit `6f02f2b` (12/11), trước RTL freeze. GCC 16.1, `-O2`
 | Diện tích, mật độ sau layout | Innovus 21.19 | - | 9 ns | - | Layout `_p9` sau ECO, không tính filler |
 | F_max sau tổng hợp | Genus 21.10 | slow | Quét 20 đến 4 ns | - | Macro chỉ có `.lib` typical |
 | Signoff, F_max sau layout | Tempus 23.14 | slow và fast, RC typical | 10 ns (quét 9 đến 8 ns) | - | 4 view, clock propagated |
-| Công suất, EPI | Genus 21.1 | slow 1,0 V 125 °C | 10 ns | SAIF từ GLS zero delay | Trước layout, PDK không có `.lib` typical |
+| Công suất, EPI | Genus 21.1 | slow 0,9 V 125 °C | 10 ns | SAIF từ GLS zero delay | Trước layout, PDK không có `.lib` typical |
 | Công suất, EPI sau layout | Innovus 21.19 | slow, RC typical | 10 ns | SAIF của PWR-01 | `route_eco`, SPEF sau ECO (PWR-02) |
 | CPI, DMIPS, CoreMark | Icarus (RTL) | - | - | - | Số chu kỳ không đổi theo tần số, nhân với f để ra hiệu năng |
 | Riêng `rv32_core` | Genus 21.10 | slow 0,9 V 125 °C | 20 ns | Mặc định | `core.sdc` có delay macro SRAM |
 
-Header của report Genus ghi `PVT_0P9V_125C` còn `power_soc.md` ghi 1,0 V. Đây là cùng thư viện `slow_vdd1v0`, giữ đúng như tài liệu nguồn.
+Mọi số đều ở 0,9 V: header của report Genus ghi `PVT_0P9V_125C`, report Innovus ghi rail VDD 0,9 V. Tên thư viện `slow_vdd1v0` chỉ là tên file, góc slow của thư viện này chạy ở 0,9 V. `power_soc.md` đã sửa từ 1,0 V thành 0,9 V ngày 26/11.
 
 ## 7. Đã cập nhật ở EVA-04 (26/11)
 
@@ -138,11 +141,12 @@ Header của report Genus ghi `PVT_0P9V_125C` còn `power_soc.md` ghi 1,0 V. Đ�
 | Công suất, EPI theo testcase | 0,306 đến 0,478 mW, 4,53 đến 5,86 pJ (trước layout) | Sau layout 0,580 đến 0,965 mW, 8,69 đến 11,59 pJ (PWR-02) | Mục 4, `power_soc.md` mục 9 |
 | Static power (leakage) | 0,0173 đến 0,0205 mW (trước layout) | 0,0179 đến 0,0211 mW (sau layout) | `appendix/power_soc_post/summary.md` |
 | IPC | Chưa ghi | IPC = 1/CPI, thêm vào mục 1 và mục 4 | Mục 1, mục 4 |
+| Công suất cây clock | Ghi là chưa tách riêng | Khoảng 0,17 mW, 18 đến 28% tổng, đọc từ bảng `Group` của report Innovus | `power_soc.md` mục 9.1 |
 
 Số không đổi ở EVA-04 (RTL đã freeze 15/11, netlist không đổi): diện tích và GE sau tổng hợp, F_max sau tổng hợp, CPI, DMIPS/MHz, CoreMark/MHz, số riêng của `rv32_core`, so sánh clock gating.
 
 Giới hạn còn lại:
-- Công suất cây clock chưa tách riêng. PWR-02 chỉ cho tổng theo leakage, internal, switching.
+- Công suất SRAM có thể thấp hơn thực tế. Phần động của cả 8 macro chỉ 0,017 đến 0,021 mW (khoảng 0,2 pJ mỗi chu kỳ). Số này lấy từ `sram_2k_macro.lib` của môn, nhóm không kiểm được (`power_soc.md` mục 9.1).
 - PWR-02 chạy trên `route_eco`, không phải `route_trim`. SPEF của layout cuối chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%), nên nhóm không chạy lại.
 - Chỉ có góc slow (RC typical) cho công suất.
 

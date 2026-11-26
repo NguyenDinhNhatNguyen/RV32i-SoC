@@ -94,17 +94,18 @@ Nhận xét:
 - Làm đủ các điểm cộng nhóm chọn: RV32IM, ngắt, BTB, SPI, PWM, I2C, DMA, accelerator dùng ngắt (mục 3).
 
 Điểm yếu:
-- F_max giảm mạnh sau layout: khoảng 200 MHz sau tổng hợp còn khoảng 110,8 MHz sau layout. Đường găng là IMEM → so sánh nhánh → `if_pc_q` và IMEM → bộ nhân (`sta_results.md` mục 4 và 6).
+- F_max sau layout chỉ khoảng 110,8 MHz, dư khoảng 10% so với signoff 100 MHz. Đường găng là IMEM → so sánh nhánh → `if_pc_q` và IMEM → bộ nhân (`sta_results.md` mục 4 và 6). Số khoảng 200 MHz sau tổng hợp đo trên một netlist khác (tổng hợp riêng ở 5 ns, clock lý tưởng, chưa có dây, macro `.lib` typical), nên không dùng hai số này để tính mức suy giảm do layout (`eva03_ppa.md` mục 3).
 - Lõi tốn diện tích ở flop: 2163 flop chiếm 44% diện tích lõi, riêng register file khoảng 6 kGE (`eva02_compare.md` mục 4).
 - Accelerator chỉ nhanh hơn phần mềm rv32im 1,61 lần, vì khoảng 95% thời gian là chuyển dữ liệu qua APB (`bench_soc.md` mục Speedup accelerator).
-- Công suất sau layout bằng 1,90 đến 2,02 lần trước layout, và skew cây clock góc slow 0,131 ns, vượt mục tiêu 0,080 ns (`power_soc.md` mục 9, `pnr_soc_status.md` mục 8).
+- Công suất sau layout bằng 1,90 đến 2,02 lần trước layout. Phần tăng chủ yếu ở logic tổ hợp (56 đến 75%), cây clock chiếm 24 đến 41%. Cây clock tốn khoảng 0,17 mW, 18 đến 28% tổng (`power_soc.md` mục 9.1). Skew cây clock góc slow 0,131 ns, vượt mục tiêu 0,080 ns (`pnr_soc_status.md` mục 8).
 - Macro không có chân ghi byte, nên mỗi SB/SH tốn thêm 1 chu kỳ. Dhrystone chậm 4,9% vì lý do này (`bench_soc.md` mục Giải thích chênh lệch).
 
 ## 7. Giới hạn của phép đo
 
 - **Công suất chỉ có góc slow** (RC typical), vì PDK không có thư viện typical cho cell chuẩn (`power_soc.md` mục 1 và 9).
 - **PWR-02 chạy trên `route_eco`, không phải `route_trim`.** SPEF của layout cuối chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%), nên nhóm không chạy lại (`pnr_soc_status.md` mục 8).
-- **Công suất cây clock chưa tách riêng.** PWR-02 chỉ cho tổng theo leakage, internal, switching (`eva03_ppa.md` mục 7).
+- **Công suất SRAM có thể thấp hơn thực tế.** Phần động của cả 8 macro chỉ 0,017 đến 0,021 mW, khoảng 0,2 pJ mỗi chu kỳ, dù IMEM được đọc gần như mỗi chu kỳ. Số này lấy từ `sram_2k_macro.lib` của môn, nhóm không kiểm được (`power_soc.md` mục 9.1).
+- **Phân tách công suất theo nhóm giữa hai tool chỉ là ước lượng.** Genus chia `register`, `logic`, `clock`, `bbox`, Innovus chia `Sequential`, `Combinational`, `Clock`, `Macro`. Hai cách chia không trùng hẳn (`power_soc.md` mục 9.1).
 - **IR drop chỉ phân tích VDD tĩnh.** VSS chỉ kiểm connectivity, sạch sau PD-08 (`ir_drop.md` mục 7). Pad là giả định (12 điểm trên vòng ring) (`ir_drop.md` mục 8).
 - **Không làm EM**, vì đề bài yêu cầu sign-off "lỗi điện" và không ghi EM (`ir_drop.md` mục 7).
 - **Không có LVS**, vì macro `sram_2k_macro` không có GDS và CDL. Thầy xác nhận không cần ngày 22/10 (`macro_notes.md` mục 3.7, `pnr_soc_status.md` mục 8).
@@ -121,7 +122,7 @@ Lợi ích dưới đây là dự kiến, chưa đo.
 | Register file dùng latch hoặc SRAM | Flop chiếm 44% diện tích lõi và register file khoảng 6 kGE (`eva02_compare.md` mục 4). Dự kiến đây là cách giảm diện tích lõi lớn nhất. |
 | Lệnh nén C | Dự kiến code nhỏ hơn, để trống thêm IMEM (CoreMark rv32i chỉ còn khoảng 1,1 KB, `bench_soc.md`). CoreMark/MHz dự kiến thay đổi ít. |
 | Cache hoặc prefetch cho bộ nhớ có wait state | Dự kiến giữ CPI gần mức hiện tại (khoảng 1,1) khi dùng bộ nhớ chậm hơn SRAM trên chip. |
-| Tách và tối ưu công suất cây clock | Dự kiến giải thích và giảm phần công suất tăng 1,90 đến 2,02 lần sau layout, đồng thời đưa skew về gần mục tiêu 0,080 ns. |
+| Tối ưu cây clock và logic tổ hợp sau layout | Cây clock tốn khoảng 0,17 mW (18 đến 28% tổng) và logic tổ hợp chiếm phần lớn mức tăng sau layout (`power_soc.md` mục 9.1). Dự kiến giảm được phần tăng 1,90 đến 2,02 lần, đồng thời đưa skew về gần mục tiêu 0,080 ns. |
 | Thêm góc fast và typical cho công suất | Dự kiến cho khoảng công suất đầy đủ hơn thay vì chỉ góc slow. Cần thư viện typical mà PDK hiện chưa có. |
 | EM và phân tích VSS | Dự kiến hoàn thiện sign-off lỗi điện cho cả hai lưới nguồn. |
-| Multi-Vt hoặc power gating | Dự kiến giảm leakage và công suất khi chờ. Leakage hiện chỉ khoảng 2 đến 3% tổng ở 100 MHz (`eva03_ppa.md` mục 1), nên lợi ích chủ yếu ở chế độ chờ. |
+| Multi-Vt hoặc power gating | Dự kiến giảm leakage và công suất khi chờ. Leakage hiện chỉ khoảng 2 đến 3% tổng ở 100 MHz (`eva03_ppa.md` mục 1), nên lợi ích chủ yếu ở chế độ chờ. Khoảng 91% leakage là của macro SRAM (`power_soc.md` mục 9.1), nên multi-Vt cho cell chuẩn giúp ít, power gating SRAM giúp nhiều hơn. |
