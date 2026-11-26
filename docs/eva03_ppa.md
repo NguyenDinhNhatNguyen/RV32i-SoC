@@ -153,7 +153,7 @@ Giới hạn còn lại:
 | Performance | F_max | Khoảng 200 MHz sau tổng hợp, khoảng 110,8 MHz sau layout, signoff 100 MHz | Mục 1 và 3, `sta_results.md` mục 4 và 6 |
 | Performance | CPI, IPC | Vùng đo: CPI 1,094 và IPC 0,914 (CoreMark), CPI 1,206 và IPC 0,829 (Dhrystone). Cả chương trình: CPI 1,128 đến 1,532 | Mục 1, 4, 5, `bench_soc.md` |
 | Power | Dynamic theo toggle rate 0,1 | Innovus trên `route_eco`: internal 0,962 mW, switching 1,001 mW (tổng 1,975 mW, leakage 0,011 mW) | `ir_drop.md` mục 5 (`power_act0.1.rpt`) |
-| Power | Dynamic theo toggle rate 0,5 | Chưa có. Lần chạy IR ở hoạt độ 0,5 không ghi công suất vào repo | `appendix/ir_drop_trim/act0.5/` |
+| Power | Dynamic theo toggle rate 0,5 | Không đo, dùng số theo 8 testcase (xem eva05_eval.md mục 7) | `appendix/ir_drop_trim/act0.5/` |
 | Power | Theo 8 testcase | 0,306 đến 0,478 mW trước layout, 0,580 đến 0,965 mW sau layout | Mục 4, `power_soc.md` mục 5 và 9 |
 | Power | Static (leakage) | 0,0179 đến 0,0211 mW sau layout | Mục 4, `appendix/power_soc_post/summary.md` |
 | Power | EPI | 4,53 đến 5,86 pJ/lệnh trước layout, 8,69 đến 11,59 pJ/lệnh sau layout | Mục 4 |
