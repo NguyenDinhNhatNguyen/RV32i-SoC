@@ -231,7 +231,7 @@ Giới hạn của GLS có SDF vì vậy là:
 
 VER-08 chỉ chạy góc max: thư viện slow, SDF `av_setup`, giá trị `MAXIMUM`. Góc này kiểm setup. VER-09 thêm góc min để kiểm hold: thư viện fast, delay nhỏ nhất.
 
-**Trạng thái (26/11):** flow đã sẵn sàng. Chưa chạy trên server.
+**Trạng thái (26/11):** xong. Trên server, cả hai góc đều `gls-soc: 71 passed, 0 failed`, không có vi phạm timing sau khi reset nhả (mục 9.4, `appendix/gls_soc_sdf_minmax/`).
 
 ### 9.1 Hai lần chạy
 
@@ -245,6 +245,7 @@ VER-08 chỉ chạy góc max: thư viện slow, SDF `av_setup`, giá trị `MAXI
 - Script cũng ghi `soc_top_setup.sdf` bằng Tempus. File này dùng để so với SDF của Innovus nếu kết quả hai góc khác nhau bất thường.
 - SDC là `syn/constraints/soc.sdc` ở 10 ns. Delay trong SDF không phụ thuộc chu kỳ, SDC chỉ cần để Tempus dựng clock.
 - Cả hai lần chạy ở clock 10 ns, bật timing check, cùng quy tắc như VER-08: chỉ đếm vi phạm sau khi reset nhả (mục 8.1).
+- SDF hold có 259 delay dây (`INTERCONNECT`) âm, lớn nhất -6 ps. Ở góc fast, slew tại chân nhận tốt hơn tại chân lái, nên Tempus tính ra delay dây hơi âm. Xcelium không nhận delay âm và đặt 258 giá trị về 0 (cảnh báo `SDFNDP`). Sai lệch tối đa 6 ps, nhỏ hơn biên hold +20 ps của STA. Các timing check âm trong SDF (ví dụ `RECREM (-0.087)`) là hợp lệ và không bị đổi.
 - Thư viện SRAM chỉ có góc typical, và model `sram_2k_macro.v` không có `specify` (mục 8.5). Ở cả hai góc macro không có delay và không có check. Hold ở chân macro do STA kiểm (hold +0,020 ns, `docs/sta_results.md` mục 6).
 
 ### 9.2 Trên server
@@ -264,8 +265,8 @@ nohup make gls-soc-sdf-minmax GLS_PNR=$P > ~/gls_minmax_run.log 2>&1 &
 Lưu kết quả cho repo:
 
 ```bash
-for c in max min; do mkdir -p appendix/gls_soc_sdf_minmax/$c; cp syn/out_soc/gls_sdf_$c/summary.txt appendix/gls_soc_sdf_minmax/$c/; grep -E '\*[WE],SDF' syn/out_soc/gls_sdf_$c/elab.log | sed 's/.*\(\*[WE],[A-Z]*\).*of module \([A-Za-z0-9_]*\).*/\1 \2/' | sort | uniq -c > appendix/gls_soc_sdf_minmax/$c/sdf_annotate_summary.txt; done
-grep -E '^(SDF|WARNING)' syn/out_soc/sdf_minmax/tempus.log > appendix/gls_soc_sdf_minmax/tempus_sdf.txt
+for c in max min; do mkdir -p appendix/gls_soc_sdf_minmax/$c; cp syn/out_soc/gls_sdf_$c/summary.txt appendix/gls_soc_sdf_minmax/$c/; grep -E '\*[WE],SDF' syn/out_soc/gls_sdf_$c/elab.log | sed -E 's/.*(\*[WE],[A-Z]+).*of module ([A-Za-z0-9_]+).*/\1 \2/; t; s/.*(\*[WE],[A-Z]+).*/\1/' | sort | uniq -c > appendix/gls_soc_sdf_minmax/$c/sdf_annotate_summary.txt; done
+grep -hE '^(SDF|WARNING)' syn/out_soc/sdf_minmax/tempus.out > appendix/gls_soc_sdf_minmax/tempus_sdf.txt
 ```
 
 Không đưa SDF, netlist, SPEF hay log có dữ liệu thư viện lên repo.
@@ -275,3 +276,15 @@ Không đưa SDF, netlist, SPEF hay log có dữ liệu thư viện lên repo.
 - **`sdf-soc-hold` không ghi SDF:** xem `syn/out_soc/sdf_minmax/tempus.log`, tìm dòng `ERROR` hoặc `WARNING: command "write_sdf`.
 - **Góc min có vi phạm hold:** gửi dòng `Scope:` và `Time:` của vi phạm. So với `hold.rpt` của Tempus ở `appendix/sta_soc_p9_sta05/route_10_cross/`. STA báo hold dư +0,020 ns, nên một vi phạm trong mô phỏng là đường mà STA và GLS hiểu khác nhau, thường là đường bất đồng bộ đã false path.
 - **Góc min timeout nhưng không có vi phạm:** chạy test đó với `TRACE=50` để so chân macro với lần chạy max.
+
+### 9.4 Kết quả trên server (26/11)
+
+Netlist sau ECO của `pnr/out_soc_p9`, clock 10 ns, bật timing check. Chạy bằng `make gls-soc-sdf-minmax`, xong lúc 10:51.
+
+| Góc | Model, SDF | Kết quả | Vi phạm trước reset nhả | Cảnh báo SDF |
+|-----|------------|---------|-------------------------|--------------|
+| max | slow, `av_setup` của Innovus, `MAXIMUM` | 71/71 PASS, số chu kỳ bằng RTL, 0 vi phạm | 2 (hold ở `u_uart_bcnt_reg`, như mục 8.5) | `SDFNET` (RECREM), `SDFNSB` (macro) |
+| min | fast, `av_hold` của Tempus, `MINIMUM` | 71/71 PASS, số chu kỳ bằng RTL, 0 vi phạm | 0 | như góc max, thêm 258 `SDFNDP` (delay dây âm đặt về 0, mục 9.1) |
+
+Kết luận: netlist sau layout chạy đúng 71 chương trình ở cả delay lớn nhất (góc slow) và delay nhỏ nhất (góc fast). Mọi đường giữa các cell chuẩn đạt setup ở góc max và đạt hold ở góc min. Hai giới hạn của mục 8.5 vẫn còn (không kiểm recovery/removal, không có timing ở macro), và các phần đó do STA kiểm.
+

@@ -1,0 +1,6 @@
+    258 *W,SDFNDP
+    493 *W,SDFNET DFFRHQX1
+      4 *W,SDFNET DFFRX1
+      1 *W,SDFNET DFFSHQX1
+      2 *W,SDFNET DFFSX1
+    500 *W,SDFNSB sram_2k_macro
