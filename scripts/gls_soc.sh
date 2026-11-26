@@ -223,16 +223,27 @@ for p in $progs; do
         else echo "ERROR: no SAIF written for $t" >> "$log"; fi
     fi
     if [ -n "$SDF" ]; then
-        # Timing check messages of the cell models (setup, hold, recovery, removal, width)
-        ntv=$(grep -ciE 'timing violation' "$log")
+        # Timing check messages of the cell models (setup, hold, recovery, removal, width).
+        # Only the ones after the reset release count ("GLS: reset released at <t> PS" of
+        # tb_soc). Before it, the netlist settles from X while reset is held, so a check
+        # there is not a real timing path (docs/gls_soc.md section 8).
+        read -r ntv npre < <(LC_ALL=C awk '
+            function ps(v, u) { u = toupper(u); return v * (u == "FS" ? 0.001 : u == "NS" ? 1000 : u == "US" ? 1e6 : 1) }
+            /GLS: reset released at/ { rel = $5; seen = 1 }
+            /[Tt]iming violation/ { pend = 1; tot++ }
+            pend && /^[ \t]*Time:/ { pend = 0; if (!seen || ps($2, $3) < rel) pre++ }
+            END { printf "%d %d\n", tot - pre, pre }' "$log")
         [ -f "$OUT/sdf_annotate.log" ] && [ ! -f "$OUT/sdf_annotate.first.log" ] &&
             cp "$OUT/sdf_annotate.log" "$OUT/sdf_annotate.first.log"
+        [ "$npre" -eq 0 ] || echo "NOTE: $npre timing violations before the reset release (not counted)" >> "$log"
         if [ "$ntv" -gt 0 ]; then
             echo "ERROR: $ntv timing violations" >> "$log"
         fi
     fi
     if grep -q '^PASS' "$log" && ! grep -qE '^(FAIL|ERROR)' "$log"; then
-        echo "  $(grep '^PASS' "$log" | tail -n 1)${SDF:+, 0 timing violations}"
+        note=""
+        [ -z "$SDF" ] || note=", 0 timing violations$(sed -n 's/^NOTE: \([0-9]*\) .*/ (\1 before the reset release)/p' "$log")"
+        echo "  $(grep '^PASS' "$log" | tail -n 1)$note"
         pass=$((pass + 1))
     else
         echo "  [FAIL] $t (log: $log)"

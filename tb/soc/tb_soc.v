@@ -440,6 +440,8 @@ module tb_soc;
         @(posedge clk) #1 check_rst(1'b1, "did not rise after 2 edges");
         running = 1'b1;
 `ifdef GLS
+        // scripts/gls_soc.sh counts the SDF timing violations from this time on (VER-08)
+        $display("GLS: reset released at %0d PS", $rtoi($realtime * 1000.0));
         act_start;
 `endif
     end

@@ -143,12 +143,14 @@ Phép thử âm: sửa lệnh `li gp,1` của `RVTEST_PASS` trong file hex thàn
 
 Chạy netlist sau layout (sau ECO) với SDF của Innovus. Mục tiêu là kiểm netlist có delay thật vẫn chạy đúng ở 100 MHz và không có vi phạm timing trong mô phỏng.
 
-**Trạng thái (21/11):** flow đã sẵn sàng, đã kiểm ở nhà phần dịch và phần bắt `tohost` ở cạnh lên. Chưa chạy trên server.
+**Trạng thái (26/11):** đã chạy trên server với 2 test (`soc`, `rv32ui-p-add`): cả hai PASS, số chu kỳ bằng RTL, 0 vi phạm timing sau khi reset nhả (mục 8.5). Còn chạy đủ 71 test.
 
 ### 8.1 Khác với zero delay
 
 - Netlist là `pnr/out_soc_p9/soc_top_pnr.v`, không phải netlist Genus. Netlist sau layout có thêm buffer clock tree và cell sửa hold, nên phải đi đúng cặp với SDF của nó (`pnr/out_soc_p9/soc_top.sdf`, `write_sdf -view av_setup`, góc slow). Không dùng thư mục `pre_eco/`.
-- Bật specify và timing check của model cell (không có `-nospecify -notimingchecks`). Test chỉ PASS khi chương trình ghi 1 vào `tohost` **và** log có 0 dòng `Timing violation`.
+- Model cell phải có khối `specify`. Model trong PDK (`~/PDK_GPDK45/lib/slow_vdd1v0_basiccells.v`) không có khối nào, chỉ mô tả chức năng, nên SDF không gán được delay cell vào đó. `make gls-soc-sdf` vì vậy mặc định dùng model gsclib045 đi kèm Stratus (`GLS_TIMING_LIB` trong Makefile, cùng thư mục với Stratus 24.01). Model này có 978 khối `specify` và có đủ 222 loại cell của netlist PnR.
+- Bật specify và timing check của model cell (không có `-nospecify -notimingchecks`). Test chỉ PASS khi chương trình ghi 1 vào `tohost` **và** có 0 vi phạm timing sau khi reset nhả.
+- Vi phạm trước khi reset nhả không được tính. tb in dòng `GLS: reset released at <t> PS` khi reset nhả. Script chỉ đếm các `Timing violation` có `Time:` từ thời điểm đó trở đi. Trước đó netlist đang đi từ X về giá trị reset và mạch còn đang reset, nên một check ở đây không phải đường timing thật. Số vi phạm trước reset vẫn được ghi trong log (dòng `NOTE:`) và trên dòng PASS.
 - tb bắt lệnh ghi `tohost` ở cạnh lên của clock tại port. Clock tới macro muộn hơn (qua clock tree), nên lúc đó chân macro vẫn giữ giá trị mà macro sắp chốt. Ở zero delay vẫn bắt ở cạnh xuống như trước. Vì vậy số chu kỳ có SDF bằng số của RTL, hơn zero delay 1 chu kỳ.
 - `$sdf_annotate` dùng giá trị `MAXIMUM` của bộ ba (đổi bằng `SDF_MTM`) và ghi `sdf_annotate.log`. Script chép SDF vào thư mục chạy trước khi đọc, vì Xcelium ghi bản SDF đã dịch cạnh file nó đọc.
 - Clock 10 ns (`HALF=5`), đúng tần số signoff. Có thể thử tần số cao hơn bằng `HALF`, ví dụ `HALF=4.5` cho 9 ns.
@@ -167,8 +169,10 @@ Chạy trong `~/RV32i-SoC-main`, chỉ đọc file PnR:
 cd ~/RV32i-SoC-main && git pull
 P=~/RV32i-SoC/pnr/out_soc_p9
 NETLIST=$P/soc_top_pnr.v SDF=$P/soc_top.sdf make gls-soc-sdf T="soc rv32ui-p-add"
-NETLIST=$P/soc_top_pnr.v SDF=$P/soc_top.sdf make gls-soc-sdf
+nohup env NETLIST=$P/soc_top_pnr.v SDF=$P/soc_top.sdf make gls-soc-sdf > ~/gls_sdf_run.log 2>&1 &
 ```
+
+Nếu model Stratus nằm chỗ khác, thêm `GLS_LIB=<đường dẫn model có specify>`.
 
 Đạt khi dòng cuối là `gls-soc: 71 passed, 0 failed` và mỗi dòng PASS ghi `0 timing violations`. Log ở `syn/out_soc/gls_sdf/`. Kiểm thêm `syn/out_soc/gls_sdf/sdf_annotate.first.log` (hoặc `elab.log`): số cell được annotate và không có lỗi `SDFNEP`, `SDFINF` hàng loạt.
 
@@ -191,4 +195,23 @@ Không đưa file SDF, netlist hay log có dữ liệu thư viện lên repo.
 ### 8.4 Kiểm ở nhà (21/11)
 
 Icarus với netlist Yosys và một SDF rỗng (model `simcells.v` không có specify, nên không có delay thật): `soc`, `rv32ui-p-add`, `dma` PASS. Phép thử này chỉ cho thấy tb dịch được với `GLS_SDF`, gọi được `$sdf_annotate`, và phần bắt `tohost` ở cạnh lên đúng (2459 chu kỳ, bằng RTL). Zero delay không đổi (`soc` 2458 chu kỳ).
+
+### 8.5 Kết quả trên server (26/11)
+
+Netlist và SDF của `pnr/out_soc_p9` (18/11, sau ECO, `av_setup`), góc slow, `MAXIMUM`, clock 10 ns.
+
+| Bước | Kết quả |
+|------|---------|
+| Netlist PnR, zero delay (model PDK) | `soc` PASS, 2458 chu kỳ. Netlist sau layout đúng chức năng |
+| SDF với model PDK | timeout. Model không có `specify`, nên delay cell không được gán, chỉ còn delay dây, và mạch chạy sai |
+| SDF với model gsclib045 của Stratus | `soc` PASS 2459 chu kỳ, `rv32ui-p-add` PASS 591 chu kỳ. Số chu kỳ bằng RTL |
+
+Vi phạm timing của lần chạy `soc`: 2 vi phạm hold, cả hai ở cạnh clock đầu tiên (5416 ps), khi reset đang giữ:
+
+- `u_uart_bcnt_reg[12]`: D đổi ở 5362 ps, hold yêu cầu 46 ps.
+- `u_uart_bcnt_reg[14]`: D đổi ở 5470 ps, hold yêu cầu 64 ps.
+
+Reset nhả sau đó nhiều chu kỳ. Hai vi phạm này là lúc netlist đi từ X về giá trị reset, không phải đường thật, nên không tính (mục 8.1). Sau khi reset nhả không có vi phạm nào.
+
+Cảnh báo `SDFNSB` khi elaborate: 500 dòng đều thuộc `sram_2k_macro`, rồi Xcelium dừng in ở giới hạn 1000 cảnh báo. SDF có các cung delay của macro mà model `sram_2k_macro.v` không khai báo trong `specify`, nên các cung đó không được gán. Các cell chuẩn không có cảnh báo này. Delay bên trong macro vì vậy chưa đầy đủ trong mô phỏng. Timing của macro vẫn được kiểm bằng STA (Tempus) với file `.lib` của macro.
 

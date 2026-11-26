@@ -1225,12 +1225,16 @@ power-soc:
 #   make gls-soc-sdf     the post-layout netlist and SDF of GLS_PNR (after ECO), timing checks
 #                        on, clock 10 ns, results in syn/out_soc/gls_sdf/
 #   NETLIST=... SDF=...  other files, for example the PnR outputs in another clone
+# The cell model of the PDK (~/PDK_GPDK45/lib) has no specify block, so the SDF cannot
+# annotate it. GLS_TIMING_LIB is the gsclib045 model of Stratus, same cells with specify.
 # ---------------------------------------------------------------------------
 GLS_PNR ?= pnr/out_soc_p9
+GLS_TIMING_LIB ?= /home/eda/cadence/STRATUS2401/share/stratus/techlibs/GPDK045/gsclib045_svt/verilog/slow_vdd1v0_basicCells.v
 
 .PHONY: gls-soc-sdf
 gls-soc-sdf:
 	@NETLIST=$${NETLIST:-$(GLS_PNR)/soc_top_pnr.v} SDF=$${SDF:-$(GLS_PNR)/soc_top.sdf} \
+	  GLS_LIB=$${GLS_LIB:-$(GLS_TIMING_LIB)} \
 	  OUT=$${OUT:-syn/out_soc/gls_sdf} bash scripts/gls_soc.sh
 
 lint-all:
