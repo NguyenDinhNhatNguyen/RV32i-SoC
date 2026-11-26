@@ -1,0 +1,63 @@
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
+--
+Activity annotation summary:
+        Primary Inputs : 38/38 = 100%
+          Flop outputs : 4149/4149 = 100%
+  Memory/Macro outputs : 256/256 = 100%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 22052/27330 = 80.6879%
+
