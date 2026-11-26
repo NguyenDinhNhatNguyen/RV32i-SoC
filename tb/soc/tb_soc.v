@@ -270,6 +270,29 @@ module tb_soc;
         end
     end
 
+    // +trace=<n>: print the macro pins of the first n cycles (debug of a netlist that does
+    // not reach tohost). IMEM: CEN of the 4 banks and the address. DMEM: CEN, WEN of the 4
+    // banks, and the address and data of a bank that is selected. X shows as x.
+    integer trace_n = 0;
+    initial if ($value$plusargs("trace=%d", trace_n)) ;
+`ifdef GLS_SDF
+    always @(posedge clk)
+`else
+    always @(negedge clk)
+`endif
+        if (running && cycle <= trace_n)
+            $display("TRACE %0d I cen=%b%b%b%b a=%h%h%h%h | D cen=%b%b%b%b wen=%b%b%b%b a=%h d=%h | uart_tx=%b",
+                cycle,
+                `GLS_I0 .CEN, `GLS_I1 .CEN, `GLS_I2 .CEN, `GLS_I3 .CEN,
+                `GLS_I0 .A, `GLS_I1 .A, `GLS_I2 .A, `GLS_I3 .A,
+                `GLS_D0 .CEN, `GLS_D1 .CEN, `GLS_D2 .CEN, `GLS_D3 .CEN,
+                `GLS_D0 .WEN, `GLS_D1 .WEN, `GLS_D2 .WEN, `GLS_D3 .WEN,
+                (`GLS_D0 .CEN === 1'b0) ? `GLS_D0 .A : (`GLS_D1 .CEN === 1'b0) ? `GLS_D1 .A :
+                (`GLS_D2 .CEN === 1'b0) ? `GLS_D2 .A : `GLS_D3 .A,
+                (`GLS_D0 .CEN === 1'b0) ? `GLS_D0 .D : (`GLS_D1 .CEN === 1'b0) ? `GLS_D1 .D :
+                (`GLS_D2 .CEN === 1'b0) ? `GLS_D2 .D : `GLS_D3 .D,
+                uart_tx);
+
     // Zero delay: sample at the falling edge, when the netlist has settled. With SDF the pins
     // may still move at the falling edge, so sample at the rising edge of the clock port:
     // the clock reaches the macro later (clock tree), so the pins still hold the values the

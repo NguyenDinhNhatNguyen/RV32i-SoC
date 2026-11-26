@@ -24,6 +24,8 @@
 #               define GLS_SAIF and the xmsim command dumpsaif, PWR-01)
 #   VCD         1: write the VCD of dut for each test to OUT/vcd/<test>.vcd (large)
 #   OUT         Run folder (default syn/out_soc/gls)
+#   TIMEOUT     Cycles before a test fails by timeout (default 2000000)
+#   TRACE       n > 0: print the macro pins of the first n cycles into each log (debug)
 #   gls_soc.sh --list   prints the memory image files the tests need, for copying to the server
 #
 # The netlist keeps the 8 sram_2k_macro instances as cells. scripts/gls_paths.py finds them and
@@ -199,7 +201,8 @@ for p in $progs; do
     t=$(basename "$p")
     log=$OUT/$t.log
     args=(+imem="$REPO/$p.imem.hex" +dmem="$REPO/$p.dmem.hex" +"$(cat "$p.tohost")"
-          +test="$t/gls" +timeout=2000000)
+          +test="$t/gls" +timeout="${TIMEOUT:-2000000}")
+    [ "${TRACE:-0}" -gt 0 ] && args+=(+trace="$TRACE")
     if [ "$VCD" = 1 ]; then mkdir -p "$OUT/vcd"; args+=(+vcd="$(absp "$OUT")/vcd/$t.vcd"); fi
     rm -f "$OUT/gls.saif"
     if [ "$SIM" = xrun ]; then
