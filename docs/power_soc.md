@@ -1,4 +1,4 @@
-# Công suất soc_top trước layout (PWR-01)
+# Công suất soc_top trước và sau layout (PWR-01, PWR-02)
 
 Chủ: Hiếu, cùng Phúc. Xuất SAIF (hoặc VCD) cho từng testcase từ GLS của netlist `soc_top` (VER-07), rồi tính công suất trước layout bằng Genus cho từng testcase và cho toggle rate mặc định. SAIF của task này dùng lại cho PWR-02 (công suất sau layout, Nguyên).
 
@@ -116,3 +116,32 @@ SAIF ở `syn/out_soc/gls_pwr/saif/` trên server, cho PWR-02 (Nguyên). Report 
 | `scripts/gls_soc.sh` | `SAIF=1`, `VCD=1`, `BENCH=1` và các benchmark rv32im |
 | `syn/scripts/power_soc.tcl` | Genus: netlist, SDC 10 ns, activity, `report_power` |
 | `scripts/power_soc.sh` | Chạy Genus cho từng trường hợp, viết bảng `summary.md` (`make power-soc`) |
+
+## 9. PWR-02: công suất sau layout (26/11)
+
+Chủ: Nguyên. Layout `_p9` (`DBS/route_eco.enc`), SPEF sau ECO, SAIF của PWR-01, Innovus 21.19, góc slow, clock 10 ns. Cách chạy trên server:
+
+```bash
+ACT_DIR=$HOME/RV32i-SoC-main/syn/out_soc/gls_pwr bash power/run_power_post.sh
+```
+
+Report ở `appendix/power_soc_post/`. Công suất tính bằng mW. Năng lượng và EPI tính như mục 5.
+
+| Testcase | Leakage | Internal | Switching | Tổng (mW) | So với PWR-01 (lần) | Năng lượng (µJ) | EPI (pJ/lệnh) |
+|----------|--------:|---------:|----------:|----------:|--------------------:|----------------:|--------------:|
+| `soc` | 0,0179 | 0,3078 | 0,2543 | 0,5800 | 1,90 | 0,0143 | 8,89 |
+| `dma` | 0,0195 | 0,3759 | 0,3587 | 0,7541 | 1,97 | 0,0946 | 10,55 |
+| `i2c` | 0,0185 | 0,3233 | 0,2742 | 0,6161 | 1,92 | 0,0093 | 8,69 |
+| `spi_pwm` | 0,0186 | 0,3581 | 0,3152 | 0,6919 | 1,93 | 0,0180 | 9,32 |
+| `soc_fw_rv32im` | 0,0189 | 0,4602 | 0,4857 | 0,9647 | 2,02 | 2,3923 | 11,02 |
+| `coremark_rv32im` | 0,0202 | 0,4360 | 0,4507 | 0,9069 | 1,99 | 9,4384 | 10,23 |
+| `dhrystone_rv32im` | 0,0211 | 0,3944 | 0,3916 | 0,8071 | 1,97 | 3,0530 | 10,01 |
+| `accel_bench_rv32im` | 0,0198 | 0,4119 | 0,4071 | 0,8389 | 1,98 | 1,3640 | 11,59 |
+
+Nhận xét và giới hạn:
+
+- Công suất sau layout bằng 1,90 đến 2,02 lần trước layout. Phần switching tăng nhiều nhất. Nguyên nhân dự kiến là cây clock, buffer và tải dây, nhóm chưa tách riêng từng phần. Hai bước còn dùng hai công cụ khác nhau (Genus và Innovus).
+- Gán activity từ SAIF: ngõ vào, flop và ngõ ra macro 100%, tổng số net 80,7%. Phần còn lại do Innovus tự lan truyền.
+- Chỉ có góc slow, RC typical.
+- PD-08 sau đó chỉ sửa lưới `VSS` (`route_trim.enc`), netlist và dây tín hiệu không đổi, nên nhóm không chạy lại.
+

@@ -126,16 +126,27 @@ Mật độ giảm khi lõi lớn hơn, còn setup chỉ tốt lên 23 ps từ 4
 
 ## 8. PD-08: kiểm cuối và xuất GDS (26/11)
 
-Làm trên `DBS/route_eco.enc` của `_p9`, lưu bản sau sửa ở `DBS/route_vssfix.enc`. `route_eco.enc` giữ nguyên. Report ở `appendix/pnr_soc_p9/vssfix/`.
+Làm trên `DBS/route_eco.enc` của `_p9`, bản cuối là `DBS/route_trim.enc`. `route_eco.enc` giữ nguyên. Hai bước: xoá đoạn nổi (`route_vssfix.enc`, report ở `appendix/pnr_soc_p9/vssfix/`), rồi cắt đầu thừa (report ở `appendix/pnr_soc_p9/trim/`).
 
 | Mục | Kết quả |
 | --- | --- |
 | Chỗ hở `VSS` | Một đoạn stripe Metal7 nổi ở (21,625, 327,51) - (23,125, 329,01). Xoá bằng `editDelete`, sau đó không còn chỗ hở |
-| Connectivity | Còn 15 thông báo IMPVFC-94 trên `VSS` Metal7 ở y = 328,26 và 418,26. Đây là đầu thừa của stripe, không phải chỗ hở. Nhóm giữ nguyên, chờ thầy xác nhận |
-| DRC, antenna | 0 lỗi, 0 vi phạm |
-| GDS | `pnr/out_soc_p9/soc_top_vssfix_merged.gds`, Metal1-Metal9, đã ghép `gsclib045.gds`. Chỉ thiếu `sram_2k_macro` (macro không cần GDS, thầy xác nhận 22/10) |
+| Dây thừa `VSS` | Sau khi xoá đoạn nổi còn 15 IMPVFC-94 trên Metal7. `editTrim -nets VSS -layers Metal7` còn 1 trên Metal8, `editTrim -nets VSS -layers Metal8` hết |
+| Kiểm cuối | Connectivity không có vấn đề, DRC 0, antenna 0 |
+| Skew cây clock | Góc slow 0,131 ns (mục tiêu 0,080 ns, không đạt), góc fast 0,050 ns. Sau CTS là 0,112 ns. Report `appendix/pnr_soc_p9/trim/skew_final.rpt` |
+| GDS | `pnr/out_soc_p9/soc_top_final.gds`, Metal1-Metal9, đã ghép `gsclib045.gds`. Chỉ thiếu `sram_2k_macro` (macro không cần GDS, thầy xác nhận 22/10) |
 
 Các file GDS xuất trước 26/11 thiếu Metal7 trở lên vì dùng `streamOut.map` trong `PDK_DIR`, không dùng nữa. `config.tcl` đã trỏ sang map của PDK GPDK045 v6.0 (commit `09c7b46`).
 
-Lệnh sửa chỉ xoá một đoạn dây nguồn nổi, netlist và dây tín hiệu không đổi. Vì vậy nhóm chưa chạy lại SPEF, SDF, LEC, GLS, STA và công suất.
+Các lệnh sửa chỉ chạy trên net `VSS`. Số cell và dây tín hiệu trong GDS không đổi, dây nguồn từ 935 còn 933. Vì vậy nhóm không chạy lại SDF, LEC, GLS, STA và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
 
+Skew của layout cuối vượt mục tiêu CTS 0,051 ns. Setup +0,977 ns và hold +0,020 ns ở Tempus 10 ns vẫn đạt (đo sau ECO, trước khi sửa lưới `VSS`), nên nhóm giữ nguyên cây clock.
+
+Hình layout cuối (chụp 26/11 từ `route_trim.enc`):
+
+| Hình | Nội dung |
+| --- | --- |
+| `figures/soc_top_layout.png` | Toàn chip |
+| `figures/soc_top_floorplan.png` | Floorplan: 8 SRAM macro, vùng cell và lưới nguồn |
+| `figures/soc_top_zoom.png` | Phóng to: cell chuẩn, dây tín hiệu, stripe `VDD`/`VSS` |
+| `figures/soc_top_cts.png` | Cây clock, góc `dc_slow`, skew 0,131 ns |
