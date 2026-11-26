@@ -22,6 +22,11 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `pnr_accel/` | Innovus cho accelerator: timing từng bước, DRC, connectivity, antenna, công suất |
 | `pnr_soc/` | Innovus cho `soc_top` (PD-04, 12/11 và 13/11), lõi 405 × 405,3 µm, `slack_summary.txt` và `pd_checks.rpt` |
 | `pnr_soc_p9/` | Innovus `soc_top` trên netlist chính thức STA-04 (18/11, lõi 420 µm, SDC 9 ns), `eco/` là report sau ECO của Phát |
+| `pnr_soc_p9/vssfix/`, `pnr_soc_p9/trim/` | PD-08 (26/11): kiểm connectivity, DRC, antenna sau khi sửa lưới `VSS`, skew cây clock cuối |
+| `pnr_soc_p9/eco/scripts/`, `pnr_soc_p9/innovus_p9.log` | Script ECO 18/11 và log Innovus của lần chạy `_p9` (đã bỏ dòng license) |
+| `pnr_soc_p9_412/`, `pnr_soc_p9_430/` | PD-07 (26/11): hai cỡ lõi khác trên netlist chính thức |
+| `power_soc_post/` | PWR-02 (26/11): công suất sau layout của 8 testcase |
+| `sta_soc_p9_trim/` | Tempus 4 view ở 10 ns trên layout cuối (26/11) |
 | `sta_soc_p9_post/` | Tempus sau layout `_p9` (sau ECO, 18/11): `sdc_10` là signoff 100 MHz, `sdc_9` để đối chiếu, kèm `tempus.log` |
 | `sta_soc_p9_sta05/` | STA-05 trên layout `_p9` (19/11): sau CTS và sau route với 4 view (`VIEWS=cross`), lần trước khi sửa SDC (`route_10_cross_before_fix`), F_max sau layout ở 9, 8,5, 8 ns, kèm `soc_10ns.sdc` mới |
 | `synth_picorv32/` | Genus PicoRV32 (`ref/picorv32`, 3 cấu hình mặc định, I, IM) cùng flow với các khối, để so với `rv32_core` (EVA-02, 19/11) |

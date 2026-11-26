@@ -95,7 +95,7 @@ Netlist chính thức STA-04 (RTL `e60437a`, Genus 9 ns, `docs/sta_results.md` m
 | Công suất | 3,235 mW (Innovus, activity mặc định, 9 ns) |
 | Signoff Tempus 10 ns | Setup +0,977, hold +0,020, recovery +7,434, removal +0,023 (`docs/sta_results.md` mục 6), chốt 100 MHz |
 
-ECO (18/11, script ở `~/eco_p9.tcl` và `~/eco_out_p9.tcl` trên server, ngoài repo):
+ECO (18/11, script `eco_p9.tcl` và `eco_out_p9.tcl` ở `appendix/pnr_soc_p9/eco/scripts/`):
 
 1. Khôi phục `DBS/route_drcfix.enc`, gỡ filler, `optDesign -postRoute -drv` cho max_tran.
 2. `editDelete -net n_9957` rồi `ecoRoute`. Innovus 21.19 không có `deleteRoute`, gõ lệnh này thì Innovus đoán thành `deleteRouteBlk` và báo lỗi.
@@ -138,9 +138,9 @@ Làm trên `DBS/route_eco.enc` của `_p9`, bản cuối là `DBS/route_trim.enc
 
 Các file GDS xuất trước 26/11 thiếu Metal7 trở lên vì dùng `streamOut.map` trong `PDK_DIR`, không dùng nữa. `config.tcl` đã trỏ sang map của PDK GPDK045 v6.0 (commit `09c7b46`).
 
-Các lệnh sửa chỉ chạy trên net `VSS`. Số cell và dây tín hiệu trong GDS không đổi, dây nguồn từ 935 còn 933. Vì vậy nhóm không chạy lại SDF, LEC, GLS, STA và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
+Các lệnh sửa chỉ chạy trên net `VSS` (ghi lại ở `pnr/scripts/pd08_vss_fix.tcl`). Netlist xuất từ `route_trim.enc` giống bản sau ECO, chỉ khác header. Dây nguồn trong GDS từ 935 còn 933. STA đã chạy lại trên layout cuối (`docs/sta_results.md` mục 6). Nhóm không chạy lại SDF, LEC, GLS và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
 
-Skew của layout cuối vượt mục tiêu CTS 0,051 ns. Setup +0,977 ns và hold +0,020 ns ở Tempus 10 ns vẫn đạt (đo sau ECO, trước khi sửa lưới `VSS`), nên nhóm giữ nguyên cây clock.
+Skew của layout cuối vượt mục tiêu CTS 0,051 ns. Setup +0,977 ns và hold +0,020 ns ở Tempus 10 ns vẫn đạt (đo lại trên layout cuối), nên nhóm giữ nguyên cây clock.
 
 Hình layout cuối (chụp 26/11 từ `route_trim.enc`):
 
