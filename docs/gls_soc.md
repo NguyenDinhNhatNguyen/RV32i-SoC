@@ -2,7 +2,7 @@
 
 Chủ: Hiếu. Mô phỏng mức cổng netlist `soc_top` của Genus bằng `tb_soc` và các chương trình của `make fw-soc` (cấu hình M1W1). Mục tiêu là kiểm netlist chạy đúng chức năng như RTL, trước khi chạy với SDF ở VER-08.
 
-**Trạng thái (19/11):** PASS. Netlist Genus chính thức (STA-04) chạy trên server bằng Xcelium, 71/71 test PASS, zero delay (mục 5). GLS có SDF sau layout (VER-08) xong 26/11, 71/71 PASS (mục 8). GLS hai góc max và min (VER-09) đã có flow, chưa chạy (mục 9).
+**Trạng thái (19/11):** PASS. Netlist Genus chính thức (STA-04) chạy trên server bằng Xcelium, 71/71 test PASS, zero delay (mục 5). GLS có SDF sau layout (VER-08) xong 26/11, 71/71 PASS (mục 8). GLS hai góc max và min (VER-09) xong 26/11, 71/71 PASS mỗi góc (mục 9).
 
 ## 1. Cách tb_soc chạy ở mức cổng
 
@@ -41,7 +41,7 @@ scripts/eda.sh run "make gls-soc-home T=soc_fw_rv32im"    # firmware C, khoảng
 
 ## 3. Trên server: chạy GLS
 
-Chạy trong bản clone `~/RV32i-SoC-main` (nhánh main). Lúc viết, `~/RV32i-SoC` còn ở nhánh của Phúc. Từ 14/11 `~/RV32i-SoC` đã về `main`, nên chạy ở đó cũng được (đổi `cd` cho đúng thư mục).
+Chạy trong bản clone `~/RV32i-SoC-main` (nhánh main). Lúc viết, `~/RV32i-SoC` còn ở nhánh của Phúc. Từ 14/11 `~/RV32i-SoC` đã về `main`, nhưng ngày 26/11 lại ở nhánh của Phúc (Nguyên báo). Không checkout, reset hay pull trong `~/RV32i-SoC`, chạy ở `~/RV32i-SoC-main`. Push lên `main` từ `~/rv32i-push`.
 
 ```bash
 cd ~/RV32i-SoC-main

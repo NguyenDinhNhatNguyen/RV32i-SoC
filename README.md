@@ -27,8 +27,9 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 | Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM, I2C đã ghép vào `soc_top` (I2C từ 10/11) |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
 | SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Netlist chính thức tổng hợp và PnR ở 9 ns trên RTL `e60437a`. **Chốt 100 MHz (18/11)**: Tempus sau layout `_p9` ở 10 ns dư setup 0,977 ns, hold, recovery, removal đều dương (`docs/sta_results.md` mục 5, 6). LEC RTL ↔ netlist chính thức còn 1 điểm Non-equivalent được chấp nhận kèm chứng minh (`spi clk_cnt_reg[15]`, bit hằng 0), LEC netlist tổng hợp ↔ sau layout PASS (`docs/lec_soc.md`). Mốc M2 đạt 25/11 |
-| Kiểm chứng mức cổng | GLS zero delay 71/71 trên netlist Genus (19/11). GLS có SDF sau layout ở 10 ns 71/71, 0 vi phạm timing sau khi reset nhả (26/11). GLS hai góc max và min (VER-09) đã có flow, chưa chạy (`docs/gls_soc.md`) |
-| Công suất, IR drop | Trước layout theo testcase 0,31 đến 0,48 mW ở 100 MHz, toggle mặc định 0,74 mW (`docs/power_soc.md`). IR drop tĩnh VDD sụt 0,69 mV, ngưỡng 45 mV (`docs/ir_drop.md`) |
+| Kiểm chứng mức cổng | GLS zero delay 71/71 trên netlist Genus (19/11). GLS có SDF sau layout ở 10 ns 71/71, 0 vi phạm timing sau khi reset nhả (26/11). GLS hai góc max (slow) và min (fast) 71/71 mỗi góc (VER-09, 26/11, `docs/gls_soc.md`) |
+| Công suất, IR drop | Trước layout theo testcase 0,31 đến 0,48 mW ở 100 MHz, toggle mặc định 0,74 mW (`docs/power_soc.md`). Sau layout 0,58 đến 0,96 mW (PWR-02). IR drop tĩnh VDD trên layout cuối sụt lớn nhất 1,69 mV, ngưỡng 45 mV (LEC-06, `docs/ir_drop.md`) |
+| Layout cuối (26/11) | `_p9` sau PD-08 (`route_trim`): DRC 0, antenna 0, connectivity sạch, GDS đủ Metal1 đến Metal9. Tempus 4 view ở 10 ns setup +0,977, hold +0,020 ns (STA-06). LEC netlist tổng hợp ↔ layout cuối PASS (LEC-05). Bảng PPA ở `docs/eva03_ppa.md`, đánh giá ở `docs/eva05_eval.md` |
 
 ## Bắt đầu nhanh
 

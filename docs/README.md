@@ -32,9 +32,9 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `macro_notes.md` | SRAM macro qua từng bước flow |
 | `genus_core.md` | Genus, Conformal, GLS cho `rv32_core` ở trường, quét chu kỳ tìm F_max |
 | `pd02_floorplan.md` | Ước lượng die, đặt macro, pin plan, power plan |
-| `pnr_soc_status.md` | Theo dõi các việc PnR của `soc_top` |
-| `ir_drop.md` | IR drop tĩnh của `soc_top` bằng Voltus: cách chạy, kết quả 20/11, số chính xác 25/11, ngưỡng 45 mV, giới hạn (LEC-04, LEC-06) |
-| `lec_soc.md` | LEC Conformal của `soc_top` và `apb_bridge`: flow, cách chạy, kết quả chạy thử (LEC-01) |
+| `pnr_soc_status.md` | Theo dõi các việc PnR của `soc_top`, so cỡ lõi (PD-07, mục 7), kiểm cuối và GDS (PD-08, mục 8) |
+| `ir_drop.md` | IR drop tĩnh của `soc_top` bằng Voltus: cách chạy, kết quả 20/11, số chính xác 25/11, ngưỡng 45 mV, sign-off trên layout cuối 26/11, giới hạn (LEC-04, LEC-06) |
+| `lec_soc.md` | LEC Conformal của `soc_top` và `apb_bridge`: flow, cách chạy, kết quả LEC-01, LEC-02, LEC-03, LEC-05 |
 
 ## Kiểm chứng và đánh giá
 
@@ -45,7 +45,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `lint_status.md` | Quy trình lint sau mỗi lần merge, danh sách waiver, bảng kết quả (VER-03) |
 | `regression.md` | `make regress` (15 target), coverage `soc_top` bằng Verilator, xác nhận RTL freeze (VER-05) |
 | `gls_soc.md` | GLS netlist `soc_top` bằng `tb_soc -DGLS`, các bước ở nhà và trên server (VER-07), GLS có SDF sau layout (VER-08, mục 8), GLS hai góc max và min (VER-09, mục 9) |
-| `power_soc.md` | Công suất `soc_top` trước layout theo testcase (SAIF từ GLS) và theo toggle rate mặc định (PWR-01) |
+| `power_soc.md` | Công suất `soc_top` trước layout theo testcase (SAIF từ GLS) và theo toggle rate mặc định (PWR-01), sau layout theo testcase (PWR-02, mục 9) |
 | `fw_soc_c.md` | Firmware C trên `soc_top`: UART, GPIO, timer, ngắt, accelerator, rv32um (VER-04) |
 | `bench_core.md` | Dhrystone, CoreMark trên `tb_core` |
 | `bench_soc.md` | Dhrystone, CoreMark trên `soc_top`, speedup accelerator (EVA-01) |

@@ -5,7 +5,7 @@ Chủ: Nhân. Đánh giá kết quả cuối của `soc_top`, đối chiếu v�
 ## 1. Tóm tắt
 
 - **Signoff 100 MHz** trên layout cuối `route_trim` (STA-06): Tempus 4 view, setup +0,977 ns, hold +0,020 ns, recovery +7,434 ns, removal +0,023 ns, 0 vi phạm (`sta_results.md` mục 6).
-- **F_max** khoảng 200 MHz sau tổng hợp và khoảng 110,8 MHz sau layout (chu kỳ nhỏ nhất 9,023 ns). Signoff 100 MHz dư khoảng 10% (`sta_results.md` mục 4 và 6).
+- **F_max** khoảng 200 MHz sau tổng hợp và khoảng 110,8 MHz sau layout (chu kỳ nhỏ nhất 9,023 ns). Hai số đo trên hai netlist khác nhau, không so trực tiếp (mục 6). Signoff 100 MHz dư khoảng 10% (`sta_results.md` mục 4 và 6).
 - **Diện tích:** cell chuẩn 58,66 kGE sau tổng hợp, 69,98 kGE sau layout, cộng 64 000 µm² macro SRAM. Lõi chip 420 × 420,7 µm, mật độ 63,7% ngoài macro. Riêng `rv32_core` 29,46 kGE (`eva03_ppa.md` mục 1 và 2).
 - **Công suất sau layout** theo 8 testcase: 0,580 đến 0,965 mW, EPI 8,69 đến 11,59 pJ/lệnh. CoreMark 0,907 mW và 10,23 pJ/lệnh (`power_soc.md` mục 9, `eva03_ppa.md` mục 4).
 - **Hiệu năng:** CPI 1,094 với CoreMark, 3,210 CoreMark/MHz, 0,882 DMIPS/MHz. Ở 100 MHz là 321 CoreMark và 88,2 DMIPS (`bench_soc.md`, `eva03_ppa.md` mục 1).
@@ -25,7 +25,7 @@ Danh sách yêu cầu theo `spec/requirements.md`.
 | Kiểm tra mức cổng: timing | Đạt. Tempus trước layout ở 10 ns, setup +0,978 ns. Hold −0,141 ns do clock lý tưởng, Innovus sửa sau CTS | `sta_results.md` mục 5, `appendix/sta_soc_p9/` |
 | Kiểm tra mức cổng: trùng khớp (LEC-02) | Đạt có ghi chú. 3965 Equivalent, 1 Non-equivalent (`clk_cnt_reg[15]` của SPI, đã chứng minh luôn bằng 0), 112 Abort ở bộ nhân và chia do thiếu license Conformal_Ultra | `lec_soc.md` mục 4, `appendix/lec_soc/run5_seqeff/` |
 | Kiểm tra mức cổng: chức năng (VER-07) | Đạt. GLS zero delay 71/71 PASS | `gls_soc.md` mục 5.1 |
-| Thiết kế vật lý, báo cáo | Đạt. Layout `_p9`, 420 × 420,7 µm, 71 800 µm² cell chuẩn, mật độ 63,7%, CTS skew 0,112 ns | `pnr_soc_status.md` mục 6, `appendix/pnr_soc_p9/` |
+| Thiết kế vật lý, báo cáo | Đạt. Layout `_p9`, 420 × 420,7 µm, 71 800 µm² cell chuẩn, mật độ 63,7%, skew 0,112 ns sau CTS và 0,131 ns trên layout cuối (góc slow) | `pnr_soc_status.md` mục 6, `appendix/pnr_soc_p9/` |
 | Sign-off timing (STA-06) | Đạt. 4 view, 10 ns: setup +0,977, hold +0,020, recovery +7,434, removal +0,023 ns | `sta_results.md` mục 6, `appendix/sta_soc_p9_trim/` |
 | Sign-off trùng khớp (LEC-03, LEC-05) | Đạt. Netlist tổng hợp so với netlist sau ECO và netlist layout cuối: 4078 Equivalent, 0 Non-equivalent, 0 Abort, `PASS` | `lec_soc.md` mục 4, `appendix/lec_soc/g2g/`, `appendix/lec_soc/g2g_lec05/` |
 | Sign-off chức năng (GLS có SDF, VER-08, VER-09) | Đạt. 71/71 PASS ở góc max (slow, `av_setup`) và góc min (fast, `av_hold`), số chu kỳ bằng RTL, 0 vi phạm sau khi reset nhả | `gls_soc.md` mục 8.5 và 9.4, `appendix/gls_soc_sdf/`, `appendix/gls_soc_sdf_minmax/` |

@@ -2,7 +2,7 @@
 
 Chủ: Hiếu, cùng Phúc. Xuất SAIF (hoặc VCD) cho từng testcase từ GLS của netlist `soc_top` (VER-07), rồi tính công suất trước layout bằng Genus cho từng testcase và cho toggle rate mặc định. SAIF của task này dùng lại cho PWR-02 (công suất sau layout, Nguyên).
 
-**Trạng thái (26/11):** xong. Cả 8 testcase PASS ở mức cổng và có SAIF. Genus gán được activity cho 100% flop và net. Bảng công suất ở mục 5.
+**Trạng thái (26/11):** xong. Cả 8 testcase PASS ở mức cổng và có SAIF. Genus gán được activity cho 100% flop và net. Bảng công suất ở mục 5. PWR-02 (sau layout) xong 26/11, mục 9.
 
 ## 1. Cách làm
 
@@ -119,7 +119,7 @@ SAIF ở `syn/out_soc/gls_pwr/saif/` trên server, cho PWR-02 (Nguyên). Report 
 
 ## 9. PWR-02: công suất sau layout (26/11)
 
-Chủ: Nguyên. Layout `_p9` (`DBS/route_eco.enc`), SPEF sau ECO, SAIF của PWR-01, Innovus 21.19, góc slow, clock 10 ns. Cách chạy trên server:
+Chủ: Nguyên. Layout `_p9` (`DBS/route_eco.enc`), SPEF sau ECO, SAIF của PWR-01 (mô phỏng ở 10 ns), Innovus 21.19, góc slow. Database giữ SDC 9 ns của PnR, nên report ghi `Clock Period: 0.009000 usec` (mục 9.1, nhận xét cuối). Cách chạy trên server:
 
 ```bash
 ACT_DIR=$HOME/RV32i-SoC-main/syn/out_soc/gls_pwr bash power/run_power_post.sh
@@ -167,5 +167,6 @@ Nhận xét:
 - Cây clock tốn khoảng 0,17 mW ở mọi testcase, tức 18 đến 28% tổng. Trước layout Genus chỉ tính khoảng 0,053 mW vì chưa có cây clock của CTS.
 - Phần tăng sau layout đến chủ yếu từ logic tổ hợp (56 đến 75%), cây clock chiếm 24 đến 41%. Sequential và macro gần như không đổi. Nguyên nhân dự kiến là tải dây thật thay cho wireload, buffer sửa hold và tối ưu sau route, và 19,3% net không có SAIF do Innovus tự lan truyền.
 - Macro SRAM chỉ chiếm khoảng 4% tổng. Phần động của cả 8 macro chỉ 0,017 đến 0,021 mW, tức khoảng 0,2 pJ mỗi chu kỳ, dù IMEM được đọc gần như mỗi chu kỳ. Số này thấp so với SRAM thật ở 45 nm. Nó phụ thuộc vào số liệu công suất trong `sram_2k_macro.lib` của môn, nhóm không kiểm được. Công suất tổng vì vậy có thể thấp hơn thực tế ở phần SRAM.
+- `power_post.tcl` không nạp SDC 10 ns, nên Innovus dùng chu kỳ 9 ns của PnR. Net có SAIF (80,7%) lấy đúng toggle của mô phỏng 10 ns, dòng `clk` có toggle 199,97 MHz. 19,3% net còn lại do Innovus tự lan truyền có thể tính theo 111 MHz, nên phần này có thể cao hơn thực tế một chút. Muốn bỏ giới hạn này thì chạy lại với `soc_10ns.sdc`.
 - Leakage của macro chiếm khoảng 91% leakage tổng (CoreMark 0,0184 trên 0,0202 mW). Leakage của cell chuẩn chỉ khoảng 0,002 mW.
 

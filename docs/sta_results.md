@@ -189,7 +189,7 @@ Ghi chú:
 
 ## 6. Sau layout (STA-05, ở trường)
 
-**Trạng thái (26/11):** STA-05 xong trên layout `_p9`. Sau CTS và sau route, 4 view, 0 vi phạm, không cần ECO. Nếu PD-08 đổi layout thì chạy lại ở STA-06.
+**Trạng thái (26/11):** STA-05 xong trên layout `_p9`. Sau CTS và sau route, 4 view, 0 vi phạm, không cần ECO. Nếu PD-08 đổi layout thì chạy lại ở STA-06 (đã hoàn thành 26/11, dòng dưới).
 
 **Trạng thái (26/11):** STA-06 xong. Layout cuối sau PD-08 (`DBS/route_trim.enc`), Tempus 4 view, 10 ns: setup +0,977, hold +0,020, recovery +7,434, removal +0,023 ns, 0 vi phạm. Report ở `appendix/sta_soc_p9_trim/`. Không chạy lại sau CTS vì PD-08 chỉ sửa lưới VSS sau route, cây clock không đổi. Removal +0,023 ns vẫn dương.
 
@@ -214,5 +214,5 @@ Ghi chú:
 - 26/11, layout cuối (Nguyên chạy, hỗ trợ STA-06): netlist giống bản sau ECO. Report giống `route_10_cross` ngoài phần header. Còn lại chỉ có `max_fanout`.
 - 14/11, layout u70: Đây là lần chạy thử, chưa phải layout chính thức. Số của Tempus lệch Innovus dưới 0,03 ns. Coverage: 0 vi phạm hold, unconstrained 298 như trước layout.
 - Đường găng setup vẫn là IMEM → `if_pc_q_reg[31]`. Removal xấu nhất ở chân `RN` của `minstret_q_reg[38]` trong CSR.
-- Tempus báo `SPEF-1152` ở net `i2c_scl_i`: net này trong SPEF thiếu kết nối so với netlist, Tempus nối phần thiếu bằng RC rất nhỏ. Chỉ ảnh hưởng đường vào I2C (đi qua bộ đồng bộ). Báo phía PnR kiểm lại pin của port này.
+- Tempus báo `SPEF-1152` ở net `i2c_scl_i`: net này trong SPEF thiếu kết nối so với netlist, Tempus nối phần thiếu bằng RC rất nhỏ. Chỉ ảnh hưởng đường vào I2C (đi qua bộ đồng bộ). Báo phía PnR kiểm lại pin của port này. Nguyên nhân có thể là port này không có tải: `i2c_apb` không đọc `scl_i` vì chưa có clock stretching (`rtl/periph/i2c_apb.v` dòng 213, `docs/soc_top.md`), nên net chỉ có port mà không có chân cell nhận.
 - Không chạy được trên `pnr/out_soc` (lõi 405 µm) vì `soc_top_pnr.v` đã bị xóa khi chạy lại ngày 13/11.

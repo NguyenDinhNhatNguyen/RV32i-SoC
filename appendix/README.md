@@ -40,6 +40,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `ver05_regress/` | `make regress` và `make cov-soc` ngày 17/11 trên `3289802` (VER-05): bảng regression, coverage theo module, 74 lần chạy Verilator |
 | `gls_soc/` | `make gls-soc` ngày 19/11 trên server (VER-07): netlist Genus STA-04, Xcelium, zero delay, 71/71 PASS, đường dẫn 8 macro |
 | `gls_soc_sdf/` | `make gls-soc-sdf` ngày 26/11 trên server (VER-08): netlist và SDF sau ECO của `_p9`, 10 ns, 71/71 PASS, tóm tắt cảnh báo SDF khi elaborate |
+| `gls_soc_sdf_minmax/` | `make gls-soc-sdf-minmax` ngày 26/11 trên server (VER-09): góc `max/` và `min/`, mỗi góc 71/71 PASS, `tempus_sdf.txt` là log ghi SDF hold |
 | `power_soc_pre/` | Công suất Genus trước layout (PWR-01, 26/11): mỗi testcase một thư mục (`power.rpt`, `power_hier.rpt`, `activity.txt`), trường hợp `default` là toggle mặc định, bảng ở `summary.md` |
 | `ver06_bench/` | Output `make bench-core` và `make bench-soc` ngày 12/11 (VER-06), chạy ở nhà trong Docker |
 

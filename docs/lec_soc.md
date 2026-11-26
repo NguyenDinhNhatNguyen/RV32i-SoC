@@ -1,6 +1,6 @@
 # LEC của `soc_top`: Conformal, RTL ↔ netlist Genus
 
-Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả, kết quả của lần chạy thử đầu tiên (LEC-01) và của LEC-02 (RTL ↔ netlist chính thức 14/11) LEC-03 (netlist tổng hợp ↔ netlist sau layout) và LEC-05 (netlist tổng hợp ↔ netlist layout cuối). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
+Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả, kết quả của lần chạy thử đầu tiên (LEC-01) và của LEC-02 (RTL ↔ netlist chính thức 14/11), LEC-03 (netlist tổng hợp ↔ netlist sau layout) và LEC-05 (netlist tổng hợp ↔ netlist layout cuối). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
 
 | File | Vai trò |
 | --- | --- |

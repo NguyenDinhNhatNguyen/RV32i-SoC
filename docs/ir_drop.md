@@ -105,10 +105,10 @@ Kết luận: LEC-06 đạt.
 
 ## 8. Giới hạn và việc còn lại
 
-- **Pad là giả định.** Thiết kế chưa có pad hay bump thật. Số liệu chỉ đúng khi nguồn được cấp từ 12 điểm trên vòng ring. Cần nhóm hoặc thầy xác nhận cách cấp nguồn.
+- **Pad là giả định.** Thiết kế chưa có pad hay bump thật. Số liệu chỉ đúng khi nguồn được cấp từ 12 điểm trên vòng ring. Cần nhóm hoặc thầy xác nhận cách cấp nguồn (26/11: nhóm giữ giả định 12 nguồn trên ring cho LEC-06, mục 7).
 - **Dòng pad chưa khớp công suất.** Ở kịch bản A, 12 pad x 0,109 mA cho khoảng 1,3 mA, trong khi 1,975 mW chia 0,9 V cho khoảng 2,2 mA. Chưa rõ nguyên nhân (có thể do scale của `.ptiavg` hoặc phần dòng không đi qua pad VDD). Mức sụt áp rất thấp nên kết luận không đổi, nhưng cần ghi chú.
-- **Chỉ phân tích VDD.** Chưa phân tích VSS (ground bounce) và không có EM, vì Lab 06 không yêu cầu. Cần hỏi nhóm hoặc thầy có cần hay không.
+- **Chỉ phân tích VDD.** Chưa phân tích VSS (ground bounce) và không có EM, vì Lab 06 không yêu cầu. Cần hỏi nhóm hoặc thầy có cần hay không (26/11: nhóm không làm EM, mục 7).
 - **Layout cuối.** Mục 5 chạy trên `route_eco` của `run_soc_p9`. LEC-06 (sign-off) đã chạy lại trên layout cuối `route_trim` (mục 7).
 - **Database là bản cuối của `_p9`.** `route_eco.enc.dat` được lưu lúc 15:10 ngày 18/11 (`~/eco_p9.tcl`), rồi `~/eco_out_p9.tcl` khôi phục đúng database này để ghi `soc_top_pnr.v`, SPEF, SDF và GDS lúc 15:31. Giữa hai bước không có lệnh nào sửa layout (Phát làm ECO, xác nhận 21/11, `docs/pnr_soc_status.md` mục 6). Vì vậy IR drop ở đây và Tempus của STA-05 chạy trên cùng một layout.
-- **Vành nguồn VSS.** Sheet (PD-06) ghi "2 chỗ hở VSS ở góc vành nguồn". Kết quả ở đây chỉ phân tích VDD nên không phản ánh ảnh hưởng của chỗ hở này lên VSS.
+- **Vành nguồn VSS.** Sheet (PD-06) ghi "2 chỗ hở VSS ở góc vành nguồn". Kết quả ở đây chỉ phân tích VDD nên không phản ánh ảnh hưởng của chỗ hở này lên VSS (đã hoàn thành 26/11, PD-08 sửa chỗ hở, `docs/pnr_soc_status.md` mục 8).
 - **Hoạt độ là giả định.** 0,1 và 0,5 theo Lab 06, không phải hoạt độ từ mô phỏng thực tế của SoC.

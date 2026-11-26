@@ -19,7 +19,7 @@ Chu kỳ chốt 10 ns (100 MHz). Tổng hợp và PnR ở 9 ns để layout còn
 | Area | Lõi chip, mật độ | 420 × 420,7 µm, **63,7%** ngoài macro | Innovus `_p9`, macro chiếm 36,2% lõi | `pnr_soc_status.md` mục 6 |
 | Area | Riêng `rv32_core` | 30 226 µm² = **29,46 kGE** | Genus 20 ns, 28/10, IM, BTB 8 entry | `appendix/core_signoff/synthesis/` |
 | Power | Công suất theo testcase, trước layout | 0,306 đến 0,478 mW | Genus, SAIF từ GLS, slow, 10 ns (PWR-01) | `power_soc.md` mục 5 |
-| Power | Công suất theo testcase, sau layout | **0,580 đến 0,965 mW** | Innovus, SAIF của PWR-01, SPEF `route_eco`, slow, 10 ns (PWR-02) | `power_soc.md` mục 9 |
+| Power | Công suất theo testcase, sau layout | **0,580 đến 0,965 mW** | Innovus, SAIF của PWR-01, SPEF `route_eco`, slow, SAIF 10 ns, SDC 9 ns của PnR (PWR-02) | `power_soc.md` mục 9 |
 | Power | Công suất CoreMark | 0,456 mW trước layout, **0,907 mW** sau layout | Như trên, `coremark_rv32im` | `power_soc.md` mục 5 và 9 |
 | Power | Static power (leakage) sau layout | **0,0179 đến 0,0211 mW** | Như PWR-02, chiếm khoảng 2 đến 3% tổng. Khoảng 91% là leakage của macro SRAM | `appendix/power_soc_post/summary.md`, `power_soc.md` mục 9.1 |
 | Power | Công suất cây clock sau layout | **khoảng 0,17 mW**, 18 đến 28% tổng | Như PWR-02, nhóm `Clock` trong report Innovus | `power_soc.md` mục 9.1 |
@@ -69,7 +69,7 @@ Ghi chú:
 
 ## 4. Công suất và EPI (PWR-01, PWR-02)
 
-PWR-01: Genus đọc SAIF của GLS (netlist STA-04, zero delay), corner slow, clock 10 ns. Trước layout, chưa có cây clock thật và tải dây thật. PWR-02: Innovus, cùng SAIF, SPEF sau ECO của `route_eco`, góc slow, clock 10 ns (`docs/power_soc.md` mục 9). Instret lấy từ mô phỏng RTL, chu kỳ lấy từ GLS (`docs/power_soc.md` mục 2 và 5).
+PWR-01: Genus đọc SAIF của GLS (netlist STA-04, zero delay), corner slow, clock 10 ns. Trước layout, chưa có cây clock thật và tải dây thật. PWR-02: Innovus, cùng SAIF, SPEF sau ECO của `route_eco`, góc slow, SAIF ở 10 ns nhưng database giữ SDC 9 ns của PnR (`docs/power_soc.md` mục 9 và 9.1). Instret lấy từ mô phỏng RTL, chu kỳ lấy từ GLS (`docs/power_soc.md` mục 2 và 5).
 
 | Testcase | Chu kỳ (GLS) | Instret | CPI | IPC | P PWR-01 (mW) | Năng lượng PWR-01 (µJ) | EPI = E / instret (pJ) | EPI = P × CPI / f (pJ) | P sau layout (PWR-02, mW) | Leakage sau layout (mW) | Năng lượng sau layout (µJ) | EPI sau layout (pJ) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -126,7 +126,7 @@ RTL `soc_top` ở commit `6f02f2b` (12/11), trước RTL freeze. GCC 16.1, `-O2`
 | F_max sau tổng hợp | Genus 21.10 | slow | Quét 20 đến 4 ns | - | Macro chỉ có `.lib` typical |
 | Signoff, F_max sau layout | Tempus 23.14 | slow và fast, RC typical | 10 ns (quét 9 đến 8 ns) | - | 4 view, clock propagated |
 | Công suất, EPI | Genus 21.1 | slow 0,9 V 125 °C | 10 ns | SAIF từ GLS zero delay | Trước layout, PDK không có `.lib` typical |
-| Công suất, EPI sau layout | Innovus 21.19 | slow, RC typical | 10 ns | SAIF của PWR-01 | `route_eco`, SPEF sau ECO (PWR-02) |
+| Công suất, EPI sau layout | Innovus 21.19 | slow, RC typical | SAIF 10 ns, SDC 9 ns | SAIF của PWR-01 | `route_eco`, SPEF sau ECO (PWR-02) |
 | CPI, DMIPS, CoreMark | Icarus (RTL) | - | - | - | Số chu kỳ không đổi theo tần số, nhân với f để ra hiệu năng |
 | Riêng `rv32_core` | Genus 21.10 | slow 0,9 V 125 °C | 20 ns | Mặc định | `core.sdc` có delay macro SRAM |
 
@@ -185,4 +185,4 @@ Bảng thứ nhất là diện tích, GE, slack, công suất của tool theo t�
 
 Cột F_max của script là 1 / (chu kỳ − slack), chỉ là ước lượng. F_max chính thức lấy từ lần quét chu kỳ (mục 3). Cột công suất của script là activity mặc định của tool, không phải số SAIF.
 
-Khi có PWR-02, chạy lại với `--innovus` trỏ tới report layout cuối và `--saif` trỏ tới bảng công suất sau layout.
+PWR-02 đã có (26/11). Script chưa chạy lại với số sau layout. Số sau layout ở mục 4 và 7 lấy trực tiếp từ `appendix/power_soc_post/summary.md`. `appendix/power_soc_post/summary.md` không có cột `SAIF` như bảng trước layout, nên `--saif` chưa đọc được file này.

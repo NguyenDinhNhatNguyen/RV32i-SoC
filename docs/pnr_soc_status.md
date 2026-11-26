@@ -52,7 +52,7 @@ Netlist `eced27a` (DMA, SPI, PWM, I2C), clock 20 ns, Innovus 21.19, Tempus 23.14
 | Recovery, removal | Recovery +17,92 ns, removal +0,029 ns (Tempus) |
 | CTS | 0 vi phạm transition, skew 0,115 ns (mục tiêu 0,080 ns) |
 | DRC, antenna, PDN | Sạch |
-| Connectivity | 12 cảnh báo IMPVFC-94: dây VDD Metal7 dài 0 ở đầu dải VDD của vành macro, mép trên. Lần 29/10 không có. Sửa ở PD-08 nếu còn (bản `_p9` ở mục 6). IR drop VDD chạy 20/11, sụt khoảng 1 đến 2 mV (`docs/ir_drop.md`) |
+| Connectivity | 12 cảnh báo IMPVFC-94: dây VDD Metal7 dài 0 ở đầu dải VDD của vành macro, mép trên. Lần 29/10 không có. Sửa ở PD-08 nếu còn (bản `_p9` ở mục 6) (đã hoàn thành 26/11, mục 8). IR drop VDD chạy 20/11, sụt khoảng 1 đến 2 mV (`docs/ir_drop.md`) |
 | Fanout | 190 net vượt `set_max_fanout 32`: 27 net clock và 163 net khác (khoảng 61 net cây reset, 102 net dữ liệu). Giữ ràng buộc này vì Genus cần nó để buffer mạng reset (`docs/sta_results.md` mục 1). Max_cap 0, max_tran 3 net (xấu nhất −0,069 ns, ví dụ `n_5552`) cần sửa |
 | Công suất | 1,261 mW, activity mặc định 0,2, chưa phải theo testcase |
 | GDS | Có ghi file. Cảnh báo IMPOGDS-1176: 26 cell rỗng vì map thiếu luật, chưa rõ cell nào |
@@ -138,7 +138,7 @@ Làm trên `DBS/route_eco.enc` của `_p9`, bản cuối là `DBS/route_trim.enc
 
 Các file GDS xuất trước 26/11 thiếu Metal7 trở lên vì dùng `streamOut.map` trong `PDK_DIR`, không dùng nữa. `config.tcl` đã trỏ sang map của PDK GPDK045 v6.0 (commit `09c7b46`).
 
-Các lệnh sửa chỉ chạy trên net `VSS` (ghi lại ở `pnr/scripts/pd08_vss_fix.tcl`). Netlist xuất từ `route_trim.enc` giống bản sau ECO, chỉ khác header. SDF giống hệt ngoài dòng ngày giờ, còn SPEF chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%). Dây nguồn trong GDS từ 935 còn 933. STA đã chạy lại trên layout cuối (`docs/sta_results.md` mục 6). Nhóm không chạy lại SDF, LEC, GLS và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
+Các lệnh sửa chỉ chạy trên net `VSS` (ghi lại ở `pnr/scripts/pd08_vss_fix.tcl`). Netlist xuất từ `route_trim.enc` giống bản sau ECO, chỉ khác header. SDF giống hệt ngoài dòng ngày giờ, còn SPEF chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%). Dây nguồn trong GDS từ 935 còn 933. STA đã chạy lại trên layout cuối (`docs/sta_results.md` mục 6). Nhóm không chạy lại SDF, GLS và công suất. LEC (LEC-05, `docs/lec_soc.md` mục 4) và IR drop (LEC-06, `docs/ir_drop.md` mục 7) đã chạy lại trên layout cuối.
 
 Skew của layout cuối vượt mục tiêu CTS 0,051 ns. Setup +0,977 ns và hold +0,020 ns ở Tempus 10 ns vẫn đạt (đo lại trên layout cuối), nên nhóm giữ nguyên cây clock.
 
