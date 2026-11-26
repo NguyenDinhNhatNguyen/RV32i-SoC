@@ -189,6 +189,8 @@ Ghi chú:
 
 ## 6. Sau layout (STA-05, ở trường)
 
+**Trạng thái (26/11):** STA-05 xong trên layout `_p9`. Sau CTS và sau route, 4 view, 0 vi phạm, không cần ECO. Nếu PD-08 đổi layout thì chạy lại ở STA-06.
+
 Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc_top_synth.sdc`). Corner RC typical, clock propagated.
 
 | Ngày | Layout | Chu kỳ | Setup | Hold | Recovery | Removal | Report gốc |

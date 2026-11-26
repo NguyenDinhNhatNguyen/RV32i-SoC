@@ -1,6 +1,6 @@
 # IR drop tĩnh của `soc_top` (Voltus/Innovus, Lab 06 mục 3.2)
 
-Tài liệu này mô tả cách chạy phân tích IR drop tĩnh trên layout của `soc_top`, kết quả ngày 20/11 và các giới hạn. Đây là phần dựng flow (LEC-04) và số liệu đầu tiên. Chưa phải sign-off (LEC-06).
+Tài liệu này mô tả cách chạy phân tích IR drop tĩnh trên layout của `soc_top`, kết quả ngày 20/11 (số chính xác đọc ngày 25/11) và các giới hạn. Đây là phần dựng flow (LEC-04) và số liệu đầu tiên. Chưa phải sign-off (LEC-06).
 
 ## 1. Đối tượng và điều kiện
 

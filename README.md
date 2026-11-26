@@ -18,7 +18,7 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 
 Đặc tả: [SoC](docs/spec/soc_spec.md), [ngoại vi](docs/spec/periph.md), [accelerator](docs/spec/accel.md), [lõi](docs/spec/core.md). Mục lục tài liệu: [docs/README.md](docs/README.md).
 
-## Trạng thái (18/11)
+## Trạng thái (26/11)
 
 | Phần | Kết quả |
 | --- | --- |
@@ -26,7 +26,9 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 | Bus, SoC | fw-bus 124/124, fw-soc 131/131 (có SPI, PWM, I2C), bootloader `sim-boot` PASS, lint 0 warning |
 | Ngoại vi | Timer, UART, GPIO, IRQC, SPI, PWM, I2C đã ghép vào `soc_top` (I2C từ 10/11) |
 | Accelerator | Mô phỏng PASS, flow Cadence chạy lại với lõi Lab 2 ngày 29/10, skew ≤ 80 ps |
-| SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Netlist chính thức tổng hợp và PnR ở 9 ns trên RTL `e60437a`. **Chốt 100 MHz (18/11)**: Tempus sau layout `_p9` ở 10 ns dư setup 0,977 ns, hold, recovery, removal đều dương (`docs/sta_results.md` mục 5, 6). LEC thử của `soc_top` ở `docs/lec_soc.md` |
+| SoC qua Cadence | Genus và Tempus đạt 20 ns trên RTL đầy đủ (12/11). PnR tới route ngày 12/11 và thử ba cỡ lõi ngày 13/11 (`docs/pnr_soc_status.md`). F_max sau tổng hợp khoảng 200 MHz (14/11). Netlist chính thức tổng hợp và PnR ở 9 ns trên RTL `e60437a`. **Chốt 100 MHz (18/11)**: Tempus sau layout `_p9` ở 10 ns dư setup 0,977 ns, hold, recovery, removal đều dương (`docs/sta_results.md` mục 5, 6). LEC RTL ↔ netlist chính thức còn 1 điểm Non-equivalent được chấp nhận kèm chứng minh (`spi clk_cnt_reg[15]`, bit hằng 0), LEC netlist tổng hợp ↔ sau layout PASS (`docs/lec_soc.md`). Mốc M2 đạt 25/11 |
+| Kiểm chứng mức cổng | GLS zero delay 71/71 trên netlist Genus (19/11). GLS có SDF sau layout ở 10 ns 71/71, 0 vi phạm timing sau khi reset nhả (26/11). GLS hai góc max và min (VER-09) đã có flow, chưa chạy (`docs/gls_soc.md`) |
+| Công suất, IR drop | Trước layout theo testcase 0,31 đến 0,48 mW ở 100 MHz, toggle mặc định 0,74 mW (`docs/power_soc.md`). IR drop tĩnh VDD sụt 0,69 mV, ngưỡng 45 mV (`docs/ir_drop.md`) |
 
 ## Bắt đầu nhanh
 

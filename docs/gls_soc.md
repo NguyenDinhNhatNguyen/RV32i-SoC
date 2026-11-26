@@ -2,7 +2,7 @@
 
 Chủ: Hiếu. Mô phỏng mức cổng netlist `soc_top` của Genus bằng `tb_soc` và các chương trình của `make fw-soc` (cấu hình M1W1). Mục tiêu là kiểm netlist chạy đúng chức năng như RTL, trước khi chạy với SDF ở VER-08.
 
-**Trạng thái (19/11):** PASS. Netlist Genus chính thức (STA-04) chạy trên server bằng Xcelium, 71/71 test PASS, zero delay (mục 5). GLS có SDF để dành cho VER-08.
+**Trạng thái (19/11):** PASS. Netlist Genus chính thức (STA-04) chạy trên server bằng Xcelium, 71/71 test PASS, zero delay (mục 5). GLS có SDF sau layout (VER-08) xong 26/11, 71/71 PASS (mục 8). GLS hai góc max và min (VER-09) đã có flow, chưa chạy (mục 9).
 
 ## 1. Cách tb_soc chạy ở mức cổng
 
