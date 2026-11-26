@@ -34,6 +34,8 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `pnr_soc_u75/`, `pnr_soc_u70/`, `pnr_soc_u65/` | Innovus `soc_top` ở ba cỡ lõi khác (PD-07, 13/11), có `drc_after_eco.rpt` khi ECO sửa DRC |
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
 | `lec_soc/` | Conformal LEC của `soc_top`: `run2/` (LEC-01, netlist 12/11), `run3/` và `run4_seqfb/` (LEC-02, netlist chính thức 14/11, 20/11), `run5_seqeff/` (LEC-02 với `SEQ_EFFORT=high`, 25/11), `g2g/` (LEC-03, netlist tổng hợp với netlist sau layout, 20/11). `apb_bridge/` là LEC riêng khối (14/11) |
+| `lec_soc/g2g_lec05/` | LEC-05 (26/11): netlist tổng hợp với netlist layout cuối `route_trim`, 4078 Equivalent, `PASS` |
+| `ir_drop_trim/` | LEC-06 (26/11): IR drop tĩnh VDD trên layout cuối `route_trim`, `act0.1/` và `act0.5/`, 0 vi phạm |
 | `lint_hal/` | HAL lint của `soc_top` trên main `7008da2` (VER-03, 13/11): `summary.txt` và `xrun.log` |
 | `ver05_regress/` | `make regress` và `make cov-soc` ngày 17/11 trên `3289802` (VER-05): bảng regression, coverage theo module, 74 lần chạy Verilator |
 | `gls_soc/` | `make gls-soc` ngày 19/11 trên server (VER-07): netlist Genus STA-04, Xcelium, zero delay, 71/71 PASS, đường dẫn 8 macro |

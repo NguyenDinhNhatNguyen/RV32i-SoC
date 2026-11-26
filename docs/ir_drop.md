@@ -1,6 +1,6 @@
 # IR drop tĩnh của `soc_top` (Voltus/Innovus, Lab 06 mục 3.2)
 
-Tài liệu này mô tả cách chạy phân tích IR drop tĩnh trên layout của `soc_top`, kết quả ngày 20/11 (số chính xác đọc ngày 25/11) và các giới hạn. Đây là phần dựng flow (LEC-04) và số liệu đầu tiên. Chưa phải sign-off (LEC-06).
+Tài liệu này mô tả cách chạy phân tích IR drop tĩnh trên layout của `soc_top`, kết quả ngày 20/11 (số chính xác đọc ngày 25/11) và các giới hạn. Đây là phần dựng flow (LEC-04) và số liệu đầu tiên. Sign-off trên layout cuối (LEC-06) ở mục 7.
 
 ## 1. Đối tượng và điều kiện
 
@@ -85,12 +85,30 @@ Thư mục `VDD_25C_avg_3` là lần thử chế độ `auto` (1089 nguồn), kh
 
 Lab 06 dùng ngưỡng sụt áp tĩnh nhỏ hơn 5% VDD. VDD của Lab là 1,0 V (50 mV), còn view `av_setup` của `soc_top` là 0,9 V (45 mV). Nhóm chốt ngưỡng 45 mV (5% của 0,9 V, đúng điện áp corner slow mà timing và IR đang dùng; Phát đề xuất 22/11, nhóm xác nhận 25/11). Kết quả ở cả hai kịch bản (khoảng 1 đến 2 mV) thấp hơn cả hai ngưỡng.
 
-## 7. Giới hạn và việc còn lại
+## 7. LEC-06: sign-off trên layout cuối (26/11)
+
+Database `pnr/run_soc_p9/DBS/route_trim.enc.dat` (layout cuối sau PD-08). Cùng script `power/run_ir.sh`, 12 nguồn trên vòng ring VDD (12/12), ngưỡng 45 mV (0,855 V). Report ở `appendix/ir_drop_trim/act0.1/` và `act0.5/` (`run_log.txt`, `VDD.layerbased_ir.rpt`, `VDD.main.rpt`).
+
+| | A (hoạt độ 0,1) | B (hoạt độ 0,5) |
+| --- | --- | --- |
+| Sụt áp lớn nhất | 0,693 mV ở Metal1 | 1,69 mV ở Metal1 |
+| Sụt áp Metal2 đến Metal8 | khoảng 0,09 mV | khoảng 0,20 mV |
+| VDD nhỏ nhất | 0,899 V | 0,898 V |
+| Dòng nguồn nhỏ nhất đến lớn nhất | 70,4 µA đến 0,160 mA | 0,142 đến 0,353 mA |
+| Số vi phạm | 0 | 0 |
+
+Kết quả gần như trùng lần chạy trên `route_eco` (mục 5), vì PD-08 chỉ sửa VSS. Kết quả cũ trên server đã đổi tên thành `power/run_ir_act0.1_eco` và `power/run_ir_act0.5_eco`.
+
+Phạm vi: chỉ phân tích VDD tĩnh. Đề bài yêu cầu sign-off "lỗi điện", không ghi EM, nên nhóm không làm EM. Với VSS, connectivity sạch sau PD-08 (`docs/pnr_soc_status.md` mục 8).
+
+Kết luận: LEC-06 đạt.
+
+## 8. Giới hạn và việc còn lại
 
 - **Pad là giả định.** Thiết kế chưa có pad hay bump thật. Số liệu chỉ đúng khi nguồn được cấp từ 12 điểm trên vòng ring. Cần nhóm hoặc thầy xác nhận cách cấp nguồn.
 - **Dòng pad chưa khớp công suất.** Ở kịch bản A, 12 pad x 0,109 mA cho khoảng 1,3 mA, trong khi 1,975 mW chia 0,9 V cho khoảng 2,2 mA. Chưa rõ nguyên nhân (có thể do scale của `.ptiavg` hoặc phần dòng không đi qua pad VDD). Mức sụt áp rất thấp nên kết luận không đổi, nhưng cần ghi chú.
 - **Chỉ phân tích VDD.** Chưa phân tích VSS (ground bounce) và không có EM, vì Lab 06 không yêu cầu. Cần hỏi nhóm hoặc thầy có cần hay không.
-- **Layout cuối.** Chạy trên `route_eco` của `run_soc_p9`. LEC-06 (sign-off) chỉ xong khi chạy lại trên layout cuối, nếu PD-08 làm thay đổi lưới nguồn.
+- **Layout cuối.** Mục 5 chạy trên `route_eco` của `run_soc_p9`. LEC-06 (sign-off) đã chạy lại trên layout cuối `route_trim` (mục 7).
 - **Database là bản cuối của `_p9`.** `route_eco.enc.dat` được lưu lúc 15:10 ngày 18/11 (`~/eco_p9.tcl`), rồi `~/eco_out_p9.tcl` khôi phục đúng database này để ghi `soc_top_pnr.v`, SPEF, SDF và GDS lúc 15:31. Giữa hai bước không có lệnh nào sửa layout (Phát làm ECO, xác nhận 21/11, `docs/pnr_soc_status.md` mục 6). Vì vậy IR drop ở đây và Tempus của STA-05 chạy trên cùng một layout.
 - **Vành nguồn VSS.** Sheet (PD-06) ghi "2 chỗ hở VSS ở góc vành nguồn". Kết quả ở đây chỉ phân tích VDD nên không phản ánh ảnh hưởng của chỗ hở này lên VSS.
 - **Hoạt độ là giả định.** 0,1 và 0,5 theo Lab 06, không phải hoạt độ từ mô phỏng thực tế của SoC.

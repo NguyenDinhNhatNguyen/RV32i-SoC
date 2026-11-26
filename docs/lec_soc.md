@@ -1,6 +1,6 @@
 # LEC của `soc_top`: Conformal, RTL ↔ netlist Genus
 
-Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả, kết quả của lần chạy thử đầu tiên (LEC-01) và của LEC-02 (RTL ↔ netlist chính thức 14/11) và LEC-03 (netlist tổng hợp ↔ netlist sau layout). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
+Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_top` bằng Cadence Conformal 24.1, cách chạy, cách đọc kết quả, kết quả của lần chạy thử đầu tiên (LEC-01) và của LEC-02 (RTL ↔ netlist chính thức 14/11) LEC-03 (netlist tổng hợp ↔ netlist sau layout) và LEC-05 (netlist tổng hợp ↔ netlist layout cuối). Flow chạy trên server trường (asiclab), nơi có Conformal. Môi trường Docker ở nhà không có Cadence.
 
 | File | Vai trò |
 | --- | --- |
@@ -10,7 +10,7 @@ Tài liệu này mô tả flow kiểm tra tương đương logic (LEC) cho `soc_
 | `lec/apb_bridge_rtl2gate.do.in`, `lec/run_lec_apb_bridge.sh` | LEC riêng khối `apb_bridge` (mục 5) |
 | `lec/precheck_lec02.sh` | Kiểm tra trước khi chạy LEC-02: netlist, trạng thái git, RTL đổi sau commit chốt |
 | `lec/soc_gate2gate.do.in`, `lec/run_lec_g2g.sh` | LEC-03: netlist tổng hợp ↔ netlist sau layout. `DRY_RUN=1` và `CHECK=1` để kiểm tra đầu vào (mục 4) |
-| `appendix/lec_soc/` | Report văn bản của các lần chạy: `run3/` (LEC-02), `run4_seqfb/` (LEC-02 với `SEQ_FEEDBACK=1`), `g2g/` (LEC-03) |
+| `appendix/lec_soc/` | Report văn bản của các lần chạy: `run3/` (LEC-02), `run4_seqfb/` (LEC-02 với `SEQ_FEEDBACK=1`), `g2g/` (LEC-03), `g2g_lec05/` (LEC-05) |
 
 ## 1. Flow hoạt động thế nào
 
@@ -210,6 +210,26 @@ Hai netlist tương đương chức năng, nên CTS, sửa hold và ECO không l
 
 - **272 điểm DLAT** là latch deglitching của ICG (`Gated-clock deglitching latch`), 136 ở mỗi phía, khớp `icg=136` của netlist 14/11.
 - **69 điểm DFF chỉ ở golden** là các flop rìa PE và `done` đã nêu ở mục 4 (32 + 32 + 4 + 1), đều `unreachable: all paths to outputs are blocked`. Netlist sau layout không còn các flop này (phía revised không có điểm DFF Unmapped nào). Nguyên nhân chưa được xác nhận: có thể bước tối ưu của PnR xóa flop không có tải. Các flop này không có đường ra, nên việc mất chúng không làm đổi chức năng.
+
+### LEC-05: netlist tổng hợp ↔ netlist layout cuối (26/11)
+
+Golden là `syn/out_soc/soc_top_netlist.v` (14/11 15:55), revised là `pnr/out_soc_p9/trim/soc_top_pnr.v` (26/11 13:10, xuất từ `route_trim.enc` sau PD-08). Lệnh chạy:
+
+```bash
+REVISED=pnr/out_soc_p9/trim/soc_top_pnr.v LEC_DIR=syn/out_soc_lec05 bash lec/run_lec_g2g.sh
+```
+
+Trước đó chạy `DRY_RUN=1` không lỗi. `run_log.txt` xác nhận 8 macro ở mỗi phía, chỉ `sram_2k_macro` không có trong thư viện cell, 0 instance FILL/DECAP/TAP, không có dòng `// Error`.
+
+| | Số điểm |
+| --- | --- |
+| Equivalent | 4078 (71 PO, 3999 DFF, 8 BBOX) |
+| Non-equivalent | 0 |
+| Abort | 0 |
+| Unmapped | 341: 205 phía golden (69 DFF, 136 DLAT), 136 phía revised (136 DLAT) |
+| Kết quả `report verification` | `PASS`, `Incomplete verification: 0` |
+
+Số liệu giống hệt LEC-03. Netlist layout cuối tương đương netlist tổng hợp, nên PD-08 không làm đổi logic. Các điểm Unmapped cùng nguyên nhân như LEC-03. Report ở `appendix/lec_soc/g2g_lec05/`.
 
 ## 5. LEC riêng khối `apb_bridge` (14/11)
 

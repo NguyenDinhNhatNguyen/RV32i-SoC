@@ -191,6 +191,8 @@ Ghi chú:
 
 **Trạng thái (26/11):** STA-05 xong trên layout `_p9`. Sau CTS và sau route, 4 view, 0 vi phạm, không cần ECO. Nếu PD-08 đổi layout thì chạy lại ở STA-06.
 
+**Trạng thái (26/11):** STA-06 xong. Layout cuối sau PD-08 (`DBS/route_trim.enc`), Tempus 4 view, 10 ns: setup +0,977, hold +0,020, recovery +7,434, removal +0,023 ns, 0 vi phạm. Report ở `appendix/sta_soc_p9_trim/`. Không chạy lại sau CTS vì PD-08 chỉ sửa lưới VSS sau route, cây clock không đổi. Removal +0,023 ns vẫn dương.
+
 Tempus đọc netlist, SPEF của Innovus và SDC do Genus ghi (`syn/out_soc/soc_top_synth.sdc`). Corner RC typical, clock propagated.
 
 | Ngày | Layout | Chu kỳ | Setup | Hold | Recovery | Removal | Report gốc |

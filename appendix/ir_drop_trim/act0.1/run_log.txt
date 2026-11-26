@@ -1,0 +1,73 @@
+== 15:45 innovus batch, DB=/home/s23521043/RV32i-SoC/pnr/run_soc_p9/DBS/route_trim.enc.dat, activity=0.1, log: /home/s23521043/RV32i-SoC/power/run_ir_act0.1/innovus.log
+== Steps
+IR: OK    restoreDesign /home/s23521043/RV32i-SoC/pnr/run_soc_p9/DBS/route_trim.enc.dat
+IR: OK    core/die box
+IR: OK    power analysis mode (write static currents)
+IR: OK    reset activity
+IR: OK    default activity 0.1, period 10.0 ns
+IR: OK    power output dir
+IR: OK    report_power for rail analysis
+IR: current files: /home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/static_VDD.ptiavg /home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/static_VSS.ptiavg
+IR: OK    rail mode era_static, view av_setup, tech /home/eda/library/cadence/gpdk045_v_6_0/qrc/typical/qrcTechFile
+IR: VDD special wire shapes: blockRing blockwire corewire followpin ring stripe, layers: Metal1 Metal4 Metal5 Metal6 Metal7 Metal8
+IR: ring wire Metal8 box 11.5 11.51 438.5 13.51
+IR: ring wire Metal8 box 11.5 437.17 438.5 439.17
+IR: ring wire Metal7 box 11.5 11.51 13.5 439.17
+IR: ring wire Metal7 box 436.5 11.51 438.5 439.17
+IR: pads: extent 11.5 11.51 438.5 439.17, layer Metal7 Metal8, 4 wires, file /home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/VDD.pp
+IR: OK    pads from the VDD ring
+IR: OK    set_pg_nets VDD 0.9 V, threshold 0.8550 V
+IR: OK    set_pg_nets VSS 0 V, threshold 0.0450 V
+IR: OK    rail analysis domain
+IR: OK    set_power_data
+IR: OK    set_power_pads VDD (xy file)
+IR: 122 result files in /home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail
+IR: OK    analyze_rail VDD
+IR: done, reports in /home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports
+== Errors (first 15)
+== Lines about IR drop in the log
+Begin IR Drop (Linear) Report Generation
+  Minimum, Average, Maximum IR Drop: 0.899V, 0.900V, 0.900V
+    Layer with maximum IR Drop:  metal1_conn
+Ended IR Drop (Linear) Report Generation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=424.78MB/6890.27MB/2630.16MB)
+Begin IR Drop (Limit) Report Generation
+  Minimum, Average, Maximum IR Drop: 0.899V, 0.900V, 0.900V
+    Layer with maximum IR Drop:  metal1_conn
+Ended IR Drop (Limit) Report Generation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=427.12MB/6890.27MB/2630.16MB)
+Begin Instance Based IR Drop Report Generation
+  Minimum, Average, Maximum Instance Based IR Drop: 0.899V, 0.900V, 0.900V
+Ended Instance Based IR Drop Report Generation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=427.36MB/6890.27MB/2630.16MB)
+  Minimum, Average, Maximum Voltage Source Current: -0.160mA, -0.109mA, -70.399uA
+  Minimum, Average, Maximum Resistor Voltage: 0.000V, 0.311uV, 44.405uV
+== rail_missing_files (if any)
+== Rail result files
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/steps.txt
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/boxes.txt
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/power_act0.1.rpt
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/static_VSS.ptiavg
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/static_VDD.ptiavg
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/voltus_power.ptifiles
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/power.db
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/cellIDMap
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/.top.power.db
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/power/power.db.cnstr.tcl
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/VDD.pp
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.grid.report
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.defInstData
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/layerInfo
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.cellviews
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.pgv_table.rpt
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.mnode
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.nodel
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.nodeinstid
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml07
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml08
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml09
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml10
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml11
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml12
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml13
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml14
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml15
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml16
+/home/s23521043/RV32i-SoC/power/run_ir_act0.1/reports/rail/VDD_25C_avg_1/VDD.ml18
