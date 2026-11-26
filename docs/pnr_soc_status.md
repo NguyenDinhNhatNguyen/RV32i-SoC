@@ -138,7 +138,7 @@ Làm trên `DBS/route_eco.enc` của `_p9`, bản cuối là `DBS/route_trim.enc
 
 Các file GDS xuất trước 26/11 thiếu Metal7 trở lên vì dùng `streamOut.map` trong `PDK_DIR`, không dùng nữa. `config.tcl` đã trỏ sang map của PDK GPDK045 v6.0 (commit `09c7b46`).
 
-Các lệnh sửa chỉ chạy trên net `VSS` (ghi lại ở `pnr/scripts/pd08_vss_fix.tcl`). Netlist xuất từ `route_trim.enc` giống bản sau ECO, chỉ khác header. Dây nguồn trong GDS từ 935 còn 933. STA đã chạy lại trên layout cuối (`docs/sta_results.md` mục 6). Nhóm không chạy lại SDF, LEC, GLS và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
+Các lệnh sửa chỉ chạy trên net `VSS` (ghi lại ở `pnr/scripts/pd08_vss_fix.tcl`). Netlist xuất từ `route_trim.enc` giống bản sau ECO, chỉ khác header. SDF giống hệt ngoài dòng ngày giờ, còn SPEF chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%). Dây nguồn trong GDS từ 935 còn 933. STA đã chạy lại trên layout cuối (`docs/sta_results.md` mục 6). Nhóm không chạy lại SDF, LEC, GLS và công suất. IR drop (LEC-06) cần chạy trên `route_trim.enc`.
 
 Skew của layout cuối vượt mục tiêu CTS 0,051 ns. Setup +0,977 ns và hold +0,020 ns ở Tempus 10 ns vẫn đạt (đo lại trên layout cuối), nên nhóm giữ nguyên cây clock.
 
