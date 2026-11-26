@@ -241,6 +241,7 @@ VER-08 chỉ chạy góc max: thư viện slow, SDF `av_setup`, giá trị `MAXI
 | min | gsclib045 `fast_vdd1v0_basicCells.v` | `soc_top_hold.sdf` của Tempus (`av_hold`, fast, RC typical) | `MINIMUM` | hold | `syn/out_soc/gls_sdf_min/` |
 
 - Flow PnR (`pnr/scripts/run_all.tcl`) chỉ ghi SDF `av_setup`. SDF `av_hold` do `make sdf-soc-hold` tạo bằng Tempus (`sta/scripts/sdf_soc.tcl`). Script đọc đúng netlist và SPEF sau ECO của `pnr/out_soc_p9`, cùng `mmmc.view` của PnR và STA. Script chỉ đọc file PnR, không mở database của Innovus.
+- `write_sdf` dùng `-recompute_delay_calc`, để mỗi cung giữa hai chân có delay riêng, đúng như Tempus khuyên cho mô phỏng (cảnh báo `SDF-808` ở lần chạy đầu 26/11).
 - Script cũng ghi `soc_top_setup.sdf` bằng Tempus. File này dùng để so với SDF của Innovus nếu kết quả hai góc khác nhau bất thường.
 - SDC là `syn/constraints/soc.sdc` ở 10 ns. Delay trong SDF không phụ thuộc chu kỳ, SDC chỉ cần để Tempus dựng clock.
 - Cả hai lần chạy ở clock 10 ns, bật timing check, cùng quy tắc như VER-08: chỉ đếm vi phạm sau khi reset nhả (mục 8.1).

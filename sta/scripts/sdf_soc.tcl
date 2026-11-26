@@ -44,8 +44,14 @@ set_interactive_constraint_modes [all_constraint_modes -active]
 set_propagated_clock [all_clocks]
 update_timing -full
 
-try_cmd {write_sdf -view av_hold  $OUT/${TOP}_hold.sdf}
-try_cmd {write_sdf -view av_setup $OUT/${TOP}_setup.sdf}
+# -recompute_delay_calc: one delay per pin pair arc, as Tempus recommends for simulation
+# (SDF-808, first run 26/11). Without it, every arc between two pins gets the same delay
+foreach {v view} {hold av_hold setup av_setup} {
+    if {[catch {write_sdf -view $view -recompute_delay_calc $OUT/${TOP}_${v}.sdf} msg]} {
+        puts "WARNING: write_sdf -recompute_delay_calc failed ($msg), writing without it"
+        try_cmd {write_sdf -view $view $OUT/${TOP}_${v}.sdf}
+    }
+}
 foreach v {hold setup} {
     set f $OUT/${TOP}_${v}.sdf
     puts "SDF: $v [expr {[file exists $f] ? "$f [file size $f] bytes" : "NOT WRITTEN"}]"

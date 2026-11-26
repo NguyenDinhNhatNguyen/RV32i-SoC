@@ -1262,8 +1262,9 @@ sdf-soc-hold:
 	  cd $$D && rm -f tempus.log* tempus.cmd* && \
 	  NETLIST=$${NETLIST:-$$P/soc_top_pnr.v} SPEF=$${SPEF:-$$P/soc_top.spef} SDC=$$D/soc_10.sdc SDF_OUT=$$D \
 	  tempus -nowin -files $$R/sta/scripts/sdf_soc.tcl -log tempus.log < /dev/null > tempus.out 2>&1 || true
-	@grep -E '^(SDF|ERROR|WARNING: command)' $(GLS_SDF_DIR)/tempus.log
-	@test -s $(GLS_SDF_HOLD) || { echo "ERROR: no hold SDF, see $(GLS_SDF_DIR)/tempus.log"; exit 1; }
+	@grep -hE '^(SDF|ERROR|WARNING: command)' $(GLS_SDF_DIR)/tempus.log* $(GLS_SDF_DIR)/tempus.out 2>/dev/null | sort -u || true
+	@test -s $(GLS_SDF_HOLD) || { echo "ERROR: no hold SDF, last lines of $(GLS_SDF_DIR)/tempus.out:"; \
+	  tail -n 15 $(GLS_SDF_DIR)/tempus.out 2>/dev/null; exit 1; }
 
 gls-soc-sdf-minmax:
 	@fail=0; \
