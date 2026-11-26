@@ -1,6 +1,6 @@
 # Theo dõi PnR `soc_top`
 
-Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 18/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
+Danh sách việc PnR sau buổi trường 29–30/10, theo bản tổng hợp của Phát ngày 30/10. Cập nhật 26/11. Floorplan và số liệu chi tiết ở `docs/pd02_floorplan.md`, cách chạy ở `docs/flow_notes.md`.
 
 ## 1. Tình trạng từng mục
 
@@ -103,3 +103,39 @@ ECO (18/11, script ở `~/eco_p9.tcl` và `~/eco_out_p9.tcl` trên server, ngoà
 4. Xuất lại netlist, netlist PG, SPEF, SDF, GDS vào `pnr/out_soc_p9/` bằng đúng lệnh của `run_all.tcl`. Bản gốc của Nguyên chuyển vào `pnr/out_soc_p9/pre_eco/`.
 
 LEC-03 (Phúc) và GLS có SDF (Hiếu) dùng file trong `pnr/out_soc_p9/`, không dùng `pre_eco/`.
+
+## 7. PD-07: ba cỡ lõi trên netlist chính thức (26/11)
+
+Cùng netlist STA-04, clock 9 ns. Số lấy từ flow tự chạy, trước mọi ECO tay. Report ở `appendix/pnr_soc_p9_412/`, `appendix/pnr_soc_p9/`, `appendix/pnr_soc_p9_430/`.
+
+| Mục | `_p9_412` | `_p9` | `_p9_430` |
+| --- | --- | --- | --- |
+| Lõi (µm) | 412 × 413,8 | 420 × 420,7 | 430 × 429,2 |
+| Diện tích lõi (µm²) | 170 494 (-3,5%) | 176 677 | 184 560 (+4,5%) |
+| Cell chuẩn (µm²) | 71 441 | 71 800 | 71 714 |
+| Mật độ ngoài macro | 67,1% | 63,7% | 59,5% |
+| Setup sau route (ns) | -0,062 | -0,043 | -0,039 |
+| Hold (ns) | +0,020 | +0,020 | +0,019 |
+| Recovery (ns) | +6,891 | +6,355 | +6,712 |
+| Removal (ns) | +0,023 | +0,025 | +0,085 |
+| DRC trước và sau tự sửa | 2, còn 0 | 5, còn 1 | 7, còn 0 |
+| Connectivity | Sạch | 2 chỗ hở, 17 dây thừa | Sạch |
+| Antenna | Sạch | Sạch sau ECO | Sạch |
+
+Mật độ giảm khi lõi lớn hơn, còn setup chỉ tốt lên 23 ps từ 412 đến 430. Nhóm giữ `_p9` làm bản chính thức vì bản này đã có ECO, signoff Tempus 100 MHz, LEC, GLS và công suất. Cỡ 420 được chọn theo bản thử 13/11 trên netlist cũ (mục 5). Trên netlist mới, hai cỡ còn lại cho DRC và connectivity sạch ngay từ flow.
+
+## 8. PD-08: kiểm cuối và xuất GDS (26/11)
+
+Làm trên `DBS/route_eco.enc` của `_p9`, lưu bản sau sửa ở `DBS/route_vssfix.enc`. `route_eco.enc` giữ nguyên. Report ở `appendix/pnr_soc_p9/vssfix/`.
+
+| Mục | Kết quả |
+| --- | --- |
+| Chỗ hở `VSS` | Một đoạn stripe Metal7 nổi ở (21,625, 327,51) - (23,125, 329,01). Xoá bằng `editDelete`, sau đó không còn chỗ hở |
+| Connectivity | Còn 15 thông báo IMPVFC-94 trên `VSS` Metal7 ở y = 328,26 và 418,26. Đây là đầu thừa của stripe, không phải chỗ hở. Nhóm giữ nguyên, chờ thầy xác nhận |
+| DRC, antenna | 0 lỗi, 0 vi phạm |
+| GDS | `pnr/out_soc_p9/soc_top_vssfix_merged.gds`, Metal1-Metal9, đã ghép `gsclib045.gds`. Chỉ thiếu `sram_2k_macro` (macro không cần GDS, thầy xác nhận 22/10) |
+
+Các file GDS xuất trước 26/11 thiếu Metal7 trở lên vì dùng `streamOut.map` trong `PDK_DIR`, không dùng nữa. `config.tcl` đã trỏ sang map của PDK GPDK045 v6.0 (commit `09c7b46`).
+
+Lệnh sửa chỉ xoá một đoạn dây nguồn nổi, netlist và dây tín hiệu không đổi. Vì vậy nhóm chưa chạy lại SPEF, SDF, LEC, GLS, STA và công suất.
+
