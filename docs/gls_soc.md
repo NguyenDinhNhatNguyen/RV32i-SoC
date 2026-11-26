@@ -143,7 +143,7 @@ Phép thử âm: sửa lệnh `li gp,1` của `RVTEST_PASS` trong file hex thàn
 
 Chạy netlist sau layout (sau ECO) với SDF của Innovus. Mục tiêu là kiểm netlist có delay thật vẫn chạy đúng ở 100 MHz và không có vi phạm timing trong mô phỏng.
 
-**Trạng thái (26/11):** đã chạy trên server với 2 test (`soc`, `rv32ui-p-add`): cả hai PASS, số chu kỳ bằng RTL, 0 vi phạm timing sau khi reset nhả (mục 8.5). Còn chạy đủ 71 test.
+**Trạng thái (26/11):** xong. Trên server `gls-soc: 71 passed, 0 failed` với netlist và SDF sau ECO, clock 10 ns. Mọi test có số chu kỳ bằng RTL và 0 vi phạm timing sau khi reset nhả (mục 8.5, `appendix/gls_soc_sdf/`).
 
 ### 8.1 Khác với zero delay
 
@@ -204,7 +204,7 @@ Netlist và SDF của `pnr/out_soc_p9` (18/11, sau ECO, `av_setup`), góc slow, 
 |------|---------|
 | Netlist PnR, zero delay (model PDK) | `soc` PASS, 2458 chu kỳ. Netlist sau layout đúng chức năng |
 | SDF với model PDK | timeout. Model không có `specify`, nên delay cell không được gán, chỉ còn delay dây, và mạch chạy sai |
-| SDF với model gsclib045 của Stratus | `soc` PASS 2459 chu kỳ, `rv32ui-p-add` PASS 591 chu kỳ. Số chu kỳ bằng RTL |
+| SDF với model gsclib045 của Stratus | 71/71 PASS (`soc` 2459 chu kỳ, `rv32ui-p-add` 591 chu kỳ, bằng RTL), 0 vi phạm sau khi reset nhả |
 
 Vi phạm timing của lần chạy `soc`: 2 vi phạm hold, cả hai ở cạnh clock đầu tiên (5416 ps), khi reset đang giữ:
 
@@ -213,5 +213,16 @@ Vi phạm timing của lần chạy `soc`: 2 vi phạm hold, cả hai ở cạnh
 
 Reset nhả sau đó nhiều chu kỳ. Hai vi phạm này là lúc netlist đi từ X về giá trị reset, không phải đường thật, nên không tính (mục 8.1). Sau khi reset nhả không có vi phạm nào.
 
-Cảnh báo `SDFNSB` khi elaborate: 500 dòng đều thuộc `sram_2k_macro`, rồi Xcelium dừng in ở giới hạn 1000 cảnh báo. SDF có các cung delay của macro mà model `sram_2k_macro.v` không khai báo trong `specify`, nên các cung đó không được gán. Các cell chuẩn không có cảnh báo này. Delay bên trong macro vì vậy chưa đầy đủ trong mô phỏng. Timing của macro vẫn được kiểm bằng STA (Tempus) với file `.lib` của macro.
+Cảnh báo khi elaborate (`appendix/gls_soc_sdf/sdf_annotate_summary.txt`). Xcelium dừng in ở 1000 cảnh báo, nên số đếm bị cắt, số thật nhiều hơn:
+
+| Cảnh báo | Ở đâu | Nghĩa |
+|----------|-------|-------|
+| `SDFNET` (500 dòng in ra) | flop có reset hoặc set: `DFFRHQX1` (netlist có khoảng 3680 cell này), `DFFRX1`, `DFFSX1`, `DFFSHQX1` | SDF ghi check `RECREM (posedge RN) (posedge CK)`. Model gsclib045 không có check `$recrem` này, nên check recovery/removal của chân reset không được kiểm. Delay của flop vẫn được gán |
+| `SDFNSB` (500 dòng in ra) | cả 8 `sram_2k_macro` | Model `sram_2k_macro.v` trong PDK không có khối `specify`. Macro không nhận delay từ SDF và không có check setup/hold ở chân macro. Dữ liệu đọc ra có ngay khi clock tới macro |
+
+Giới hạn của GLS có SDF vì vậy là:
+
+- Không kiểm recovery/removal của reset. Reset vào chip qua bộ đồng bộ 2 flop, nên reset nhả đồng bộ với clock. Recovery/removal được kiểm bằng STA (Tempus).
+- Không kiểm setup/hold ở chân macro, và đường từ chân ra macro lạc quan về setup (macro không có delay clock tới Q). Đường vào và ra macro được kiểm bằng STA với file `.lib` của macro.
+- Mọi đường giữa các cell chuẩn có delay thật từ SDF và có check setup/hold. GLS có SDF kiểm các đường đó, cùng với việc netlist sau layout chạy đúng chức năng ở 100 MHz.
 
