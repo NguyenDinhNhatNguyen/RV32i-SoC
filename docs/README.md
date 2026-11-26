@@ -52,6 +52,7 @@ Mục lục tài liệu của đồ án, xếp theo chủ đề. Kế hoạch, p
 | `timing_core.md` | Timing ước lượng của lõi (Nangate45, flow nhà) |
 | `btb_eval.md` | Thử nghiệm dự đoán nhánh (tĩnh, BTB): CPI, diện tích, timing, đề xuất |
 | `eva02_compare.md` | So `rv32_core` với PicoRV32 (cùng flow Genus), Ibex và SERV (số công bố) theo kGE, CoreMark/MHz, DMIPS/MHz (EVA-02) |
+| `eva03_ppa.md` | Bảng PPA chính thức của `soc_top` và `rv32_core`: diện tích, GE, F_max, công suất, EPI, CPI, số cập nhật ở EVA-04 (EVA-03) |
 | `yosys_compare.md` | Tổng hợp thử bằng Yosys, so với PicoRV32 |
 
 ## Report
