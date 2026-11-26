@@ -1,0 +1,4 @@
+  PASS: coremark_rv32im/gls (gate level, cycles 1040707)
+  PASS: dhrystone_rv32im/gls (gate level, cycles 378275)
+  PASS: accel_bench_rv32im/gls (gate level, cycles 162595)
+gls-soc: 3 passed, 0 failed

@@ -1,0 +1,3 @@
+activity: none, Genus default toggle rate
+lp_default_toggle_rate = 0.02000
+lp_default_probability = 0.50000

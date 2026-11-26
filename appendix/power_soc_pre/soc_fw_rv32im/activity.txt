@@ -1,0 +1,1 @@
+activity: read_saif -instance tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/soc_fw_rv32im.saif
