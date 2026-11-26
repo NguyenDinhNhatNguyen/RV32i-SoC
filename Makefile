@@ -30,6 +30,8 @@ help:
 	@echo "make gls-soc-saif  - GLS of the PWR_TESTS with SAIF per testcase (server, PWR-01)"
 	@echo "make power-soc     - Genus pre-layout power per SAIF and default toggle rate (server, PWR-01)"
 	@echo "make gls-soc-sdf   - GLS of the post-layout netlist with its SDF, timing checks on (server, VER-08)"
+	@echo "make sdf-soc-hold - Tempus writes the hold-corner SDF of the post-layout netlist (server, VER-09)"
+	@echo "make gls-soc-sdf-minmax - GLS with SDF at the max (setup) and min (hold) corners (server, VER-09)"
 	@echo "make unit-core     - unit tests of the core blocks (ALU, regfile, decoder, imm_gen, lsu_align)"
 	@echo "make fw-core       - assembly tests on tb_core (T=name runs one test)"
 	@echo "make isa-core      - riscv-tests (rv32ui/rv32mi/rv32um, env p) on tb_core (T=rv32ui-p-add)"
@@ -1236,6 +1238,47 @@ gls-soc-sdf:
 	@NETLIST=$${NETLIST:-$(GLS_PNR)/soc_top_pnr.v} SDF=$${SDF:-$(GLS_PNR)/soc_top.sdf} \
 	  GLS_LIB=$${GLS_LIB:-$(GLS_TIMING_LIB)} \
 	  OUT=$${OUT:-syn/out_soc/gls_sdf} bash scripts/gls_soc.sh
+
+# ---------------------------------------------------------------------------
+# GLS with SDF at both corners (Hieu, VER-09), server only. Docs: docs/gls_soc.md section 9.
+#   make sdf-soc-hold        Tempus writes the SDF of av_hold (fast library) from the netlist
+#                            and SPEF of GLS_PNR into GLS_SDF_DIR (Innovus writes only av_setup)
+#   make gls-soc-sdf-minmax  max run: slow model, SDF of av_setup, MAXIMUM, in gls_sdf_max/
+#                            min run: fast model, SDF of av_hold, MINIMUM, in gls_sdf_min/
+#                            Both at 10 ns with timing checks on. RUN=max or RUN=min runs one
+# ---------------------------------------------------------------------------
+GLS_SDF_DIR ?= syn/out_soc/sdf_minmax
+GLS_TIMING_LIB_FAST ?= $(dir $(GLS_TIMING_LIB))fast_vdd1v0_basicCells.v
+GLS_SDF_SETUP ?= $(GLS_PNR)/soc_top.sdf
+GLS_SDF_HOLD ?= $(GLS_SDF_DIR)/soc_top_hold.sdf
+
+.PHONY: sdf-soc-hold gls-soc-sdf-minmax
+sdf-soc-hold:
+	@command -v tempus > /dev/null || \
+	  { echo "ERROR: tempus not found, this target runs on the school server"; exit 1; }
+	@mkdir -p $(GLS_SDF_DIR) && rm -f $(GLS_SDF_DIR)/*.sdf
+	@sed 's/^set SOC_PERIOD .*/set SOC_PERIOD 10.0/' syn/constraints/soc.sdc > $(GLS_SDF_DIR)/soc_10.sdc
+	@D=$$(cd $(GLS_SDF_DIR) && pwd); R=$$(pwd); P=$$(cd $(GLS_PNR) && pwd); \
+	  cd $$D && rm -f tempus.log* tempus.cmd* && \
+	  NETLIST=$${NETLIST:-$$P/soc_top_pnr.v} SPEF=$${SPEF:-$$P/soc_top.spef} SDC=$$D/soc_10.sdc SDF_OUT=$$D \
+	  tempus -nowin -files $$R/sta/scripts/sdf_soc.tcl -log tempus.log < /dev/null > tempus.out 2>&1 || true
+	@grep -E '^(SDF|ERROR|WARNING: command)' $(GLS_SDF_DIR)/tempus.log
+	@test -s $(GLS_SDF_HOLD) || { echo "ERROR: no hold SDF, see $(GLS_SDF_DIR)/tempus.log"; exit 1; }
+
+gls-soc-sdf-minmax:
+	@fail=0; \
+	if [ "$${RUN:-max}" = max ]; then \
+	  echo "===== max: slow model, $(GLS_SDF_SETUP), MAXIMUM"; \
+	  NETLIST=$${NETLIST:-$(GLS_PNR)/soc_top_pnr.v} SDF=$(GLS_SDF_SETUP) SDF_MTM=MAXIMUM \
+	    GLS_LIB=$(GLS_TIMING_LIB) OUT=syn/out_soc/gls_sdf_max bash scripts/gls_soc.sh || fail=1; \
+	fi; \
+	if [ "$${RUN:-min}" = min ]; then \
+	  test -s $(GLS_SDF_HOLD) || { echo "ERROR: $(GLS_SDF_HOLD) not found, run make sdf-soc-hold first"; exit 1; }; \
+	  echo "===== min: fast model, $(GLS_SDF_HOLD), MINIMUM"; \
+	  NETLIST=$${NETLIST:-$(GLS_PNR)/soc_top_pnr.v} SDF=$(GLS_SDF_HOLD) SDF_MTM=MINIMUM \
+	    GLS_LIB=$(GLS_TIMING_LIB_FAST) OUT=syn/out_soc/gls_sdf_min bash scripts/gls_soc.sh || fail=1; \
+	fi; \
+	exit $$fail
 
 lint-all:
 	@fail=0; sum=""; \

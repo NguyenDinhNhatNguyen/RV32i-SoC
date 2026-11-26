@@ -226,3 +226,51 @@ Giới hạn của GLS có SDF vì vậy là:
 - Không kiểm setup/hold ở chân macro, và đường từ chân ra macro lạc quan về setup (macro không có delay clock tới Q). Đường vào và ra macro được kiểm bằng STA với file `.lib` của macro.
 - Mọi đường giữa các cell chuẩn có delay thật từ SDF và có check setup/hold. GLS có SDF kiểm các đường đó, cùng với việc netlist sau layout chạy đúng chức năng ở 100 MHz.
 
+
+## 9. GLS có SDF ở hai góc max và min (VER-09)
+
+VER-08 chỉ chạy góc max: thư viện slow, SDF `av_setup`, giá trị `MAXIMUM`. Góc này kiểm setup. VER-09 thêm góc min để kiểm hold: thư viện fast, delay nhỏ nhất.
+
+**Trạng thái (26/11):** flow đã sẵn sàng. Chưa chạy trên server.
+
+### 9.1 Hai lần chạy
+
+| Lần chạy | Model cell | SDF | Bộ ba | Kiểm chủ yếu | Thư mục |
+|----------|------------|-----|-------|--------------|---------|
+| max | gsclib045 `slow_vdd1v0_basicCells.v` | `soc_top.sdf` của Innovus (`av_setup`, slow, RC typical) | `MAXIMUM` | setup | `syn/out_soc/gls_sdf_max/` |
+| min | gsclib045 `fast_vdd1v0_basicCells.v` | `soc_top_hold.sdf` của Tempus (`av_hold`, fast, RC typical) | `MINIMUM` | hold | `syn/out_soc/gls_sdf_min/` |
+
+- Flow PnR (`pnr/scripts/run_all.tcl`) chỉ ghi SDF `av_setup`. SDF `av_hold` do `make sdf-soc-hold` tạo bằng Tempus (`sta/scripts/sdf_soc.tcl`). Script đọc đúng netlist và SPEF sau ECO của `pnr/out_soc_p9`, cùng `mmmc.view` của PnR và STA. Script chỉ đọc file PnR, không mở database của Innovus.
+- Script cũng ghi `soc_top_setup.sdf` bằng Tempus. File này dùng để so với SDF của Innovus nếu kết quả hai góc khác nhau bất thường.
+- SDC là `syn/constraints/soc.sdc` ở 10 ns. Delay trong SDF không phụ thuộc chu kỳ, SDC chỉ cần để Tempus dựng clock.
+- Cả hai lần chạy ở clock 10 ns, bật timing check, cùng quy tắc như VER-08: chỉ đếm vi phạm sau khi reset nhả (mục 8.1).
+- Thư viện SRAM chỉ có góc typical, và model `sram_2k_macro.v` không có `specify` (mục 8.5). Ở cả hai góc macro không có delay và không có check. Hold ở chân macro do STA kiểm (hold +0,020 ns, `docs/sta_results.md` mục 6).
+
+### 9.2 Trên server
+
+```bash
+cd ~/RV32i-SoC-main && git pull
+P=$HOME/RV32i-SoC/pnr/out_soc_p9
+make sdf-soc-hold GLS_PNR=$P
+make gls-soc-sdf-minmax GLS_PNR=$P RUN=min T="soc rv32ui-p-add"
+nohup make gls-soc-sdf-minmax GLS_PNR=$P > ~/gls_minmax_run.log 2>&1 &
+```
+
+- `sdf-soc-hold` in 2 dòng `SDF: hold ...` và `SDF: setup ...` có kích thước file. SDF và log ở `syn/out_soc/sdf_minmax/`.
+- Đạt khi cả hai lần chạy ghi `gls-soc: 71 passed, 0 failed`. Xem `grep -E '^=====|^gls-soc:' ~/gls_minmax_run.log`.
+- Chạy một góc: `RUN=max` hoặc `RUN=min`.
+
+Lưu kết quả cho repo:
+
+```bash
+for c in max min; do mkdir -p appendix/gls_soc_sdf_minmax/$c; cp syn/out_soc/gls_sdf_$c/summary.txt appendix/gls_soc_sdf_minmax/$c/; grep -E '\*[WE],SDF' syn/out_soc/gls_sdf_$c/elab.log | sed 's/.*\(\*[WE],[A-Z]*\).*of module \([A-Za-z0-9_]*\).*/\1 \2/' | sort | uniq -c > appendix/gls_soc_sdf_minmax/$c/sdf_annotate_summary.txt; done
+grep -E '^(SDF|WARNING)' syn/out_soc/sdf_minmax/tempus.log > appendix/gls_soc_sdf_minmax/tempus_sdf.txt
+```
+
+Không đưa SDF, netlist, SPEF hay log có dữ liệu thư viện lên repo.
+
+### 9.3 Nếu gặp lỗi
+
+- **`sdf-soc-hold` không ghi SDF:** xem `syn/out_soc/sdf_minmax/tempus.log`, tìm dòng `ERROR` hoặc `WARNING: command "write_sdf`.
+- **Góc min có vi phạm hold:** gửi dòng `Scope:` và `Time:` của vi phạm. So với `hold.rpt` của Tempus ở `appendix/sta_soc_p9_sta05/route_10_cross/`. STA báo hold dư +0,020 ns, nên một vi phạm trong mô phỏng là đường mà STA và GLS hiểu khác nhau, thường là đường bất đồng bộ đã false path.
+- **Góc min timeout nhưng không có vi phạm:** chạy test đó với `TRACE=50` để so chân macro với lần chạy max.
