@@ -17,8 +17,8 @@ set TECH_LEF  $PDK_DIR/lef/gsclib045_tech.lef
 set CELL_LEF  $PDK_DIR/lef/gsclib045_macro.lef
 set QRC_TECH  {}                           ;# The Lab qrc/gpdk045.tch is unreadable (IMPEXT-1211, 21/10) and captable/ is for 28 nm.
                                            # Empty: Innovus estimates RC from the tech LEF
-set GDS_MAP   $PDK_DIR/streamOut.map
-set CELL_GDS  {}                           ;# Cell library GDS: not found by HT-01. Empty means the GDS holds only Innovus geometry
+set GDS_MAP   /home/eda/library/cadence/gpdk045_v_6_0/soce/streamOut.map ;# PDK_DIR map has no Metal7+
+set CELL_GDS  /home/eda/library/cadence/gsclib045_all_v4.7/gsclib045/gds/gsclib045.gds ;# SRAM has no GDS
 
 # SRAM macro for soc_top. HT-01 (21/10): sram_2k_macro 80 x 100 um with LEF, .lib and .v,
 # no GDS (not required, lecturer 22/10). Also read by sta/scripts/sta_soc.tcl.
@@ -52,6 +52,7 @@ if {![file exists $LIB_DIR/$LIB_FAST]} {
 }
 if {$QRC_TECH ne "" && ![file exists $QRC_TECH]} { set QRC_TECH {} }
 if {$GDS_MAP ne "" && ![file exists $GDS_MAP]} { set GDS_MAP {} }
+if {$CELL_GDS ne "" && ![file exists $CELL_GDS]} { set CELL_GDS {} }
 
 foreach f [list $LIB_DIR/$LIB_SLOW $TECH_LEF $CELL_LEF] {
     if {![file exists $f]} { puts "WARNING: cannot find $f - edit pnr/scripts/config.tcl or set PDK_DIR" }
