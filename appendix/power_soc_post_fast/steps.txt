@@ -1,0 +1,35 @@
+PP: OK   restoreDesign /home/s23521043/RV32i-SoC/pnr/run_soc_p9/DBS/route_eco.enc.dat soc_top
+PP: OK   spefIn -rc_corner rc_typ /home/s23521043/RV32i-SoC/pnr/out_soc_p9/soc_top.spef
+PP: OK   set_power_analysis_mode -method static -analysis_view av_hold -corner max
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/soc.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/soc/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/dma.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/dma/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/i2c.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/i2c/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/spi_pwm.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/spi_pwm/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/soc_fw_rv32im.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/soc_fw_rv32im/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/coremark_rv32im.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/coremark_rv32im/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/dhrystone_rv32im.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/dhrystone_rv32im/power.rpt
+PP: OK   set_default_switching_activity -reset
+PP: OK   read_activity_file -reset
+PP: OK   read_activity_file -format SAIF -scope tb_soc/dut /home/s23521043/RV32i-SoC-main/syn/out_soc/gls_pwr/saif/accel_bench_rv32im.saif
+PP: OK   report_power -outfile /home/s23521043/RV32i-SoC/power/run_post_fast/accel_bench_rv32im/power.rpt

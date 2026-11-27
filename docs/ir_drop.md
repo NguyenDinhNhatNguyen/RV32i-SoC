@@ -67,7 +67,7 @@ Vòng ring VDD gồm 4 wire: 2 wire ngang trên Metal8 (y = 11,51 và y = 437,17
 | Dòng pad nhỏ nhất / trung bình / lớn nhất | 70 uA / 0,109 mA / 0,160 mA | 0,142 / 0,238 / 0,353 mA |
 | Điện áp lớn nhất trên một điện trở | 44 uV | 0,103 mV |
 
-Tổng công suất ở hoạt độ 0,1 (báo cáo `power_act0.1.rpt`): 1,975 mW, gồm nội bộ 0,962 mW, chuyển mạch 1,001 mW, rò 0,011 mW.
+Tổng công suất ở hoạt độ 0,1 (báo cáo `power_act0.1.rpt`): 1,975 mW, gồm nội bộ 0,962 mW, chuyển mạch 1,001 mW, rò 0,011 mW. Số này của lần chạy 25/11 trên `route_eco`, không khớp dòng tải. Số dùng chính thức là 1,182 mW trên layout cuối (mục 7).
 
 Log của Voltus chỉ làm tròn đến 1 mV. Số chính xác của kịch bản A lấy từ file điện áp từng instance `power/run_ir_act0.1/reports/rail/VDD_25C_avg_4/Reports/VDD/VDD.iv` (46674 instance, đọc 25/11):
 
@@ -97,6 +97,17 @@ Database `pnr/run_soc_p9/DBS/route_trim.enc.dat` (layout cuối sau PD-08). Cùn
 | Dòng nguồn nhỏ nhất đến lớn nhất | 70,4 µA đến 0,160 mA | 0,142 đến 0,353 mA |
 | Số vi phạm | 0 | 0 |
 
+Tổng công suất trên `route_trim` (`appendix/ir_drop_trim/act*/power_total.txt`):
+
+| | A (hoạt độ 0,1) | B (hoạt độ 0,5) |
+| --- | --- | --- |
+| Nội bộ | 0,628 mW | 1,192 mW |
+| Chuyển mạch | 0,542 mW | 1,364 mW |
+| Rò | 0,0114 mW | 0,0114 mW |
+| **Tổng** | **1,182 mW** | **2,567 mW** |
+
+Đối chiếu với dòng tải. Ở A, 1,182 mW / 0,9 V ≈ 1,31 mA, khớp `Total Static Current Loaded` 1,313 mA trong `VDD.main.rpt`. Ở B, 2,567 mW / 0,9 V ≈ 2,85 mA, khớp dòng nguồn trung bình 0,238 mA × 12 ≈ 2,86 mA (tính). Hình phân bố sụt áp ở `appendix/ir_drop_trim/act*/ir_linear.gif` (thang tuyến tính) và `ir_limit.gif` (thang theo ngưỡng).
+
 Kết quả gần như trùng lần chạy trên `route_eco` (mục 5), vì PD-08 chỉ sửa VSS. Kết quả cũ trên server đã đổi tên thành `power/run_ir_act0.1_eco` và `power/run_ir_act0.5_eco`.
 
 Phạm vi: chỉ phân tích VDD tĩnh. Đề bài yêu cầu sign-off "lỗi điện", không ghi EM, nên nhóm không làm EM. Với VSS, connectivity sạch sau PD-08 (`docs/pnr_soc_status.md` mục 8).
@@ -106,8 +117,9 @@ Kết luận: LEC-06 đạt.
 ## 8. Giới hạn và việc còn lại
 
 - **Pad là giả định.** Thiết kế chưa có pad hay bump thật. Số liệu chỉ đúng khi nguồn được cấp từ 12 điểm trên vòng ring. Cần nhóm hoặc thầy xác nhận cách cấp nguồn (26/11: nhóm giữ giả định 12 nguồn trên ring cho LEC-06, mục 7).
-- **Dòng pad chưa khớp công suất.** Ở kịch bản A, 12 pad x 0,109 mA cho khoảng 1,3 mA, trong khi 1,975 mW chia 0,9 V cho khoảng 2,2 mA. Chưa rõ nguyên nhân (có thể do scale của `.ptiavg` hoặc phần dòng không đi qua pad VDD). Mức sụt áp rất thấp nên kết luận không đổi, nhưng cần ghi chú.
+- **Dòng pad chưa khớp công suất.** Ở kịch bản A, 12 pad x 0,109 mA cho khoảng 1,3 mA, trong khi 1,975 mW (số cũ của `route_eco`, mục 5) chia 0,9 V cho khoảng 2,2 mA. Chưa rõ nguyên nhân (có thể do scale của `.ptiavg` hoặc phần dòng không đi qua pad VDD). Mức sụt áp rất thấp nên kết luận không đổi, nhưng cần ghi chú. Đã giải quyết ở mục 7: số trên layout cuối khớp dòng tải.
 - **Chỉ phân tích VDD.** Chưa phân tích VSS (ground bounce) và không có EM, vì Lab 06 không yêu cầu. Cần hỏi nhóm hoặc thầy có cần hay không (26/11: nhóm không làm EM, mục 7).
+- **Không tính EM.** Voltus có mục `CURRENT DENSITY ANALYSIS` nhưng không tính J/Jmax (dòng để trống, không có `rj.gif`), dù tech LEF có 22 luật `DCCURRENTDENSITY`. Nhóm không làm EM vì đề bài chỉ yêu cầu sign-off lỗi điện, IR drop đã đạt.
 - **Layout cuối.** Mục 5 chạy trên `route_eco` của `run_soc_p9`. LEC-06 (sign-off) đã chạy lại trên layout cuối `route_trim` (mục 7).
 - **Database là bản cuối của `_p9`.** `route_eco.enc.dat` được lưu lúc 15:10 ngày 18/11 (`~/eco_p9.tcl`), rồi `~/eco_out_p9.tcl` khôi phục đúng database này để ghi `soc_top_pnr.v`, SPEF, SDF và GDS lúc 15:31. Giữa hai bước không có lệnh nào sửa layout (Phát làm ECO, xác nhận 21/11, `docs/pnr_soc_status.md` mục 6). Vì vậy IR drop ở đây và Tempus của STA-05 chạy trên cùng một layout.
 - **Vành nguồn VSS.** Sheet (PD-06) ghi "2 chỗ hở VSS ở góc vành nguồn". Kết quả ở đây chỉ phân tích VDD nên không phản ánh ảnh hưởng của chỗ hở này lên VSS (đã hoàn thành 26/11, PD-08 sửa chỗ hở, `docs/pnr_soc_status.md` mục 8).

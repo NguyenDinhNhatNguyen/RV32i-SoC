@@ -13,13 +13,14 @@ Chu kỳ chốt 10 ns (100 MHz). Tổng hợp và PnR ở 9 ns để layout còn
 | Timing | Tần số signoff | **100 MHz** | Tempus trên layout cuối `route_trim` (STA-06), 4 view, setup +0,977 ns, hold +0,020 ns, recovery +7,434 ns, removal +0,023 ns | `sta_results.md` mục 6 |
 | Timing | F_max sau tổng hợp | **khoảng 200 MHz** | Genus quét chu kỳ, 5 ns đạt, 4,5 ns thiếu 0,208 ns | `sta_results.md` mục 4 |
 | Timing | F_max sau layout | **khoảng 110,8 MHz** | Tempus trên SPEF sau route, chu kỳ nhỏ nhất 9,023 ns, corner slow, RC typical | `sta_results.md` mục 6 |
-| Area | Cell chuẩn sau tổng hợp | 60 187 µm² = **58,66 kGE** | Genus 9 ns, netlist `e60437a`, 4068 flop, 136 ICG | `appendix/synth_soc_e60437a/` |
+| Area | Cell chuẩn sau tổng hợp | 60 188 µm² = **58,66 kGE** | Genus 9 ns, netlist `e60437a`, 4068 flop, 136 ICG | `appendix/synth_soc_e60437a/` |
 | Area | Cell chuẩn sau layout | 71 800 µm² = **69,98 kGE** | Innovus `_p9`, không tính filler. Layout cuối `route_trim` không đổi (mục 2) | `appendix/pnr_soc_p9/summary/` |
 | Area | Macro SRAM | 64 000 µm² | 8 macro `sram_2k_macro` (IMEM 16 KB, DMEM 16 KB) | `gates.rpt`, summary Innovus |
 | Area | Lõi chip, mật độ | 420 × 420,7 µm, **63,7%** ngoài macro | Innovus `_p9`, macro chiếm 36,2% lõi | `pnr_soc_status.md` mục 6 |
 | Area | Riêng `rv32_core` | 30 226 µm² = **29,46 kGE** | Genus 20 ns, 28/10, IM, BTB 8 entry | `appendix/core_signoff/synthesis/` |
 | Power | Công suất theo testcase, trước layout | 0,306 đến 0,478 mW | Genus, SAIF từ GLS, slow, 10 ns (PWR-01) | `power_soc.md` mục 5 |
 | Power | Công suất theo testcase, sau layout | **0,580 đến 0,965 mW** | Innovus, SAIF của PWR-01, SPEF `route_eco`, slow, SAIF 10 ns, SDC 9 ns của PnR (PWR-02) | `power_soc.md` mục 9 |
+| Power | Công suất theo testcase, sau layout, góc fast | 0,879 đến 1,452 mW, CoreMark 1,365 mW (EPI khoảng 14,93 pJ/lệnh) | Innovus, `fast_vdd1v0`, rail 1,1 V, SAIF của PWR-01, `route_eco`, cùng điều kiện PWR-02 trừ góc. EPI = P × 1,094 / 100 MHz (tính) | `appendix/power_soc_post_fast/summary.md` |
 | Power | Công suất CoreMark | 0,456 mW trước layout, **0,907 mW** sau layout | Như trên, `coremark_rv32im` | `power_soc.md` mục 5 và 9 |
 | Power | Static power (leakage) sau layout | **0,0179 đến 0,0211 mW** | Như PWR-02, chiếm khoảng 2 đến 3% tổng. Khoảng 91% là leakage của macro SRAM | `appendix/power_soc_post/summary.md`, `power_soc.md` mục 9.1 |
 | Power | Công suất cây clock sau layout | **khoảng 0,17 mW**, 18 đến 28% tổng | Như PWR-02, nhóm `Clock` trong report Innovus | `power_soc.md` mục 9.1 |
@@ -127,10 +128,13 @@ RTL `soc_top` ở commit `6f02f2b` (12/11), trước RTL freeze. GCC 16.1, `-O2`
 | Signoff, F_max sau layout | Tempus 23.14 | slow và fast, RC typical | 10 ns (quét 9 đến 8 ns) | - | 4 view, clock propagated |
 | Công suất, EPI | Genus 21.1 | slow 0,9 V 125 °C | 10 ns | SAIF từ GLS zero delay | Trước layout, PDK không có `.lib` typical |
 | Công suất, EPI sau layout | Innovus 21.19 | slow, RC typical | SAIF 10 ns, SDC 9 ns | SAIF của PWR-01 | `route_eco`, SPEF sau ECO (PWR-02) |
+| Công suất sau layout, góc fast | Innovus 21.19 | fast (`fast_vdd1v0`, view `av_hold`), rail 1,1 V, RC typical | SAIF 10 ns, SDC 9 ns | SAIF của PWR-01 | `route_eco`, cùng điều kiện PWR-02 trừ góc |
 | CPI, DMIPS, CoreMark | Icarus (RTL) | - | - | - | Số chu kỳ không đổi theo tần số, nhân với f để ra hiệu năng |
 | Riêng `rv32_core` | Genus 21.10 | slow 0,9 V 125 °C | 20 ns | Mặc định | `core.sdc` có delay macro SRAM |
 
 Mọi số đều ở 0,9 V: header của report Genus ghi `PVT_0P9V_125C`, report Innovus ghi rail VDD 0,9 V. Tên thư viện `slow_vdd1v0` chỉ là tên file, góc slow của thư viện này chạy ở 0,9 V. `power_soc.md` đã sửa từ 1,0 V thành 0,9 V ngày 26/11.
+
+Riêng dòng góc fast chạy ở 1,1 V. Tiêu đề `appendix/power_soc_post_fast/summary.md` ghi "slow corner" do script ghi cứng. Report từng testcase ghi view `av_hold`, thư viện `fast_vdd1v0`, rail 1,1 V. Công suất góc fast bằng khoảng 1,5 lần góc slow, gần (1,1 / 0,9)² ≈ 1,49 (tính).
 
 ## 7. Đã cập nhật ở EVA-04 (26/11)
 
@@ -148,7 +152,7 @@ Số không đổi ở EVA-04 (RTL đã freeze 15/11, netlist không đổi): di
 Giới hạn còn lại:
 - Công suất SRAM có thể thấp hơn thực tế. Phần động của cả 8 macro chỉ 0,017 đến 0,021 mW (khoảng 0,2 pJ mỗi chu kỳ). Số này lấy từ `sram_2k_macro.lib` của môn, nhóm không kiểm được (`power_soc.md` mục 9.1).
 - PWR-02 chạy trên `route_eco`, không phải `route_trim`. SPEF của layout cuối chỉ đổi tổng điện dung ở 2 trên 27 329 net (nhiều nhất 0,049%), nên nhóm không chạy lại.
-- Chỉ có góc slow (RC typical) cho công suất.
+- Công suất có góc slow và góc fast (RC typical). Chưa có góc typical vì PDK không có `.lib` typical.
 
 ### Đối chiếu với điểm cộng PPA của đề bài
 
@@ -156,8 +160,8 @@ Giới hạn còn lại:
 | --- | --- | --- | --- |
 | Performance | F_max | Khoảng 200 MHz sau tổng hợp, khoảng 110,8 MHz sau layout, signoff 100 MHz | Mục 1 và 3, `sta_results.md` mục 4 và 6 |
 | Performance | CPI, IPC | Vùng đo: CPI 1,094 và IPC 0,914 (CoreMark), CPI 1,206 và IPC 0,829 (Dhrystone). Cả chương trình: CPI 1,128 đến 1,532 | Mục 1, 4, 5, `bench_soc.md` |
-| Power | Dynamic theo toggle rate 0,1 | Innovus trên `route_eco`: internal 0,962 mW, switching 1,001 mW (tổng 1,975 mW, leakage 0,011 mW) | `ir_drop.md` mục 5 (`power_act0.1.rpt`) |
-| Power | Dynamic theo toggle rate 0,5 | Không đo, dùng số theo 8 testcase (xem eva05_eval.md mục 7) | `appendix/ir_drop_trim/act0.5/` |
+| Power | Dynamic theo toggle rate 0,1 | Innovus trên `route_trim`: tổng 1,182 mW (internal 0,628 mW, switching 0,542 mW, leakage 0,0114 mW). Số cũ 1,975 mW của `route_eco` không khớp dòng tải, không dùng (xem `ir_drop.md` mục 7) | `ir_drop.md` mục 7, `appendix/ir_drop_trim/act0.1/power_total.txt` |
+| Power | Dynamic theo toggle rate 0,5 | Innovus trên `route_trim`: tổng 2,567 mW (internal 1,192 mW, switching 1,364 mW, leakage 0,0114 mW) | `ir_drop.md` mục 7, `appendix/ir_drop_trim/act0.5/power_total.txt` |
 | Power | Theo 8 testcase | 0,306 đến 0,478 mW trước layout, 0,580 đến 0,965 mW sau layout | Mục 4, `power_soc.md` mục 5 và 9 |
 | Power | Static (leakage) | 0,0179 đến 0,0211 mW sau layout | Mục 4, `appendix/power_soc_post/summary.md` |
 | Power | EPI | 4,53 đến 5,86 pJ/lệnh trước layout, 8,69 đến 11,59 pJ/lệnh sau layout | Mục 4 |
@@ -186,3 +190,63 @@ Bảng thứ nhất là diện tích, GE, slack, công suất của tool theo t�
 Cột F_max của script là 1 / (chu kỳ − slack), chỉ là ước lượng. F_max chính thức lấy từ lần quét chu kỳ (mục 3). Cột công suất của script là activity mặc định của tool, không phải số SAIF.
 
 PWR-02 đã có (26/11). Script chưa chạy lại với số sau layout. Số sau layout ở mục 4 và 7 lấy trực tiếp từ `appendix/power_soc_post/summary.md`. `appendix/power_soc_post/summary.md` không có cột `SAIF` như bảng trước layout, nên `--saif` chưa đọc được file này.
+
+## 9. Số liệu bổ sung trên layout cuối (27/11)
+
+Nguồn: `appendix/layout_trim_stats/`. Innovus 21.19 mở `route_trim.enc` ở chế độ chỉ đọc, không sửa layout.
+
+### 9.1. Dây và via
+
+Tổng chiều dài dây 548 172 µm, khoảng 548 mm (`wire.rpt`). Tổng số via 194 982.
+
+| Lớp | Chiều dài dây (µm) | Via lên lớp trên | Số via |
+| --- | ---: | --- | ---: |
+| Metal1 | 21 521,56 | Via1 | 93 067 |
+| Metal2 | 121 418,61 | Via2 | 69 554 |
+| Metal3 | 161 500,73 | Via3 | 22 614 |
+| Metal4 | 116 040,69 | Via4 | 7 245 |
+| Metal5 | 78 769,92 | Via5 | 1 972 |
+| Metal6 | 31 943,80 | Via6 | 485 |
+| Metal7 | 15 889,12 | Via7 | 45 |
+| Metal8 | 1 087,82 | Via8 | 0 |
+| **Tổng** | **548 172,25** | | **194 982** |
+
+Metal9 đến Metal11 không có dây. Metal3 dài nhất (khoảng 29% tổng).
+
+### 9.2. Phân bố slack của 6000 endpoint xấu nhất
+
+Lấy từ `hold_end.rpt` và `setup_end.rpt` (`report_timing -max_paths 6000 -nworst 1 -path_type end_slack_only`).
+
+| | Hold (`av_hold`) | Setup (`av_setup`, SDC PnR 9 ns) |
+| --- | --- | --- |
+| Slack nhỏ nhất | +0,020 ns | −0,047 ns (`u_core_if_pc_q_reg[14]/D`) |
+| Trung vị | 0,086 ns | 6,254 ns |
+| Lớn nhất trong 6000 | 0,190 ns | 7,822 ns |
+| Endpoint âm | 0 | 15 (12 ở `if_pc_q`, 3 ở bộ nhân) |
+
+- Hold nhỏ nhất +0,020 ns, không endpoint âm, khớp sign-off.
+- Setup đo theo SDC 9 ns của PnR, không phải chu kỳ sign-off. Xấu nhất −0,047 ns cho chu kỳ nhỏ nhất khoảng 9,05 ns (khoảng 110,5 MHz), gần F_max 110,8 MHz của Tempus (mục 3).
+- Sign-off 10 ns của Tempus vẫn +0,977 ns (STA-06). Số Innovus 9 ns chỉ để xem biên F_max.
+
+### 9.3. Số cell theo khối
+
+Tổng 25 616 cell (`gates.rpt`). Đếm theo tiền tố tên instance vì netlist đã làm phẳng (`module_cells.txt`, danh sách tiền tố ở `cell_prefixes.txt`).
+
+| Khối | Màu trong hình | Số cell | Tỉ lệ |
+| --- | --- | ---: | ---: |
+| Core | đỏ | 5 721 | 22,3% |
+| Accelerator | xanh lam | 3 849 | 15,0% |
+| DMA | cam | 669 | 2,6% |
+| Ngoại vi | xanh lá | 1 058 | 4,1% |
+| Bus/APB | tím | 108 | 0,4% |
+| Boot ROM | vàng | 662 | 2,6% |
+| Buffer do Innovus chèn (`FE_*`, `CTS_*`) | xám (hình 1), xanh dương (hình 2) | 5 411 | 21,1% |
+| Không gán được khối theo tên | xám | 8 138 | 31,8% |
+| **Tổng** | | **25 616** | |
+
+Phần không gán được là cell có tên không mang tiền tố của khối nào (tính = 25 616 − 17 478).
+
+### 9.4. Hình
+
+- `docs/figures/soc_top_modules.png`: cell tô màu theo khối, ẩn dây. Đỏ là core, xanh lam là accelerator, cam là DMA, xanh lá là ngoại vi, tím là bus/APB, vàng là boot ROM, xám là buffer và cell khác.
+- `docs/figures/soc_top_modules_buf.png`: như trên, buffer `FE_*` và `CTS_*` tô xanh dương. Kích thước 2000 × 1800 px.

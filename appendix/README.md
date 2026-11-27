@@ -26,6 +26,7 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `pnr_soc_p9/eco/scripts/`, `pnr_soc_p9/innovus_p9.log` | Script ECO 18/11 và log Innovus của lần chạy `_p9` (đã bỏ dòng license) |
 | `pnr_soc_p9_412/`, `pnr_soc_p9_430/` | PD-07 (26/11): hai cỡ lõi khác trên netlist chính thức |
 | `power_soc_post/` | PWR-02 (26/11): công suất sau layout của 8 testcase |
+| `power_soc_post_fast/` | 27/11: công suất sau layout của 8 testcase ở góc fast (`fast_vdd1v0`, 1,1 V, `route_eco`). Tiêu đề `summary.md` in nhầm "slow corner", report từng testcase ghi đúng `av_hold` |
 | `sta_soc_p9_trim/` | Tempus 4 view ở 10 ns trên layout cuối (26/11) |
 | `sta_soc_p9_post/` | Tempus sau layout `_p9` (sau ECO, 18/11): `sdc_10` là signoff 100 MHz, `sdc_9` để đối chiếu, kèm `tempus.log` |
 | `sta_soc_p9_sta05/` | STA-05 trên layout `_p9` (19/11): sau CTS và sau route với 4 view (`VIEWS=cross`), lần trước khi sửa SDC (`route_10_cross_before_fix`), F_max sau layout ở 9, 8,5, 8 ns, kèm `soc_10ns.sdc` mới |
@@ -35,7 +36,8 @@ Report và log chính thức copy từ server để đưa vào report. Mỗi bư
 | `macro_check/` | Thông tin macro `sram_2k_macro` đọc từ LEF và `.lib` trên server (29/10, 30/10) |
 | `lec_soc/` | Conformal LEC của `soc_top`: `run2/` (LEC-01, netlist 12/11), `run3/` và `run4_seqfb/` (LEC-02, netlist chính thức 14/11, 20/11), `run5_seqeff/` (LEC-02 với `SEQ_EFFORT=high`, 25/11), `g2g/` (LEC-03, netlist tổng hợp với netlist sau layout, 20/11). `apb_bridge/` là LEC riêng khối (14/11) |
 | `lec_soc/g2g_lec05/` | LEC-05 (26/11): netlist tổng hợp với netlist layout cuối `route_trim`, 4078 Equivalent, `PASS` |
-| `ir_drop_trim/` | LEC-06 (26/11): IR drop tĩnh VDD trên layout cuối `route_trim`, `act0.1/` và `act0.5/`, 0 vi phạm |
+| `ir_drop_trim/` | LEC-06 (26/11): IR drop tĩnh VDD trên layout cuối `route_trim`, `act0.1/` và `act0.5/`, 0 vi phạm, hình IR và tổng công suất |
+| `layout_trim_stats/` | 27/11: số liệu bổ sung trên layout cuối `route_trim` (Innovus chỉ đọc): dây và via, slack 6000 endpoint, diện tích, số cell theo khối |
 | `lint_hal/` | HAL lint của `soc_top` trên main `7008da2` (VER-03, 13/11): `summary.txt` và `xrun.log` |
 | `ver05_regress/` | `make regress` và `make cov-soc` ngày 17/11 trên `3289802` (VER-05): bảng regression, coverage theo module, 74 lần chạy Verilator |
 | `gls_soc/` | `make gls-soc` ngày 19/11 trên server (VER-07): netlist Genus STA-04, Xcelium, zero delay, 71/71 PASS, đường dẫn 8 macro |

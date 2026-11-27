@@ -1,0 +1,11 @@
+Gate area 1.0260 um^2
+Level 0 Module soc_top                                  Gates=    132360 Cells=   25616 Area=  135802.2 um^2
+Level 1 Module u_imem_u_rom                             Gates=1090       Cells=662      Area=    1118.7 um^2
+Level 1 Module u_dmem_u_arr_g_multi.g_bank[0].u_mac     Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_dmem_u_arr_g_multi.g_bank[1].u_mac     Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_dmem_u_arr_g_multi.g_bank[2].u_mac     Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_dmem_u_arr_g_multi.g_bank[3].u_mac     Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_imem_u_sram_u_arr_g_multi.g_bank[0].u_mac Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_imem_u_sram_u_arr_g_multi.g_bank[1].u_mac Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_imem_u_sram_u_arr_g_multi.g_bank[2].u_mac Gates=7797       Cells=0        Area=    8000.0 um^2
+Level 1 Module u_imem_u_sram_u_arr_g_multi.g_bank[3].u_mac Gates=7797       Cells=0        Area=    8000.0 um^2

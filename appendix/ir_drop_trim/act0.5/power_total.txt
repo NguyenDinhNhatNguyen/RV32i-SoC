@@ -1,0 +1,4 @@
+Total Internal Power:        1.19152423 	   46.4132%
+Total Switching Power:       1.36424072 	   53.1410%
+Total Leakage Power:         0.01144664 	    0.4459%
+Total Power:                 2.56721159

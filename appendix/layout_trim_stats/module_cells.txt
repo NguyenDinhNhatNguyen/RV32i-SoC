@@ -1,0 +1,7 @@
+FIG-N red 5721
+FIG-N cyan 3849
+FIG-N orange 669
+FIG-N green 1058
+FIG-N magenta 108
+FIG-N yellow 662
+FIG-N blue 5411
