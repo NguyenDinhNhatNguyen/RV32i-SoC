@@ -24,6 +24,8 @@
 #   SEQ_EFFORT=high           add "set flatten model -seq_constant_effort high" (deeper search for
 #                             flops that are constant over all reachable states), tried for the
 #                             last Non-equivalent point of LEC-02 (clk_cnt_reg[15], 21/11)
+#   LEC_XL=1                  start lec with -xl and run "analyze datapath -module -verbose"
+#                             before compare (licence not tried on the server yet)
 #   DRY_RUN=1                 only check the inputs and write the dofile, do not start lec
 #
 # The script stops before lec while a TODO_MACRO marker is in the dofile template.
@@ -39,6 +41,7 @@ MACRO_MODE=${MACRO_MODE:-undef}
 DRY_RUN=${DRY_RUN:-0}
 SEQ_FEEDBACK=${SEQ_FEEDBACK:-0}
 SEQ_EFFORT=${SEQ_EFFORT:-}
+LEC_XL=${LEC_XL:-0}
 NETLIST_SRC=$SRC_DIR/soc_top_netlist.v
 TEMPLATE=lec/soc_rtl2gate.do.in
 DO=lec/soc_rtl2gate.do
@@ -129,7 +132,15 @@ esac
 
 # Macro declaration, written before read design (see the template)
 tmp_macro=$(mktemp)
-trap 'rm -f "$tmp_reads" "$tmp_macro" "$tmp_par" "$tmp_seq"' EXIT
+tmp_dp=$(mktemp)
+lec_flags=""
+case "$LEC_XL" in
+    1) lec_flags="-xl"
+       echo "analyze datapath -module -verbose" > "$tmp_dp" ;;
+    0) ;;
+    *) die "LEC_XL must be 0 or 1" ;;
+esac
+trap 'rm -f "$tmp_reads" "$tmp_macro" "$tmp_par" "$tmp_seq" "$tmp_dp"' EXIT
 case "$MACRO_MODE" in
     lib)     echo "read library -both -append -liberty ~/PDK_GPDK45/lib/sram_2k_macro.lib" > "$tmp_macro" ;;
     verilog) echo "read library -both -append -verilog ~/PDK_GPDK45/lib/sram_2k_macro.v" > "$tmp_macro" ;;
@@ -145,9 +156,11 @@ sed -e "s|@@NETLIST@@|$LEC_DIR/soc_top_netlist.v|g" \
     -e "d}" \
     -e "/^\/\/ @@PARALLEL@@\$/{r $tmp_par" \
     -e "d}" \
+    -e "/^\/\/ @@DATAPATH@@\$/{r $tmp_dp" \
+    -e "d}" \
     -e "/^\/\/ @@SEQ_FEEDBACK@@\$/{r $tmp_seq" \
     -e "d}" "$TEMPLATE" > "$DO"
-echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off}, SEQ_FEEDBACK=$SEQ_FEEDBACK, SEQ_EFFORT=${SEQ_EFFORT:-default})"
+echo "== Dofile written: $DO ($(echo $files | wc -w) golden RTL files, ONE_LINE=$ONE_LINE, MACRO_MODE=$MACRO_MODE, THREADS=${THREADS:-off}, SEQ_FEEDBACK=$SEQ_FEEDBACK, SEQ_EFFORT=${SEQ_EFFORT:-default}, LEC_XL=$LEC_XL)"
 
 if grep -q 'TODO_MACRO' "$DO"; then
     echo "STOP: a TODO_MACRO marker is still in the dofile, lec was not started."
@@ -162,7 +175,7 @@ fi
 # 4. Run Conformal. < /dev/null so lec exits if the dofile stops midway
 echo "== Starting lec at $(date '+%H:%M:%S'), log: $LEC_DIR/lec.txt"
 start=$(date +%s)
-lec -nogui -dofile "$DO" < /dev/null > "$LEC_DIR/lec.txt" 2>&1 || true
+lec $lec_flags -nogui -dofile "$DO" < /dev/null > "$LEC_DIR/lec.txt" 2>&1 || true
 echo "== lec finished after $(( ($(date +%s) - start) / 60 )) min"
 
 # 5. Summary: same grep as make lec-core, plus the lines about the black box command

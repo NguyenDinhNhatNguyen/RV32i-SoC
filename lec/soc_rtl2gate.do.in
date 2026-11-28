@@ -55,6 +55,8 @@ set flatten model -gated_clock
 // @@SEQ_FEEDBACK@@
 set system mode lec
 // @@PARALLEL@@
+// Optional (LEC_XL=1): datapath analysis for the multiplier aborts, needs an XL licence
+// @@DATAPATH@@
 
 // Same comment as core_rtl2gate.do: analyze datapath needs Conformal_Ultra, which the school
 // does not have. GLS also checks function (make gls-core for the core).
