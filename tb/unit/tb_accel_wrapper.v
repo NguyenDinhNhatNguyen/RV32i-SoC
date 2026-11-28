@@ -54,6 +54,27 @@ module tb_accel_wrapper;
     reg signed [31:0] G [0:N*N-1];
     reg [31:0] rd, word;
     integer t, i, j, k, w, cycles, seed;
+    integer len, blk;
+    reg signed [31:0] S [0:N*N-1];
+
+    // Loads A and B, starts with the given CTRL value, waits for DONE and clears it
+    task run_block(input [31:0] ctrl);
+    begin
+        for (w = 0; w < N*N/4; w = w + 1) begin
+            bus_write(12'h100 + 4*w, {A[4*w+3], A[4*w+2], A[4*w+1], A[4*w]}, 4'hF);
+            bus_write(12'h200 + 4*w, {B[4*w+3], B[4*w+2], B[4*w+1], B[4*w]}, 4'hF);
+        end
+        bus_write(12'h000, ctrl, 4'h1);
+        cycles = 0;
+        rd = 32'h1;
+        while (rd[1] == 1'b0) begin
+            bus_read(12'h004, rd);
+            cycles = cycles + 1;
+            if (cycles > 100) begin $display("ERROR: timeout"); $finish; end
+        end
+        bus_write(12'h004, 32'h2, 4'h1);
+    end
+    endtask
 
 `ifdef DUMP_VCD
     initial begin $dumpfile("accel.vcd"); $dumpvars(0, tb_accel_wrapper); end
@@ -124,6 +145,40 @@ module tb_accel_wrapper;
             // Clear DONE (W1C), irq must drop
             bus_write(12'h004, 32'h2, 4'h1);
             #1 if (irq) begin $display("ERROR: irq still high after W1C"); errors = errors + 1; end
+        end
+
+        // ACC_KEEP: chains of 2 to 7 runs add up in the PEs. Chains 6 and 7 use the extreme
+        // operands (7 runs = 458752, the 20 bit limit allows 524287)
+        for (len = 2; len <= 7; len = len + 1) begin
+            for (i = 0; i < N*N; i = i + 1) S[i] = 0;
+            for (blk = 0; blk < len; blk = blk + 1) begin
+                for (i = 0; i < N*N; i = i + 1) begin
+                    if (len == 7)      begin A[i] = -8'sd128; B[i] = -8'sd128; end
+                    else if (len == 6) begin A[i] =  8'sd127; B[i] = -8'sd128; end
+                    else begin A[i] = $random(seed); B[i] = $random(seed); end
+                end
+                for (i = 0; i < N; i = i + 1)
+                    for (j = 0; j < N; j = j + 1)
+                        for (k = 0; k < N; k = k + 1)
+                            S[i*N+j] = S[i*N+j] + A[i*N+k] * B[k*N+j];
+                run_block((blk == 0) ? 32'h1 : 32'h5);
+            end
+            for (i = 0; i < N*N; i = i + 1) begin
+                bus_read(12'h300 + 4*i, rd);
+                if (rd !== S[i]) begin
+                    $display("ERROR chain %0d C[%0d][%0d] = %0d, expected %0d",
+                             len, i/N, i%N, $signed(rd), S[i]);
+                    errors = errors + 1;
+                end
+            end
+        end
+        // A START without ACC_KEEP clears the sums again
+        for (i = 0; i < N*N; i = i + 1) begin A[i] = 8'sd1; B[i] = 8'sd1; end
+        run_block(32'h1);
+        bus_read(12'h300, rd);
+        if (rd !== 32'd4) begin
+            $display("ERROR: sums not cleared, C[0][0] = %0d", $signed(rd));
+            errors = errors + 1;
         end
 
         if (errors == 0) $display("PASS: %0d matrix multiplies %0dx%0d match the golden model", NTEST, N, N);

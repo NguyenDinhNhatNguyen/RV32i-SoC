@@ -7,6 +7,7 @@ module pe (
     input  wire        rst_n,
     input  wire        en,         // RTL-05: update only while running, so Genus gates every flop
     input  wire        clr_acc,    // Clear the accumulator
+    input  wire        keep_acc,   // With clr_acc: clear the pipeline only, keep the sum
     input  wire        valid_in,   // Input data valid
     input  wire signed [7:0]  a_in,  // A data (moves horizontally)
     input  wire signed [7:0]  b_in,  // B data (moves vertically)
@@ -32,7 +33,8 @@ module pe (
                 a_out     <= 8'sd0;
                 b_out     <= 8'sd0;
                 valid_out <= 1'b0;
-                c_out     <= valid_in ? {{4{mult_res[15]}}, mult_res} : 20'sd0;
+                if (!keep_acc)
+                    c_out <= valid_in ? {{4{mult_res[15]}}, mult_res} : 20'sd0;
             end else if (en) begin
                 // Pass data on to the neighbouring PEs
                 a_out     <= a_in;

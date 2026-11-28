@@ -9,6 +9,7 @@ module accelerator_top (
     input  wire               rst_n,
     input  wire               start,
     input  wire               clear,
+    input  wire               keep_acc,     // With clear: keep the accumulated sums
     input  wire [3:0]         row_sel,      // Which result row to read out
     // Matrix A inputs (4 rows, one 8-bit value per cycle each)
     input  wire signed [7:0]  a_row0,
@@ -64,6 +65,7 @@ module accelerator_top (
                     .rst_n     (rst_n),
                     .en        (busy),     // RTL-05: the array runs only while busy
                     .clr_acc   (clear),
+                    .keep_acc  (keep_acc),
                     .valid_in  (v_wire[i][j]),
                     .a_in      (a_wire[i][j]),
                     .b_in      (b_wire[i][j]),

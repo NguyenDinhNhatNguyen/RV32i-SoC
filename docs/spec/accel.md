@@ -19,6 +19,7 @@ Accelerator của Lab 2 (mảng systolic 4x4) được bọc thành ngoại vi �
 | Offset | Tên | Truy cập | Ý nghĩa |
 | --- | --- | --- | --- |
 | 0x000 | CTRL | W | bit0 START (chỉ nhận khi rảnh), bit1 IRQ_EN |
+| 0x000 | CTRL | W | bit2 ACC_KEEP: ghi cùng START thì cộng tiếp vào tổng của các lần trước, không xoá |
 | 0x000 | CTRL | R | bit1 IRQ_EN |
 | 0x004 | STATUS | R | bit0 BUSY, bit1 DONE |
 | 0x004 | STATUS | W | Ghi 1 vào bit1 để xoá DONE |
@@ -40,6 +41,8 @@ Accelerator của Lab 2 (mảng systolic 4x4) được bọc thành ngoại vi �
 5. Ghi STATUS = 2 để xoá DONE.
 
 `accel_matmul(a, b, c)` trong `fw/accel.h` làm đúng các bước trên bằng polling.
+
+**Cộng dồn nhiều khối (V2):** khi tính một khối kết quả từ nhiều khối K, lần đầu ghi CTRL = START, các lần sau ghi START | ACC_KEEP, chỉ đọc C sau lần cuối. Tối đa 7 lần liên tiếp, vì tổng 20 bit có dấu (7 × 4 × 16 384 = 458 752, giới hạn 524 287). Không có phần cứng báo tràn.
 
 ## 4. Hoạt động bên trong
 

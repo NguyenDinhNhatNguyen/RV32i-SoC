@@ -160,3 +160,16 @@ Hướng tăng speedup: bộ đệm C đọc được nhiều phần tử mỗi 
 - Vùng đo của module theo dõi tính từ lệnh `csrr minstret` này tới lệnh kia, nên nhiều hơn số `mcycle` của firmware 3 chu kỳ.
 - `BAUDDIV = 1` chỉ dùng cho mô phỏng. Phần in nằm ngoài vùng đo nên không ảnh hưởng kết quả.
 - Phép nhân 16 × 16 được chọn để vừa IMEM và DMEM 16 KB và chạy nhanh trong mô phỏng. Ma trận lớn hơn cho speedup gần như không đổi, vì chi phí mỗi khối cố định.
+
+## Accelerator tự cộng dồn (V2, 28/11)
+
+Mô phỏng RTL trên Icarus, rv32im, `make bench-soc T=accel_bench`. RTL V2 chưa tổng hợp.
+
+| Bản | Chu kỳ | Speedup so với phần mềm |
+| --- | ---: | ---: |
+| sw | 35 219 | 1 |
+| poll | 21 825 | 1,61× |
+| acc (cộng dồn 4 khối, đọc C một lần) | 7 779 | 4,53× |
+
+rv32i: sw 513 282, acc 7 779, speedup 65,98×. Kết quả giống bản phần mềm, checksum `52119321`.
+

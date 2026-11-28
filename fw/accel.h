@@ -15,6 +15,7 @@
 
 #define ACCEL_CTRL_START   (1u << 0)
 #define ACCEL_CTRL_IRQ_EN  (1u << 1)
+#define ACCEL_CTRL_KEEP    (1u << 2)   /* With START: add to the sums of the earlier runs */
 #define ACCEL_STATUS_BUSY  (1u << 0)
 #define ACCEL_STATUS_DONE  (1u << 1)
 

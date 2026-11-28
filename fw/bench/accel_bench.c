@@ -4,6 +4,7 @@
 //   sw    plain C on the core (rv32i: multiply in libgcc, rv32im: MUL instruction)
 //   poll  tiled into 4 x 4 blocks on the accelerator (64 block multiplies), wait on STATUS.DONE
 //   irq   same tiling, wait with WFI for the accelerator interrupt through IRQC (bit 1)
+//   acc   same tiling, the PEs keep the sum over the 4 blocks (ACC_KEEP), C is read once
 // Each version is timed with mcycle/minstret. One block is also timed phase by phase to show
 // the APB overhead: load A and B, START until DONE, read C and accumulate, clear DONE.
 // main returns 0 when every result matches, so crt0 writes tohost = 1.
@@ -29,6 +30,7 @@ static int8_t  mat_b[M * M] __attribute__((aligned(4)));
 static int32_t c_sw[M * M];
 static int32_t c_poll[M * M];
 static int32_t c_irq[M * M];
+static int32_t c_acc[M * M];
 
 static volatile uint32_t irq_done;      // Set by the handler for each accelerator interrupt
 static volatile uint32_t irq_count;
@@ -147,6 +149,24 @@ static void matmul_irq(int32_t *c)
         }
 }
 
+// NB runs per result block, at most 7 are allowed (20 bit sums)
+static void matmul_acc(int32_t *c)
+{
+    for (int bi = 0; bi < NB; bi++)
+        for (int bj = 0; bj < NB; bj++) {
+            for (int bk = 0; bk < NB; bk++) {
+                load_block(bi, bj, bk);
+                ACCEL_CTRL = ACCEL_CTRL_START | (bk ? ACCEL_CTRL_KEEP : 0);
+                while (!(ACCEL_STATUS & ACCEL_STATUS_DONE))
+                    ;
+            }
+            for (int r = 0; r < ACCEL_N; r++)
+                for (int q = 0; q < ACCEL_N; q++)
+                    c[(bi * ACCEL_N + r) * M + bj * ACCEL_N + q] = ACCEL_C_BUF[r * ACCEL_N + q];
+        }
+    ACCEL_STATUS = ACCEL_STATUS_DONE;
+}
+
 static int compare(const int32_t *c)
 {
     for (int i = 0; i < M * M; i++)
@@ -185,7 +205,7 @@ static void phases(void)
 
 int main(void)
 {
-    bench_stats_t s_sw, s_poll, s_irq;
+    bench_stats_t s_sw, s_poll, s_irq, s_acc;
     int err = 0;
 
     fill();
@@ -208,11 +228,17 @@ int main(void)
     clear_csr(mie, MIE_MEIE);
     IRQC_ENABLE = 0;
 
+    bench_start(&s_acc);
+    matmul_acc(c_acc);
+    bench_stop(&s_acc);
+
     bench_report("accel_sw", &s_sw);
     bench_report("accel_poll", &s_poll);
     bench_report("accel_irq", &s_irq);
+    bench_report("accel_acc", &s_acc);
     report_speedup("poll", &s_sw, &s_poll);
     report_speedup("irq", &s_sw, &s_irq);
+    report_speedup("acc", &s_sw, &s_acc);
     phases();
 
     if (compare(c_poll))
@@ -221,6 +247,8 @@ int main(void)
         err |= 2;
     if (irq_bad || irq_count != NB * NB * NB)
         err |= 4;
+    if (compare(c_acc))
+        err |= 8;
     uint32_t sum = 0;
     for (int i = 0; i < M * M; i++)
         sum = sum * 31u + (uint32_t)c_sw[i];

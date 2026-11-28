@@ -35,7 +35,7 @@ file mkdir $OUT $RPT DBS
 set UTIL     0.70     ;# Lab 02: 0.55 / 0.70 / 0.85
 set IO_GAP   15       ;# Core to die edge (um)
 set STRIPE_P 30.0     ;# Lab 03: 15 / 30 / 60 um
-set SKEW     0.080    ;# Lab 05: 0.020 / 0.080 / 0.150 ns
+set SKEW     [expr {[info exists ::env(SKEW)] ? $::env(SKEW) : 0.080}] ;# ns, Lab 05: 0.020 / 0.080 / 0.150
 
 # Report/check commands: on error only warn and keep going (options differ between Innovus versions).
 # The main steps (init, floorplan, place, CTS, route, file output) still stop on error.

@@ -12,7 +12,9 @@
 // (ready = valid) and read data is valid in the same ready cycle.
 //
 // Register map (offset inside the 4 KB region):
-//   0x000 CTRL    W: bit0 START (taken only when idle), bit1 IRQ_EN.  R: bit1 IRQ_EN
+//   0x000 CTRL    W: bit0 START (taken only when idle), bit1 IRQ_EN,
+//                    bit2 ACC_KEEP (with START: add to the sums of earlier runs, at most
+//                    7 runs in a row).  R: bit1 IRQ_EN
 //   0x004 STATUS  R: bit0 BUSY, bit1 DONE.  W: write 1 to bit1 to clear DONE
 //   0x008 INFO    R: {N, DW, AW, LAT}, 8 bits each, from the MSB down
 //   0x100 A_BUF   A[i][k] at byte i*N+k (little-endian within a word), N*N bytes
@@ -60,6 +62,7 @@ module accel_wrapper #(
     reg  [CW-1:0] cnt;
     reg           done;
     reg           irq_en;
+    reg           keep_q;          // ACC_KEEP of the running START
     wire          busy = (state != S_IDLE);
 
     reg  [NB*DW-1:0] abuf;
@@ -111,6 +114,13 @@ module accel_wrapper #(
             else if (start || (wr_status && s_wdata[1]))
                 done <= 1'b0;
         end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            keep_q <= 1'b0;
+        else if (start)
+            keep_q <= s_wdata[2];
     end
 
     assign irq = done & irq_en;
@@ -169,6 +179,7 @@ module accel_wrapper #(
         .rst_n    (rst_n),
         .start    (state == S_CLR),
         .clear    (state == S_CLR),
+        .keep_acc (keep_q),
         .row_sel  (row_sel),
         .a_row0   (a_feed[0*DW +: DW]),
         .a_row1   (a_feed[1*DW +: DW]),
