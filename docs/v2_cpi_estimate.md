@@ -83,7 +83,6 @@ Bản rv32i không có MUL nên không đổi. Với phương án đề xuất (
 
 ## 7. Giới hạn
 
-- `scripts/cpi5_estimate.py` ở mục 1 chưa có trong repo (28/11), nên chưa chạy lại được.
 - Đây là ước lượng từ trace, chưa đo trên RTL 5 tầng.
 - Chưa tính stall SB/SH trên `soc_top` (3 647 chu kỳ ở CoreMark). Stall này có ở cả V1 và V2 nên gần như không đổi tỉ lệ.
 - Số redirect giả định BTB giữ nguyên. Nếu BTB đổi thì phải chạy lại.

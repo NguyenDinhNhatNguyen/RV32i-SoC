@@ -11,6 +11,7 @@
 | `gen_boot_rom.py` | ELF của bootloader ra `rtl/mem/boot_rom_init.vh` (`make boot-gen`) | Container |
 | `uart_pack.py` | Đóng gói ELF (mỗi section một gói) hoặc `.bin` theo giao thức bootloader, hoặc gửi xuống board | Bất kỳ |
 | `isa_status.py` | Lập bảng kết quả riscv-tests | Container |
+| `cpi5_estimate.py` | Đếm load-use, MUL, redirect từ trace `make bench-core PLUSARGS=+trace`, ước lượng CPI lõi 5 tầng (`docs/v2_cpi_estimate.md`, V2-01) | Bất kỳ |
 | `yosys_summary.sh`, `get_nangate45.sh` | Tóm tắt Yosys, tải thư viện Nangate45 mở | Container |
 | `ppa_table.py` | Gom số PPA từ report Genus, Innovus | Bất kỳ |
 | `check_server.sh` | Ghi lại tool và PDK trên server (HT-01) | Server trường |
