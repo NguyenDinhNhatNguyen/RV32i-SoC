@@ -59,6 +59,14 @@ git diff --stat eced27a HEAD -- rtl
 
 Không in gì nghĩa là RTL không đổi. Script cũng cảnh báo nếu có file RTL mới hơn netlist.
 
+Từ 28/11 RTL trên `main` đã có thay đổi của V2 (`45b776c`, accelerator), nên khác RTL của netlist V1 (`e60437a`). LEC cho V1 phải chạy trên tag `v1-signoff` (RTL giống `e60437a`) trong một bản clone riêng, ví dụ:
+
+```bash
+git clone -b v1-signoff https://github.com/NguyenDinhNhatNguyen/RV32i-SoC.git ~/rv32i-v1
+```
+
+Không checkout tag trong `~/RV32i-SoC`, vì thư mục này đang có việc riêng của Phúc. LEC của V2 thì chạy trên `main` với netlist V2.
+
 **Bước 1. Sinh dofile, chưa gọi Conformal:**
 
 ```bash

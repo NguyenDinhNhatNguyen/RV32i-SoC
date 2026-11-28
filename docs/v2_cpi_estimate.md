@@ -61,16 +61,29 @@ Số trong ngoặc là tần số tối thiểu (MHz) để lõi 5 tầng chạy
 | Dhrystone rv32i | 1,085 | 1,131 (104 / 115) | 1,184 (109 / 121) | 1,216 (112 / 124) | 1,269 (117 / 130) |
 | Dhrystone rv32im | 1,144 | 1,193 (104 / 116) | 1,249 (109 / 121) | 1,273 (111 / 123) | 1,329 (116 / 129) |
 
+### 5.1 Nếu bộ nhân 3 chu kỳ (bảng kiến trúc V2, 28/11)
+
+Bảng trên giả định MUL thêm 1 chu kỳ như lõi 3 tầng. Bảng kiến trúc V2 ghi bộ nhân 3 chu kỳ, tức thêm 2 chu kỳ mỗi lệnh MUL. Cộng thêm 1 chu kỳ cho mỗi lệnh MUL ở mục 4 (tính, chưa đo):
+
+| Bench | CPI V1 | Nhánh ID, FWD | Nhánh ID, không FWD | Nhánh EX, FWD | Nhánh EX, không FWD |
+| --- | --- | --- | --- | --- | --- |
+| CoreMark rv32im | 1,089 | 1,199 (110 / 122) | 1,304 (120 / 133) | 1,255 (115 / 128) | 1,360 (125 / 138) |
+| Dhrystone rv32im | 1,144 | 1,195 (104 / 116) | 1,251 (109 / 121) | 1,275 (111 / 123) | 1,331 (116 / 129) |
+
+Bản rv32i không có MUL nên không đổi. Với phương án đề xuất (nhánh ở EX, có FWD), CoreMark rv32im tăng từ 1,222 lên 1,255. Kết luận qua cổng C0 vẫn giữ. Số bộ nhân cần chốt với Nhân.
+
 ## 6. Kết luận
 
 - CPI lõi 5 tầng nằm trong khoảng 1,13 đến 1,33.
 - Trường hợp xấu nhất (nhánh ở EX, không FWD) cần trên 122 MHz để hơn V1 sign-off, trên 135 MHz để hơn V1 ở F_max. Mục tiêu V2 là 150 MHz, nên phần CPI qua cổng C0.
 - Đề xuất nhánh ở EX, có FWD. So sánh nhánh ở ID làm dài đường găng, ngược mục tiêu tăng tần số. Phương án này cần trên khoảng 112 MHz (124 MHz nếu so F_max).
 - Nếu MUL chạy pipeline qua EX và MEM thì bỏ được 1 chu kỳ mỗi lệnh MUL, nhưng lệnh dùng ngay kết quả MUL tốn 1 bubble. Với CoreMark rv32im, 28 188 lệnh MUL đều bị dùng ngay, nên hai phần bù nhau.
+- Cột so sánh dùng V1 đúng như đã làm layout (100 MHz sign-off và F_max 110,8 MHz). Nếu V2-08 cho thấy lõi cũ tổng hợp chặt hơn đạt tần số cao hơn, ví dụ khoảng 150 MHz, thì với tỉ lệ CPI 1,222 / 1,089 V2 cần khoảng 168 MHz mới hơn (tính). Cổng G2 cần chốt so với mốc nào.
 - Rủi ro chính của V2 là tần số sau layout (V2-08), không phải CPI. File `.lib` của SRAM macro chỉ có góc typical.
 
 ## 7. Giới hạn
 
+- `scripts/cpi5_estimate.py` ở mục 1 chưa có trong repo (28/11), nên chưa chạy lại được.
 - Đây là ước lượng từ trace, chưa đo trên RTL 5 tầng.
 - Chưa tính stall SB/SH trên `soc_top` (3 647 chu kỳ ở CoreMark). Stall này có ở cả V1 và V2 nên gần như không đổi tỉ lệ.
 - Số redirect giả định BTB giữ nguyên. Nếu BTB đổi thì phải chạy lại.
