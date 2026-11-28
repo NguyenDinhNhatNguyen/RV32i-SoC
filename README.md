@@ -20,6 +20,8 @@ rv32_core ── nạp lệnh ──► IMEM (4 macro) + boot ROM
 
 ## Trạng thái (26/11)
 
+Từ 28/11 nhóm làm thêm V2 (lõi 5 tầng, accelerator tự cộng dồn, xem Sheet). RTL trên `main` đã có thay đổi của V2. Bản V1 đã sign-off ở bảng dưới nằm ở tag `v1-signoff`, chạy lại hoặc kiểm V1 thì dùng tag này.
+
 | Phần | Kết quả |
 | --- | --- |
 | Lõi RV32IM | riscv-tests 472/472, test assembly 112/112, unit 11/11. GLS có SDF 49/49, LEC 0 non-equivalent (lõi đứng riêng, 30/10) |

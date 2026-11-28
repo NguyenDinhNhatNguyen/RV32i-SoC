@@ -9,6 +9,7 @@ Script Innovus, chỉ chạy trên server trường.
 | `scripts/run_all.tcl` | Flow trọn: floorplan, power, place, CTS, route, kiểm tra. Chọn khối bằng biến `TOP` (`accel_wrapper` hoặc `soc_top`) |
 | `scripts/soc_floorplan.tcl` | Floorplan SoC: lõi mặc định 405 × 405 µm (đổi bằng `CORE_W`, `CORE_H`), 8 SRAM macro, pin plan, power plan (PD-02) |
 | `scripts/estimate_die.py` | Ước lượng kích thước die |
+| `run_signoff_reports.sh`, `scripts/signoff_reports.tcl` | Xuất 8 report sign-off theo checklist (thiết kế, cây clock, QoR, vi phạm ràng buộc, công suất, DRC, connectivity, antenna) từ database layout cuối, chỉ đọc (V2-14). Chạy trên server: `bash pnr/run_signoff_reports.sh` |
 | `scripts/pd08_vss_fix.tcl` | Ghi lại các lệnh sửa lưới `VSS` của PD-08 (26/11) trên `_p9`. Chạy lại thì lưu sang database mới, không ghi đè `route_trim.enc` |
 
 Chạy: `make pnr-accel` hoặc `make pnr-soc`. Thư mục `run*/`, `out*/` bị ignore. Netlist, SPEF, SDF, GDS trong `out*/` dựng từ thư viện của trường, không bao giờ commit. Chỉ copy report văn bản vào `appendix/`. Hướng dẫn: `docs/flow_notes.md`, floorplan SoC: `docs/pd02_floorplan.md`.
