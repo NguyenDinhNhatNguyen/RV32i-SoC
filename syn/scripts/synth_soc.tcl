@@ -3,6 +3,9 @@
 # Run from the repo root on the server: make synth-soc (CG=0 for the run without clock gating).
 # Environment: CG=0|1 (default 1), PERIOD=<ns> (default 20, replaces SOC_PERIOD in soc.sdc),
 # SYN_OUT=<dir> (default syn/out_soc). make synth-soc-sweep sets PERIOD and SYN_OUT (STA-03).
+# SYN_EXTRA_LIBS="<file.lib> ..." adds more standard cell libraries, for example LVT or HVT
+# (V2-20, Genus trial only: mmmc.view and Tempus do not read them yet). Use SYN_OUT outside
+# syn/out_soc for such a run.
 # The netlist and SDC are the input of soc_floorplan.tcl (PD-02, PD-03, docs/pd02_floorplan.md).
 #
 # Parameters are the soc_top defaults: ENABLE_M=1, ENABLE_WFI_SLEEP=1, ENABLE_DMA=1, and the
@@ -44,7 +47,15 @@ if {![file exists $sram_lib]} {
 }
 set_db init_lib_search_path [list $LIB_DIR]
 set_db init_hdl_search_path [list $REPO/rtl/core $REPO/rtl/bus $REPO/rtl/mem]
-read_libs [list $LIB_SLOW $sram_lib]
+set extra_libs [env_or SYN_EXTRA_LIBS ""]
+foreach f $extra_libs {
+    if {![file exists $f]} {
+        puts "ERROR: $f in SYN_EXTRA_LIBS not found"
+        quit
+    }
+}
+if {[llength $extra_libs] > 0} { puts "SYN: extra libraries $extra_libs" }
+read_libs [concat [list $LIB_SLOW $sram_lib] $extra_libs]
 
 # Scan flop ban, layer 1: no SDFF* cell may be picked, and no scan flop for normal flops
 foreach c [get_db lib_cells -if {.base_name == SDFF*}] { set_db $c .dont_use true }

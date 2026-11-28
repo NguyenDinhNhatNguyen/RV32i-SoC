@@ -36,6 +36,11 @@ set UTIL     0.70     ;# Lab 02: 0.55 / 0.70 / 0.85
 set IO_GAP   15       ;# Core to die edge (um)
 set STRIPE_P 30.0     ;# Lab 03: 15 / 30 / 60 um
 set SKEW     [expr {[info exists ::env(SKEW)] ? $::env(SKEW) : 0.080}] ;# ns, Lab 05: 0.020 / 0.080 / 0.150
+# Max fanout (V2 checklist: 0 violations). Genus already meets set_max_fanout 32 of soc.sdc, the
+# 134 violations of _p9 came from Innovus buffers (FE_OFC*, reset tree, ICG outputs, CTS buffers)
+# because place and route did not fix fanout. FIX_FANOUT=0 keeps the old behaviour.
+set FIX_FANOUT [expr {[info exists ::env(FIX_FANOUT)] ? $::env(FIX_FANOUT) : 1}]
+set MAX_FANOUT [expr {[info exists ::env(MAX_FANOUT)] ? $::env(MAX_FANOUT) : 32}] ;# Same as soc.sdc
 
 # Report/check commands: on error only warn and keep going (options differ between Innovus versions).
 # The main steps (init, floorplan, place, CTS, route, file output) still stop on error.
@@ -95,6 +100,8 @@ try_cmd  {setPlaceMode -fp false}
 try_mode {setPlaceMode -place_global_cong_effort high}           {setPlaceMode -congestionEffort high}
 try_mode {setPlaceMode -place_global_timing_effort medium}       {setPlaceMode -timingDriven true}
 try_mode {setPlaceMode -place_detail_wire_length_opt_effort medium} {setPlaceMode -wireLenOptEffort medium}
+# Let every optDesign step (pre-CTS, post-CTS, post-route) repair max fanout like max tran and cap
+if {$FIX_FANOUT} { try_cmd {setOptMode -fixFanoutLoad true} }
 place_opt_design
 try_cmd {checkPlace $RPT/placement_check.rpt}                                  ;# 0 unplaced/overlap/off-grid
 try_cmd {reportCongestion -overflow > $RPT/placement_congestion.rpt}           ;# overflow < 0.5%
@@ -106,6 +113,8 @@ try_cmd {set_ccopt_property buffer_cells     $CTS_BUFFERS}
 try_cmd {set_ccopt_property inverter_cells   $CTS_INVERTERS}
 try_cmd {set_ccopt_property target_skew      $SKEW}
 try_cmd {set_ccopt_property target_max_trans 0.150}
+# Clock tree buffers and ICG outputs had fanout 89 to 100 in _p9. CCOpt splits them at MAX_FANOUT
+if {$FIX_FANOUT} { try_cmd {set_ccopt_property max_fanout $MAX_FANOUT} }
 try_cmd {setAnalysisMode -analysisType onChipVariation -cppr both}
 # Clock wires at double width and double spacing (Lab 05). Innovus 21.1 uses add_ndr and a CCOpt route type.
 try_mode {add_ndr -name CLK_2W2S -width_multiplier {Metal3:Metal7 2} -spacing_multiplier {Metal3:Metal7 2}} \
